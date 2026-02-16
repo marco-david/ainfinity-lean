@@ -6,7 +6,7 @@ pp.unicode.fun = true
 
 [[require]]
 name = "mathlib"
-git = "https://github.com/leanprover-community/mathlib4.git"
+scope = "leanprover-community"
 
 [[lean_lib]]
 name = "Ainfinity"
