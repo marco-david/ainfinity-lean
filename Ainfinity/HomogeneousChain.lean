@@ -11,11 +11,13 @@ are additionally labeled with their degree. Then a homogeneous
 chain is defined as a Quiver.Path object on that quiver.
 -/
 
+universe u v w
+
 -- bundle degree with the arrow so we can use plain `Quiver.Path`
 def toQuiver {β : Type u} {obj : Type v} (gquiver : GQuiver.{u, v, w} β obj) : Quiver obj where
   Hom X Y := Σ d : β, gquiver.data X Y d
 
-abbrev HomogeneousChain.{u, v, w} {β : Type u} {obj : Type v} {gquiver : GQuiver.{u, v, w} β obj} (X : obj) (Y : obj) :=
+abbrev HomogeneousChain {β : Type u} {obj : Type v} {gquiver : GQuiver.{u, v, w} β obj} (X : obj) (Y : obj) :=
   @Quiver.Path obj (toQuiver gquiver) X Y
 
 def total_deg {β : Type u} [GradingCore β] {obj : Type v} {gquiver : GQuiver.{u, v, w} β obj} {X : obj} {Y : obj} (chain : HomogeneousChain (gquiver := gquiver) X Y) : β :=

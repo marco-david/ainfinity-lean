@@ -2,7 +2,6 @@ import Mathlib
 
 open ChainComplex CategoryTheory DirectSum GradedMonoid GradedObject
 
-
 namespace AInfinityCategoryTheory
 
 
@@ -75,7 +74,7 @@ instance : Has_Int_or_Parity ℤ where
   deg_cast := fun n ↦ n
   cast_compat := by intro n; rfl
 
-class GradingCore (β : Type u) extends AddCommGroup β, Has_Int_or_Parity β
+class GradingCore.{u} (β : Type u) extends AddCommGroup β, Has_Int_or_Parity β
 
 class GQuiver.{u, v, w} (β : Type u) (obj : Type v) where
   /-- The type of morphisms between a given source and target. -/
