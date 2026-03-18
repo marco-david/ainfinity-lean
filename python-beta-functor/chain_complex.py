@@ -652,10 +652,10 @@ def _mc_short(m: MapCoeff) -> str:
     Single term {(i,j,k):1} -> 'k' (just the index).
     Single term {(i,j,k):c} -> 'c·k'.
     Multiple terms        -> comma-separated.
-    Zero                  -> '0'.
+    Zero morphism ({})    -> '-'.
     """
     if not m:
-        return "0"
+        return "-"
     parts = []
     for (i, j, idx), coeff in sorted(m.items(), key=lambda x: x[0][2]):
         if coeff == 1:
