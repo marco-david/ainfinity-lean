@@ -9,7 +9,7 @@ structure CMat_ (C : Type*) where
 namespace CMat_
 
 section Preadditive
-variable {C : Type*} [Category C] [Preadditive C] (M N : CMat_ C)
+variable {C : Type*} [Category C] [Preadditive C] (M N K : CMat_ C)
 
 /-- Mirrors the API of `CategoryTheory.Mat_.ι` -/
 def ι : Type := Fin M.toList.length
@@ -93,6 +93,15 @@ noncomputable def fullyFaithful_toMat_ : (toMat_ (C := C)).FullyFaithful := by
 
 theorem essSurj_toMat_ : (toMat_ (C := C)).EssSurj := by
   sorry
+
+/-- Computable version of `CategoryTheory.Limits.biprod` -/
+def cbiprod : CMat_ C := CMat_.ofList (M.toList ++ N.toList)
+
+@[inherit_doc] infixl:65 " ⊞ₖ " => cbiprod
+
+omit [Category C] [Preadditive C]
+theorem cbiprod_assoc : M ⊞ₖ N ⊞ₖ K = M ⊞ₖ (N ⊞ₖ K) := by
+  simp [cbiprod]
 
 end Preadditive
 
