@@ -11,17 +11,26 @@ namespace CMat_
 section definition
 variable {C : Type*} [Category C] [Preadditive C] (M N K : CMat_ C)
 
-/-- Mirrors the API of `CategoryTheory.Mat_.ι` -/
+/--
+Mirrors the API of `CategoryTheory.Mat_.ι`.
+This is irreducible because it is effectively irreducible in `Mat_`, and we should mirror the API.
+-/
+@[irreducible]
 def ι : Type := Fin M.toList.length
 
 /- Auxillary definitions that are used to avoid defeq abuse. -/
+unseal ι in
 def ι.toFin (i : M.ι) : Fin M.toList.length := i
+unseal ι in
 def ι.ofFin (i : Fin M.toList.length) : M.ι := i
 
+unseal ι in
 instance fintype : Fintype M.ι := inferInstanceAs <| Fintype (Fin M.toList.length)
+unseal ι in
 instance : DecidableEq M.ι := inferInstanceAs <| DecidableEq (Fin M.toList.length)
 
 /-- Mirrors the API of `CategoryTheory.Mat_.X` -/
+@[irreducible]
 def X : M.ι → C := fun i ↦ M.toList[i.toFin]
 
 /-- Mirrors the API of `CategoryTheory.Mat_.Hom` -/
