@@ -8,7 +8,7 @@ structure CMat_ (C : Type*) where
 
 namespace CMat_
 
-section Preadditive
+section definition
 variable {C : Type*} [Category C] [Preadditive C] (M N K : CMat_ C)
 
 /-- Mirrors the API of `CategoryTheory.Mat_.ι` -/
@@ -103,7 +103,38 @@ omit [Category C] [Preadditive C]
 theorem cbiprod_assoc : M ⊞ₖ N ⊞ₖ K = M ⊞ₖ (N ⊞ₖ K) := by
   simp [cbiprod]
 
-end Preadditive
+end definition
+
+section embedding
+
+variable (C : Type*) [Category C] [Preadditive C]
+
+def embedding : C ⥤ CMat_ C where
+  obj X := CMat_.ofList [X]
+  map {M N} f i j :=
+    have : (M ⟶ N) = ((CMat_.ofList [M]).X i ⟶ (CMat_.ofList [N]).X j) := by
+      have hi : i.toFin.val = 0 := sorry
+      have hj : j.toFin.val = 0 := sorry
+      sorry
+    cast this f
+  map_id f := by sorry
+  map_comp f g := by sorry
+
+namespace Embedding
+instance : (embedding C).Faithful where
+  map_injective h := sorry
+
+instance : (embedding C).Full where
+  map_surjective f := sorry
+
+instance : Functor.Additive (embedding C) where
+  map_add {M N f g} := sorry
+end Embedding
+
+end embedding
+
+-- TODO: Pick a simp normal form
+-- TODO: implement Repr using cibiprod and the embedding
 
 section Linear
 
