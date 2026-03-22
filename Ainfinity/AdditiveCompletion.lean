@@ -72,6 +72,28 @@ instance : Preadditive (CMat_ C) where
   add_comp M N K f f' g := by ext; simp [Finset.sum_add_distrib]
   comp_add M N K f g g' := by ext; simp [Finset.sum_add_distrib]
 
+-- Idea: Maybe we can translate the `HasFiniteBiproducts` instance from `CategoryTheory.Mat_` using
+-- an equivalence. I don't know if this would make it computable though, which we might need.
+
+-- We split the equivalence into two parts rather than just having a singular
+-- `CategoryTheory.Equivalence` structure because one direction is computable.
+def toMat_ : CMat_ C ⥤ Mat_ C where
+  obj M := {
+    ι := M.ι
+    fintype := M.fintype
+    X := M.X
+  }
+  map f := f
+  map_id M := by
+    rw [id_def, Mat_.id_def]
+    convert rfl
+
+noncomputable def fullyFaithful_toMat_ : (toMat_ (C := C)).FullyFaithful := by
+  sorry
+
+theorem essSurj_toMat_ : (toMat_ (C := C)).EssSurj := by
+  sorry
+
 end Preadditive
 
 section Linear
