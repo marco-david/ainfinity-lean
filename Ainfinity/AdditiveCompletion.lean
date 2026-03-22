@@ -118,23 +118,45 @@ section embedding
 
 variable (C : Type*) [Category C] [Preadditive C]
 
+/--
+This is not a simp lemma because I am worried that this is often an equality of types.
+But I think this could work as a simp lemma, I'm just not sure if it would cause defeq issues.
+-/
+theorem apply_X_ofList_singleton {A : C} (i : (CMat_.ofList [A]).ι) :
+    (CMat_.ofList [A]).X i = A := by
+  sorry
+
 def embedding : C ⥤ CMat_ C where
   obj X := CMat_.ofList [X]
-  map {M N} f i j :=
-    have : (M ⟶ N) = ((CMat_.ofList [M]).X i ⟶ (CMat_.ofList [N]).X j) := by
-      have hi : i.toFin.val = 0 := sorry
-      have hj : j.toFin.val = 0 := sorry
-      sorry
-    cast this f
+  map {A B} f i j := cast (by simp [apply_X_ofList_singleton]) f
   map_id f := by sorry
   map_comp f g := by sorry
 
-namespace Embedding
-instance : (embedding C).Faithful where
-  map_injective h := sorry
+@[simp]
+theorem ofList_singleton {A : C} : CMat_.ofList [A] = (embedding C).obj A := rfl
 
-instance : (embedding C).Full where
-  map_surjective f := sorry
+@[simp]
+theorem toList_embedding {A : C} : ((embedding C).obj A).toList = [A] := rfl
+
+theorem X_embedding {A : C} (i : ((embedding C).obj A).ι) : ((embedding C).obj A).X i = A :=
+  apply_X_ofList_singleton C i
+
+instance {A : C} : Unique ((embedding C).obj A).ι where
+  default :=
+    have : NeZero ((embedding C).obj A).toList.length := sorry
+    ι.ofFin ((embedding C).obj A) 0
+  uniq a := sorry
+
+namespace Embedding
+def fullyFaithful : (embedding C).FullyFaithful where
+  preimage {A B} f' :=
+    -- The default here means 0, and it comes from the `Unique` instance above.
+    have : (((embedding C).obj A).X default ⟶ ((embedding C).obj B).X default) = (A ⟶ B) := by
+      simp [X_embedding]
+    cast this (f' default default)
+  map_preimage {A B} f' := sorry
+  preimage_map {A B} f := sorry
+
 
 instance : Functor.Additive (embedding C) where
   map_add {M N f g} := sorry
