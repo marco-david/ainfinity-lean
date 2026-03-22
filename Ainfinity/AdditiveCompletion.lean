@@ -2,8 +2,6 @@ import Mathlib
 
 open CategoryTheory
 
--- TODO: Consider renaming to something like `ComputableMat_` or `CMat_`
-
 structure CMat_ (C : Type*) where
   ofList ::
     toList : List C
@@ -20,8 +18,8 @@ def ι : Type := Fin M.toList.length
 def ι.toFin (i : M.ι) : Fin M.toList.length := i
 def ι.ofFin (i : Fin M.toList.length) : M.ι := i
 
-instance fintype : Fintype M.ι := inferInstanceAs (Fintype (Fin M.toList.length))
-instance : DecidableEq M.ι := inferInstanceAs (DecidableEq (Fin M.toList.length))
+instance fintype : Fintype M.ι := inferInstanceAs <| Fintype (Fin M.toList.length)
+instance : DecidableEq M.ι := inferInstanceAs <| DecidableEq (Fin M.toList.length)
 
 /-- Mirrors the API of `CategoryTheory.Mat_.X` -/
 def X : M.ι → C := fun i ↦ M.toList[i.toFin]
@@ -51,6 +49,28 @@ instance : Category (CMat_ C) where
     simp_rw [Hom.comp, CategoryTheory.Preadditive.sum_comp, CategoryTheory.Preadditive.comp_sum,
       Category.assoc]
     rw [Finset.sum_comm]
+
+-- These theorems and instances are almost directly copied from `CategoryTheory.Mat_`.
+@[ext] theorem hom_ext {M N : CMat_ C} (f g : M ⟶ N) (H : ∀ i j, f i j = g i j) : f = g :=
+  DMatrix.ext_iff.mp H
+theorem id_def (M : CMat_ C) :
+    (𝟙 M : Hom M M) = fun i j => if h : i = j then eqToHom (congr_arg M.X h) else 0 := rfl
+theorem id_apply (M : CMat_ C) (i j : M.ι) :
+    (𝟙 M : Hom M M) i j = if h : i = j then eqToHom (congr_arg M.X h) else 0 := rfl
+@[simp] theorem id_apply_self (M : CMat_ C) (i : M.ι) : (𝟙 M : Hom M M) i i = 𝟙 _ := by
+  simp [id_apply]
+@[simp] theorem id_apply_of_ne (M : CMat_ C) (i j : M.ι) (h : i ≠ j) : (𝟙 M : Hom M M) i j = 0 := by
+  simp [id_apply, h]
+theorem comp_def {M N K : CMat_ C} (f : M ⟶ N) (g : N ⟶ K) :
+    f ≫ g = fun i k => ∑ j : N.ι, f i j ≫ g j k := rfl
+@[simp] theorem comp_apply {M N K : CMat_ C} (f : M ⟶ N) (g : N ⟶ K) (i k) :
+    (f ≫ g) i k = ∑ j : N.ι, f i j ≫ g j k := rfl
+instance : Inhabited (M ⟶ N) := ⟨fun i j => (0 : M.X i ⟶ N.X j)⟩
+instance : AddCommGroup (M ⟶ N) := inferInstanceAs <| AddCommGroup (DMatrix M.ι N.ι _)
+@[simp] theorem add_apply {M N : CMat_ C} (f g : M ⟶ N) (i j) : (f + g) i j = f i j + g i j := rfl
+instance : Preadditive (CMat_ C) where
+  add_comp M N K f f' g := by ext; simp [Finset.sum_add_distrib]
+  comp_add M N K f g g' := by ext; simp [Finset.sum_add_distrib]
 
 end Preadditive
 
