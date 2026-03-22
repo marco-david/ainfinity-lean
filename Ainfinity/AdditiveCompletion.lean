@@ -8,11 +8,10 @@ structure CMat_ (C : Type*) where
   ofList ::
     toList : List C
 
-variable {R : Type*} [CommRing R]
-  {C : Type*} [Category C] [Preadditive C] [Linear R C]
-  (M N : CMat_ C)
-
 namespace CMat_
+
+section Preadditive
+variable {C : Type*} [Category C] [Preadditive C] (M N : CMat_ C)
 
 /-- Mirrors the API of `CategoryTheory.Mat_.ι` -/
 def ι : Type := Fin M.toList.length
@@ -30,20 +29,36 @@ def X : M.ι → C := fun i ↦ M.toList[i.toFin]
 /-- Mirrors the API of `CategoryTheory.Mat_.Hom` -/
 def Hom : Type* := DMatrix M.ι N.ι fun i j => M.X i ⟶ N.X j
 
-/-- Mirrors the API of `CategoryTheory.Mat_.id` -/
-def id : Hom M M :=
+/-- Mirrors the API of `CategoryTheory.Mat_.Hom.id` -/
+def Hom.id : Hom M M :=
   fun i j => if h : i = j then eqToHom (congr_arg M.X h) else 0
 
-/-- Mirrors the API of `CategoryTheory.Mat_.comp` -/
-def comp {M N K : CMat_ C} (f : Hom M N) (g : Hom N K) : Hom M K :=
+/-- Mirrors the API of `CategoryTheory.Mat_.Hom.comp` -/
+def Hom.comp {M N K : CMat_ C} (f : Hom M N) (g : Hom N K) : Hom M K :=
   fun i k => ∑ j : N.ι, f i j ≫ g j k
 
 instance : Category (CMat_ C) where
   Hom := CMat_.Hom
-  id := CMat_.id
-  comp := CMat_.comp
-  id_comp := sorry
-  comp_id := sorry
-  assoc := sorry
+  id := CMat_.Hom.id
+  comp f g := f.comp g
+  -- These proofs are based on those in `CategoryTheory.Mat_`.
+  -- We add more to the simp set because we don't have a `local simp` attribute immediately above.
+  id_comp f := by simp +unfoldPartialApp [dite_comp, Hom.id, Hom.comp]
+  comp_id f := by simp +unfoldPartialApp [comp_dite, Hom.id, Hom.comp]
+  assoc f g h := by
+    apply DMatrix.ext
+    intros
+    simp_rw [Hom.comp, CategoryTheory.Preadditive.sum_comp, CategoryTheory.Preadditive.comp_sum,
+      Category.assoc]
+    rw [Finset.sum_comm]
+
+end Preadditive
+
+section Linear
+
+variable {R : Type*} [CommRing R]
+  {C : Type*} [Category C] [Preadditive C] [Linear R C] (M N : CMat_ C)
+
+end Linear
 
 end CMat_
