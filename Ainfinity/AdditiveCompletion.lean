@@ -177,14 +177,14 @@ section linear
 
 instance {R : Type*} [Semiring R] (m n : Type*) (α : m → n → Type*)
     [(i : m) → (j : n) → AddCommGroup (α i j)] [(i : m) → (j : n) → Module R (α i j)] :
-  Module R (DMatrix m n α) where
-  smul r M := fun i j => r • M i j
-  mul_smul r s M := sorry
-  one_smul M := sorry
-  smul_zero M := sorry
-  smul_add r M N := sorry
-  add_smul r M N := sorry
-  zero_smul M := sorry
+    Module R (DMatrix m n α) where
+  smul r M := fun i j ↦ r • (M i j)
+  mul_smul r s M := by ext i j; exact mul_smul r s (M i j)
+  one_smul M := by ext i j; exact one_smul R (M i j)
+  smul_zero r := by ext i j; exact smul_zero r
+  smul_add r M N := by ext i j; exact smul_add r (M i j) (N i j)
+  add_smul r s N := by ext i j; exact add_smul r s (N i j)
+  zero_smul M := by ext i j; exact zero_smul R (M i j)
 
 variable {R : Type*} [Semiring R]
   {C : Type*} [Category C] [Preadditive C] [Linear R C]
