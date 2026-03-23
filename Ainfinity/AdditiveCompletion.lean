@@ -173,11 +173,28 @@ end embedding
 -- TODO: Pick a simp normal form
 -- TODO: implement Repr using cibiprod and the embedding
 
-section Linear
+section linear
 
-variable {R : Type*} [CommRing R]
-  {C : Type*} [Category C] [Preadditive C] [Linear R C] (M N : CMat_ C)
+instance {R : Type*} [Semiring R] (m n : Type*) (α : m → n → Type*)
+    [(i : m) → (j : n) → AddCommGroup (α i j)] [(i : m) → (j : n) → Module R (α i j)] :
+  Module R (DMatrix m n α) where
+  smul r M := fun i j => r • M i j
+  mul_smul r s M := sorry
+  one_smul M := sorry
+  smul_zero M := sorry
+  smul_add r M N := sorry
+  add_smul r M N := sorry
+  zero_smul M := sorry
 
-end Linear
+variable {R : Type*} [Semiring R]
+  {C : Type*} [Category C] [Preadditive C] [Linear R C]
+
+instance : Linear R (CMat_ C) where
+  homModule M N := inferInstanceAs <| Module R
+    (DMatrix M.ι N.ι fun i j => M.X i ⟶ N.X j)
+  smul_comp := sorry
+  comp_smul := sorry
+
+end linear
 
 end CMat_
