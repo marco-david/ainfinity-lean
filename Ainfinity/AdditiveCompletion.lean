@@ -97,16 +97,16 @@ def toMat_ (C : Type*) [Category C] [Preadditive C] : CMat_ C ⥤ Mat_ C where
     rw [id_def, Mat_.id_def]
     convert rfl
 
-instance faithful_toMat_ : (toMat_ C).Faithful where
+instance : (toMat_ C).Faithful where
   map_injective {M N} f g := by sorry
-
-instance full_toMat_ : (toMat_ C).Full where
+instance : (toMat_ C).Full where
   map_surjective {M N} f' := by sorry
-
-noncomputable def fullyFaithful_toMat_ : (toMat_ C).FullyFaithful := .ofFullyFaithful (toMat_ C)
-
-theorem essSurj_toMat_ : (toMat_ C).EssSurj := by
-  sorry
+instance : (toMat_ C).EssSurj where
+  mem_essImage M' := sorry
+instance : (toMat_ C).IsEquivalence where
+  faithful := inferInstance
+  full := inferInstance
+  essSurj := inferInstance
 
 /-- Computable version of `CategoryTheory.Limits.biprod` -/
 def cbiprod : CMat_ C := CMat_.ofList (M.toList ++ N.toList)
