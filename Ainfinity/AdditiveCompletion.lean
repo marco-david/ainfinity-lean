@@ -86,7 +86,7 @@ instance : Preadditive (CMat_ C) where
 
 -- We split the equivalence into two parts rather than just having a singular
 -- `CategoryTheory.Equivalence` structure because one direction is computable.
-def toMat_ : CMat_ C ⥤ Mat_ C where
+def toMat_ (C : Type*) [Category C] [Preadditive C] : CMat_ C ⥤ Mat_ C where
   obj M := {
     ι := M.ι
     fintype := M.fintype
@@ -97,10 +97,15 @@ def toMat_ : CMat_ C ⥤ Mat_ C where
     rw [id_def, Mat_.id_def]
     convert rfl
 
-noncomputable def fullyFaithful_toMat_ : (toMat_ (C := C)).FullyFaithful := by
-  sorry
+instance faithful_toMat_ : (toMat_ C).Faithful where
+  map_injective {M N} f g := by sorry
 
-theorem essSurj_toMat_ : (toMat_ (C := C)).EssSurj := by
+instance full_toMat_ : (toMat_ C).Full where
+  map_surjective {M N} f' := by sorry
+
+noncomputable def fullyFaithful_toMat_ : (toMat_ C).FullyFaithful := .ofFullyFaithful (toMat_ C)
+
+theorem essSurj_toMat_ : (toMat_ C).EssSurj := by
   sorry
 
 /-- Computable version of `CategoryTheory.Limits.biprod` -/
@@ -151,15 +156,16 @@ namespace Embedding
 def fullyFaithful : (embedding C).FullyFaithful where
   preimage {A B} f' :=
     -- The default here means 0, and it comes from the `Unique` instance above.
-    have : (((embedding C).obj A).X default ⟶ ((embedding C).obj B).X default) = (A ⟶ B) := by
-      simp [X_embedding]
-    cast this (f' default default)
+    cast (by simp [X_embedding]) (f' default default)
   map_preimage {A B} f' := sorry
   preimage_map {A B} f := sorry
 
+instance : (embedding C).Faithful := (fullyFaithful C).faithful
+instance : (embedding C).Full := (fullyFaithful C).full
 
 instance : Functor.Additive (embedding C) where
   map_add {M N f g} := sorry
+
 end Embedding
 
 end embedding
