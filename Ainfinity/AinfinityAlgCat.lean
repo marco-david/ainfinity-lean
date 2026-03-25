@@ -1,3 +1,8 @@
+/- IGNORE for now
+will be used to define category of A-infinity algebras later
+not critical to current repo - see AinfinityAlgebra.lean instead
+most of this will likely need rework anyway
+-/
 import Mathlib
 import Ainfinity.Grading
 
@@ -23,17 +28,18 @@ abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
   (∑ i, deg i) + shift_ofInt (3 - (n : ℤ))
 
-structure AInfinityAlgData (R : Type u) [CommRing R] (A : GradedRModule (β := β) (R := R)) where
+structure AInfinityAlgDataCat (R : Type u) [CommRing R] where
+  A : GradedRModule (β := β) (R := R)
+
   m :
     (n : ℕ) →
     (deg : Fin n → β) →
     MultilinearMap R (fun i => A (deg i))
       (A (operationTargetDeg deg))
 
-namespace AInfinityAlgData
+namespace AInfinityAlgDataCat
 
 variable {R : Type u} [CommRing R]
-variable {A : GradedRModule (β := β) (R := R)}
 
 section Internal
 
@@ -149,21 +155,21 @@ end Internal
 
 /-- The `(r,s)` summand in the arity-`n` Stasheff relation. -/
 def stasheffTerm
-  (X : AInfinityAlgData R A)
+  (X : AInfinityAlgDataCat R)
   (n : ℕ)
   (deg : Fin n → β)
-  (x : ∀ i, A (deg i))
+  (x : ∀ i, X.A (deg i))
   (r s : ℕ)
   (hs : 1 ≤ s)
   (hr : r + s ≤ n) :
-  A (stasheffTargetDeg deg) :=
+  X.A (stasheffTargetDeg deg) :=
 by
   let degIn := stasheffDegIn deg r s hr
-  let xIn : ∀ i : Fin s, A (degIn i) := fun i => x ⟨r + i.val, by omega⟩
+  let xIn : ∀ i : Fin s, X.A (degIn i) := fun i => x ⟨r + i.val, by omega⟩
   let inner := X.m s degIn xIn
   let outerN := n + 1 - s
   let degOut := stasheffDegOut deg r s hr
-  let xOut : ∀ i : Fin outerN, A (degOut i) := by
+  let xOut : ∀ i : Fin outerN, X.A (degOut i) := by
     intro i
     by_cases hlt : i.val < r
     · simpa [degOut, stasheffDegOut, hlt] using x ⟨i.val, by omega⟩
@@ -176,17 +182,19 @@ by
   exact hdeg ▸ outer
 
 
+
+
 /--
 A single summand in the Stasheff sum, returning `0` when the indices are invalid.
 This is the object that appears inside the double finite sum.
 -/
 def stasheffSummand
-  (X : AInfinityAlgData (β := β) R A)
+  (X : AInfinityAlgDataCat (β := β) R)
   (n : ℕ)
   (deg : Fin n → β)
-  (x : ∀ i, A (deg i))
+  (x : ∀ i, X.A (deg i))
   (r s : ℕ) :
-  A (stasheffTargetDeg deg) :=
+  X.A (stasheffTargetDeg deg) :=
   if h : validStasheffIndices n r s then
     X.stasheffTerm n deg x r s h.1 h.2
   else
@@ -194,27 +202,27 @@ def stasheffSummand
 
 /-- The full Stasheff sum in arity `n`. -/
 def stasheffSum
-  (X : AInfinityAlgData (β := β) R A)
+  (X : AInfinityAlgDataCat (β := β) R)
   (n : ℕ)
   (deg : Fin n → β)
-  (x : ∀ i, A (deg i)) :
-  A (stasheffTargetDeg deg) :=
+  (x : ∀ i, X.A (deg i)) :
+  X.A (stasheffTargetDeg deg) :=
   ∑ r ∈ Finset.range (n + 1),
     ∑ s ∈ Finset.Ico 1 (n - r + 1),
       X.stasheffSummand n deg x r s
 
 /-- The Stasheff identities as a property of the raw A∞ data. -/
 def satisfiesStasheff
-  (X : AInfinityAlgData (β := β) R A) : Prop :=
-  ∀ (n : ℕ) (deg : Fin n → β) (x : ∀ i, A (deg i)),
+  (X : AInfinityAlgDataCat (β := β) R) : Prop :=
+  ∀ (n : ℕ) (deg : Fin n → β) (x : ∀ i, X.A (deg i)),
     X.stasheffSum n deg x = 0
 
 /-- If the indices are valid, the summand is exactly the corresponding term. -/
 lemma stasheffSummand_eq_term
-  (X : AInfinityAlgData (β := β) R A)
+  (X : AInfinityAlgDataCat (β := β) R)
   (n : ℕ)
   (deg : Fin n → β)
-  (x : ∀ i, A (deg i))
+  (x : ∀ i, X.A (deg i))
   (r s : ℕ)
   (h : validStasheffIndices n r s) :
   X.stasheffSummand n deg x r s
@@ -225,36 +233,35 @@ lemma stasheffSummand_eq_term
 
 /-- If the indices are invalid, the summand vanishes. -/
 lemma stasheffSummand_eq_zero
-  (X : AInfinityAlgData (β := β) R A)
+  (X : AInfinityAlgDataCat (β := β) R)
   (n : ℕ)
   (deg : Fin n → β)
-  (x : ∀ i, A (deg i))
+  (x : ∀ i, X.A (deg i))
   (r s : ℕ)
   (h : ¬ validStasheffIndices n r s) :
   X.stasheffSummand n deg x r s = 0 := by
-  unfold AInfinityAlgData.stasheffSummand; aesop
+  unfold AInfinityAlgDataCat.stasheffSummand; aesop
 
-end AInfinityAlgData
+end AInfinityAlgDataCat
 
 /-- An A∞-algebra is raw data together with the Stasheff identities. -/
-structure AInfinityAlgebra (R : Type u) [CommRing R] (A : GradedRModule (β := β) (R := R))
-  extends AInfinityAlgData (β := β) R A where
+structure AInfinityAlgCat (R : Type u) [CommRing R]
+  extends AInfinityAlgDataCat (β := β) R where
   stasheff :
-    AInfinityAlgData.satisfiesStasheff
-      (β := β) toAInfinityAlgData
+    AInfinityAlgDataCat.satisfiesStasheff
+      (β := β) toAInfinityAlgDataCat
 
 namespace AInfinityAlgebra
 
 variable {R : Type u} [CommRing R]
-variable {A : GradedRModule (β := β) (R := R)}
 
 /-- Re-export the Stasheff identity in a convenient form. -/
 lemma stasheff_eq_zero
-  (X : AInfinityAlgebra (β := β) R A)
+  (X : AInfinityAlgCat (β := β) R)
   (n : ℕ)
   (deg : Fin n → β)
-  (x : ∀ i, A (deg i)) :
-  X.toAInfinityAlgData.stasheffSum n deg x = 0 :=
+  (x : ∀ i, X.A (deg i)) :
+  X.toAInfinityAlgDataCat.stasheffSum n deg x = 0 :=
   X.stasheff n deg x
 
 end AInfinityAlgebra
