@@ -192,7 +192,26 @@ def stasheffSummand
   else
     0
 
-/-- The full Stasheff sum in arity `n`. -/
+/-- The sign parity for the `(r,s)` Stasheff term:
+    `sign(deg(r+s)) + ⋯ + sign(deg(n-1)) - (n-r-s)` in `ZMod 2`.
+    This computes the parity of `|a_{r+s+1}| + ⋯ + |a_n| - t` where `t = n - r - s`. -/
+def stasheffSignParity
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n) : Parity :=
+  (∑ i : Fin (n - r - s), Grading.sign (deg ⟨r + s + i.val, by omega⟩)) -
+    ((n - r - s : ℕ) : Parity)
+/-- The sign `(-1)^(|a_{r+s+1}| + ⋯ + |a_n| - t)` as an integer,
+    defaulting to `1` for invalid indices. -/
+
+def stasheffSign
+    (deg : Fin n → β)
+    (r s : ℕ) : ℤ :=
+  if h : r + s ≤ n then
+    (-1) ^ (stasheffSignParity deg r s h).val
+  else
+    1
+/-- The full Stasheff sum in arity `n`, with Koszul signs. -/
 def stasheffSum
   (X : AInfinityAlgData (β := β) R A)
   (n : ℕ)
@@ -201,7 +220,7 @@ def stasheffSum
   A (stasheffTargetDeg deg) :=
   ∑ r ∈ Finset.range (n + 1),
     ∑ s ∈ Finset.Ico 1 (n - r + 1),
-      X.stasheffSummand n deg x r s
+      (stasheffSign deg r s) • (X.stasheffSummand n deg x r s)
 
 /-- The Stasheff identities as a property of the raw A∞ data. -/
 def satisfiesStasheff
@@ -233,6 +252,44 @@ lemma stasheffSummand_eq_zero
   (h : ¬ validStasheffIndices n r s) :
   X.stasheffSummand n deg x r s = 0 := by
   unfold AInfinityAlgData.stasheffSummand; aesop
+
+--some helper lemmas
+lemma stasheffTerm_zero_of_inner_zero
+    (X : AInfinityAlgData (β := β) R A)
+    (n : ℕ) (deg : Fin n → β) (x : ∀ i, A (deg i))
+    (r s : ℕ) (hs : 1 ≤ s) (hr : r + s ≤ n)
+    (hm : X.m s (stasheffDegIn deg r s hr) = 0) :
+    X.stasheffTerm n deg x r s hs hr = 0 := by
+  -- Since the inner multilinear map is zero, the entire inner value is zero.
+  have h_inner_zero : X.m s (stasheffDegIn deg r s hr) (fun i => x ⟨r + i.val, by omega⟩) = 0 := by
+    aesop;
+  simp +decide [ h_inner_zero, AInfinityAlgData.stasheffTerm ];
+  have h_xOut_zero : ∀ (f : ∀ i : Fin (n + 1 - s), A (stasheffDegOut deg r s hr i)), f ⟨r, by omega⟩ = 0 → X.m (n + 1 - s) (stasheffDegOut deg r s hr) f = 0 := by
+    intro f hf_zero
+    have h_xOut_zero : X.m (n + 1 - s) (stasheffDegOut deg r s hr) f = 0 := by
+      convert MultilinearMap.map_coord_zero _ _ hf_zero
+    exact h_xOut_zero;
+  grind +locals
+lemma stasheffTerm_zero_of_outer_zero
+    (X : AInfinityAlgData (β := β) R A)
+    (n : ℕ) (deg : Fin n → β) (x : ∀ i, A (deg i))
+    (r s : ℕ) (hs : 1 ≤ s) (hr : r + s ≤ n)
+    (hm : X.m (n + 1 - s) (stasheffDegOut deg r s hr) = 0) :
+    X.stasheffTerm n deg x r s hs hr = 0 := by
+  unfold AInfinityAlgData.stasheffTerm;
+  -- Since the outer multilinear map is zero, applying it to any input gives zero.
+  have h_outer_zero_apply : ∀ xOut : ∀ i : Fin (n + 1 - s), A (stasheffDegOut deg r s hr i), X.m (n + 1 - s) (stasheffDegOut deg r s hr) xOut = 0 := by
+    aesop;
+  grind
+lemma stasheffSummand_zero_of_inner_or_outer_zero
+    (X : AInfinityAlgData (β := β) R A)
+    (n : ℕ) (deg : Fin n → β) (x : ∀ i, A (deg i))
+    (r s : ℕ)
+    (h : ∀ (hs : 1 ≤ s) (hr : r + s ≤ n),
+          X.m s (stasheffDegIn deg r s hr) = 0 ∨
+          X.m (n + 1 - s) (stasheffDegOut deg r s hr) = 0) :
+    X.stasheffSummand n deg x r s = 0 := by
+  grind +suggestions
 
 end AInfinityAlgData
 
