@@ -1,2 +1,3 @@
 import Ainfinity.Grading
-import Ainfinity.HomogeneousChain
+import Ainfinity.AInfinityAlgebra
+import Ainfinity.AInfinityMorphism

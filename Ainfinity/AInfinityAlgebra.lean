@@ -102,7 +102,7 @@ lemma stasheffDegOut_sum_core
       · rw [ show ( Finset.univ : Finset ( Fin n ) ) = Finset.image ( fun i : Fin r => ⟨ i, by linarith [ Fin.is_lt i ] ⟩ ) Finset.univ ∪ Finset.image ( fun i : Fin s => ⟨ r + i, by linarith [ Fin.is_lt i ] ⟩ ) Finset.univ ∪ Finset.image ( fun i : Fin ( n - r - s ) => ⟨ r + s + i, by omega ⟩ ) Finset.univ from ?_, Finset.sum_union, Finset.sum_union ];
         · rw [ Finset.sum_image, Finset.sum_image, Finset.sum_image ] <;> norm_num;
           · unfold stasheffInnerDeg;
-            unfold stasheffDegIn; ring;
+            unfold stasheffDegIn; ring_nf;
             grind;
           · exact fun i j h => by simpa [ Fin.ext_iff ] using h;
           · exact fun i j h => by simpa [ Fin.ext_iff ] using h;
