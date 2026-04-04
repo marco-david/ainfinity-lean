@@ -1,7 +1,11 @@
-import Mathlib
+module
 
-import Ainfinity.Grading
-import Ainfinity.HomogeneousChain
+public import Mathlib
+
+public import Ainfinity.Grading
+public import Ainfinity.HomogeneousChain
+
+@[expose] public section
 
 /- open ChainComplex CategoryTheory DirectSum GradedMonoid GradedObject -/
 
@@ -29,9 +33,10 @@ Jasper: 1+2
 Marco: 3+4
 -/
 
+universe u v w
 
 -- Its type is Type (max u v (w+1))
-class AInfinityCategoryStruct.{u, v, w} (β : Type u) [GradingCore β] (obj : Type v) extends GQuiver.{u, v, w} β obj where
+class AInfinityCategoryStruct (β : Type u) [GradingCore β] (obj : Type v) extends GQuiver.{u, v, w} β obj where
   /-- All possible compositions of chains of morphisms. -/
   mu {X Y : obj} (chain : HomogeneousChain X Y): (toGQuiver.data X Y) (correct_output_deg chain)
 
@@ -54,7 +59,7 @@ Use only as much structure as your use case requires.
 -/
 
 @[pp_with_univ, stacks 0014]
-class AInfinityPreadditive.{u,v,w} (β : Type u) [GradingCore β] (obj : Type v) extends AInfinityCategoryStruct.{u,v,w} β obj where
+class AInfinityPreadditive (β : Type u) [GradingCore β] (obj : Type v) extends AInfinityCategoryStruct.{u,v,w} β obj where
   hom_is_monoid: ∀ (X Y : obj) (b : β), AddCommMonoid ((toGQuiver.data X Y) b)
 
 def addcommmonoid_to_zero {G : Type u} (s : AddCommMonoid G) : Zero.{u} G where
@@ -64,7 +69,7 @@ def addcommmonoid_to_zero {G : Type u} (s : AddCommMonoid G) : Zero.{u} G where
 def toInhomQuiver {β : Type u} [GradingCore β] {obj : Type v} (C : AInfinityPreadditive.{u, v, w} β obj) : Quiver obj where
   Hom X Y := @DFinsupp β (C.data X Y) (fun i ↦ addcommmonoid_to_zero (C.hom_is_monoid X Y i))
 
-abbrev InhomogeneousChain.{u, v, w} {β : Type u} [GradingCore β] {obj : Type v} {C : AInfinityPreadditive.{u, v, w} β obj} (X : obj) (Y : obj) :=
+abbrev InhomogeneousChain {β : Type u} [GradingCore β] {obj : Type v} {C : AInfinityPreadditive.{u, v, w} β obj} (X : obj) (Y : obj) :=
   @Quiver.Path obj (toInhomQuiver C) X Y
 
 -- Convenience: the inhomogeneous Hom type at (X,Y)
