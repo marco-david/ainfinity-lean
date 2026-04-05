@@ -1,9 +1,12 @@
 module
+
 public import Mathlib
 
 @[expose] public section
 
 open CategoryTheory
+
+namespace AInfinityCategoryTheory
 
 universe v u
 variable {R : Type u} [CommRing R] [DecidableEq R] (C : Type u) [Category C]
@@ -112,12 +115,12 @@ instance : Preadditive (KLRWCategory n R) where
   homGroup P Q := inferInstanceAs (AddCommGroup (StrandSpace R))
   add_comp := by
     intro P Q S f f' g
-    letI := inferInstanceAs (AddCommMonoid (StrandSpace R))
+    letI : AddCommMonoid (StrandSpace R) := inferInstance
     exact DFinsupp.sum_add_index (fun k => sum_inner_zero g k)
       (fun k a b => sum_inner_add g k a b)
   comp_add := by
     intro P Q S f g g'
-    letI := inferInstanceAs (AddCommMonoid (StrandSpace R))
+    letI : AddCommMonoid (StrandSpace R) := inferInstance
     suffices h : (f : StrandSpace R).sum (fun i r =>
         (g + g' : StrandSpace R).sum (fun j s => (r * s) • StrandSpace.dots R (i + j + 0))) =
       (f : StrandSpace R).sum (fun i r =>
@@ -136,3 +139,5 @@ abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Typ
 
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   CochainComplex (AddKLRWCategory n R) ℤ
+
+end AInfinityCategoryTheory

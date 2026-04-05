@@ -1,4 +1,3 @@
-module
-
-public import Ainfinity.Grading
-public import Ainfinity.HomogeneousChain
+import AInfinity.Grading
+import AInfinity.AInfinityAlgebra
+import AInfinity.KLRW
