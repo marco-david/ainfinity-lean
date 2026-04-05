@@ -150,6 +150,8 @@ private noncomputable def toMat_ofMat_iso (M' : Mat_ C) :
   hom_inv_id := by
     -- Artistotle had proved this but the proof was causing performance issues so it needs to be
     -- replaced with a better proof
+    ext i j
+    simp_all
     sorry
   inv_hom_id := by
     -- Cleaned up Aristotle proof
@@ -199,15 +201,16 @@ But I think this could work as a simp lemma, I'm just not sure if it would cause
 -/
 theorem apply_X_ofList_singleton {A : C} (i : (CMat_.ofList [A]).ι) :
     (CMat_.ofList [A]).X i = A := by
-  -- Aristotle proof
-  simp only [X, List.length_cons, List.length_nil, Nat.reduceAdd, ι.toFin];
-  unfold CMat_.ι at i;
-  fin_cases i ; rfl
+  -- Cleaned-up Aristotle proof
+  simp only [X, List.length_cons, List.length_nil, Nat.reduceAdd, ι.toFin]
+  unfold CMat_.ι at i
+  fin_cases i
+  rfl
 
 unseal ι in
 theorem ofList_singleton_card {A : C} : Fintype.card (CMat_.ofList [A]).ι = 1 := by
-  -- Aristotle proof
-  simp [CMat_.ι] at *
+  -- Cleaned-up Aristotle proof
+  simp [CMat_.ι]
 
 -- Aristotle proof
 unseal ι in
