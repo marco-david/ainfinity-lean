@@ -1,5 +1,5 @@
 name = "ainfinity"
-defaultTargets = ["Ainfinity"]
+defaultTargets = ["AInfinity"]
 
 [leanOptions]
 pp.unicode.fun = true
@@ -13,4 +13,4 @@ name = "mathlib"
 scope = "leanprover-community"
 
 [[lean_lib]]
-name = "Ainfinity"
+name = "AInfinity"
