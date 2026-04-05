@@ -1,7 +1,10 @@
-import Mathlib
+module
+
+public import Mathlib
+
+@[expose] public section
 
 open ChainComplex CategoryTheory DirectSum GradedMonoid GradedObject
-
 
 namespace AInfinityCategoryTheory
 
