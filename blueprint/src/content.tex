@@ -10,3 +10,32 @@
 
 This project formalizes the definition of \Ainf{}-categories and constructs an
 \Ainf{}-endofunctor on a variant of the KLRW category, which acts as a braid group invariant.
+
+\chapter{\Ainf{}-algebras}
+
+\section{Overview}
+
+We define an \Ainf{}-algebra, which can be thought of as an \Ainf{}-category with a single element.
+This will later be generalized with the definition of an \Ainf{}-category.
+
+\section{Gradings}
+
+\begin{definition}\label{GradingIndex}
+  A \emph{grading index} is an abelian group $(\beta,0,+)$ equipped with additive group
+  homomorphisms $\phi : \mathbb{Z} \to \beta$ and $\sigma : \beta \to \mathbb{Z}/2\mathbb{Z}$ such
+  that $\sigma \circ \phi$ is the canonical projection $\pi : \mathbb{Z} \to \mathbb{Z}/2\mathbb{Z}$.
+
+\end{definition}
+
+\begin{definition}[Mathlib]\label{GradedObject}
+  Let $\mathcal C$ be a category and $\beta$ a type (not necessarily a grading index).
+  Then a \emph{$\beta$-graded object in $\mathcal C$} is a function $X : \beta \to \mathcal C$.
+  The collection of $\beta$-graded objects in $\mathcal C$ forms a category $\mathrm{Gr}_\beta(\mathcal C)$.
+
+\end{definition}
+
+\begin{definition}\label{GradedModule}
+
+  Given a grading index $\beta$ and a commutative ring $R$, a \emph{graded $R$-module} is a
+  $\beta$-graded object in the category $R\text{-}\mathrm{Mod}$.
+\end{definition}
