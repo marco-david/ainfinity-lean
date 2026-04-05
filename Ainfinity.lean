@@ -1,2 +1,3 @@
-import Ainfinity.Grading
-import Ainfinity.HomogeneousChain
+import AInfinity.Grading
+import AInfinity.AInfinityAlgebra
+import AInfinity.KLRW
