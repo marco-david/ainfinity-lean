@@ -109,10 +109,8 @@ instance : (toMat_ C).Faithful where
   map_injective {M N} f g := by aesop
 
 instance : (toMat_ C).Full where
-  map_surjective {M N} f' := by
-  -- Aristotle proof
-    constructor;
-    convert rfl
+  -- Cleaned-up Aristotle proof
+  map_surjective {M N} f' := by constructor; rfl
 
 -- Aristotle generated definition
 /-- Given a Mat_ object M', construct the corresponding CMat_ object. -/
@@ -130,45 +128,38 @@ private noncomputable def ofMat_equiv (M' : Mat_ C) :
     (ofMat_ M').ι ≃ M'.ι :=
   (ofMat_equiv_fin M').trans (Fintype.equivFin M'.ι).symm
 
--- Aristotle generated theorem
+-- Cleaned-up Aristotle generated theorem
 omit [Category C] [Preadditive C] in
 private theorem ofMat_X_equiv (M' : Mat_ C) (i : (ofMat_ M').ι) :
     (ofMat_ M').X i = M'.X (ofMat_equiv M' i) := by
-  unfold CMat_.X; simp +decide only [Fin.getElem_fin];
-  unfold ofMat_ at *; simp_all +decide only [List.getElem_ofFn, Function.comp_apply] ;
-  congr! 1
+  simp only [CMat_.X, Fin.getElem_fin, ofMat_, List.getElem_ofFn, Function.comp_apply]
+  rfl
 
--- Aristotle generated theorem
+-- Cleaned-up Aristotle generated theorem
 omit [Category C] [Preadditive C] in
 private theorem ofMat_X_equiv' (M' : Mat_ C) (i : (ofMat_ M').ι) (j : M'.ι)
     (h : ofMat_equiv M' i = j) :
-    (ofMat_ M').X i = M'.X j := by
-  subst h; exact ofMat_X_equiv M' i
+    (ofMat_ M').X i = M'.X j := by subst h; exact ofMat_X_equiv M' i
 
 -- Artitotle generated definition
 open Classical in
 private noncomputable def toMat_ofMat_iso (M' : Mat_ C) :
     (toMat_ C).obj (ofMat_ M') ≅ M' where
-  hom := fun i j =>
-    if h : ofMat_equiv M' i = j
-      then eqToHom (ofMat_X_equiv' M' i j h)
-      else 0
-  inv := fun j i =>
-    if h : ofMat_equiv M' i = j
-      then eqToHom (ofMat_X_equiv' M' i j h).symm
-      else 0
+  hom := fun i j ↦ if h : ofMat_equiv M' i = j then eqToHom (ofMat_X_equiv' M' i j h) else 0
+  inv := fun j i ↦ if h : ofMat_equiv M' i = j then eqToHom (ofMat_X_equiv' M' i j h).symm else 0
   hom_inv_id := by
     -- Artistotle had proved this but the proof was causing performance issues so it needs to be
     -- replaced with a better proof
     sorry
   inv_hom_id := by
+    -- Cleaned up Aristotle proof
     ext j k
-    simp only [CategoryStruct.comp] at *;
-    convert Finset.sum_eq_single ( ( ofMat_equiv M' ).symm j ) _ _ using 1 <;>
-      simp +decide only [Equiv.apply_symm_apply, ↓reduceDIte, Preadditive.IsIso.comp_left_eq_zero,
-        dite_eq_right_iff]
-    · split_ifs with h <;> simp +decide [ h ]
-      rw [ eq_comm ] at h ; induction h ; simp +decide [ eqToHom_refl ]
+    rw [CategoryStruct.comp]
+    convert Finset.sum_eq_single ((ofMat_equiv M').symm j) _ _ <;>
+      simp only [Equiv.apply_symm_apply, ↓reduceDIte]
+    · split_ifs with h
+      · rw [eq_comm] at h; induction h; simp [eqToHom_refl]
+      · simp [h]
     · intro b hb
       split_ifs with h1 h2
       · intro hab
@@ -229,27 +220,17 @@ def embedding : C ⥤ CMat_ C where
   obj X := CMat_.ofList [X]
   map {A B} f i j := cast (by simp [apply_X_ofList_singleton]) f
   map_id f := by
-    -- Aristotle proof
+    -- Cleaned-up Aristotle proof
     ext i j
-    generalize_proofs at *;
-    generalize_proofs at *; simp_all +decide only [id_apply, Subsingleton.elim i j, ↓reduceDIte] ;
-    simp +decide only [eqToHom, eq_mpr_eq_cast];
-    congr! 1
-    generalize_proofs at *; -- This should close the goal. If not, it means there's a mistake in the
-    -- previous steps. In that case, you need to put in more proof steps.;
-    -- all_goals generalize_proofs at *; simp_all +decide [ id_apply, Subsingleton.elim i j ] ;
-    congr! 1
-    generalize_proofs at *; -- This should close the goal. If not, it means there's a mistake in the
-    -- previous steps. In that case, you need to put in more proof steps;
-    (generalize_proofs at *; simp_all +decide only [Subsingleton.elim i j] ;);
-    exact Eq.symm (apply_X_ofList_singleton C j)
+    simp only [id_apply, Subsingleton.elim i j, ↓reduceDIte, eqToHom, eq_mpr_eq_cast]
+    congr! 2
+    exact (apply_X_ofList_singleton C j).symm
   map_comp f g := by
-    -- Aristotle proof
-    ext i j; simp +decide only [comp_apply, Finset.univ_unique, Finset.sum_singleton] ;
+    -- Cleaned-up Aristotle proof
+    ext i j
+    simp only [comp_apply, Finset.univ_unique]
     unfold CMat_.X at *
-    generalize_proofs at *;
-    generalize_proofs at *;
-    grind +ring
+    grind
 
 @[simp]
 theorem ofList_singleton {A : C} : CMat_.ofList [A] = (embedding C).obj A := rfl
@@ -270,40 +251,39 @@ def fullyFaithful : (embedding C).FullyFaithful where
     -- The default here means 0, and it comes from the `Unique` instance above.
     cast (by simp [X_embedding]) (f' default default)
   map_preimage {A B} f' := by
-    -- Aristotle proof
-    unfold embedding;
-    ext i j; simp only [ofList_singleton, cast_cast];
-    exact Eq.symm ( by rw [ show i = default from Subsingleton.elim _ _, show j = default from
-      Subsingleton.elim _ _ ] ; rfl )
+    -- Cleaned-up Aristotle proof
+    unfold embedding
+    ext i j
+    simp only [cast_cast]
+    rw [Subsingleton.elim i default, Subsingleton.elim j default]
+    rfl
   preimage_map {A B} f := by
-    -- Aristotle proof
-    generalize_proofs at *;
+    -- Cleaned-up Aristotle proof
+    generalize_proofs
     convert cast_cast _ _ _;
-    grind +ring
+    grind
 
 instance : (embedding C).Faithful := (fullyFaithful C).faithful
 instance : (embedding C).Full := (fullyFaithful C).full
 
 instance : Functor.Additive (embedding C) where
   map_add {M N f g} := by
-    -- Aristotle proof
-    ext i j; simp +decide only [add_apply] ;
-    convert congr_arg ( fun x : M ⟶ N => x ) rfl using 1;
-    rotate_right;
-    · exact f + g;
-    · exact congr_arg₂ _ ( X_embedding C i ) ( X_embedding C j );
-    · (expose_names; exact HEq.symm (heq_of_eqRec_eq (id (Eq.symm e_1)) rfl));
-    · congr! 1;
-      · congr! 1;
-        congr! 1;
-        congr! 1;
-        congr! 1;
-        congr! 1;
-        congr! 1;
-        · exact X_embedding C i;
-        · exact X_embedding C j;
-      · unfold embedding; aesop;
-      · unfold embedding; aesop;
+    -- Cleaned-up Aristotle proof
+    ext i j
+    convert congr_arg (fun x : M ⟶ N ↦ x) rfl using 1
+    rotate_right
+    · exact f + g
+    · exact congr_arg₂ _ (X_embedding C i) (X_embedding C j)
+    · rename_i h
+      exact HEq.symm (heq_of_eqRec_eq h.symm rfl)
+    · unfold embedding
+      simp only [add_apply]
+      congr! 1
+      · congr!
+        · exact X_embedding C i
+        · exact X_embedding C j
+      · aesop
+      · aesop
 
 end Embedding
 
@@ -332,21 +312,18 @@ instance : Linear R (CMat_ C) where
   homModule M N := inferInstanceAs <| Module R
     (DMatrix M.ι N.ι fun i j => M.X i ⟶ N.X j)
   smul_comp := by
-    -- Aristotle proof
-    intros X Y Z r f g
+    -- Cleaned-up Aristotle proof
+    intros
     ext i j
-    simp only [comp_apply];
-    convert Finset.smul_sum.symm using 2;
-    -- Apply the linearity of the composition in the first argument.
+    rw [comp_apply]
+    convert Finset.smul_sum.symm
     apply Linear.smul_comp
   comp_smul := by
-    -- Aristotle proof
-    intro X Y Z f r g
+    -- Cleaned-up Aristotle proof
+    intros
     ext i j
-    simp only [comp_apply] at *;
-    convert Finset.smul_sum.symm using 2
-    generalize_proofs at *; -- This should close the goal. If not, it means there's a mistake in the
-    -- previous steps. In that case, you need to put in more proof steps.;
+    rw [comp_apply]
+    convert Finset.smul_sum.symm
     apply Linear.comp_smul
 
 end linear
