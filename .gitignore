@@ -1,3 +1,4 @@
 /.lake
 /build/
 .DS_Store
+.venv/
