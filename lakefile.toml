@@ -7,8 +7,6 @@ pp.unicode.fun = true
 autoImplicit = false
 relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
-weak.linter.docBlame = false # disables linter for missing docstrings above declarations
-weak.linter.unusedArguments = false # disables linter for unused arguments - remove later?
 maxSynthPendingDepth = 3
 
 [[require]]
