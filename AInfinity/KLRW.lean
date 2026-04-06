@@ -1,6 +1,7 @@
 module
 
 public import Mathlib
+import AInfinity.AdditiveCompletion
 
 @[expose] public section
 
@@ -135,7 +136,7 @@ instance : Preadditive (KLRWCategory n R) where
     simp only [DFinsupp.sum, Finset.sum_add_distrib]
 
 abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
-  Mat_ (KLRWCategory n R)
+  CMat_ (KLRWCategory n R)
 
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   CochainComplex (AddKLRWCategory n R) ℤ
