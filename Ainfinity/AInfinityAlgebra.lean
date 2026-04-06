@@ -7,7 +7,7 @@ noncomputable section
 
 namespace AInfinityAlgebraTheory
 
-universe u v
+universe u v w
 variable {β : Type v} [Grading β]
 
 abbrev GradedRModule (R : Type u) [CommRing R] :=
@@ -18,29 +18,76 @@ abbrev operationTargetDeg
     (deg : Fin n → β) : β :=
   (∑ i, deg i) + shift_ofInt (2 - (n : ℤ))
 
+
+
+-- ============================================================
+-- Layer 1: just Obj and Hom
+-- ============================================================
+
+structure AInfinityCategoryData (R : Type u) [CommRing R] where
+  Obj : Type w
+  Hom : Obj → Obj → GradedRModule (β := β) (R := R)
+
+-- ============================================================
+-- Layer 2: Chain
+-- ============================================================
+
+namespace AInfinityCategoryData
+
+variable {R : Type u} [CommRing R]
+
+structure Chain (C : AInfinityCategoryData (β := β) R) where
+  n   : ℕ+
+  obj : Fin (n + 1) → C.Obj
+  deg : Fin n → β
+
+namespace Chain
+
+variable {C : AInfinityCategoryData (β := β) R}
+
+def source (ch : C.Chain) : C.Obj := ch.obj 0
+
+def target (ch : C.Chain) : C.Obj := ch.obj (Fin.last ch.n)
+
+def operationTarget (ch : C.Chain) : ModuleCat R :=
+  C.Hom ch.source ch.target (operationTargetDeg ch.deg)
+
+def link (ch : C.Chain) (i : Fin ch.n) : ModuleCat R :=
+  C.Hom (ch.obj (Fin.castSucc i)) (ch.obj ((Fin.castSucc i) + 1)) (ch.deg i)
+
+end Chain
+
+end AInfinityCategoryData
+
+-- ============================================================
+-- Layer 3: AInfinityCategory with m
+-- ============================================================
+
+structure AInfinityPreCategory (R : Type u) [CommRing R]
+    extends AInfinityCategoryData (β := β) R where
+  m : (ch : toAInfinityCategoryData.Chain) →
+      MultilinearMap R
+        (fun i : Fin ch.n => ch.link i)
+        ch.operationTarget
+
+
+
+
+
+namespace AInfinityPreCategory
+
+variable {R : Type u} [CommRing R]
+
+section Internal
+
+abbrev validStasheffIndices (n r s : ℕ) : Prop :=
+  1 ≤ s ∧ r + s ≤ n
+
 /-- Target degree of the arity-`n` Stasheff relation. -/
 abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
   (∑ i, deg i) + shift_ofInt (3 - (n : ℤ))
 
-structure AInfinityAlgData (R : Type u) [CommRing R] (A : GradedRModule (β := β) (R := R)) where
-  m :
-    (n : ℕ) →
-    (deg : Fin n → β) →
-    MultilinearMap R (fun i => A (deg i))
-      (A (operationTargetDeg deg))
-
-namespace AInfinityAlgData
-
-variable {R : Type u} [CommRing R]
-variable {A : GradedRModule (β := β) (R := R)}
-
-section Internal
-
-/-! Internal combinatorics for the Stasheff relation. -/
-
-abbrev validStasheffIndices (n r s : ℕ) : Prop :=
-  1 ≤ s ∧ r + s ≤ n
 
 /-- Helper: degree function for the inner portion of the Stasheff composition. -/
 def stasheffDegIn
@@ -146,174 +193,103 @@ lemma stasheffDegOut_sum
 
 end Internal
 
-
 /-- The `(r,s)` summand in the arity-`n` Stasheff relation. -/
 def stasheffTerm
-  (X : AInfinityAlgData R A)
-  (n : ℕ)
-  (deg : Fin n → β)
-  (x : ∀ i, A (deg i))
+  {β : Type v} [Grading β]
+  {R : Type u} [CommRing R]
+  (X : AInfinityPreCategory (β := β) R)
+  (ch : X.Chain)
+  (x : ∀ i : Fin ch.n, ch.link i)
   (r s : ℕ)
   (hs : 1 ≤ s)
-  (hr : r + s ≤ n) :
-  A (stasheffTargetDeg deg) :=
+  (hr : r + s ≤ ch.n) :
+  X.Hom ch.source ch.target (stasheffTargetDeg ch.deg):=
 by
-  let degIn := stasheffDegIn deg r s hr
-  let xIn : ∀ i : Fin s, A (degIn i) := fun i => x ⟨r + i.val, by omega⟩
-  let inner := X.m s degIn xIn
-  let outerN := n + 1 - s
-  let degOut := stasheffDegOut deg r s hr
-  let xOut : ∀ i : Fin outerN, A (degOut i) := by
-    intro i
-    by_cases hlt : i.val < r
-    · simpa [degOut, stasheffDegOut, hlt] using x ⟨i.val, by omega⟩
-    · by_cases heq : i.val = r
-      · simpa [degOut, stasheffDegOut, hlt, heq] using inner
-      · simpa [degOut, stasheffDegOut, hlt, heq] using x ⟨i.val + s - 1, by omega⟩
-  let outer := X.m outerN degOut xOut
-  have hdeg : operationTargetDeg degOut = stasheffTargetDeg deg := by
-    exact stasheffDegOut_sum deg r s hr
+  let degIn := stasheffDegIn ch.deg r s hr
+  let objIn : Fin (s+1) → X.Obj := fun i => ch.obj ⟨r + i.val, by omega⟩
+  let innerch : X.Chain := ⟨⟨s, hs⟩, objIn, degIn⟩
+
+
+
+  have test (i : Fin innerch.n) : r + i.val < ch.n := by
+    exact Nat.lt_of_lt_of_le (Nat.add_lt_add_left i.isLt r) hr
+  have test2 (i : Fin innerch.n) : innerch.link i = ch.link ⟨r + i.val, test i⟩ := by
+    unfold AInfinityCategoryData.Chain.link;
+    simp +zetaDelta at *;
+    congr!;
+    norm_num [ Fin.val_add ];
+    rw [ Nat.mod_eq_of_lt ( by linarith [ Fin.is_lt i, show ( i : ℕ ) < s from i.2 ] ) ]
+    ring_nf
+    sorry
+
+
+
+
+
+  let xIn : ∀ i : Fin innerch.n, innerch.link i := fun i => by
+    rw [test2 i]
+    exact x ⟨r + i.val, test i⟩
+
+  let inner := X.m innerch xIn
+  let outerN := ch.n + 1 - s
+  let degOut := stasheffDegOut ch.deg r s hr
+
+  let objOut : Fin (outerN+1) → X.Obj := fun i =>
+    if h1 : i.val ≤ r then
+      ch.obj ⟨i.val, by omega⟩
+    else if _ : i.val = r+1 then
+      ch.obj ⟨r+s, by omega⟩
+    else
+      ch.obj ⟨i.val + s - 1, by omega⟩
+
+  let outerch : X.Chain := ⟨⟨outerN, by omega⟩, objOut, degOut⟩
+
+
+  have xOut_link_lt (i : Fin outerN) (h1 : i.val < r) :
+      outerch.link i = ch.link ⟨i.val, by omega⟩ := by
+        sorry
+
+
+  have xOut_link_eq (i : Fin outerN) (h2 : i.val = r) :
+      outerch.link i = innerch.operationTarget := by
+        simp +zetaDelta at *;
+        unfold AInfinityCategoryData.Chain.link AInfinityCategoryData.Chain.operationTarget;
+        all_goals norm_num [ h2, operationTargetDeg, stasheffInnerDeg, stasheffDegOut ];
+        all_goals norm_cast
+  have xOut_link_gt (i : Fin outerN) (h1 : ¬ i.val < r) (h2 : ¬ i.val = r) :
+      outerch.link i = ch.link ⟨i.val + s - 1, by omega⟩ := by
+        simp +decide [ AInfinityCategoryData.Chain.link ];
+        congr! 1;
+        all_goals norm_num [ outerch, objOut, degOut ];
+        any_goals split_ifs ; omega;
+        any_goals congr! 1;
+        all_goals norm_num [ Fin.ext_iff, Fin.val_add ] at *;
+        any_goals rw [ Nat.sub_add_cancel ( by linarith ) ] ; rw [ Nat.mod_eq_of_lt ] ; omega;
+        any_goals rw [ stasheffDegOut ] ; simp +decide [*];
+        omega
+
+  /-
+  xOut i
+  if i < r: return x i
+  if i = r: return inner
+  if i > r return x (i + s -1)
+   -/
+  let xOut : ∀ i : Fin outerN, outerch.link i := fun i => by
+    by_cases h1 : i.val < r
+    · exact (xOut_link_lt i h1) ▸ x ⟨i.val, by omega⟩
+    · by_cases h2 : i.val = r
+      · exact (xOut_link_eq i h2) ▸ inner
+      · exact (xOut_link_gt i h1 h2) ▸ x ⟨i.val + s - 1, by omega⟩
+
+  let outer := X.m outerch xOut
+  have hdeg : outerch.operationTarget = X.Hom ch.source ch.target (stasheffTargetDeg ch.deg) := by
+    convert congr_arg _ ( stasheffDegOut_sum ch.deg r s hr ) using 1;
+    congr! 1;
+    simp +decide [ AInfinityCategoryData.Chain.target ];
+    simp +decide [ outerch, Fin.last ];
+    grind
   exact hdeg ▸ outer
 
-
-/--
-A single summand in the Stasheff sum, returning `0` when the indices are invalid.
-This is the object that appears inside the double finite sum.
--/
-def stasheffSummand
-  (X : AInfinityAlgData (β := β) R A)
-  (n : ℕ)
-  (deg : Fin n → β)
-  (x : ∀ i, A (deg i))
-  (r s : ℕ) :
-  A (stasheffTargetDeg deg) :=
-  if h : validStasheffIndices n r s then
-    X.stasheffTerm n deg x r s h.1 h.2
-  else
-    0
-
-/-- The sign parity for the `(r,s)` Stasheff term:
-    `sign(deg(r+s)) + ⋯ + sign(deg(n-1)) - (n-r-s)` in `ZMod 2`.
-    This computes the parity of `|a_{r+s+1}| + ⋯ + |a_n| - t` where `t = n - r - s`. -/
-def stasheffSignParity
-    (deg : Fin n → β)
-    (r s : ℕ)
-    (hr : r + s ≤ n) : Parity :=
-  (∑ i : Fin (n - r - s), Grading.sign (deg ⟨r + s + i.val, by omega⟩)) -
-    ((n - r - s : ℕ) : Parity)
-/-- The sign `(-1)^(|a_{r+s+1}| + ⋯ + |a_n| - t)` as an integer,
-    defaulting to `1` for invalid indices. -/
-
-def stasheffSign
-    (deg : Fin n → β)
-    (r s : ℕ) : ℤ :=
-  if h : r + s ≤ n then
-    (-1) ^ (stasheffSignParity deg r s h).val
-  else
-    1
-/-- The full Stasheff sum in arity `n`, with Koszul signs. -/
-def stasheffSum
-  (X : AInfinityAlgData (β := β) R A)
-  (n : ℕ)
-  (deg : Fin n → β)
-  (x : ∀ i, A (deg i)) :
-  A (stasheffTargetDeg deg) :=
-  ∑ r ∈ Finset.range (n + 1),
-    ∑ s ∈ Finset.Ico 1 (n - r + 1),
-      (stasheffSign deg r s) • (X.stasheffSummand n deg x r s)
-
-/-- The Stasheff identities as a property of the raw A∞ data. -/
-def satisfiesStasheff
-  (X : AInfinityAlgData (β := β) R A) : Prop :=
-  ∀ (n : ℕ) (deg : Fin n → β) (x : ∀ i, A (deg i)),
-    X.stasheffSum n deg x = 0
-
-/-- If the indices are valid, the summand is exactly the corresponding term. -/
-lemma stasheffSummand_eq_term
-  (X : AInfinityAlgData (β := β) R A)
-  (n : ℕ)
-  (deg : Fin n → β)
-  (x : ∀ i, A (deg i))
-  (r s : ℕ)
-  (h : validStasheffIndices n r s) :
-  X.stasheffSummand n deg x r s
-    = X.stasheffTerm n deg x r s h.1 h.2 := by
-
-  unfold stasheffSummand; aesop
-
-
-/-- If the indices are invalid, the summand vanishes. -/
-lemma stasheffSummand_eq_zero
-  (X : AInfinityAlgData (β := β) R A)
-  (n : ℕ)
-  (deg : Fin n → β)
-  (x : ∀ i, A (deg i))
-  (r s : ℕ)
-  (h : ¬ validStasheffIndices n r s) :
-  X.stasheffSummand n deg x r s = 0 := by
-  unfold AInfinityAlgData.stasheffSummand; aesop
-
---some helper lemmas
-lemma stasheffTerm_zero_of_inner_zero
-    (X : AInfinityAlgData (β := β) R A)
-    (n : ℕ) (deg : Fin n → β) (x : ∀ i, A (deg i))
-    (r s : ℕ) (hs : 1 ≤ s) (hr : r + s ≤ n)
-    (hm : X.m s (stasheffDegIn deg r s hr) = 0) :
-    X.stasheffTerm n deg x r s hs hr = 0 := by
-  -- Since the inner multilinear map is zero, the entire inner value is zero.
-  have h_inner_zero : X.m s (stasheffDegIn deg r s hr) (fun i => x ⟨r + i.val, by omega⟩) = 0 := by
-    aesop;
-  simp +decide [ h_inner_zero, AInfinityAlgData.stasheffTerm ];
-  have h_xOut_zero : ∀ (f : ∀ i : Fin (n + 1 - s), A (stasheffDegOut deg r s hr i)), f ⟨r, by omega⟩ = 0 → X.m (n + 1 - s) (stasheffDegOut deg r s hr) f = 0 := by
-    intro f hf_zero
-    have h_xOut_zero : X.m (n + 1 - s) (stasheffDegOut deg r s hr) f = 0 := by
-      convert MultilinearMap.map_coord_zero _ _ hf_zero
-    exact h_xOut_zero;
-  grind +locals
-lemma stasheffTerm_zero_of_outer_zero
-    (X : AInfinityAlgData (β := β) R A)
-    (n : ℕ) (deg : Fin n → β) (x : ∀ i, A (deg i))
-    (r s : ℕ) (hs : 1 ≤ s) (hr : r + s ≤ n)
-    (hm : X.m (n + 1 - s) (stasheffDegOut deg r s hr) = 0) :
-    X.stasheffTerm n deg x r s hs hr = 0 := by
-  unfold AInfinityAlgData.stasheffTerm;
-  -- Since the outer multilinear map is zero, applying it to any input gives zero.
-  have h_outer_zero_apply : ∀ xOut : ∀ i : Fin (n + 1 - s), A (stasheffDegOut deg r s hr i), X.m (n + 1 - s) (stasheffDegOut deg r s hr) xOut = 0 := by
-    aesop;
-  grind
-lemma stasheffSummand_zero_of_inner_or_outer_zero
-    (X : AInfinityAlgData (β := β) R A)
-    (n : ℕ) (deg : Fin n → β) (x : ∀ i, A (deg i))
-    (r s : ℕ)
-    (h : ∀ (hs : 1 ≤ s) (hr : r + s ≤ n),
-          X.m s (stasheffDegIn deg r s hr) = 0 ∨
-          X.m (n + 1 - s) (stasheffDegOut deg r s hr) = 0) :
-    X.stasheffSummand n deg x r s = 0 := by
-  grind +suggestions
-
-end AInfinityAlgData
-
-/-- An A∞-algebra is raw data together with the Stasheff identities. -/
-structure AInfinityAlgebra (R : Type u) [CommRing R] (A : GradedRModule (β := β) (R := R))
-  extends AInfinityAlgData (β := β) R A where
-  stasheff :
-    AInfinityAlgData.satisfiesStasheff
-      (β := β) toAInfinityAlgData
-
-namespace AInfinityAlgebra
-
-variable {R : Type u} [CommRing R]
-variable {A : GradedRModule (β := β) (R := R)}
-
-/-- Re-export the Stasheff identity in a convenient form. -/
-lemma stasheff_eq_zero
-  (X : AInfinityAlgebra (β := β) R A)
-  (n : ℕ)
-  (deg : Fin n → β)
-  (x : ∀ i, A (deg i)) :
-  X.toAInfinityAlgData.stasheffSum n deg x = 0 :=
-  X.stasheff n deg x
-
-end AInfinityAlgebra
+end AInfinityPreCategory
 
 end AInfinityAlgebraTheory
