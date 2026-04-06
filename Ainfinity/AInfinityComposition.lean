@@ -207,13 +207,6 @@ variable {B : GradedRModule (β := β_B) (R := R)}
 variable {C : GradedRModule (β := β_C) (R := R)}
 variable {D : GradedRModule (β := β_D) (R := R)}
 
-/-- The composition of two A∞-morphism data `F : A → B` and `G : B → C`
-    produces A∞-morphism data `G ∘ F : A → C`.
-    The `n`-th component is defined by:
-    `(G ∘ F)_n(a₁, …, aₙ) = ∑_{c} G_{|c|}(F_{c₁}(block₁), …, F_{c_{|c|}}(block_{|c|}))`
-    where the sum is over all compositions `c = (i₁, …, iₖ)` of `n` into positive parts,
-    and `blockₗ` denotes the `l`-th consecutive block of inputs of size `iₗ`. -/
-
 def comp
     (F : AInfinityMorphismData (β_A := β_A) (β_B := β_B) R A B)
     (G : AInfinityMorphismData (β_A := β_B) (β_B := β_C) R B C) :
@@ -227,12 +220,49 @@ def comp
           F.deg_trans_sign, G.deg_trans_sign]
   phi := fun n deg => AInfinityCompositionTheory.compPhi F G n deg
 
+
+theorem ext_iff {F G : AInfinityMorphismData (β_A := β_A) (β_B := β_B) R A B} :
+    F = G ↔ (F.deg_trans = G.deg_trans ∧ HEq F.phi G.phi) := by
+  constructor
+  · rintro rfl; exact ⟨rfl, heq_of_eq rfl⟩
+  · rcases F with ⟨dt1, dto1, dts1, phi1⟩
+    rcases G with ⟨dt2, dto2, dts2, phi2⟩
+    simp only [mk.injEq]
+    exact id
+open AInfinityCompositionTheory in
+
+lemma eq_mpr_sum {β : Type*} [AddCommGroup β] (M : β → Type*)
+    [∀ b, AddCommMonoid (M b)] {a b : β} (h : a = b)
+    {α : Type*} (s : Finset α) (f : α → M a) :
+    (h ▸ (∑ i ∈ s, f i) : M b) = ∑ i ∈ s, (h ▸ f i : M b) := by
+  subst h; rfl
+/-- Transport (`▸`) on a multilinear map commutes with application. -/
+lemma eq_mpr_multilinearMap_apply' {β : Type*} [AddCommGroup β]
+    {R : Type*} [CommSemiring R]
+    {ι : Type*} {N : ι → Type*} [∀ i, AddCommMonoid (N i)] [∀ i, Module R (N i)]
+    (M : β → Type*) [∀ b, AddCommMonoid (M b)] [∀ b, Module R (M b)]
+    {a b : β} (h : a = b)
+    (f : MultilinearMap R N (M a)) (x : ∀ i, N i) :
+    ((h ▸ f : MultilinearMap R N (M b)) x : M b) = (h ▸ (f x) : M b) := by
+  subst h; rfl
+/-- The phi components of `(F.comp G).comp H` and `F.comp (G.comp H)` are equal.
+    This is the core content of associativity: both compute the same triple composition
+    `H ∘ G ∘ F` by summing over all 2-level decompositions of compositions,
+    just organized differently. -/
+theorem comp_phi_eq
+    (F : AInfinityMorphismData (β_A := β_A) (β_B := β_B) R A B)
+    (G : AInfinityMorphismData (β_A := β_B) (β_B := β_C) R B C)
+    (H : AInfinityMorphismData (β_A := β_C) (β_B := β_D) R C D) :
+    ((F.comp G).comp H).phi = (F.comp (G.comp H)).phi := by
+  sorry
+
 theorem comp_assoc
     (F : AInfinityMorphismData (β_A := β_A) (β_B := β_B) R A B)
     (G : AInfinityMorphismData (β_A := β_B) (β_B := β_C) R B C)
     (H : AInfinityMorphismData (β_A := β_C) (β_B := β_D) R C D) :
     (F.comp G).comp H = F.comp (G.comp H) := by
-  sorry
+  rw [ext_iff]
+  exact ⟨rfl, heq_of_eq (comp_phi_eq F G H)⟩
 
 end AInfinityMorphismData
 end AInfinityMorphismTheory

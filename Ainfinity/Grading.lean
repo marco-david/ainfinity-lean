@@ -12,6 +12,11 @@ class Grading (β : Type u) extends AddCommGroup β where
   sign : β →+ Parity
   sign_ofInt: ∀ n : ℤ, sign (ofInt n) = (n : Parity)
 
+instance : Grading ℤ where
+  ofInt := AddMonoidHom.id ℤ
+  sign := Int.castAddHom Parity
+  sign_ofInt n := by simp
+
 
 def shift_ofInt {β} [Grading β] (n : ℤ) : β :=
   Grading.ofInt n
