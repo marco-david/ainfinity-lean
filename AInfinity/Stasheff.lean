@@ -11,7 +11,7 @@ noncomputable section
 
 namespace AInfinityTheory
 
-universe u v
+universe u v w
 variable {β : Type v} [Grading β]
 variable {n : ℕ}
 
@@ -28,6 +28,30 @@ abbrev stasheffTargetDeg
 abbrev validStasheffIndices (n r s : ℕ) : Prop :=
   1 ≤ s ∧ r + s ≤ n
 
+/-- The type of the `i`-th morphism in a composable string of objects and degrees. -/
+abbrev composableHomType
+    {R : Type u} [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (i : Fin n) : ModuleCat R :=
+  Hom
+    (obj ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)
+    (obj ⟨i.val + 1, by omega⟩)
+    (deg i)
+
+/-- The target type of the `n`-ary operation on a composable string. -/
+abbrev operationTargetType
+    {R : Type u} [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β) : ModuleCat R :=
+  Hom (obj 0) (obj (Fin.last n)) (operationTargetDeg deg)
+
 /-- Helper: degree function for the inner portion of the Stasheff composition. -/
 def stasheffDegIn
     (deg : Fin n → β)
@@ -40,7 +64,7 @@ def stasheffInnerDeg
     (deg : Fin n → β)
     (r s : ℕ)
     (hr : r + s ≤ n) : β :=
-  (∑ j : Fin s, stasheffDegIn deg r s hr j) + shift_ofInt (2 - (s : ℤ))
+  operationTargetDeg (stasheffDegIn deg r s hr)
 
 /-- Helper: the outer degree function. -/
 def stasheffDegOut
@@ -54,6 +78,26 @@ def stasheffDegOut
       stasheffInnerDeg deg r s hr
     else
       deg ⟨i.val + s - 1, by omega⟩
+
+/-- Helper: the inner object string. -/
+def stasheffObjIn
+    {Obj : Type w}
+    (obj : Fin (n + 1) → Obj)
+    (r s : ℕ)
+    (hr : r + s ≤ n) : Fin (s + 1) → Obj :=
+  fun i => obj ⟨r + i.val, by omega⟩
+
+/-- Helper: the outer object string obtained by collapsing the inner block. -/
+def stasheffObjOut
+    {Obj : Type w}
+    (obj : Fin (n + 1) → Obj)
+    (r s : ℕ)
+    (hr : r + s ≤ n) : Fin ((n + 1 - s) + 1) → Obj :=
+  fun i =>
+    if h1 : i.val ≤ r then
+      obj ⟨i.val, by omega⟩
+    else
+      obj ⟨i.val + s - 1, by omega⟩
 
 private lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
     shift_ofInt (β := β) (2 - (s : ℤ)) + shift_ofInt (2 - ((n + 1 - s : ℕ) : ℤ)) =
@@ -71,6 +115,16 @@ private lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
   unfold shift_ofInt
   symm
   apply map_add
+
+lemma validStasheffIndices_of_mem_ranges
+    {r s : ℕ}
+    (hr : r ∈ Finset.range (n + 1))
+    (hs : s ∈ Finset.Ico 1 (n - r + 1)) :
+    validStasheffIndices n r s := by
+  rcases Finset.mem_range.mp hr with hr
+  rcases Finset.mem_Ico.mp hs with ⟨hs₁, hs₂⟩
+  refine ⟨hs₁, ?_⟩
+  omega
 
 /-- Summing the outer degrees recovers the original total degree plus the inner shift. -/
 lemma stasheffDegOut_sum_core
@@ -185,35 +239,120 @@ lemma stasheffDegOut_sum
   rw [stasheffDegOut_sum_core deg r s hr, add_assoc,
       shift_ofInt_combine (by omega : s ≤ n)]
 
-/-- Generic Stasheff term construction for an A∞-algebra-style operation. -/
-def algebraStasheffTerm
+/-- A generic Stasheff term builder for object-indexed A∞ operations. -/
+def indexedStasheffTerm
     {R : Type u}
     [CommRing R]
-    {A : GradedRModule (β := β) (R := R)}
-    (m : (n : ℕ) → (deg : Fin n → β) →
-      MultilinearMap R (fun i => A (deg i)) (A (operationTargetDeg deg)))
-    (n : ℕ)
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => composableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
-    (x : ∀ i, A (deg i))
+    (x : ∀ i : Fin n, composableHomType Hom obj deg i)
     (r s : ℕ)
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
-    A (stasheffTargetDeg deg) := by
+    Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) := by
   let degIn := stasheffDegIn deg r s hr
-  let xIn : ∀ i : Fin s, A (degIn i) := fun i => x ⟨r + i.val, by omega⟩
-  let inner := m s degIn xIn
+  let objIn := stasheffObjIn obj r s hr
+  let xIn : ∀ i : Fin s, composableHomType Hom objIn degIn i := fun i => by
+    simpa [composableHomType, objIn, stasheffObjIn, degIn, stasheffDegIn]
+      using x ⟨r + i.val, by omega⟩
+  let inner := m objIn degIn xIn
   let outerN := n + 1 - s
   let degOut := stasheffDegOut deg r s hr
-  let xOut : ∀ i : Fin outerN, A (degOut i) := by
+  let objOut := stasheffObjOut obj r s hr
+  let xOut : ∀ i : Fin outerN, composableHomType Hom objOut degOut i := by
     intro i
     by_cases hlt : i.val < r
-    · simpa [degOut, stasheffDegOut, hlt] using x ⟨i.val, by omega⟩
+    · simpa [composableHomType, objOut, stasheffObjOut, degOut, stasheffDegOut, hlt,
+        Nat.le_of_lt hlt]
+        using x ⟨i.val, by omega⟩
     · by_cases heq : i.val = r
-      · simpa [degOut, stasheffDegOut, hlt, heq] using inner
-      · simpa [degOut, stasheffDegOut, hlt, heq] using x ⟨i.val + s - 1, by omega⟩
-  let outer := m outerN degOut xOut
-  have hdeg : operationTargetDeg degOut = stasheffTargetDeg deg := by
-    exact stasheffDegOut_sum deg r s hr
+      · simpa
+          [composableHomType, operationTargetType, objIn, stasheffObjIn,
+            degIn, stasheffDegIn, objOut, stasheffObjOut, degOut, stasheffDegOut,
+            stasheffInnerDeg, hlt, heq]
+          using inner
+      · have hgt : ¬ i.val ≤ r := by omega
+        have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
+        simpa
+          [composableHomType, objOut, stasheffObjOut, degOut, stasheffDegOut,
+            hlt, heq, hgt, hsucc]
+          using x ⟨i.val + s - 1, by omega⟩
+  let outer := m objOut degOut xOut
+  have hsource : objOut 0 = obj 0 := by
+    simp [objOut, stasheffObjOut]
+  have hlast_gt : ¬ outerN ≤ r := by
+    dsimp [outerN]
+    omega
+  have htarget : objOut (Fin.last outerN) = obj (Fin.last n) := by
+    simp [objOut, stasheffObjOut, Fin.last, hlast_gt]
+    congr
+    omega
+  have hdeg :
+      operationTargetType Hom objOut degOut =
+        Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) := by
+    dsimp [operationTargetType]
+    rw [hsource, htarget]
+    exact congrArg (fun d => Hom (obj 0) (obj (Fin.last n)) d) (stasheffDegOut_sum deg r s hr)
   exact hdeg ▸ outer
+
+/-- The sign parity for the `(r,s)` Stasheff term:
+    `sign(deg(r+s)) + ⋯ + sign(deg(n-1)) - (n-r-s)` in `ZMod 2`. -/
+def stasheffSignParity
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n) : Parity :=
+  (∑ i : Fin (n - r - s), Grading.sign (deg ⟨r + s + i.val, by omega⟩)) -
+    ((n - r - s : ℕ) : Parity)
+
+/-- The sign `(-1)^(|a_{r+s+1}| + ⋯ + |a_n| - t)` as an integer,
+    for a valid Stasheff index pair. -/
+def stasheffSign
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n) : ℤ :=
+  (-1) ^ (stasheffSignParity deg r s hr).val
+
+/-- The full Stasheff sum in arity `n`, with Koszul signs. -/
+def indexedStasheffSum
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => composableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, composableHomType Hom obj deg i) :
+    Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
+  Finset.sum ((Finset.range (n + 1)).attach) fun r =>
+    Finset.sum ((Finset.Ico 1 (n - r.1 + 1)).attach) fun s =>
+      let h : validStasheffIndices n r.1 s.1 :=
+        validStasheffIndices_of_mem_ranges (n := n) r.2 s.2
+      (stasheffSign deg r.1 s.1 h.2) •
+        indexedStasheffTerm Hom m obj deg x r.1 s.1 h.1 h.2
+
+/-- The Stasheff identities for object-indexed A∞ operations. -/
+def indexedSatisfiesStasheff
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => composableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg)) : Prop :=
+  ∀ (n : ℕ) (obj : Fin (n + 1) → Obj) (deg : Fin n → β)
+    (x : ∀ i : Fin n, composableHomType Hom obj deg i),
+    indexedStasheffSum Hom m obj deg x = 0
 
 end AInfinityTheory

@@ -26,8 +26,8 @@ variable {β : Type v} [Grading β]
 abbrev GradedRModule (R : Type u) [CommRing R] :=
   GradedObject β (ModuleCat.{u} R)
 
-class GQuiver (obj : Type v) where
-  /-- The type of morphisms between a given source and target. -/
-  data : obj → obj → GradedObject β (Type w)
+class RLinearGQuiver (R : Type u) [CommRing R] (Obj : Type w) where
+  /-- The graded `R`-module of morphisms between two objects. -/
+  Hom : Obj → Obj → GradedRModule (β := β) (R := R)
 
 end AInfinityTheory
