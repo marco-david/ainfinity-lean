@@ -1,2 +1,2 @@
-import Ainfinity.Grading
-import Ainfinity.AInfinityAlgebra
+import AInfinity.Grading
+import AInfinity.AInfinityCategory

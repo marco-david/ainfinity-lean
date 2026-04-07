@@ -1,11 +1,13 @@
-import Mathlib
-import Ainfinity.Grading
+module
 
-open CategoryTheory Finset AInfinityCategoryTheory
+public import Mathlib
+public import Ainfinity.Grading
+
+open CategoryTheory Finset AInfinityAlgebraTheory
 
 noncomputable section
 
-namespace AInfinityAlgebraTheory
+namespace AInfinityCategoryTheory
 
 universe u v w
 variable {β : Type v} [Grading β]
@@ -292,4 +294,4 @@ by
 
 end AInfinityPreCategory
 
-end AInfinityAlgebraTheory
+end AInfinityCategoryTheory
