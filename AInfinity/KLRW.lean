@@ -6,7 +6,7 @@ public import Mathlib
 
 open CategoryTheory
 
-namespace AInfinityCategoryTheory
+namespace AInfinityTheory
 
 universe v u
 variable {R : Type u} [CommRing R] [DecidableEq R] (C : Type u) [Category C]
@@ -140,4 +140,4 @@ abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Typ
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   CochainComplex (AddKLRWCategory n R) ℤ
 
-end AInfinityCategoryTheory
+end AInfinityTheory

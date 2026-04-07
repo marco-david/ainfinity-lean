@@ -1,3 +1,5 @@
 import AInfinity.Grading
-import AInfinity.AInfinityAlgebra
 import AInfinity.KLRW
+import AInfinity.Stasheff
+import AInfinity.AInfinityAlgebra
+import AInfinity.AInfinityCategory
