@@ -1,8 +1,6 @@
-module
-
-public import Mathlib
-
-@[expose] public section
+import Mathlib
+import AInfinity.AdditiveCompletion
+import AInfinity.BoundedCochainComplex
 
 open CategoryTheory
 
@@ -135,9 +133,9 @@ instance : Preadditive (KLRWCategory n R) where
     simp only [DFinsupp.sum, Finset.sum_add_distrib]
 
 abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
-  Mat_ (KLRWCategory n R)
+  CMat_ (KLRWCategory n R)
 
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
-  CochainComplex (AddKLRWCategory n R) ℤ
+  BoundedCochainComplex (AddKLRWCategory n R)
 
 end AInfinityCategoryTheory

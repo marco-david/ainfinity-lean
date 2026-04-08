@@ -1,3 +1,5 @@
 import AInfinity.AInfinityAlgebra
+import AInfinity.AdditiveCompletion
+import AInfinity.BoundedCochainComplex
 import AInfinity.Grading
 import AInfinity.KLRW
