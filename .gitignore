@@ -1,3 +1,10 @@
 /.lake
 /build/
 .DS_Store
+.venv/
+blueprint/print/print.log
+blueprint/web/
+blueprint/src/web.paux
+blueprint/src/web.bbl
+blueprint/print/
+blueprint/lean_decls
