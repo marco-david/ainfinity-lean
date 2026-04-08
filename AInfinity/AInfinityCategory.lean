@@ -18,11 +18,11 @@ structure AInfinityPreCategory
     (R : Type u) [CommRing R] (Obj : Type w)
     extends RLinearGQuiver (β := β) R Obj where
   m :
-    {n : ℕ} →
-    (obj : Fin (n + 1) → Obj) →
-    (deg : Fin n → β) →
+    {n : ℕ+} →
+    (obj : Fin ((n : ℕ) + 1) → Obj) →
+    (deg : Fin (n : ℕ) → β) →
     MultilinearMap R
-      (fun i : Fin n => composableHomType toRLinearGQuiver.Hom obj deg i)
+      (fun i : Fin (n : ℕ) => composableHomType toRLinearGQuiver.Hom obj deg i)
       (operationTargetType toRLinearGQuiver.Hom obj deg)
 
 namespace AInfinityPreCategory
@@ -31,9 +31,9 @@ variable {R : Type u} [CommRing R]
 variable {Obj : Type w}
 
 structure Chain (X : AInfinityPreCategory (β := β) R Obj) where
-  n : ℕ
-  obj : Fin (n + 1) → Obj
-  deg : Fin n → β
+  n : ℕ+
+  obj : Fin ((n : ℕ) + 1) → Obj
+  deg : Fin (n : ℕ) → β
 
 namespace Chain
 
@@ -54,11 +54,11 @@ end Chain
 /-- The full Stasheff sum in arity `n`, with Koszul signs. -/
 def stasheffSum
     (X : AInfinityPreCategory (β := β) R Obj)
-    {n : ℕ}
-    (obj : Fin (n + 1) → Obj)
-    (deg : Fin n → β)
-    (x : ∀ i : Fin n, composableHomType X.Hom obj deg i) :
-    X.Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
+    {n : ℕ+}
+    (obj : Fin ((n : ℕ) + 1) → Obj)
+    (deg : Fin (n : ℕ) → β)
+    (x : ∀ i : Fin (n : ℕ), composableHomType X.Hom obj deg i) :
+    X.Hom (obj 0) (obj (Fin.last (n : ℕ))) (stasheffTargetDeg deg) :=
   indexedStasheffSum X.Hom X.m obj deg x
 
 /-- The Stasheff identities as a property of the raw A∞ category data. -/
@@ -82,10 +82,10 @@ variable {Obj : Type w}
 
 lemma stasheff_eq_zero
     (X : AInfinityCategory (β := β) R Obj)
-    {n : ℕ}
-    (obj : Fin (n + 1) → Obj)
-    (deg : Fin n → β)
-    (x : ∀ i : Fin n, composableHomType X.Hom obj deg i) :
+    {n : ℕ+}
+    (obj : Fin ((n : ℕ) + 1) → Obj)
+    (deg : Fin (n : ℕ) → β)
+    (x : ∀ i : Fin (n : ℕ), composableHomType X.Hom obj deg i) :
     X.toAInfinityPreCategory.stasheffSum obj deg x = 0 :=
   X.stasheff n obj deg x
 
