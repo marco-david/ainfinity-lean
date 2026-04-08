@@ -12,7 +12,7 @@ noncomputable section
 namespace AInfinityAlgebraTheory
 
 universe u v
-variable {β : Type v} [Grading β]
+variable {β : Type v} [GradingIndex β]
 variable {n : ℕ}
 
 abbrev GradedRModule (R : Type u) [CommRing R] :=
@@ -21,12 +21,12 @@ abbrev GradedRModule (R : Type u) [CommRing R] :=
 /-- Target degree of the `n`-ary operation `m`. -/
 abbrev operationTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + shift_ofInt (2 - (n : ℤ))
+  (∑ i, deg i) + (2 - (n : ℤ))
 
 /-- Target degree of the arity-`n` Stasheff relation. -/
 abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + shift_ofInt (3 - (n : ℤ))
+  (∑ i, deg i) + (3 - (n : ℤ))
 
 structure AInfinityAlgData (R : Type u) [CommRing R] (A : GradedRModule (β := β) (R := R)) where
   m :
@@ -61,7 +61,7 @@ def stasheffInnerDeg
     (deg : Fin n → β)
     (r s : ℕ)
     (hr : r + s ≤ n) : β :=
-  (∑ j : Fin s, stasheffDegIn deg r s hr j) + shift_ofInt (2 - (s : ℤ))
+  (∑ j : Fin s, stasheffDegIn deg r s hr j) + (2 - (s : ℤ))
 
 /-- Helper: the outer degree function. -/
 def stasheffDegOut
@@ -77,8 +77,8 @@ def stasheffDegOut
       deg ⟨i.val + s - 1, by omega⟩
 
 private lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
-    shift_ofInt (β := β) (2 - (s : ℤ)) + shift_ofInt (2 - ((n + 1 - s : ℕ) : ℤ)) =
-    shift_ofInt (3 - (n : ℤ)) := by
+    Int.cast (R := β) (2 - (s : ℤ)) + Int.cast (2 - ((n + 1 - s : ℕ) : ℤ)) =
+    Int.cast (3 - (n : ℤ)) := by
     have : 3 - (n : ℤ) = 2 - (s : ℤ) + 2 - ((n + 1 - s : ℕ) : ℤ) := by
       have hle : s ≤ n + 1 := Nat.le_succ_of_le hsn
       rw [Nat.cast_sub hle]
@@ -89,9 +89,8 @@ private lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
       rhs
       arg 1
       rw [Int.add_sub_assoc (2 - (s : ℤ))]
-    unfold shift_ofInt
     symm
-    apply map_add
+    apply Int.cast_add
 
 /-- Summing the outer degrees recovers the original total degree plus the inner shift. -/
 lemma stasheffDegOut_sum_core
@@ -99,7 +98,7 @@ lemma stasheffDegOut_sum_core
     (r s : ℕ)
     (hr : r + s ≤ n) :
     (∑ i : Fin (n + 1 - s), stasheffDegOut deg r s hr i) =
-    (∑ i : Fin n, deg i) + shift_ofInt (2 - (s : ℤ)) := by
+    (∑ i : Fin n, deg i) + (2 - (s : ℤ)) := by
   unfold stasheffDegOut
   rw [
     show (Finset.univ : Finset (Fin (n + 1 - s))) =
@@ -138,6 +137,7 @@ lemma stasheffDegOut_sum_core
           · unfold stasheffInnerDeg
             unfold stasheffDegIn
             ring_nf
+            simp only [Int.cast_natCast]
             grind
           · exact fun i j h => by simpa [Fin.ext_iff] using h
           · exact fun i j h => by simpa [Fin.ext_iff] using h
@@ -203,10 +203,11 @@ lemma stasheffDegOut_sum
     (r s : ℕ)
     (hr : r + s ≤ n) :
     (∑ i : Fin (n + 1 - s), stasheffDegOut deg r s hr i) +
-      shift_ofInt (2 - ((n + 1 - s : ℕ) : ℤ)) =
+      (2 - ((n + 1 - s : ℕ) : ℤ)) =
     stasheffTargetDeg deg := by
-  rw [stasheffDegOut_sum_core deg r s hr, add_assoc,
-      shift_ofInt_combine (by omega : s ≤ n)]
+  have := shift_ofInt_combine (β := β) (by omega : s ≤ n)
+  simp only [Int.cast_sub, Int.cast_ofNat, Int.cast_natCast] at this
+  simp [stasheffDegOut_sum_core deg r s hr, add_assoc, this]
 
 end Internal
 
@@ -262,9 +263,9 @@ def stasheffSummand
 def stasheffSignParity
     (deg : Fin n → β)
     (r s : ℕ)
-    (hr : r + s ≤ n) : Parity :=
-  (∑ i : Fin (n - r - s), Grading.sign (deg ⟨r + s + i.val, by omega⟩)) -
-    ((n - r - s : ℕ) : Parity)
+    (hr : r + s ≤ n) : ZMod 2 :=
+  (∑ i : Fin (n - r - s), parity (deg ⟨r + s + i.val, by omega⟩)) -
+    ((n - r - s : ℕ) : ZMod 2)
 
 /-- The sign `(-1)^(|a_{r+s+1}| + ⋯ + |a_n| - t)` as an integer,
     defaulting to `1` for invalid indices. -/
