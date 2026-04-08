@@ -1,9 +1,6 @@
-module
-
-public import Mathlib
+import Mathlib
 import AInfinity.AdditiveCompletion
-
-@[expose] public section
+import AInfinity.BoundedCochainComplex
 
 open CategoryTheory
 
@@ -139,6 +136,6 @@ abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Typ
   CMat_ (KLRWCategory n R)
 
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
-  CochainComplex (AddKLRWCategory n R) ℤ
+  BoundedCochainComplex (AddKLRWCategory n R)
 
 end AInfinityCategoryTheory
