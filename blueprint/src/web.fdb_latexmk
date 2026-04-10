@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1775863230.01485 "/Users/user/Desktop/renders/projects/ainf/blueprint/src/web.tex" "web.pdf" "web" 1775863230.88902 2
+["pdflatex"] 1775863850.77037 "/Users/user/Desktop/renders/projects/ainf/blueprint/src/web.tex" "web.pdf" "web" 1775863851.69972 2
   "/Users/user/Desktop/renders/projects/ainf/blueprint/src/web.tex" 1775688424.739 673 e5026fe324a497a3a8b92d664f9608f3 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
@@ -70,12 +70,12 @@
   "blueprint.sty" 1775688424.73629 65 23dee80806b6add7e7746217b977b67b ""
   "chapters/ch01introduction.tex" 1775688424.73659 197 32eb0fb523b912cbe78bc7d6eca697ac ""
   "chapters/ch02ainfinityalgebra.tex" 1775861329.75867 1417 9fbe884ee8dd2bdbbf907d8a291661e3 ""
-  "chapters/ch03klrwcategory.tex" 1775863228.79872 723 36558b94847d9b6f4ce81b021fee8d1b ""
+  "chapters/ch03klrwcategory.tex" 1775863850.70937 1952 f8a6a31969f3e7feefc59cecfadca126 ""
   "content.tex" 1775861377.49941 475 4f1ce1eb98fa4100b938e5acb8e2e1e2 ""
-  "macros/common.tex" 1775862863.90235 1048 5e29d41f567d47497d51bf734d07855a ""
+  "macros/common.tex" 1775863676.39805 1208 fdd7a51e3e1d739612e2b37b23eb35b3 ""
   "macros/web.tex" 1775688424.73845 261 9aa31421e067adbb8a70f51d11e1ed93 ""
-  "web.aux" 1775863230.45703 1507 f326482883e750b12932f6f840a6e05a "pdflatex"
-  "web.out" 1775863230.45757 853 1f4e7ed4905dd28e1787a805ab8e3528 "pdflatex"
+  "web.aux" 1775863851.24443 1460 b447f756a0245a06f5c488e14e112273 "pdflatex"
+  "web.out" 1775863851.24499 853 1f4e7ed4905dd28e1787a805ab8e3528 "pdflatex"
   "web.tex" 1775688424.739 673 e5026fe324a497a3a8b92d664f9608f3 ""
   (generated)
   "web.aux"
