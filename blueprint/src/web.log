@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  10 APR 2026 16:30
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  10 APR 2026 16:42
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -339,7 +339,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 ]
 Chapter 3.
 
-Overfull \hbox (129.45457pt too wide) in paragraph at lines 12--15
+Overfull \hbox (121.95457pt too wide) in paragraph at lines 12--15
 \OT1/cmr/m/n/10 (\OML/cmm/m/it/10 A[]; A[]; [] ; A[]\OT1/cmr/m/n/10 )\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 (\OML/cmm/m/it/10 B[]; B[]; [] ; B[]\OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 2 [] []\OT1/cmr/m/n/10 ([](\OMS/cmsy/m/n/10 C\OT1/cmr/m/n/10 ))[]$\TU/lmr/m/n/10 , then $[] []\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 A[]; A[]; [] ; A[]\OT1/cmr/m/n/10 )\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 (\OML/cmm/m/it/10 B[]; B[]; [] ; B[]\OT1/cmr/m/n/10 )[] =
  []
 
@@ -348,10 +348,6 @@ Overfull \hbox (145.96603pt too wide) detected at line 21
 \OT1/cmr/m/n/10 (1[])[] = []
  []
 
-
-LaTeX Warning: Command \c invalid in math mode on input line 26.
-
-Missing character: There is no ̧ (U+0327) in font [lmroman10-regular]:mapping=tex-text;!
 
 
 [3
@@ -377,12 +373,12 @@ Package rerunfilecheck Info: Checksums for `web.out':
 (rerunfilecheck)             After:  1F4E7ED4905DD28E1787A805AB8E3528;853.
  ) 
 Here is how much of TeX's memory you used:
- 9098 strings out of 473832
- 139364 string characters out of 5729482
- 532744 words of memory out of 5000000
- 32052 multiletter control sequences out of 15000+600000
+ 9099 strings out of 473832
+ 139413 string characters out of 5729482
+ 531742 words of memory out of 5000000
+ 32053 multiletter control sequences out of 15000+600000
  570275 words of font info for 93 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 72i,9n,79p,596b,517s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 72i,9n,79p,596b,463s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on web.pdf (6 pages).
