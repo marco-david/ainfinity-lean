@@ -28,7 +28,7 @@
   of categories.
 \begin{definition}
   Given $A = (A_0, \ldots, A_n), B=(B_0, \ldots, B_n)\in \CMat(\C)$, the
-  computable biproduct of $A$ and $B$ is defined by $A\boxplus_k B = (A_0, \ldots, A_n, B_0, \ldots, B_m)$
+  \emph{computable biproduct} of $A$ and $B$ is defined by $A\boxplus_k B = (A_0, \ldots, A_n, B_0, \ldots, B_m)$
 \end{definition}
 \begin{definition}
   For any $Z\in \CMat (\C)$, the \emph{index type}, denoted $\iota_Z$, is the type
@@ -68,4 +68,12 @@
 
   Since each $\Hom(X, Y)$ is an $R$-module and composition is $R$-linear, $\KLRW^R_n$
   is $R$-linear and thus preadditive.
+\end{definition}
+\begin{definition}
+  Let $\C$ be a preadditive category with a zero object. Then a bounded cochain
+  complex of $\C$ is a ($\Z$-graded) cochain complex $A^\bullet$ of $\C$ equipped with a finite set
+  $S$ called the support, satisfying
+  $\forall i\in \Z, i\in S \Leftrightarrow A^i\not\cong 0$. Note that
+  $S$ is uniquely determined by $A^\bullet$, though included
+  for computability.
 \end{definition}
