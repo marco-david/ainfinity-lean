@@ -21,6 +21,15 @@
   \end{cases}$$. %TODO
  \end{itemize}
 \end{definition}
+  There is a fully faithful functor $G: \C \Rightarrow \CMat(\C)$.
+
+  There is a fully faithful embedding functor $F: \CMat(\C) \Rightarrow \Mat (\C)$.
+  It is (nonconstructively) essentially surjective, so $F$ is an equivalence
+  of categories.
+\begin{definition}
+  Given $A = (A_0, \ldots, A_n), B=(B_0, \ldots, B_n)\in \CMat(\C)$, the
+  computable biproduct of $A$ and $B$ is defined by $A\boxplus_k B = (A_0, \ldots, A_n, B_0, \ldots, B_m)$
+\end{definition}
 \begin{definition}
   For any $Z\in \CMat (\C)$, the \emph{index type}, denoted $\iota_Z$, is the type
   $\{ 0, \ldots, (\len(Z)-1)\}$, and the indexing function, $X_2: \iota_Z\to \C$,
@@ -59,5 +68,4 @@
 
   Since each $\Hom(X, Y)$ is an $R$-module and composition is $R$-linear, $\KLRW^R_n$
   is $R$-linear and thus preadditive.
-
 \end{definition}
