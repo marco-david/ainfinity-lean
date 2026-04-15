@@ -18,17 +18,17 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: AInfinity Categories
+title: A-infinity Categories
 #email: your-email@example.com
-description: by Placeholder Author List
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://example.com" # the base hostname & protocol for your site, e.g. http://example.com
+description: by Marco David, Jason Dong, Hallvard Hareide, Jasper van de Kreeke, Justin Mu, Niels Voss and Annie Yao
+baseurl: "/ainfinity-lean" # the subpath of your site, e.g. /blog
+url: "https://marcodavid.net" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username:
-github_username: marco-david/ainfinity-lean
+github_username: marco-david
 repository: marco-david/ainfinity-lean/
 
 # Build settings
-remote_theme: pages-themes/cayman@v0.2.0 
+remote_theme: pages-themes/cayman@v0.2.0
 plugins:
   - jekyll-remote-theme
   - jekyll-github-metadata
