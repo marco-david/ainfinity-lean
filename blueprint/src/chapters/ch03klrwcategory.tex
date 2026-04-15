@@ -10,12 +10,20 @@
  \begin{itemize}
   \item as objects, lists of elements in $\C$.
   \item as morphisms, dependent matrices of morphisms in $\C$.
-  Specifically, if $(A_0, A_0, \ldots, A_n), (B_0, B_1, \ldots, B_m) \in \Ob\big((\Mat (\C))\big)$,
-  then $\Hom\big((A_0, A_1, \ldots, A_n), (B_0, B_1, \ldots, B_n)\big) =
-  \{\begin{bmatrix}
-    a_{00} & \cdots & a_{0a} \\ \cdots & \cdots & \cdots \\ a_{m0} & \cdots & a_{ma}
-  \end{bmatrix}: a_{ij}\in \Hom(A_j, B_i), i\in \{0, \ldots, m-1\}, j\in \{0, \ldots, n-1\}\}
-  $
+  Specifically, if $(A_0, A_1, \ldots, A_n), (B_0, B_1, \ldots, B_m) \in \Ob\big(\Mat(\C)\big)$, then
+\begin{multline*}
+\Hom\big((A_0, A_1, \ldots, A_n), (B_0, B_1, \ldots, B_m)\big) \\
+= \left\{
+\begin{bmatrix}
+  a_{00} & \cdots & a_{0,n-1} \\
+  \vdots & \ddots & \vdots \\
+  a_{m-1,0} & \cdots & a_{m-1,n-1}
+\end{bmatrix}
+: a_{ij} \in \Hom(A_j, B_i)
+\right\}
+\end{multline*}
+where $0 \le i \le m-1$ and $0 \le j \le n-1$.
+
   \item composition is defined by matrix multiplication
   \item identities are given by the identity matrix
   $$ (\idf_{(A_0, \ldots, A_m)})_{i, j} = \begin{cases}
@@ -117,7 +125,7 @@ $$\widehat{\beta}_0\left(\bigoplus_i S_i\right) = \bigoplus_i \beta_0(S_i)$$
 
 Extending the remaining two functions requires more care.
 
-For $\beta_1$, let $\bigoplus_i A_i$ and $\bigoplus_j B_j$ be objects in $\operatorname{Add}(\mathcal{KLRW})$. Let $f \in \operatorname{Hom}\left(\bigoplus_i A_i, \bigoplus_j B_j\right)$. For each pair $k, l$, we project $f$ to its component $f_{k,l} \in \operatorname{Hom}(A_k, B_l)$. We now create $g_{k,l} \in $\operatorname{Hom}\left(\widehat{\beta}_0\left(\bigoplus_i A_i\right), \widehat{\beta}_0\left(\bigoplus_j B_j\right)\right)$ by extending this morphism. Formally, $g_{k,l}$ is constructed by composing the canonical projection, the mapped component, and the canonical injection:
+For $\beta_1$, let $\bigoplus_i A_i$ and $\bigoplus_j B_j$ be objects in $\operatorname{Add}(\mathcal{KLRW})$. Let $f \in \operatorname{Hom}\left(\bigoplus_i A_i, \bigoplus_j B_j\right)$. For each pair $k, l$, we project $f$ to its component $f_{k,l} \in \operatorname{Hom}(A_k, B_l)$. We now create $g_{k,l} \in \operatorname{Hom}\left(\widehat{\beta}_0\left(\bigoplus_i A_i\right), \widehat{\beta}_0\left(\bigoplus_j B_j\right)\right)$ by extending this morphism. Formally, $g_{k,l}$ is constructed by composing the canonical projection, the mapped component, and the canonical injection:
 $$\widehat{\beta}_0\left(\bigoplus_i A_i\right) \twoheadrightarrow {\beta}_0(A_k) \xrightarrow{\beta_1(f_{k,l})} {\beta}_0(B_l) \hookrightarrow \widehat{\beta}_0\left(\bigoplus_j B_j\right)$$
 
 
@@ -125,10 +133,11 @@ $$\widehat{\beta}_0\left(\bigoplus_i A_i\right) \twoheadrightarrow {\beta}_0(A_k
 For $\beta_2$, we construct the extension $\widehat{\beta}_2$ analogously.
 
 Note now that if $A^* \in K^*$, then we may write $A^*$ as the cone of the following chain map:
-$$\begin{tikzcd}
-0 \arrow[r] & A_0 \arrow[r] \arrow[d] & \dots \arrow[r] & A_{n-1} \arrow[r] \arrow[d] & 0 \\
-0 \arrow[r] & 0 \arrow[r] & \dots \arrow[r] & A_n \arrow[r] & 0
-\end{tikzcd}$$
+$$\begin{array}{ccccccccc}
+0 & \to & A_0 & \to & \cdots & \to & A_{n-1} & \to & 0 \\
+  &     & \downarrow & & & & \downarrow & & \\
+0 & \to & 0   & \to & \cdots & \to & A_n     & \to & 0
+\end{array}$$
 
 We may call the upper chain complex $A^*_{[0,n-1]}$, and the lower $A^*_{[n,n]}[-1]$ (shifted by $-1$ because $A_{n-1}$ and $A_n$ need the same homological grading).
 
