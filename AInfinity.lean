@@ -1,5 +1,6 @@
 import AInfinity.AInfinityAlgebra
 import AInfinity.AInfinityCategory
+import AInfinity.AdditiveCompletion
 import AInfinity.Grading
 import AInfinity.KLRW
 import AInfinity.Stasheff
