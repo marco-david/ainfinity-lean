@@ -81,9 +81,56 @@
   $S$ is uniquely determined by $A^\bullet$, though included
   for computability.
 \end{definition}
+
+\section{Bounded Cochain Complexes}
 \begin{definition}
   Let $\BK(\C)$ denote the set of bounded cochain complexes in $\C$. THen
   there is a function $F:\BK(\C)\to K^\bullet(\C)$ which forgets the finiteness.
   Then we equip $\BK(\C)$ with the induced category structure of $F$ which makes
   $F$ into a fully faithful functor $F:\BK(\C) \to K^\bullet (\C)$.
 \end{definition}
+
+\section{$\beta$-functor}
+
+
+\subsection{Functor data}
+We will now specify the data needed to define how a braiding functor acts. Let $R, S, T \in \mathcal{KLRW}$.
+
+The data of a braiding functor is given by the following functions:
+$$
+\begin{aligned}
+\beta_0 &\colon & \mathcal{KLRW} &\to K^* \\
+\beta_1 &\colon & \operatorname{Hom}(R,S) &\to \operatorname{Hom}(\beta_0(R), \beta_0(S)) \\
+\beta_2 &\colon & \operatorname{Hom}(R,S) \times \operatorname{Hom}(S,T) &\to \operatorname{Hom}(\beta_0(R), \beta_0(T))
+\end{aligned}
+$$
+
+In addition to these functions, there must also be proofs that they satisfy $A_\infty$ relations (to be specified).
+
+One can understand these functions as specifying how the functor acts on the generating elements of our chain complex category. The action of the functor is as follows.
+
+\subsection{Functor action}
+Firstly, we may extend the functions acting on $\mathcal{KLRW}$ to act on $\operatorname{Add}(\mathcal{KLRW})$ in a linear sense. We define:
+$$\widehat{\beta}_0 \colon \operatorname{Add}(\mathcal{KLRW}) \to K^*$$
+by setting:
+$$\widehat{\beta}_0\left(\bigoplus_i S_i\right) = \bigoplus_i \beta_0(S_i)$$
+
+Extending the remaining two functions requires more care.
+
+For $\beta_1$, let $\bigoplus_i A_i$ and $\bigoplus_j B_j$ be objects in $\operatorname{Add}(\mathcal{KLRW})$. Let $f \in \operatorname{Hom}\left(\bigoplus_i A_i, \bigoplus_j B_j\right)$. For each pair $k, l$, we project $f$ to its component $f_{k,l} \in \operatorname{Hom}(A_k, B_l)$. We now create $g_{k,l} \in $\operatorname{Hom}\left(\widehat{\beta}_0\left(\bigoplus_i A_i\right), \widehat{\beta}_0\left(\bigoplus_j B_j\right)\right)$ by extending this morphism. Formally, $g_{k,l}$ is constructed by composing the canonical projection, the mapped component, and the canonical injection:
+$$\widehat{\beta}_0\left(\bigoplus_i A_i\right) \twoheadrightarrow {\beta}_0(A_k) \xrightarrow{\beta_1(f_{k,l})} {\beta}_0(B_l) \hookrightarrow \widehat{\beta}_0\left(\bigoplus_j B_j\right)$$
+
+
+
+For $\beta_2$, we construct the extension $\widehat{\beta}_2$ analogously.
+
+Note now that if $A^* \in K^*$, then we may write $A^*$ as the cone of the following chain map:
+$$\begin{tikzcd}
+0 \arrow[r] & A_0 \arrow[r] \arrow[d] & \dots \arrow[r] & A_{n-1} \arrow[r] \arrow[d] & 0 \\
+0 \arrow[r] & 0 \arrow[r] & \dots \arrow[r] & A_n \arrow[r] & 0
+\end{tikzcd}$$
+
+We may call the upper chain complex $A^*_{[0,n-1]}$, and the lower $A^*_{[n,n]}[-1]$ (shifted by $-1$ because $A_{n-1}$ and $A_n$ need the same homological grading).
+
+Assuming we know how $\overline{\beta}_0$ acts on these two chain complexes, we will state how it acts on $A^*$. First, take the direct sum:
+$$\overline{\beta}_0(A^*) = \overline{\beta}_0(A^*_{[0,n-1]}) \oplus \overline{\beta}_0(A^*_{[n,n]}[-1])$$
