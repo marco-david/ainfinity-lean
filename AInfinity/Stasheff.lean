@@ -99,7 +99,7 @@ def stasheffObjOut
     else
       obj ⟨i.val + s - 1, by omega⟩
 
-private lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
+lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
     shift_ofInt (β := β) (2 - (s : ℤ)) + shift_ofInt (2 - ((n + 1 - s : ℕ) : ℤ)) =
     shift_ofInt (3 - (n : ℤ)) := by
   have : 3 - (n : ℤ) = 2 - (s : ℤ) + 2 - ((n + 1 - s : ℕ) : ℤ) := by
