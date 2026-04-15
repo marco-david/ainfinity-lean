@@ -100,7 +100,16 @@ INPUT ./macros/web.tex
 INPUT macros/web.tex
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/l3backend/l3backend-xetex.def
 INPUT /usr/local/texlive/2025/texmf-dist/tex/latex/l3backend/l3backend-xetex.def
+INPUT ./web.aux
+INPUT ./web.aux
+INPUT web.aux
 OUTPUT web.aux
+INPUT ./web.out
+INPUT ./web.out
+INPUT web.out
+INPUT web.out
+INPUT ./web.out
+INPUT ./web.out
 OUTPUT web.out
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/cm/cmr12.tfm
 INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/cm/cmr8.tfm
@@ -170,6 +179,3 @@ INPUT /usr/local/texlive/2025/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm1
 INPUT ./chapters/ch03klrwcategory.tex
 INPUT ./chapters/ch03klrwcategory.tex
 INPUT chapters/ch03klrwcategory.tex
-INPUT web.aux
-INPUT ./web.out
-INPUT ./web.out

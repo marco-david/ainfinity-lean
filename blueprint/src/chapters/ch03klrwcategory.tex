@@ -11,14 +11,18 @@
   \item as objects, lists of elements in $\C$.
   \item as morphisms, dependent matrices of morphisms in $\C$.
   Specifically, if $(A_0, A_0, \ldots, A_n), (B_0, B_1, \ldots, B_m) \in \Ob\big((\Mat (\C))\big)$,
-  then $\Hom\big((A_0, A_1, \ldots, A_n), (B_0, B_1, \ldots, B_n)\big) = \{\}$. %TODO
+  then $\Hom\big((A_0, A_1, \ldots, A_n), (B_0, B_1, \ldots, B_n)\big) =
+  \{\begin{bmatrix}
+    a_{00} & \cdots & a_{0a} \\ \cdots & \cdots & \cdots \\ a_{m0} & \cdots & a_{ma}
+  \end{bmatrix}: a_{ij}\in \Hom(A_j, B_i), i\in \{0, \ldots, m-1\}, j\in \{0, \ldots, n-1\}\}
+  $
   \item composition is defined by matrix multiplication
   \item identities are given by the identity matrix
   $$ (\idf_{(A_0, \ldots, A_m)})_{i, j} = \begin{cases}
   \idf_{A_i} & \text{reinterpreted as an element of }\Hom(A_i, A_j)
-  \text{ by casting along the equality if }i=j
+  \text{ by casting along the equality if }i = j
   \\ 0 & \text{ if }i\ne j
-  \end{cases}$$. %TODO
+  \end{cases}$$.
  \end{itemize}
 \end{definition}
   There is a fully faithful functor $G: \C \Rightarrow \CMat(\C)$.
@@ -78,7 +82,7 @@
   for computability.
 \end{definition}
 \begin{definition}
-  Let $\BK(\C)$ denote the set of boudned cochain complexes in $\C$. THen
+  Let $\BK(\C)$ denote the set of bounded cochain complexes in $\C$. THen
   there is a function $F:\BK(\C)\to K^\bullet(\C)$ which forgets the finiteness.
   Then we equip $\BK(\C)$ with the induced category structure of $F$ which makes
   $F$ into a fully faithful functor $F:\BK(\C) \to K^\bullet (\C)$.
