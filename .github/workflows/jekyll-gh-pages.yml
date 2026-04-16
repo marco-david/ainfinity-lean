@@ -29,6 +29,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Build project
+        uses: leanprover/lean-action@434f25c2f80ded67bba02502ad3a86f25db50709 # 2025-07-02
+        with:
+          build: true
+          lint: false
+          mk_all-check: true
+      - name: Generate documentation assets
+        uses: leanprover-community/docgen-action@deed0cdc44dd8e5de07a300773eb751d33e32fc8 # 2025-10-26
+        with:
+          blueprint: true
+          homepage: home_page
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build with Jekyll
