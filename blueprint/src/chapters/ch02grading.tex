@@ -1,11 +1,5 @@
 \chapter{Gradings}
 
-\section{Overview}
-
-This chapter records the basic grading data used throughout the project:
-the parity group, the class of grading indices, graded modules, and graded
-$R$-linear quivers.
-
 \begin{definition}[Parity group]
 \lean{AInfinityTheory.Parity}
 \label{AInfinityTheory.Parity}
@@ -33,8 +27,8 @@ such that $\sigma(\phi(n))$ is the parity class of $n$ for every integer $n$.
 \label{AInfinityTheory.shift_ofInt}
 \leanok
 \uses{AInfinityTheory.Grading}
-For a grading index $\beta$, the definition \lean{AInfinityTheory.shift_ofInt} is the image of
-$n \in \mathbb{Z}$ under the distinguished map $\mathbb{Z} \to \beta$.
+For a grading index $\beta$, \lean{AInfinityTheory.shift_ofInt} is the image of
+$n \in \mathbb{Z}$ under the distinguished map $\phi : \mathbb{Z} \to \beta$.
 \end{definition}
 
 \begin{definition}[Graded $R$-module]

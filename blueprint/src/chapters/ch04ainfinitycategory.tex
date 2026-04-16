@@ -1,12 +1,5 @@
 \chapter{A-infinity Categories}
 
-\section{Overview}
-
-This chapter upgrades the abstract Stasheff package to object-indexed
-\Ainf{}-categories. The public API consists of raw precategory data, chains,
-their basic accessors, the Stasheff sum/property on a precategory, and the
-packaged notion of an \Ainf{}-category.
-
 \begin{definition}[\Ainf{}-precategory]
 \lean{AInfinityCategoryTheory.AInfinityPreCategory}
 \label{AInfinityCategoryTheory.AInfinityPreCategory}
@@ -19,6 +12,8 @@ graded $R$-linear quiver together with operations
 \]
 of the prescribed multilinear type for every positive arity $n$.
 \end{definition}
+
+\section{Chains}
 
 \begin{definition}[Chain]
 \lean{AInfinityCategoryTheory.AInfinityPreCategory.Chain}
@@ -51,8 +46,9 @@ The target of a chain is its final object.
 \label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.link}
 \leanok
 \uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain, AInfinityTheory.composableHomType}
-For a chain and an index $i$, \lean{AInfinityCategoryTheory.AInfinityPreCategory.Chain.link} is the module of the $i$-th
-composable morphism in that chain.
+For a chain and an index $i$,
+\lean{AInfinityCategoryTheory.AInfinityPreCategory.Chain.link} is the module of
+the $i$-th composable morphism in that chain.
 \end{definition}
 
 \begin{definition}[Chain operation target]
@@ -63,6 +59,8 @@ composable morphism in that chain.
 For a chain, this is the graded hom-module that receives the corresponding
 multilinear operation.
 \end{definition}
+
+\section{Stasheff Identities}
 
 \begin{definition}[Precategory Stasheff sum]
 \lean{AInfinityCategoryTheory.AInfinityPreCategory.stasheffSum}

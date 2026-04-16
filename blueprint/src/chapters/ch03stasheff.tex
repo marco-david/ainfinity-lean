@@ -1,11 +1,5 @@
 \chapter{Stasheff Data}
 
-\section{Overview}
-
-This chapter packages the public bookkeeping used to state the Stasheff
-identities. Low-level degree and object rearrangements used only inside the
-implementation are kept private in Lean and are intentionally omitted here.
-
 \begin{definition}[Operation target degree]
 \lean{AInfinityTheory.operationTargetDeg}
 \label{AInfinityTheory.operationTargetDeg}
@@ -37,8 +31,9 @@ in the grading index.
 \label{AInfinityTheory.composableHomType}
 \leanok
 \uses{AInfinityTheory.GradedRModule}
-For a string of objects and prescribed degrees, \lean{AInfinityTheory.composableHomType} is the
-$i$-th graded hom-module in that composable string.
+For a string of objects and prescribed degrees,
+\lean{AInfinityTheory.composableHomType} is the $i$-th graded hom-module in
+that composable string.
 \end{definition}
 
 \begin{definition}[Operation target type]
