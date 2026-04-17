@@ -22,10 +22,12 @@ variable (β : BraidingFunctorData R n)
 
 def add₀ (A : CMat_ (KLRWCategory n R))
   : CochainComplex (CMat_ (KLRWCategory n R)) ℤ :=
+  -- Idea: Use CochainComplex.singleFunctor
   let _ := β -- To get β to become a parameter of this until we actually implement it
   sorry
 
 def add₁ {A B : CMat_ (KLRWCategory n R)} (f : A ⟶ B)
+  -- Idea: Use the action of CochainComplex.singleFunctor on maps
   : β.add₀ A ⟶ β.add₀ B := sorry
 
 def add₂ {A B C : CMat_ (KLRWCategory n R)} (f : A ⟶ B) (g : B ⟶ C)
