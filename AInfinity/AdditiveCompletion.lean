@@ -15,7 +15,28 @@ syntax (name := «term[_,]ₘ») "[" withoutPosition(term,*,?) "]ₘ" : term
 macro_rules
   | `([ $elems,* ]ₘ) => `(CMat_.ofList [ $elems,* ])
 
+recommended_spelling "empty" for "[]ₘ" in [«term[_,]ₘ»]
+recommended_spelling "singleton" for "[x]ₘ" in [«term[_,]ₘ»]
+
 namespace CMat_
+
+section lists
+variable {C : Type*} (A : C) (M N K : CMat_ C)
+
+theorem toList_empty : ([]ₘ : CMat_ C).toList = [] := rfl
+
+theorem toList_singleton : [A]ₘ.toList = [A] := rfl
+
+/-- Computable version of `CategoryTheory.Limits.biprod`. -/
+def cbiprod : CMat_ C := CMat_.ofList (M.toList ++ N.toList)
+
+-- `m` stands for "matrix"
+@[inherit_doc] infixl:65 " ⊞ₘ " => cbiprod
+
+theorem cbiprod_assoc : M ⊞ₘ N ⊞ₘ K = M ⊞ₘ (N ⊞ₘ K) := by
+  simp [cbiprod]
+
+end lists
 
 section definition
 variable {C : Type*} [Category C] [Preadditive C] (M N K : CMat_ C)
@@ -189,16 +210,6 @@ instance : (toMat_ C).IsEquivalence where
   full := inferInstance
   essSurj := inferInstance
 
-/-- Computable version of `CategoryTheory.Limits.biprod`. -/
-def cbiprod : CMat_ C := CMat_.ofList (M.toList ++ N.toList)
-
--- `m` stands for "matrix"
-@[inherit_doc] infixl:65 " ⊞ₘ " => cbiprod
-
-omit [Category C] [Preadditive C]
-theorem cbiprod_assoc : M ⊞ₘ N ⊞ₘ K = M ⊞ₘ (N ⊞ₘ K) := by
-  simp [cbiprod]
-
 end definition
 
 section embedding
@@ -218,13 +229,13 @@ theorem apply_X_ofList_singleton {A : C} (i : [A]ₘ.ι) :
   rfl
 
 unseal ι in
-theorem ofList_singleton_card {A : C} : Fintype.card [A]ₘ.ι = 1 := by
+theorem singleton_ι_card {A : C} : Fintype.card [A]ₘ.ι = 1 := by
   -- Cleaned-up Aristotle proof
   simp [CMat_.ι]
 
 -- Aristotle proof
 unseal ι in
-instance ofList_singleton_unique {A : C} : Unique [A]ₘ.ι :=
+instance singleton_ι_unique {A : C} : Unique [A]ₘ.ι :=
   inferInstanceAs (Unique (Fin 1))
 
 variable [Category C] [Preadditive C]
@@ -255,7 +266,7 @@ theorem X_embedding {A : C} (i : ((embedding C).obj A).ι) : ((embedding C).obj 
   apply_X_ofList_singleton C i
 
 -- Aristotle generated definition
-instance {A : C} : Unique ((embedding C).obj A).ι := ofList_singleton_unique C
+instance {A : C} : Unique ((embedding C).obj A).ι := singleton_ι_unique C
 
 namespace Embedding
 
