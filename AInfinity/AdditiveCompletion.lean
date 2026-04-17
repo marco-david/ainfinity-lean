@@ -10,6 +10,11 @@ structure CMat_ (C : Type*) where
   ofList ::
     toList : List C
 
+syntax (name := «term[_,]ₘ») "[" withoutPosition(term,*,?) "]ₘ" : term
+
+macro_rules
+  | `([ $elems,* ]ₘ) => `(CMat_.ofList [ $elems,* ])
+
 namespace CMat_
 
 section definition
@@ -184,13 +189,14 @@ instance : (toMat_ C).IsEquivalence where
   full := inferInstance
   essSurj := inferInstance
 
-/-- Computable version of `CategoryTheory.Limits.biprod` -/
+/-- Computable version of `CategoryTheory.Limits.biprod`. -/
 def cbiprod : CMat_ C := CMat_.ofList (M.toList ++ N.toList)
 
-@[inherit_doc] infixl:65 " ⊞ₖ " => cbiprod
+-- `m` stands for "matrix"
+@[inherit_doc] infixl:65 " ⊞ₘ " => cbiprod
 
 omit [Category C] [Preadditive C]
-theorem cbiprod_assoc : M ⊞ₖ N ⊞ₖ K = M ⊞ₖ (N ⊞ₖ K) := by
+theorem cbiprod_assoc : M ⊞ₘ N ⊞ₘ K = M ⊞ₘ (N ⊞ₘ K) := by
   simp [cbiprod]
 
 end definition
@@ -203,7 +209,7 @@ variable (C : Type*)
 This is not a simp lemma because I am worried that this is often an equality of types.
 But I think this could work as a simp lemma, I'm just not sure if it would cause defeq issues.
 -/
-theorem apply_X_ofList_singleton {A : C} (i : (CMat_.ofList [A]).ι) :
+theorem apply_X_ofList_singleton {A : C} (i : [A]ₘ.ι) :
     (CMat_.ofList [A]).X i = A := by
   -- Cleaned-up Aristotle proof
   simp only [X, List.length_cons, List.length_nil, Nat.reduceAdd, ι.toFin]
@@ -212,13 +218,13 @@ theorem apply_X_ofList_singleton {A : C} (i : (CMat_.ofList [A]).ι) :
   rfl
 
 unseal ι in
-theorem ofList_singleton_card {A : C} : Fintype.card (CMat_.ofList [A]).ι = 1 := by
+theorem ofList_singleton_card {A : C} : Fintype.card [A]ₘ.ι = 1 := by
   -- Cleaned-up Aristotle proof
   simp [CMat_.ι]
 
 -- Aristotle proof
 unseal ι in
-instance ofList_singleton_unique {A : C} : Unique (CMat_.ofList [A]).ι :=
+instance ofList_singleton_unique {A : C} : Unique [A]ₘ.ι :=
   inferInstanceAs (Unique (Fin 1))
 
 variable [Category C] [Preadditive C]
