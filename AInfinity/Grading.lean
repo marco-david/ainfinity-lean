@@ -6,7 +6,7 @@ public import Mathlib
 
 open ChainComplex CategoryTheory DirectSum GradedMonoid GradedObject
 
-namespace AInfinityCategoryTheory
+namespace AInfinityTheory
 
 universe u v w
 
@@ -21,8 +21,13 @@ class Grading (β : Type u) extends AddCommGroup β where
 def shift_ofInt {β} [Grading β] (n : ℤ) : β :=
   Grading.ofInt n
 
-class GQuiver (β : Type u) (obj : Type v) where
-  /-- The type of morphisms between a given source and target. -/
-  data : obj → obj → GradedObject β (Type w)
+variable {β : Type v} [Grading β]
 
-end AInfinityCategoryTheory
+abbrev GradedRModule (R : Type u) [CommRing R] :=
+  GradedObject β (ModuleCat.{u} R)
+
+/-- The graded `R`-module of morphisms between two objects. -/
+class RLinearGQuiver (R : Type u) [CommRing R] (Obj : Type w) where
+  Hom : Obj → Obj → GradedRModule (β := β) (R := R)
+
+end AInfinityTheory

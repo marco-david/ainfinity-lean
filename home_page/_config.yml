@@ -20,7 +20,7 @@
 
 title: A-infinity Categories
 #email: your-email@example.com
-description: by Marco David, Jason Dong, Hallvard Hareide, Jasper van de Kreeke, Justin Mu, Niels Voss and Annie Yao
+authors: authors
 baseurl: "/ainfinity-lean" # the subpath of your site, e.g. /blog
 url: "https://marcodavid.net" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username:
