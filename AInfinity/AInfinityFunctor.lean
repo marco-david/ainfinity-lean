@@ -31,9 +31,9 @@ abbrev functorTargetType
     (BHom : ObjB → ObjB → GradedRModule β_B R)
     (F : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
-    {n : ℕ}
-    (obj : Fin (n + 1) → ObjA)
-    (deg : Fin n → β_A) :
+    {n : ℕ+}
+    (obj : Fin ((n : ℕ) + 1) → ObjA)
+    (deg : Fin (n : ℕ) → β_A) :
     ModuleCat R :=
   (BHom (F (obj 0)) (F (obj (Fin.last n)))) (functorTargetDeg β_A β_B deg_trans deg)
 
@@ -53,11 +53,11 @@ structure AInfinityFunctorData
   deg_trans_sign : ∀ b : β_A, Grading.sign (deg_trans b) = Grading.sign b
 
   phi :
-    {n : ℕ} → [NeZero n] →
-    (obj : Fin (n + 1) → ObjA) →
-    (deg : Fin n → β_A) →
+    {n : ℕ+} →
+    (obj : Fin ((n : ℕ) + 1) → ObjA) →
+    (deg : Fin (n : ℕ) → β_A) →
     MultilinearMap R
-      (fun i : Fin n => composableHomType (GHom β_A R) obj deg i)
+      (fun i : Fin (n : ℕ) => composableHomType (GHom β_A R) obj deg i)
       (functorTargetType β_A β_B (GHom β_B R) F deg_trans obj deg)
 
 
