@@ -12,9 +12,10 @@ noncomputable section
 namespace AInfinityCategoryTheory
 
 universe u v w
-variable {β : Type v} [Grading β]
+variable (β : Type v) [Grading β]
 
-structure AInfinityCategoryData
+--TODO: change n to N and then take in extra parameter  → [NeZero n]
+class AInfinityCategoryData
     (R : Type u) [CommRing R] (Obj : Type w)
     extends RLinearGQuiver (β := β) R Obj where
   m :
@@ -27,12 +28,12 @@ structure AInfinityCategoryData
 
 namespace AInfinityCategoryData
 
-variable {R : Type u} [CommRing R]
-variable {Obj : Type w}
+variable (R : Type u) [CommRing R]
+variable (Obj : Type w)
 
-/-- The full Stasheff sum in arity `n`, with Koszul signs. -/
+/-- The full Stasheff sum in arity n, with Koszul signs. -/
 def stasheffSum
-    (X : AInfinityCategoryData (β := β) R Obj)
+    (X : AInfinityCategoryData β R Obj)
     {n : ℕ+}
     (obj : Fin ((n : ℕ) + 1) → Obj)
     (deg : Fin (n : ℕ) → β)
@@ -52,21 +53,12 @@ structure AInfinityCategory
     extends AInfinityCategoryData (β := β) R Obj where
   stasheff :
     AInfinityCategoryData.satisfiesStasheff
-      (β := β) toAInfinityCategoryData
+      β R Obj toAInfinityCategoryData
 
 namespace AInfinityCategory
 
-variable {R : Type u} [CommRing R]
-variable {Obj : Type w}
-
-lemma stasheff_eq_zero
-    (X : AInfinityCategory (β := β) R Obj)
-    {n : ℕ+}
-    (obj : Fin ((n : ℕ) + 1) → Obj)
-    (deg : Fin (n : ℕ) → β)
-    (x : ∀ i : Fin (n : ℕ), composableHomType X.Hom obj deg i) :
-    X.toAInfinityCategoryData.stasheffSum obj deg x = 0 :=
-  X.stasheff n obj deg x
+variable (R : Type u) [CommRing R]
+variable (Obj : Type w)
 
 end AInfinityCategory
 

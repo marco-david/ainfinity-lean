@@ -13,8 +13,8 @@ noncomputable section
 namespace AInfinityFunctorTheory
 
 universe u v w x y
-variable {β_A : Type v} [Grading β_A]
-variable {β_B : Type w} [Grading β_B]
+variable (β_A : Type v) [Grading β_A]
+variable (β_B : Type w) [Grading β_B]
 
 /-- Target degree of `φ_n` applied to inputs of the given degrees.
     `φ_n` has degree `1 − n`, so the output lives in
@@ -28,21 +28,21 @@ abbrev functorTargetDeg
 abbrev functorTargetType
     {R : Type u} [CommRing R]
     {ObjA : Type x} {ObjB : Type y}
-    (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
+    (BHom : ObjB → ObjB → GradedRModule β_B R)
     (F : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
-    {n : ℕ+}
-    (obj : Fin ((n : ℕ) + 1) → ObjA)
-    (deg : Fin (n : ℕ) → β_A) :
+    {n : ℕ}
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A) :
     ModuleCat R :=
-  (BHom (F (obj 0)) (F (obj (Fin.last n)))) (functorTargetDeg deg_trans deg)
+  (BHom (F (obj 0)) (F (obj (Fin.last n)))) (functorTargetDeg β_A β_B deg_trans deg)
 
 /-- Raw data for an A∞ functor between graded `R`-linear quivers. -/
 structure AInfinityFunctorData
-    {R : Type u} [CommRing R]
-    {ObjA : Type x} {ObjB : Type y}
-    (A : RLinearGQuiver (β := β_A) R ObjA)
-    (B : RLinearGQuiver (β := β_B) R ObjB) where
+    (R : Type u) [CommRing R]
+    (ObjA : Type x) (ObjB : Type y)
+    [RLinearGQuiver β_A R ObjA]
+    [RLinearGQuiver β_B R ObjB] where
   /-- The map on objects. -/
   F : ObjA → ObjB
   /-- Group homofunctor translating degrees from `β_A` to `β_B`. -/
@@ -53,12 +53,12 @@ structure AInfinityFunctorData
   deg_trans_sign : ∀ b : β_A, Grading.sign (deg_trans b) = Grading.sign b
 
   phi :
-    {n : ℕ+} →
-    (obj : Fin ((n : ℕ) + 1) → ObjA) →
-    (deg : Fin (n : ℕ) → β_A) →
+    {n : ℕ} → [NeZero n] →
+    (obj : Fin (n + 1) → ObjA) →
+    (deg : Fin n → β_A) →
     MultilinearMap R
-      (fun i : Fin (n : ℕ) => composableHomType A.Hom obj deg i)
-      (functorTargetType B.Hom F deg_trans obj deg)
+      (fun i : Fin n => composableHomType (GHom β_A R) obj deg i)
+      (functorTargetType β_A β_B (GHom β_B R) F deg_trans obj deg)
 
 
 
@@ -66,8 +66,8 @@ namespace AInfinityFunctorData
 
 variable {R : Type u} [CommRing R]
 variable {ObjA : Type x} {ObjB : Type y}
-variable {A : RLinearGQuiver (β := β_A) R ObjA}
-variable {B : RLinearGQuiver (β := β_B) R ObjB}
+variable [RLinearGQuiver β_A R ObjA]
+variable [RLinearGQuiver β_B R ObjB]
 
 /-- Target degree of the functor equation.
     Both sides of the A∞-functor equation land in
@@ -87,7 +87,7 @@ abbrev functorEqTargetType
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A) :
     ModuleCat R :=
-  (BHom (F (obj 0)) (F (obj (Fin.last n)))) (functorEqTargetDeg deg_trans deg)
+  (BHom (F (obj 0)) (F (obj (Fin.last n)))) (functorEqTargetDeg β_A β_B deg_trans deg)
 
 
 /- The LHS of the A∞-functor equation is:
@@ -99,44 +99,40 @@ Structurally this is the same as the Stasheff term, except the *outer* operation
 section LHS
 --helper lemmas
 lemma functorLHS_deg_compat
-    (F : AInfinityFunctorData A B)
+    (F : AInfinityFunctorData β_A β_B R ObjA ObjB)
     {n : ℕ}
     (deg : Fin n → β_A)
     (r s : ℕ)
     (hr : r + s ≤ n) :
-    functorTargetDeg F.deg_trans (stasheffDegOut deg r s hr) =
-    functorEqTargetDeg F.deg_trans deg := by
-  unfold functorTargetDeg functorEqTargetDeg;
+    functorTargetDeg β_A β_B F.deg_trans (stasheffDegOut deg r s hr) =
+    functorEqTargetDeg β_A β_B F.deg_trans deg := by
+  /-unfold functorTargetDeg functorEqTargetDeg;
   rw [ ← map_sum ];
-  rw [ show F.deg_trans ( ∑ x : Fin ( n + 1 - s ), stasheffDegOut deg r s hr x ) = F.deg_trans ( ∑ i : Fin n, deg i + shift_ofInt ( 2 - ( s : ℤ ) ) ) by
+  rw [ show deg_trans ( ∑ x : Fin ( n + 1 - s ), stasheffDegOut deg r s hr x ) = F.deg_trans ( ∑ i : Fin n, deg i + shift_ofInt ( 2 - ( s : ℤ ) ) ) by
         exact congr_arg _ ( stasheffDegOut_sum_core deg r s hr ) ];
   rw [ map_add, show F.deg_trans ( shift_ofInt ( 2 - s : ℤ ) ) = shift_ofInt ( 2 - s : ℤ ) from ?_, show ( n + 1 - s : ℕ ) = ( n - s ) + 1 from ?_ ] ; norm_num ; ring;
   · simp +decide [ add_assoc, Nat.cast_sub ( show s ≤ n from by linarith ) ];
     simp +decide [ shift_ofInt ];
   · rw [ Nat.sub_add_comm ( by linarith ) ];
-  · exact F.deg_trans_ofInt _
+  · exact F.deg_trans_ofInt _-/
+  sorry
 
 
-/-- The `(r, s)` summand on the LHS of the functor equation:
-
-(obj : Fin ((n : ℕ) + 1) → ObjA) →
-    (deg : Fin (n : ℕ) → β_A)
-    `φ_{r+1+t}(a_1, …, a_r, m^A_s(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, a_n)`. -/
-def functorLHSTerm
-    (X_A : AInfinityCategoryData R ObjA)
-    (F : AInfinityFunctorData X_A.toRLinearGQuiver B)
+/- def functorLHSTerm
+    [AInfinityCategoryData β_A R ObjA]
+    (F : AInfinityFunctorData β_A β_B R ObjA ObjB)
     (n : ℕ)
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : ∀ i : Fin n, composableHomType X_A.Hom obj deg i)
+    (x : ∀ i : Fin n, composableHomType (GHom β_A R) obj deg i)
     (r s : ℕ)
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
-    functorEqTargetType B.Hom F.F F.deg_trans obj deg := by
+    functorEqTargetType β_A β_B (GHom β_B R) F.F F.deg_trans obj deg := by
   -- Inner: apply m^A_s to the (r+1, …, r+s) block
   let degIn := stasheffDegIn deg r s hr
   let objIn := stasheffObjIn obj r s hr
-  let xIn : ∀ i : Fin s, composableHomType X_A.Hom objIn degIn i := fun i => by
+  let xIn : ∀ i : Fin s, composableHomType (GHom β_A R) objIn degIn i := fun i => by
     simpa [composableHomType, objIn, stasheffObjIn, degIn, stasheffDegIn]
       using x ⟨r + i.val, by omega⟩
   let inner := X_A.m (n := ⟨s, hs⟩) objIn degIn xIn
@@ -172,26 +168,26 @@ def functorLHSTerm
     functorTargetType (n := ⟨outerN, houterN⟩) B.Hom F.F F.deg_trans objOut degOut:= by
     sorry
 
-  exact hdeg ▸ outer
+  exact hdeg ▸ outer -/
 
-/-- The full LHS sum with signs:
-    `∑_{r,s} (-1)^† φ_{r+1+t}(…, m^A_s(…), …)`. -/
+
+/-
 def functorLHSSum
-    (X_A : AInfinityCategoryData R ObjA)
-    (F : AInfinityFunctorData X_A.toRLinearGQuiver B)
+    [AInfinityCategoryData β_A R ObjA]
+    (F : AInfinityFunctorData β_A β_B R ObjA ObjB)
     (n : ℕ)
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : ∀ i : Fin n, composableHomType X_A.Hom obj deg i) :
-    functorEqTargetType B.Hom F.F F.deg_trans obj deg :=
+    (x : ∀ i : Fin n, composableHomType (GHom β_A R) obj deg i) :
+    functorEqTargetType β_A β_B (GHom β_B R) F.F F.deg_trans obj deg :=
   Finset.sum ((Finset.range (n + 1)).attach) fun r =>
     Finset.sum ((Finset.Ico 1 (n - r.1 + 1)).attach) fun s =>
       let h : validStasheffIndices n r.1 s.1 :=
         validStasheffIndices_of_mem_ranges (n := (n : ℕ)) r.2 s.2
       (stasheffSign deg r.1 s.1 h.2) •
-        (F.functorLHSTerm X_A n obj deg x r.1 s.1 h.1 h.2)
+        (F.functorLHSTerm β_A β_B n obj deg x r.1 s.1 h.1 h.2)
 
-
+ -/
 end LHS
 
 
