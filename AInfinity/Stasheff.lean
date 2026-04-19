@@ -245,7 +245,8 @@ def indexedStasheffTerm
     [CommRing R]
     {Obj : Type w}
     (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
-    (m : {n : ℕ} → (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
       MultilinearMap R
         (fun i : Fin n => composableHomType Hom obj deg i)
         (operationTargetType Hom obj deg))
@@ -262,6 +263,7 @@ def indexedStasheffTerm
   let xIn : ∀ i : Fin s, composableHomType Hom objIn degIn i := fun i => by
     simpa [composableHomType, objIn, stasheffObjIn, degIn, stasheffDegIn]
       using x ⟨r + i.val, by omega⟩
+  letI : NeZero s := ⟨by omega⟩
   let inner := m objIn degIn xIn
   let outerN := n + 1 - s
   let degOut := stasheffDegOut deg r s hr
@@ -284,6 +286,10 @@ def indexedStasheffTerm
           [composableHomType, objOut, stasheffObjOut, degOut, stasheffDegOut,
             hlt, heq, hgt, hsucc]
           using x ⟨i.val + s - 1, by omega⟩
+  have houterN_pos : 0 < outerN := by
+    dsimp [outerN]
+    omega
+  letI : NeZero outerN := ⟨Nat.ne_of_gt houterN_pos⟩
   let outer := m objOut degOut xOut
   have hsource : objOut 0 = obj 0 := by
     simp [objOut, stasheffObjOut]
@@ -325,7 +331,8 @@ def indexedStasheffSum
     [CommRing R]
     {Obj : Type w}
     (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
-    (m : {n : ℕ} → (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
       MultilinearMap R
         (fun i : Fin n => composableHomType Hom obj deg i)
         (operationTargetType Hom obj deg))
@@ -347,11 +354,12 @@ def indexedSatisfiesStasheff
     [CommRing R]
     {Obj : Type w}
     (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
-    (m : {n : ℕ} → (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
       MultilinearMap R
         (fun i : Fin n => composableHomType Hom obj deg i)
         (operationTargetType Hom obj deg)) : Prop :=
-  ∀ (n : ℕ) (obj : Fin (n + 1) → Obj) (deg : Fin n → β)
+  ∀ (n : ℕ) [NeZero n] (obj : Fin (n + 1) → Obj) (deg : Fin n → β)
     (x : ∀ i : Fin n, composableHomType Hom obj deg i),
     indexedStasheffSum Hom m obj deg x = 0
 

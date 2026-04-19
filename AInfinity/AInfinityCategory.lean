@@ -14,7 +14,6 @@ namespace AInfinityCategoryTheory
 universe u v w
 variable (β : Type v) [Grading β]
 
---TODO: change n to N and then take in extra parameter  → [NeZero n]
 class AInfinityCategoryData
     (R : Type u) [CommRing R] (Obj : Type w)
     extends RLinearGQuiver (β := β) R Obj where
@@ -37,14 +36,14 @@ def stasheffSum
     {n : ℕ}
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
-    (x : ∀ i : Fin n, composableHomType X.Hom obj deg i) :
-    X.Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
-  indexedStasheffSum X.Hom X.m obj deg x
+    (x : ∀ i : Fin n, composableHomType (GHom β R) obj deg i) :
+    (GHom β R) (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
+  indexedStasheffSum (GHom β R) X.m obj deg x
 
 /-- The Stasheff identities as a property of the raw A∞ category data. -/
 def satisfiesStasheff
     (X : AInfinityCategoryData (β := β) R Obj) : Prop :=
-  indexedSatisfiesStasheff X.Hom X.m
+  indexedSatisfiesStasheff (GHom β R) X.m
 
 end AInfinityCategoryData
 

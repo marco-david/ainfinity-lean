@@ -28,10 +28,9 @@ abbrev GradedRModule (R : Type u) [CommRing R] :=
 
 /-- The graded R-module of morphisms between two objects. -/
 class RLinearGQuiver (R : Type u) [CommRing R] (Obj : Type w) where
-  -- TODO: Rename to GHom' and make protected
-  Hom : Obj → Obj → GradedRModule β R
+  protected GHom' : Obj → Obj → GradedRModule β R
 
 def GHom (R : Type u) [CommRing R] {Obj : Type w} [RLinearGQuiver β R Obj] (X Y : Obj) : GradedRModule β R :=
-  RLinearGQuiver.Hom X Y
+  RLinearGQuiver.GHom' X Y
 
 end AInfinityTheory
