@@ -467,6 +467,27 @@ def functorRHSSum
 end RHS
 
 
+/-- The A∞ functor equations as a property of raw functor data between raw A∞ category data. -/
+def satisfiesFunctorEquations
+    (A : AInfinityCategoryData β_A R ObjA)
+    (B : AInfinityCategoryData β_B R ObjB)
+    (F : @AInfinityFunctorData
+      β_A _ β_B _ R _ ObjA ObjB
+      A.toRLinearGQuiver B.toRLinearGQuiver) : Prop :=
+  letI : RLinearGQuiver β_A R ObjA := A.toRLinearGQuiver
+  letI : RLinearGQuiver β_B R ObjB := B.toRLinearGQuiver
+  ∀ (n : ℕ) [NeZero n] (obj : Fin (n + 1) → ObjA) (deg : Fin n → β_A)
+    (x : ∀ i : Fin n, composableHomType (GHom β_A R) obj deg i),
+    functorLHSSum β_A β_B
+      (GHom β_A R) (GHom β_B R)
+      F.F F.deg_trans F.deg_trans_ofInt F.phi A.m
+      obj deg x =
+    functorRHSSum β_A β_B
+      (GHom β_A R) (GHom β_B R)
+      F.F F.deg_trans F.phi B.m
+      obj deg x
+
+
 end AInfinityFunctorData
 
 end AInfinityFunctorTheory

@@ -47,7 +47,7 @@ def satisfiesStasheff
 
 end AInfinityCategoryData
 
-structure AInfinityCategory
+class AInfinityCategory
     (R : Type u) [CommRing R] (Obj : Type w)
     extends AInfinityCategoryData (β := β) R Obj where
   stasheff :

@@ -9,7 +9,7 @@ open CategoryTheory Finset AInfinityTheory AInfinityCategoryTheory
 
 noncomputable section
 
-namespace AInfinityAlgebraTheory
+/- namespace AInfinityAlgebraTheory
 
 universe u v
 variable {β : Type v} [Grading β]
@@ -86,4 +86,4 @@ def toPreCategory
 
 end AInfinityAlgebra
 
-end AInfinityAlgebraTheory
+end AInfinityAlgebraTheory -/
