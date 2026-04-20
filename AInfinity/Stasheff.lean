@@ -341,12 +341,12 @@ def indexedStasheffSum
     (deg : Fin n → β)
     (x : ∀ i : Fin n, composableHomType Hom obj deg i) :
     Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
-  Finset.sum ((Finset.range (n + 1)).attach) fun r =>
-    Finset.sum ((Finset.Ico 1 (n - r.1 + 1)).attach) fun s =>
+  ∑ r ∈ (Finset.range (n + 1)).attach,
+    ∑ s ∈ (Finset.Ico 1 (n - r.1 + 1)).attach,
       let h : validStasheffIndices n r.1 s.1 :=
         validStasheffIndices_of_mem_ranges (n := n) r.2 s.2
       (stasheffSign deg r.1 s.1 h.2) •
-        indexedStasheffTerm Hom m obj deg x r.1 s.1 h.1 h.2
+        (indexedStasheffTerm Hom m obj deg x r.1 s.1 h.1 h.2)
 
 /-- The Stasheff identities for object-indexed A∞ operations. -/
 def indexedSatisfiesStasheff
