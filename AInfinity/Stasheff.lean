@@ -343,12 +343,11 @@ def indexedStasheffInner
 def indexedStasheffMiddleIndex
     {n : ℕ}
     (r s : ℕ)
-    (hs : 1 ≤ s)
     (hr : r + s ≤ n) : Fin (n + 1 - s) :=
   ⟨r, by omega⟩
 
 /-- Helper: the `ModuleCat` equality identifying the middle outer input with the inner output. -/
-def indexedStasheffMiddleModuleEq
+lemma indexedStasheffMiddleModuleEq
     {R : Type u}
     [CommRing R]
     {Obj : Type w}
@@ -357,16 +356,15 @@ def indexedStasheffMiddleModuleEq
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
     (r s : ℕ)
-    (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
     operationTargetType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) =
       composableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr)
-        (indexedStasheffMiddleIndex r s hs hr) := by
+        (indexedStasheffMiddleIndex r s hr) := by
   simp [composableHomType, operationTargetType, indexedStasheffMiddleIndex,
     stasheffObjIn, stasheffObjOut, stasheffDegOut, stasheffInnerDeg]
 
 /-- Helper: the type equality identifying the middle outer input with the inner output. -/
-def indexedStasheffMiddleTypeEq
+lemma indexedStasheffMiddleTypeEq
     {R : Type u}
     [CommRing R]
     {Obj : Type w}
@@ -375,13 +373,12 @@ def indexedStasheffMiddleTypeEq
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
     (r s : ℕ)
-    (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
     ((operationTargetType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) : ModuleCat R) : Type u) =
       ((composableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr)
-        (indexedStasheffMiddleIndex r s hs hr) : ModuleCat R) : Type u) := by
+        (indexedStasheffMiddleIndex r s hr) : ModuleCat R) : Type u) := by
   exact congrArg (fun M : ModuleCat R => (M : Type u))
-    (indexedStasheffMiddleModuleEq Hom obj deg r s hs hr)
+    (indexedStasheffMiddleModuleEq Hom obj deg r s hr)
 
 /-- Helper: the input tuple for the outer operation in a Stasheff term. -/
 def indexedStasheffXOut
@@ -408,12 +405,12 @@ def indexedStasheffXOut
   · simpa [composableHomType, stasheffObjOut, stasheffDegOut, hlt, Nat.le_of_lt hlt]
       using x ⟨i.val, by omega⟩
   · by_cases heq : i.val = r
-    · have hi : i = indexedStasheffMiddleIndex r s hs hr := by
+    · have hi : i = indexedStasheffMiddleIndex r s hr := by
         apply Fin.ext
         simp [indexedStasheffMiddleIndex, heq]
       subst hi
       exact
-        cast (indexedStasheffMiddleTypeEq Hom obj deg r s hs hr)
+        cast (indexedStasheffMiddleTypeEq Hom obj deg r s hr)
           (indexedStasheffInner Hom m obj deg x r s hs hr)
     · have hgt : ¬ i.val ≤ r := by omega
       have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
@@ -424,7 +421,6 @@ def indexedStasheffXOut
 lemma indexedStasheffOuterArity_pos
     {n : ℕ}
     (r s : ℕ)
-    (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
     0 < n + 1 - s := by
   omega
@@ -448,12 +444,12 @@ def indexedStasheffOuter
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
     operationTargetType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) := by
-  letI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hs hr)⟩
+  letI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
   exact m (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr)
     (indexedStasheffXOut Hom m obj deg x r s hs hr)
 
 /-- Helper: the `ModuleCat` equality from the outer target to the final Stasheff target. -/
-def indexedStasheffTargetModuleEq
+lemma indexedStasheffTargetModuleEq
     {R : Type u}
     [CommRing R]
     {Obj : Type w}
@@ -489,7 +485,7 @@ def indexedStasheffTargetModuleEq
       exact congrArg (fun d => Hom (obj 0) (obj (Fin.last n)) d) (stasheffDegOut_sum deg r s hr)
 
 /-- Helper: transport from the outer target type to the final Stasheff target type. -/
-def indexedStasheffTargetEq
+lemma indexedStasheffTargetEq
     {R : Type u}
     [CommRing R]
     {Obj : Type w}
@@ -544,8 +540,8 @@ lemma indexedStasheffXOut_middle_eq
     (r s : ℕ)
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
-    indexedStasheffXOut Hom m obj deg x r s hs hr (indexedStasheffMiddleIndex r s hs hr) =
-      cast (indexedStasheffMiddleTypeEq Hom obj deg r s hs hr)
+    indexedStasheffXOut Hom m obj deg x r s hs hr (indexedStasheffMiddleIndex r s hr) =
+      cast (indexedStasheffMiddleTypeEq Hom obj deg r s hr)
         (indexedStasheffInner Hom m obj deg x r s hs hr) := by
   unfold indexedStasheffXOut
   simp [indexedStasheffMiddleIndex]
@@ -569,11 +565,11 @@ lemma indexedStasheffXOut_middle_eq_zero_of_inner_eq_zero
     (hs : 1 ≤ s)
     (hr : r + s ≤ n)
     (hinner : indexedStasheffInner Hom m obj deg x r s hs hr = 0) :
-    indexedStasheffXOut Hom m obj deg x r s hs hr (indexedStasheffMiddleIndex r s hs hr) = 0 := by
+    indexedStasheffXOut Hom m obj deg x r s hs hr (indexedStasheffMiddleIndex r s hr) = 0 := by
   rw [indexedStasheffXOut_middle_eq]
   exact
     (cast_eq_zero_iff_of_module_eq
-      (indexedStasheffMiddleModuleEq Hom obj deg r s hs hr)
+      (indexedStasheffMiddleModuleEq Hom obj deg r s hr)
       (indexedStasheffInner Hom m obj deg x r s hs hr)).2 hinner
 
 /-- The outer value vanishes if the outer multilinear map itself vanishes. -/
@@ -595,7 +591,7 @@ lemma indexedStasheffOuter_eq_zero_of_map_eq_zero
     (hs : 1 ≤ s)
     (hr : r + s ≤ n)
     (hm :
-      @m (n + 1 - s) ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hs hr)⟩
+      @m (n + 1 - s) ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
         (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) = 0) :
     indexedStasheffOuter Hom m obj deg x r s hs hr = 0 := by
   simp [indexedStasheffOuter, hm]
@@ -620,9 +616,9 @@ lemma indexedStasheffOuter_eq_zero_of_inner_eq_zero
     (hr : r + s ≤ n)
     (hinner : indexedStasheffInner Hom m obj deg x r s hs hr = 0) :
     indexedStasheffOuter Hom m obj deg x r s hs hr = 0 := by
-  let i0 := indexedStasheffMiddleIndex r s hs hr
+  let i0 := indexedStasheffMiddleIndex r s hr
   dsimp [indexedStasheffOuter]
-  letI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hs hr)⟩
+  letI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
   exact MultilinearMap.map_coord_zero
     (m (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr))
     i0
@@ -672,7 +668,7 @@ lemma indexedStasheffTerm_eq_zero_of_outer_map_eq_zero
     (hs : 1 ≤ s)
     (hr : r + s ≤ n)
     (hm :
-      @m (n + 1 - s) ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hs hr)⟩
+      @m (n + 1 - s) ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
         (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) = 0) :
     indexedStasheffTerm Hom m obj deg x r s hs hr = 0 :=
   (indexedStasheffTerm_eq_zero_iff_outer_eq_zero Hom m obj deg x r s hs hr).2

@@ -196,7 +196,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_eq_zero_of_ne_three
   by_cases hs2 : s = 2
   · have hout : n + 1 - s ≠ 2 := by
       omega
-    haveI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hs hr)⟩
+    haveI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
     exact
       indexedStasheffTerm_eq_zero_of_outer_map_eq_zero
         (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -248,7 +248,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_eq_zero_of_s_ne_two
 
 lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
     (obj : Fin 4 → OneObj)
-    (x : ∀ i : Fin 3, ModuleCat.of R S) :
+    (x : Fin 3 → ModuleCat.of R S) :
     indexedStasheffTerm
       (fun _ _ => concentratedAt0 (R := R) (S := S))
       (concentratedAt0CategoryData (R := R) (S := S)).m
@@ -301,7 +301,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
     have hz0 : z 0 = x 0 * x 1 := by
       simpa [z, indexedStasheffXOut, x', hinner, hdegOut, concentratedAt0]
     have hz1 : z 1 = x 2 := by
-      simpa [z, indexedStasheffXOut, x', hinner, hdegOut, concentratedAt0]
+      simp [z, indexedStasheffXOut, x', concentratedAt0]
     have hz :
         (concentratedAt0CategoryData (R := R) (S := S)).m
           (stasheffObjOut obj 0 2 (by omega))
@@ -355,7 +355,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
 
 lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_zero_degrees
     (obj : Fin 4 → OneObj)
-    (x : ∀ i : Fin 3, ModuleCat.of R S) :
+    (x : Fin 3 → ModuleCat.of R S) :
     indexedStasheffTerm
       (fun _ _ => concentratedAt0 (R := R) (S := S))
       (concentratedAt0CategoryData (R := R) (S := S)).m
@@ -497,7 +497,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_eq_zero_of_not_all_zero
             (R := R) (S := S)
             (obj := stasheffObjOut obj 0 2 (by omega))
             (deg := stasheffDegOut deg 0 2 (by omega))
-            (h0 := by simpa [stasheffDegOut, hinnerDeg])
+            (h0 := by simp [stasheffDegOut, hinnerDeg])
             (h1 := by simpa [stasheffDegOut, hinnerDeg] using h2))
     · exact
         indexedStasheffTerm_eq_zero_of_inner_map_eq_zero
