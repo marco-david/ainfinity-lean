@@ -572,6 +572,14 @@ lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_eq_zero_of_not_all_zero
           (deg := stasheffDegIn deg 1 2 (by omega))
           (h0 := by simpa [stasheffDegIn] using h1))
 
+private lemma stasheffSign_zero_deg_0_2 :
+    stasheffSign (fun _ : Fin 3 => (0 : ℤ)) 0 2 (by omega) = -1 := by
+  norm_num [stasheffSign, stasheffSignParity]
+private lemma stasheffSign_zero_deg_1_2 :
+    stasheffSign (fun _ : Fin 3 => (0 : ℤ)) 1 2 (by omega) = 1 := by
+  norm_num [stasheffSign, stasheffSignParity]
+
+
 theorem concentratedAt0CategoryData_satisfiesStasheff :
     AInfinityCategoryData.satisfiesStasheff
       (β := ℤ) R OneObj (concentratedAt0CategoryData (R := R) (S := S)) := by
@@ -606,7 +614,107 @@ theorem concentratedAt0CategoryData_satisfiesStasheff :
       -- Remaining task: reduce the finite Stasheff sum to the two valid nonzero terms
       -- `(r,s) = (0,2)` and `(1,2)`, then use their signs and `hassoc`.
 
-      sorry
+      unfold indexedStasheffSum;
+      rw [ Finset.sum_eq_add ( ⟨ 0, by decide ⟩ ) ( ⟨ 1, by decide ⟩ ) ];
+      · rw [ Finset.sum_eq_single ⟨ 2, by decide ⟩, Finset.sum_eq_single ⟨ 2, by decide ⟩ ] <;> simp +decide [ * ];
+        · erw [ hterm02, hterm12, stasheffSign_zero_deg_0_2, stasheffSign_zero_deg_1_2 ] ; simp +decide [ hassoc ];
+        · intro a ha₁ ha₂ ha₃
+          interval_cases a <;> simp +decide at ha₃ ⊢
+          have hterm :
+              indexedStasheffTerm
+                (fun _ _ => concentratedAt0 (R := R) (S := S))
+                (concentratedAt0CategoryData (R := R) (S := S)).m
+                obj (fun _ : Fin 3 => 0) x 1 1 (by omega) (by omega) = 0 := by
+            exact
+              concentratedAt0CategoryData_stasheffTerm_eq_zero_of_s_ne_two
+                (R := R) (S := S)
+                (obj := obj) (deg := fun _ : Fin 3 => 0) (x := x)
+                (r := 1) (s := 1) (by omega) (by omega) (by decide)
+          have hsmul :
+              stasheffSign (fun _ : Fin 3 => (0 : ℤ)) 1 1 (by omega) •
+                indexedStasheffTerm
+                  (fun _ _ => concentratedAt0 (R := R) (S := S))
+                  (concentratedAt0CategoryData (R := R) (S := S)).m
+                  obj (fun _ : Fin 3 => (0 : ℤ)) x 1 1 (by omega) (by omega) = 0 := by
+            rw [hterm]
+            simp
+          simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
+        · intro a ha₁ ha₂ ha₃
+          interval_cases a <;> simp +decide [ * ] at ha₃ ⊢
+          · have hterm :
+                indexedStasheffTerm
+                  (fun _ _ => concentratedAt0 (R := R) (S := S))
+                  (concentratedAt0CategoryData (R := R) (S := S)).m
+                  obj (fun _ : Fin 3 => 0) x 0 1 (by omega) (by omega) = 0 := by
+              exact
+                concentratedAt0CategoryData_stasheffTerm_eq_zero_of_s_ne_two
+                  (R := R) (S := S)
+                  (obj := obj) (deg := fun _ : Fin 3 => 0) (x := x)
+                  (r := 0) (s := 1) (by omega) (by omega) (by decide)
+            have hsmul :
+                stasheffSign (fun _ : Fin 3 => (0 : ℤ)) 0 1 (by omega) •
+                  indexedStasheffTerm
+                    (fun _ _ => concentratedAt0 (R := R) (S := S))
+                    (concentratedAt0CategoryData (R := R) (S := S)).m
+                    obj (fun _ : Fin 3 => (0 : ℤ)) x 0 1 (by omega) (by omega) = 0 := by
+              rw [hterm]
+              simp
+            simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
+          · have hterm :
+                indexedStasheffTerm
+                  (fun _ _ => concentratedAt0 (R := R) (S := S))
+                  (concentratedAt0CategoryData (R := R) (S := S)).m
+                  obj (fun _ : Fin 3 => 0) x 0 3 (by omega) (by omega) = 0 := by
+              exact
+                concentratedAt0CategoryData_stasheffTerm_eq_zero_of_s_ne_two
+                  (R := R) (S := S)
+                  (obj := obj) (deg := fun _ : Fin 3 => 0) (x := x)
+                  (r := 0) (s := 3) (by omega) (by omega) (by decide)
+            have hsmul :
+                stasheffSign (fun _ : Fin 3 => (0 : ℤ)) 0 3 (by omega) •
+                  indexedStasheffTerm
+                    (fun _ _ => concentratedAt0 (R := R) (S := S))
+                    (concentratedAt0CategoryData (R := R) (S := S)).m
+                    obj (fun _ : Fin 3 => (0 : ℤ)) x 0 3 (by omega) (by omega) = 0 := by
+              rw [hterm]
+              simp
+            simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
+      · simp +decide;
+      · intro c hc hne; fin_cases c <;> simp +decide at hne hc ⊢;
+        · rw [Finset.sum_eq_single ⟨ 1, by decide ⟩]
+          · have hterm :
+                indexedStasheffTerm
+                  (fun _ _ => concentratedAt0 (R := R) (S := S))
+                  (concentratedAt0CategoryData (R := R) (S := S)).m
+                  obj (fun _ : Fin 3 => 0) x 2 1 (by omega) (by omega) = 0 := by
+              exact
+                concentratedAt0CategoryData_stasheffTerm_eq_zero_of_s_ne_two
+                  (R := R) (S := S)
+                  (obj := obj) (deg := fun _ : Fin 3 => 0) (x := x)
+                  (r := 2) (s := 1) (by omega) (by omega) (by decide)
+            have hsmul :
+                stasheffSign (fun _ : Fin 3 => (0 : ℤ)) 2 1 (by omega) •
+                  indexedStasheffTerm
+                    (fun _ _ => concentratedAt0 (R := R) (S := S))
+                    (concentratedAt0CategoryData (R := R) (S := S)).m
+                    obj (fun _ : Fin 3 => (0 : ℤ)) x 2 1 (by omega) (by omega) = 0 := by
+              rw [hterm]
+              simp
+            simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
+          · intro a ha hne
+            rcases a with ⟨a, ha'⟩
+            have ha1 : a = 1 := by
+              have hleft : 1 ≤ a := (Finset.mem_Ico.mp ha').1
+              have hright : a < 2 := (Finset.mem_Ico.mp ha').2
+              omega
+            subst ha1
+            exact (hne rfl).elim
+          · intro hnotmem
+            exfalso
+            exact hnotmem (by simp)
+        · rfl;
+      · simp +decide;
+      · simp +decide
     · rw [indexedStasheffSum]
       refine Finset.sum_eq_zero ?_
       intro r hr
