@@ -313,6 +313,23 @@ end Embedding
 
 end embedding
 
+section lift
+
+variable {C : Type*} [Category C] [Preadditive C]
+variable {D : Type*} [Category D] [Preadditive D]
+
+-- Unfortunately, we need to lift to some arbitrary computable category, not just CMat_
+-- These are candidate definitions until we get lifting to some arbitrary category
+-- These also look suspiciously similar to a monad
+
+def bind : CMat_ (CMat_ C) ⥤ CMat_ C := sorry
+
+def mapCMat_ (F : C ⥤ D) : CMat_ C ⥤ CMat_ D := sorry
+
+def lift (F : C ⥤ CMat_ C) : CMat_ C ⥤ CMat_ C := mapCMat_ F ⋙ bind
+
+end lift
+
 -- TODO: Pick a simp normal form
 -- TODO: implement Repr using cibiprod and the embedding
 
