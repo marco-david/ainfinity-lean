@@ -15,13 +15,13 @@ structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq
   gen₀ : KLRWCategory n R → CochainComplex (CMat_ (KLRWCategory n R)) ℤ
   gen₁ : {A B : KLRWCategory n R} → (A ⟶ B) → (gen₀ A ⟶ gen₀ B)
   gen₂ : {A B C : KLRWCategory n R} → (A ⟶ B) → (B ⟶ C) → ∀ (i : ℤ), (gen₀ A).X i → (gen₀ B).X (i - 1)
-  -- Replaced this with a degree -1 graded map, instead of another chain map
+  -- NOTE! Replaced this with a degree -1 graded map, instead of another chain map
 
   --SFₙ axioms. Note:
   --KLRW is a preadditive category, so its Hom-space is
   --all degree 0. Then only μ₂ is nonzero (it is composition).
   --Tw(Add(KLRW)) is a dg-category, so it has μ₁ = d, μ₂ = composition,
-  --and no higher terms. 
+  --and no higher terms.
   SF₂ : ∀ {A B C : KLRWCategory n R} (f : A ⟶ B) (g : B ⟶ C) (i : ℤ),
     (gen₁ (f ≫ g)).f i + (gen₁ f ≫ gen₁ g).f i
       = gen₂ f g i ≫ (gen₀ C).d (i - 1) i
