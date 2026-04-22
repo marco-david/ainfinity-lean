@@ -31,7 +31,7 @@ def add₁ {A B : CMat_ (KLRWCategory n R)} (f : A ⟶ B)
   : β.add₀ A ⟶ β.add₀ B := sorry
 
 def add₂ {A B C : CMat_ (KLRWCategory n R)} (f : A ⟶ B) (g : B ⟶ C)
-  : β.add₀ A ⟶ β.add₀ B := sorry
+  : β.add₀ A ⟶ β.add₀ C := sorry
 
 def full₀ (A : CochainComplex (CMat_ (KLRWCategory n R)) ℤ)
   : CochainComplex (CMat_ (KLRWCategory n R)) ℤ :=
