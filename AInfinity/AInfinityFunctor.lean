@@ -467,15 +467,16 @@ def functorRHSSum
 end RHS
 
 
-/-- The A∞ functor equations as a property of raw functor data between raw A∞ category data. -/
-def satisfiesFunctorEquations
-    (A : AInfinityCategoryData β_A R ObjA)
-    (B : AInfinityCategoryData β_B R ObjB)
+/-- The A∞ functor equations as a property of raw functor data between raw A∞ category
+    structures. -/
+def SatisfiesFunctorEquations
+    (R : Type u) [CommRing R]
+    (ObjA : Type x) (ObjB : Type y)
+    [A : AInfinityCategoryStruct β_A R ObjA]
+    [B : AInfinityCategoryStruct β_B R ObjB]
     (F : @AInfinityFunctorData
       β_A _ β_B _ R _ ObjA ObjB
       A.toRLinearGQuiver B.toRLinearGQuiver) : Prop :=
-  letI : RLinearGQuiver β_A R ObjA := A.toRLinearGQuiver
-  letI : RLinearGQuiver β_B R ObjB := B.toRLinearGQuiver
   ∀ (n : ℕ) [NeZero n] (obj : Fin (n + 1) → ObjA) (deg : Fin n → β_A)
     (x : ∀ i : Fin n, composableHomType (GHom β_A R) obj deg i),
     functorLHSSum β_A β_B
@@ -489,5 +490,23 @@ def satisfiesFunctorEquations
 
 
 end AInfinityFunctorData
+
+/-- An A∞ functor between A∞ categories is raw functor data satisfying the functor
+    equations. -/
+structure AInfinityFunctor
+    (R : Type u) [CommRing R]
+    (ObjA : Type x) (ObjB : Type y)
+    [A : AInfinityCategory β_A R ObjA]
+    [B : AInfinityCategory β_B R ObjB]
+    extends @AInfinityFunctorData
+      β_A _ β_B _ R _ ObjA ObjB
+      A.toAInfinityCategoryStruct.toRLinearGQuiver
+      B.toAInfinityCategoryStruct.toRLinearGQuiver where
+  satisfiesFunctorEquations :
+    AInfinityFunctorData.SatisfiesFunctorEquations
+      (β_A := β_A) (β_B := β_B)
+      (A := A.toAInfinityCategoryStruct)
+      (B := B.toAInfinityCategoryStruct)
+      R ObjA ObjB toAInfinityFunctorData
 
 end AInfinityFunctorTheory

@@ -109,7 +109,7 @@ lemma concentratedAt0Map_two_zero_zero_apply
   rfl
 
 @[reducible] def concentratedAt0CategoryData :
-    AInfinityCategoryData (β := ℤ) R OneObj where
+    AInfinityCategoryStruct (β := ℤ) R OneObj where
   toRLinearGQuiver := concentratedAt0Quiver (R := R) (S := S)
   m := by
     intro n _ obj deg
@@ -581,8 +581,8 @@ private lemma stasheffSign_zero_deg_1_2 :
 
 
 theorem concentratedAt0CategoryData_satisfiesStasheff :
-    AInfinityCategoryData.satisfiesStasheff
-      (β := ℤ) R OneObj (concentratedAt0CategoryData (R := R) (S := S)) := by
+    @AInfinityCategoryStruct.SatisfiesStasheff ℤ _ R _ OneObj
+      (concentratedAt0CategoryData (R := R) (S := S)) := by
   intro n _ obj deg x
   by_cases hn : n = 3
   · subst hn
@@ -808,8 +808,8 @@ theorem concentratedAt0CategoryData_satisfiesStasheff :
 
 @[reducible] def concentratedAt0Category :
     AInfinityCategory (β := ℤ) R OneObj where
-  toAInfinityCategoryData := concentratedAt0CategoryData (R := R) (S := S)
-  stasheff := concentratedAt0CategoryData_satisfiesStasheff (R := R) (S := S)
+  toAInfinityCategoryStruct := concentratedAt0CategoryData (R := R) (S := S)
+  satisfiesStasheff := concentratedAt0CategoryData_satisfiesStasheff (R := R) (S := S)
 
 
 end AInfinityExamples

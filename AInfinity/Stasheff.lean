@@ -743,7 +743,9 @@ def indexedStasheffSum
 
 /-- The Stasheff identities for object-indexed A∞ operations. -/
 def indexedSatisfiesStasheff
-    {R : Type u}
+    (β : Type v)
+    [Grading β]
+    (R : Type u)
     [CommRing R]
     {Obj : Type w}
     (Hom : Obj → Obj → GradedRModule (β := β) (R := R))

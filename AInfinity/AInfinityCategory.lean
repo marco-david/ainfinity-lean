@@ -14,7 +14,7 @@ namespace AInfinityCategoryTheory
 universe u v w
 variable (β : Type v) [Grading β]
 
-class AInfinityCategoryData
+class AInfinityCategoryStruct
     (R : Type u) [CommRing R] (Obj : Type w)
     extends RLinearGQuiver (β := β) R Obj where
   m :
@@ -25,34 +25,33 @@ class AInfinityCategoryData
       (fun i : Fin (n : ℕ) => composableHomType (GHom β R) obj deg i)
       (operationTargetType (GHom β R) obj deg)
 
-namespace AInfinityCategoryData
+namespace AInfinityCategoryStruct
 
 variable (R : Type u) [CommRing R]
 variable (Obj : Type w)
 
 /-- The full Stasheff sum in arity n, with Koszul signs. -/
 def stasheffSum
-    (X : AInfinityCategoryData β R Obj)
+    [AInfinityCategoryStruct β R Obj]
     {n : ℕ}
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
     (x : ∀ i : Fin n, composableHomType (GHom β R) obj deg i) :
     (GHom β R) (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
-  indexedStasheffSum (GHom β R) X.m obj deg x
+  indexedStasheffSum (GHom β R) m obj deg x
 
 /-- The Stasheff identities as a property of the raw A∞ category data. -/
-def satisfiesStasheff
-    (X : AInfinityCategoryData (β := β) R Obj) : Prop :=
-  indexedSatisfiesStasheff (GHom β R) X.m
+def SatisfiesStasheff
+    [AInfinityCategoryStruct (β := β) R Obj] : Prop :=
+  indexedSatisfiesStasheff β R (Obj := Obj) (GHom β R) m
 
-end AInfinityCategoryData
+end AInfinityCategoryStruct
 
 class AInfinityCategory
     (R : Type u) [CommRing R] (Obj : Type w)
-    extends AInfinityCategoryData (β := β) R Obj where
-  stasheff :
-    AInfinityCategoryData.satisfiesStasheff
-      β R Obj toAInfinityCategoryData
+    extends AInfinityCategoryStruct (β := β) R Obj where
+  satisfiesStasheff :
+    AInfinityCategoryStruct.SatisfiesStasheff (β := β) R Obj
 
 namespace AInfinityCategory
 
