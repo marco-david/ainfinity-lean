@@ -15,6 +15,8 @@ abbrev BinaryBiproductData.mkOfMaps {C : Type*} [Category C] [HasZeroMorphisms C
     (pair_snd : ∀ X (f : X ⟶ P) (g : X ⟶ Q), pair X f g ≫ snd = g := by aesop)
     (inl_copair : ∀ X (f : P ⟶ X) (g : Q ⟶ X), inl ≫ copair X f g = f := by aesop)
     (inr_copair : ∀ X (f : P ⟶ X) (g : Q ⟶ X), inr ≫ copair X f g = g := by aesop)
+    (pair_eta : ∀ X (h : X ⟶ pt), pair X (h ≫ fst) (h ≫ snd) = h := by aesop)
+    (copair_eta : ∀ X (h : pt ⟶ X), copair X (inl ≫ h) (inr ≫ h) = h := by aesop)
     : BinaryBiproductData P Q where
   bicone := ⟨pt, fst, snd, inl, inr, inl_fst, inl_snd, inr_fst, inr_snd⟩
   isBilimit := {
