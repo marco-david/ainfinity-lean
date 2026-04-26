@@ -269,83 +269,94 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
         (concentratedAt0CategoryData (R := R) (S := S)).m
         obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega) =
       x 0 * x 1 := by
-    simpa [indexedStasheffInner, indexedStasheffXIn, x', stasheffDegIn, concentratedAt0] using
+    simpa [indexedStasheffInner, indexedStasheffXIn_apply, x', concentratedAt0] using
       (concentratedAt0CategoryData_m_two_zero_zero_apply
         (R := R) (S := S)
         (obj := stasheffObjIn obj 0 2 (by omega))
         (x := fun i : Fin 2 => x ⟨i.1, by omega⟩))
+  have hdegOut :
+      stasheffDegOut (fun _ : Fin 3 => 0) 0 2 (by omega) = (fun _ : Fin 2 => (0 : ℤ)) := by
+    have hdegIn :
+        stasheffDegIn (fun _ : Fin 3 => 0) 0 2 (by omega) = (fun _ : Fin 2 => (0 : ℤ)) := by
+      ext i
+      fin_cases i <;> rfl
+    have hinnerDeg : stasheffInnerDeg (fun _ : Fin 3 => 0) 0 2 (by omega) = (0 : ℤ) := by
+      rw [stasheffInnerDeg, hdegIn]
+      simp [operationTargetDeg, shift_ofInt]
+    ext i
+    fin_cases i <;> simp [stasheffDegOut, hinnerDeg]
+  let z : ∀ i : Fin 2, ModuleCat.of R S :=
+    fun i => by
+      simpa [composableHomType, concentratedAt0, hdegOut] using
+        indexedStasheffXOut
+          (fun _ _ => concentratedAt0 (R := R) (S := S))
+          (concentratedAt0CategoryData (R := R) (S := S)).m
+          obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega) i
+  have hz0 : z 0 = x 0 * x 1 := by
+    simpa [z, hdegOut, concentratedAt0, hinner, indexedStasheffMiddleIndex] using
+      (indexedStasheffXOut_middle_eq
+        (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
+        (m := (concentratedAt0CategoryData (R := R) (S := S)).m)
+        (obj := obj) (deg := fun _ : Fin 3 => 0) (x := x')
+        (r := 0) (s := 2) (hs := by omega) (hr := by omega))
+  have hz1 : z 1 = x 2 := by
+    simpa [z, hdegOut, concentratedAt0] using
+      (indexedStasheffXOut_apply_of_gt
+        (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
+        (m := (concentratedAt0CategoryData (R := R) (S := S)).m)
+        (obj := obj) (deg := fun _ : Fin 3 => 0) (x := x')
+        (r := 0) (s := 2) (hs := by omega) (hr := by omega)
+        (i := 1) (by decide))
+  have hmcast :
+      (concentratedAt0CategoryData (R := R) (S := S)).m
+        (stasheffObjOut obj 0 2 (by omega))
+        (fun _ : Fin 2 => 0)
+        z =
+      (concentratedAt0CategoryData (R := R) (S := S)).m
+        (stasheffObjOut obj 0 2 (by omega))
+        (stasheffDegOut (fun _ : Fin 3 => 0) 0 2 (by omega))
+        (indexedStasheffXOut
+          (fun _ _ => concentratedAt0 (R := R) (S := S))
+          (concentratedAt0CategoryData (R := R) (S := S)).m
+          obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega)) := by
+    simpa [z, hdegOut, concentratedAt0] using
+      (multilinearFamily_eq_of_deg_eq
+        (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
+        (m := (concentratedAt0CategoryData (R := R) (S := S)).m)
+        (obj := stasheffObjOut obj 0 2 (by omega))
+        hdegOut
+        (indexedStasheffXOut
+          (fun _ _ => concentratedAt0 (R := R) (S := S))
+          (concentratedAt0CategoryData (R := R) (S := S)).m
+          obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega)))        
+  have houter0 :
+      indexedStasheffOuter
+        (fun _ _ => concentratedAt0 (R := R) (S := S))
+        (concentratedAt0CategoryData (R := R) (S := S)).m
+        obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega)
+        =
+      (concentratedAt0CategoryData (R := R) (S := S)).m
+        (stasheffObjOut obj 0 2 (by omega))
+        (fun _ : Fin 2 => 0)
+        z := by
+    simpa [indexedStasheffOuter] using hmcast.symm
+  have hz :
+      (concentratedAt0CategoryData (R := R) (S := S)).m
+        (stasheffObjOut obj 0 2 (by omega))
+        (fun _ : Fin 2 => 0)
+        z =
+      z 0 * z 1 := by
+    simpa using
+      (concentratedAt0CategoryData_m_two_zero_zero_apply
+        (R := R) (S := S)
+        (obj := stasheffObjOut obj 0 2 (by omega))
+        (x := z))
   have houter :
       indexedStasheffOuter
         (fun _ _ => concentratedAt0 (R := R) (S := S))
         (concentratedAt0CategoryData (R := R) (S := S)).m
         obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega) =
       (x 0 * x 1) * x 2 := by
-    have hdegOut :
-        stasheffDegOut (fun _ : Fin 3 => 0) 0 2 (by omega) = (fun _ : Fin 2 => (0 : ℤ)) := by
-      have hdegIn :
-          stasheffDegIn (fun _ : Fin 3 => 0) 0 2 (by omega) = (fun _ : Fin 2 => (0 : ℤ)) := by
-        ext i
-        fin_cases i <;> rfl
-      have hinnerDeg : stasheffInnerDeg (fun _ : Fin 3 => 0) 0 2 (by omega) = (0 : ℤ) := by
-        rw [stasheffInnerDeg, hdegIn]
-        simp [operationTargetDeg, shift_ofInt]
-      ext i
-      fin_cases i <;> simp [stasheffDegOut, hinnerDeg]
-    let z : ∀ i : Fin 2, ModuleCat.of R S :=
-      fun i => by
-        simpa [composableHomType, concentratedAt0, hdegOut] using
-          indexedStasheffXOut
-            (fun _ _ => concentratedAt0 (R := R) (S := S))
-            (concentratedAt0CategoryData (R := R) (S := S)).m
-            obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega) i
-    have hz0 : z 0 = x 0 * x 1 := by
-      simpa [z, indexedStasheffXOut, x', hinner, hdegOut, concentratedAt0]
-    have hz1 : z 1 = x 2 := by
-      simp [z, indexedStasheffXOut, x', concentratedAt0]
-    have hz :
-        (concentratedAt0CategoryData (R := R) (S := S)).m
-          (stasheffObjOut obj 0 2 (by omega))
-          (fun _ : Fin 2 => 0)
-          z =
-        z 0 * z 1 := by
-      simpa using
-        (concentratedAt0CategoryData_m_two_zero_zero_apply
-          (R := R) (S := S)
-          (obj := stasheffObjOut obj 0 2 (by omega))
-          (x := z))
-    have hmcast :
-        (concentratedAt0CategoryData (R := R) (S := S)).m
-          (stasheffObjOut obj 0 2 (by omega))
-          (fun _ : Fin 2 => 0)
-          z =
-        (concentratedAt0CategoryData (R := R) (S := S)).m
-          (stasheffObjOut obj 0 2 (by omega))
-          (stasheffDegOut (fun _ : Fin 3 => 0) 0 2 (by omega))
-          (indexedStasheffXOut
-            (fun _ _ => concentratedAt0 (R := R) (S := S))
-            (concentratedAt0CategoryData (R := R) (S := S)).m
-            obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega)) := by
-      simpa [z, hdegOut, concentratedAt0] using
-        (multilinearFamily_eq_of_deg_eq
-          (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
-          (m := (concentratedAt0CategoryData (R := R) (S := S)).m)
-          (obj := stasheffObjOut obj 0 2 (by omega))
-          hdegOut
-          (indexedStasheffXOut
-            (fun _ _ => concentratedAt0 (R := R) (S := S))
-            (concentratedAt0CategoryData (R := R) (S := S)).m
-            obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega)))
-    have houter0 :
-        indexedStasheffOuter
-          (fun _ _ => concentratedAt0 (R := R) (S := S))
-          (concentratedAt0CategoryData (R := R) (S := S)).m
-          obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega)
-          =
-        (concentratedAt0CategoryData (R := R) (S := S)).m
-          (stasheffObjOut obj 0 2 (by omega))
-          (fun _ : Fin 2 => 0)
-          z := by
-      simpa [indexedStasheffOuter] using hmcast.symm
     exact houter0.trans <| hz.trans <| by rw [hz0, hz1]
   rw [indexedStasheffTerm, houter]
   cases indexedStasheffTargetModuleEq
@@ -376,86 +387,93 @@ lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_zero_degrees
         (concentratedAt0CategoryData (R := R) (S := S)).m
         obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega) =
       x 1 * x 2 := by
-    simpa [indexedStasheffInner, indexedStasheffXIn, x', stasheffDegIn, concentratedAt0] using
+    simpa [indexedStasheffInner, indexedStasheffXIn_apply, x', concentratedAt0] using
       (concentratedAt0CategoryData_m_two_zero_zero_apply
         (R := R) (S := S)
         (obj := stasheffObjIn obj 1 2 (by omega))
         (x := fun i : Fin 2 => x ⟨1 + i.1, by omega⟩))
+  have hdegOut :
+      stasheffDegOut (fun _ : Fin 3 => 0) 1 2 (by omega) = (fun _ : Fin 2 => (0 : ℤ)) := by
+    have hdegIn : stasheffDegIn (fun _ : Fin 3 => 0) 1 2 (by omega) = (fun _ : Fin 2 => (0 : ℤ)) := by
+      ext i
+      fin_cases i <;> rfl
+    have hinnerDeg : stasheffInnerDeg (fun _ : Fin 3 => 0) 1 2 (by omega) = (0 : ℤ) := by
+      rw [stasheffInnerDeg, hdegIn]
+      simp [operationTargetDeg, shift_ofInt]
+    ext i
+    fin_cases i <;> simp [stasheffDegOut, hinnerDeg]
+  let z : ∀ i : Fin 2, ModuleCat.of R S :=
+    fun i => by
+      simpa [composableHomType, concentratedAt0, hdegOut] using
+        indexedStasheffXOut
+          (fun _ _ => concentratedAt0 (R := R) (S := S))
+          (concentratedAt0CategoryData (R := R) (S := S)).m
+          obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega) i
+  have hz0 : z 0 = x 0 := by
+    simpa [z, hdegOut, concentratedAt0] using
+      (indexedStasheffXOut_apply_of_lt
+        (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
+        (m := (concentratedAt0CategoryData (R := R) (S := S)).m)
+        (obj := obj) (deg := fun _ : Fin 3 => 0) (x := x')
+        (r := 1) (s := 2) (hs := by omega) (hr := by omega)
+        (i := 0) (by decide))
+  have hz1 : z 1 = x 1 * x 2 := by
+    simpa [z, hdegOut, concentratedAt0, hinner, indexedStasheffMiddleIndex] using
+      (indexedStasheffXOut_middle_eq
+        (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
+        (m := (concentratedAt0CategoryData (R := R) (S := S)).m)
+        (obj := obj) (deg := fun _ : Fin 3 => 0) (x := x')
+        (r := 1) (s := 2) (hs := by omega) (hr := by omega))
+  have hmcast :
+      (concentratedAt0CategoryData (R := R) (S := S)).m
+        (stasheffObjOut obj 1 2 (by omega))
+        (fun _ : Fin 2 => 0)
+        z =
+      (concentratedAt0CategoryData (R := R) (S := S)).m
+        (stasheffObjOut obj 1 2 (by omega))
+        (stasheffDegOut (fun _ : Fin 3 => 0) 1 2 (by omega))
+        (indexedStasheffXOut
+          (fun _ _ => concentratedAt0 (R := R) (S := S))
+          (concentratedAt0CategoryData (R := R) (S := S)).m
+          obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega)) := by
+    simpa [z, hdegOut, concentratedAt0] using
+      (multilinearFamily_eq_of_deg_eq
+        (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
+        (m := (concentratedAt0CategoryData (R := R) (S := S)).m)
+        (obj := stasheffObjOut obj 1 2 (by omega))
+        hdegOut
+        (indexedStasheffXOut
+          (fun _ _ => concentratedAt0 (R := R) (S := S))
+          (concentratedAt0CategoryData (R := R) (S := S)).m
+          obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega)))
+  have houter0 :
+      indexedStasheffOuter
+        (fun _ _ => concentratedAt0 (R := R) (S := S))
+        (concentratedAt0CategoryData (R := R) (S := S)).m
+        obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega)
+        =
+      (concentratedAt0CategoryData (R := R) (S := S)).m
+        (stasheffObjOut obj 1 2 (by omega))
+        (fun _ : Fin 2 => 0)
+        z := by
+    simpa [indexedStasheffOuter] using hmcast.symm
+  have hz :
+      (concentratedAt0CategoryData (R := R) (S := S)).m
+        (stasheffObjOut obj 1 2 (by omega))
+        (fun _ : Fin 2 => 0)
+        z =
+      z 0 * z 1 := by
+    simpa using
+      (concentratedAt0CategoryData_m_two_zero_zero_apply
+        (R := R) (S := S)
+        (obj := stasheffObjOut obj 1 2 (by omega))
+        (x := z))
   have houter :
       indexedStasheffOuter
         (fun _ _ => concentratedAt0 (R := R) (S := S))
         (concentratedAt0CategoryData (R := R) (S := S)).m
         obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega) =
       x 0 * (x 1 * x 2) := by
-    have hdegOut :
-        stasheffDegOut (fun _ : Fin 3 => 0) 1 2 (by omega) = (fun _ : Fin 2 => (0 : ℤ)) := by
-      have hdegIn : stasheffDegIn (fun _ : Fin 3 => 0) 1 2 (by omega) = (fun _ : Fin 2 => (0 : ℤ)) := by
-        ext i
-        fin_cases i <;> rfl
-      have hinnerDeg : stasheffInnerDeg (fun _ : Fin 3 => 0) 1 2 (by omega) = (0 : ℤ) := by
-        rw [stasheffInnerDeg, hdegIn]
-        simp [operationTargetDeg, shift_ofInt]
-      ext i
-      fin_cases i <;> simp [stasheffDegOut, hinnerDeg]
-    let z : ∀ i : Fin 2, ModuleCat.of R S :=
-      fun i => by
-        simpa [composableHomType, concentratedAt0, hdegOut] using
-          indexedStasheffXOut
-            (fun _ _ => concentratedAt0 (R := R) (S := S))
-            (concentratedAt0CategoryData (R := R) (S := S)).m
-            obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega) i
-    have hz0 : z 0 = x 0 := by
-      have h0 : stasheffDegOut (fun _ : Fin 3 => (0 : ℤ)) 1 2 (by omega) 0 = (0 : ℤ) := by
-        exact congrFun hdegOut 0
-      cases h0
-      simp [z, indexedStasheffXOut, x', concentratedAt0]
-      exact cast_eq_iff_heq.mpr HEq.rfl
-    have hz1 : z 1 = x 1 * x 2 := by
-      simpa [z, indexedStasheffXOut, x', hinner, hdegOut, concentratedAt0]
-    have hz :
-        (concentratedAt0CategoryData (R := R) (S := S)).m
-          (stasheffObjOut obj 1 2 (by omega))
-          (fun _ : Fin 2 => 0)
-          z =
-        z 0 * z 1 := by
-      simpa using
-        (concentratedAt0CategoryData_m_two_zero_zero_apply
-          (R := R) (S := S)
-          (obj := stasheffObjOut obj 1 2 (by omega))
-          (x := z))
-    have hmcast :
-        (concentratedAt0CategoryData (R := R) (S := S)).m
-          (stasheffObjOut obj 1 2 (by omega))
-          (fun _ : Fin 2 => 0)
-          z =
-        (concentratedAt0CategoryData (R := R) (S := S)).m
-          (stasheffObjOut obj 1 2 (by omega))
-          (stasheffDegOut (fun _ : Fin 3 => 0) 1 2 (by omega))
-          (indexedStasheffXOut
-            (fun _ _ => concentratedAt0 (R := R) (S := S))
-            (concentratedAt0CategoryData (R := R) (S := S)).m
-            obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega)) := by
-      simpa [z, hdegOut, concentratedAt0] using
-        (multilinearFamily_eq_of_deg_eq
-          (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
-          (m := (concentratedAt0CategoryData (R := R) (S := S)).m)
-          (obj := stasheffObjOut obj 1 2 (by omega))
-          hdegOut
-          (indexedStasheffXOut
-            (fun _ _ => concentratedAt0 (R := R) (S := S))
-            (concentratedAt0CategoryData (R := R) (S := S)).m
-            obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega)))
-    have houter0 :
-        indexedStasheffOuter
-          (fun _ _ => concentratedAt0 (R := R) (S := S))
-          (concentratedAt0CategoryData (R := R) (S := S)).m
-          obj (fun _ : Fin 3 => 0) x' 1 2 (by omega) (by omega)
-          =
-        (concentratedAt0CategoryData (R := R) (S := S)).m
-          (stasheffObjOut obj 1 2 (by omega))
-          (fun _ : Fin 2 => 0)
-          z := by
-      simpa [indexedStasheffOuter] using hmcast.symm
     exact houter0.trans <| hz.trans <| by rw [hz0, hz1]
   rw [indexedStasheffTerm, houter]
   cases indexedStasheffTargetModuleEq

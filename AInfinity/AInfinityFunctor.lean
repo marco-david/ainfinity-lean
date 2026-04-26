@@ -29,13 +29,14 @@ abbrev functorTargetType
     {R : Type u} [CommRing R]
     {ObjA : Type x} {ObjB : Type y}
     (BHom : ObjB → ObjB → GradedRModule β_B R)
-    (F : ObjA → ObjB)
+    (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
     {n : ℕ}
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A) :
     ModuleCat R :=
-  (BHom (F (obj 0)) (F (obj (Fin.last n)))) (functorTargetDeg β_A β_B deg_trans deg)
+  (BHom (objMap (obj 0)) (objMap (obj (Fin.last n))))
+    (functorTargetDeg β_A β_B deg_trans deg)
 
 /-- Raw data for an A∞ functor between graded `R`-linear quivers. -/
 structure AInfinityFunctorData
@@ -43,8 +44,8 @@ structure AInfinityFunctorData
     (ObjA : Type x) (ObjB : Type y)
     [RLinearGQuiver β_A R ObjA]
     [RLinearGQuiver β_B R ObjB] where
-  /-- The map on objects. -/
-  F : ObjA → ObjB
+  /-- The action on objects. -/
+  objMap : ObjA → ObjB
   /-- Group homofunctor translating degrees from `β_A` to `β_B`. -/
   deg_trans : β_A →+ β_B
   /-- `deg_trans` is compatible with the integer embeddings. -/
@@ -58,11 +59,125 @@ structure AInfinityFunctorData
     (deg : Fin n → β_A) →
     MultilinearMap R
       (fun i : Fin n => composableHomType (GHom β_A R) obj deg i)
-      (functorTargetType β_A β_B (GHom β_B R) F deg_trans obj deg)
+      (functorTargetType β_A β_B (GHom β_B R) objMap deg_trans obj deg)
 
 
 
 namespace AInfinityFunctorData
+
+section CompComposition
+universe u₁
+variable {R : Type u₁} [CommSemiring R]
+
+lemma Composition.embedding_ne_of_ne
+    {n : ℕ} (c : Composition n)
+    {l l₀ : Fin c.length} (hl : l ≠ l₀)
+    (j : Fin (c.blocksFun l)) (j₀ : Fin (c.blocksFun l₀)) :
+    (c.embedding l) j ≠ (c.embedding l₀) j₀ := by
+  have h_range : Disjoint (Set.range (c.embedding l)) (Set.range (c.embedding l₀)) := by
+    exact c.disjoint_range hl
+  exact fun h => h_range.le_bot ⟨⟨j, h⟩, ⟨j₀, rfl⟩⟩
+
+lemma Composition.update_comp_ne_block
+    {n : ℕ} (c : Composition n)
+    {M : Fin n → Type*} [DecidableEq (Fin n)] (m : ∀ i, M i)
+    {l₀ : Fin c.length} (j₀ : Fin (c.blocksFun l₀))
+    (v : M (c.embedding l₀ j₀))
+    {l : Fin c.length} (hl : l ≠ l₀) :
+    (fun j => Function.update m (c.embedding l₀ j₀) v (c.embedding l j)) =
+      (fun j => m (c.embedding l j)) := by
+  exact funext fun j =>
+    Function.update_of_ne
+      (by
+        intro h
+        have := Composition.embedding_ne_of_ne c hl j j₀
+        aesop)
+      _ _
+
+lemma Composition.update_comp_same_block
+    {n : ℕ} (c : Composition n)
+    {M : Fin n → Type*} [DecidableEq (Fin n)] (m : ∀ i, M i)
+    (l₀ : Fin c.length) (j₀ : Fin (c.blocksFun l₀))
+    (v : M (c.embedding l₀ j₀)) :
+    (fun j => Function.update m (c.embedding l₀ j₀) v (c.embedding l₀ j)) =
+      Function.update (fun j => m (c.embedding l₀ j)) j₀ v := by
+  ext j
+  by_cases h : c.embedding l₀ j = c.embedding l₀ j₀
+  · simp +decide [h, Function.update]
+    have := (c.embedding l₀).injective h
+    aesop
+  · aesop
+
+lemma Composition.compComposition_outer_update
+    {n : ℕ} (c : Composition n)
+    {M : Fin n → Type*} {N : Fin c.length → Type*}
+    [∀ i, AddCommMonoid (M i)] [∀ l, AddCommMonoid (N l)]
+    [∀ i, Module R (M i)] [∀ l, Module R (N l)]
+    [DecidableEq (Fin n)]
+    (f : (l : Fin c.length) → MultilinearMap R (fun j => M (c.embedding l j)) (N l))
+    (m : ∀ i, M i) (l₀ : Fin c.length) (j₀ : Fin (c.blocksFun l₀))
+    (v : M (c.embedding l₀ j₀)) :
+    (fun l => f l (fun j => Function.update m (c.embedding l₀ j₀) v (c.embedding l j))) =
+    Function.update
+      (fun l => f l (fun j => m (c.embedding l j)))
+      l₀
+      (f l₀ (Function.update (fun j => m (c.embedding l₀ j)) j₀ v)) := by
+  ext l
+  by_cases hl : l = l₀
+  · have := Composition.update_comp_same_block c m l₀ j₀ v
+    aesop
+  · rw [Function.update_of_ne hl]
+    have := Composition.update_comp_ne_block c m j₀ v hl
+    rw [this]
+
+/-- Multi-composition of multilinear maps along a composition `c` of `n`. -/
+def MultilinearMap.compComposition
+    {n : ℕ} (c : Composition n)
+    {M : Fin n → Type*} {N : Fin c.length → Type*} {P : Type*}
+    [∀ i, AddCommMonoid (M i)] [∀ l, AddCommMonoid (N l)] [AddCommMonoid P]
+    [∀ i, Module R (M i)] [∀ l, Module R (N l)] [Module R P]
+    (g : MultilinearMap R N P)
+    (f : (l : Fin c.length) → MultilinearMap R (fun j => M (c.embedding l j)) (N l)) :
+    MultilinearMap R M P where
+  toFun x := g (fun l => f l (fun j => x (c.embedding l j)))
+  map_update_add' m i p q := by
+    obtain ⟨l₀, j₀, rfl⟩ : ∃ l : Fin c.length, ∃ j : Fin (c.blocksFun l),
+        c.embedding l j = i :=
+      ⟨c.index i, c.invEmbedding i, c.embedding_comp_inv i⟩
+    have h := Composition.compComposition_outer_update c f m l₀ j₀
+    have lhs : g (fun l => f l (fun j => Function.update m _ (p + q) (c.embedding l j)))
+      = g (Function.update (fun l => f l (fun j => m (c.embedding l j))) l₀
+          (f l₀ (Function.update (fun j => m (c.embedding l₀ j)) j₀ (p + q)))) := by
+      congr 1
+      exact h (p + q)
+    have rhs₁ : g (fun l => f l (fun j => Function.update m _ p (c.embedding l j)))
+      = g (Function.update (fun l => f l (fun j => m (c.embedding l j))) l₀
+          (f l₀ (Function.update (fun j => m (c.embedding l₀ j)) j₀ p))) := by
+      congr 1
+      exact h p
+    have rhs₂ : g (fun l => f l (fun j => Function.update m _ q (c.embedding l j)))
+      = g (Function.update (fun l => f l (fun j => m (c.embedding l j))) l₀
+          (f l₀ (Function.update (fun j => m (c.embedding l₀ j)) j₀ q))) := by
+      congr 1
+      exact h q
+    rw [lhs, rhs₁, rhs₂, (f l₀).map_update_add, g.map_update_add]
+  map_update_smul' m i a p := by
+    obtain ⟨l₀, j₀, rfl⟩ : ∃ l : Fin c.length, ∃ j : Fin (c.blocksFun l),
+        c.embedding l j = i :=
+      ⟨c.index i, c.invEmbedding i, c.embedding_comp_inv i⟩
+    have h := Composition.compComposition_outer_update c f m l₀ j₀
+    have lhs : g (fun l => f l (fun j => Function.update m _ (a • p) (c.embedding l j)))
+      = g (Function.update (fun l => f l (fun j => m (c.embedding l j))) l₀
+          (f l₀ (Function.update (fun j => m (c.embedding l₀ j)) j₀ (a • p)))) := by
+      congr 1
+      exact h (a • p)
+    have rhs : g (fun l => f l (fun j => Function.update m _ p (c.embedding l j)))
+      = g (Function.update (fun l => f l (fun j => m (c.embedding l j))) l₀
+          (f l₀ (Function.update (fun j => m (c.embedding l₀ j)) j₀ p))) := by
+      congr 1
+      exact h p
+    rw [lhs, rhs, (f l₀).map_update_smul, g.map_update_smul]
+end CompComposition
 
 variable {R : Type u} [CommRing R]
 variable {ObjA : Type x} {ObjB : Type y}
@@ -79,13 +194,14 @@ abbrev functorEqTargetType
     {R : Type u} [CommRing R]
     {ObjA : Type x} {ObjB : Type y}
     (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
-    (F : ObjA → ObjB)
+    (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
     {n : ℕ}
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A) :
     ModuleCat R :=
-  (BHom (F (obj 0)) (F (obj (Fin.last n)))) (functorEqTargetDeg β_A β_B deg_trans deg)
+  (BHom (objMap (obj 0)) (objMap (obj (Fin.last n))))
+    (functorEqTargetDeg β_A β_B deg_trans deg)
 
 
 /- The LHS of the A∞-functor equation is:
@@ -116,7 +232,7 @@ lemma LHS_compatible_deg
 def functorLHSTerm
     (AHom : ObjA → ObjA → GradedRModule (β := β_A) (R := R))
     (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
-    (F : ObjA → ObjB)
+    (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
     (deg_trans_ofInt : ∀ n : ℤ, deg_trans (Grading.ofInt n) = Grading.ofInt n)
     (phi :
@@ -125,7 +241,7 @@ def functorLHSTerm
       (deg : Fin n → β_A) →
       MultilinearMap R
         (fun i : Fin n => composableHomType AHom obj deg i)
-        (functorTargetType β_A β_B BHom F deg_trans obj deg))
+        (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
     (m_A :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjA) →
@@ -140,42 +256,16 @@ def functorLHSTerm
     (r s : ℕ)
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
-    functorEqTargetType β_A β_B BHom F deg_trans obj deg := by
-  -- Inner: apply m^A_s to the (r+1, …, r+s) block
-  let degIn := stasheffDegIn deg r s hr
-  let objIn := stasheffObjIn obj r s hr
-  let xIn : ∀ i : Fin s, composableHomType AHom objIn degIn i := fun i => by
-    simpa [composableHomType, objIn, stasheffObjIn, degIn, stasheffDegIn]
-      using x ⟨r + i.val, by omega⟩
-  letI : NeZero s := ⟨by omega⟩
-  let inner := m_A objIn degIn xIn
-
-
+    functorEqTargetType β_A β_B BHom objMap deg_trans obj deg := by
   -- Outer: apply φ_{n+1-s} to (a_1, …, a_r, inner, a_{r+s+1}, …, a_n)
   let outerN := n + 1 - s
   let degOut := stasheffDegOut deg r s hr
   let objOut := stasheffObjOut obj r s hr
-  let xOut : ∀ i : Fin outerN, composableHomType AHom objOut degOut i := by
-    intro i
-    by_cases hlt : i.val < r
-    · simpa [composableHomType, objOut, stasheffObjOut, degOut, stasheffDegOut, hlt,
-        Nat.le_of_lt hlt]
-        using x ⟨i.val, by omega⟩
-    · by_cases heq : i.val = r
-      · simpa
-          [composableHomType, operationTargetType, objIn, stasheffObjIn,
-            degIn, stasheffDegIn, objOut, stasheffObjOut, degOut, stasheffDegOut,
-            stasheffInnerDeg, hlt, heq]
-          using inner
-      · have hgt : ¬ i.val ≤ r := by omega
-        have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
-        simpa
-          [composableHomType, objOut, stasheffObjOut, degOut, stasheffDegOut,
-            hlt, heq, hgt, hsucc]
-          using x ⟨i.val + s - 1, by omega⟩
+  let xOut : ∀ i : Fin outerN, composableHomType AHom objOut degOut i :=
+    indexedStasheffXOut AHom m_A obj deg x r s hs hr
   have houterN : 0 < outerN := by
     dsimp [outerN]
-    omega
+    exact indexedStasheffOuterArity_pos r s hr
   letI : NeZero outerN := ⟨Nat.ne_of_gt houterN⟩
   let outer := phi objOut degOut xOut
 
@@ -189,8 +279,8 @@ def functorLHSTerm
     congr
     omega
   have hdeg :
-      functorTargetType β_A β_B BHom F deg_trans objOut degOut =
-        functorEqTargetType β_A β_B BHom F deg_trans obj deg := by
+      functorTargetType β_A β_B BHom objMap deg_trans objOut degOut =
+        functorEqTargetType β_A β_B BHom objMap deg_trans obj deg := by
     dsimp [functorTargetType, functorEqTargetType]
     rw [hsource, htarget]
     exact congrArg _ (LHS_compatible_deg β_A β_B deg_trans deg_trans_ofInt deg r s hr)
@@ -202,7 +292,7 @@ def functorLHSTerm
 def functorLHSSum
     (AHom : ObjA → ObjA → GradedRModule (β := β_A) (R := R))
     (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
-    (F : ObjA → ObjB)
+    (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
     (deg_trans_ofInt : ∀ n : ℤ, deg_trans (Grading.ofInt n) = Grading.ofInt n)
     (phi :
@@ -211,7 +301,7 @@ def functorLHSSum
       (deg : Fin n → β_A) →
       MultilinearMap R
         (fun i : Fin n => composableHomType AHom obj deg i)
-        (functorTargetType β_A β_B BHom F deg_trans obj deg))
+        (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
     (m_A :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjA) →
@@ -223,13 +313,14 @@ def functorLHSSum
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
     (x : ∀ i : Fin n, composableHomType AHom obj deg i) :
-    functorEqTargetType β_A β_B BHom F deg_trans obj deg :=
+    functorEqTargetType β_A β_B BHom objMap deg_trans obj deg :=
   ∑ r ∈ (Finset.range (n + 1)).attach,
     ∑ s ∈ (Finset.Ico 1 (n - r.1 + 1)).attach,
       let h : validStasheffIndices n r.1 s.1 :=
         validStasheffIndices_of_mem_ranges (n := n) r.2 s.2
       (stasheffSign deg r.1 s.1 h.2) •
-        (functorLHSTerm β_A β_B AHom BHom F deg_trans deg_trans_ofInt phi m_A obj deg x r.1 s.1 h.1 h.2)
+        (functorLHSTerm β_A β_B AHom BHom objMap deg_trans deg_trans_ofInt phi m_A
+          obj deg x r.1 s.1 h.1 h.2)
 
 end LHS
 
@@ -273,19 +364,17 @@ def compositionBlockObj
       rw [h₄] at h₃
       exact le_trans h₁ h₃⟩
 
-/-- Object string for the outer `m^B` in the RHS.
-the objects plugged in after to m^B, after all the F has been applied
--/
-def functorRHSOuterObj
+--TODO: rename this to like idk. but composition referse to composition block, dotn want to confuse with composition of functors
+ /-- Object string obtained by applying `objMap` to the boundary objects of a composition. -/
+def functorCompositionOuterObj
     {n : ℕ}
-    (F : ObjA → ObjB)
+    (objMap : ObjA → ObjB)
     (obj : Fin (n + 1) → ObjA)
     (c : Composition n) : Fin (c.length + 1) → ObjB :=
-  fun l => F (obj (c.boundary l))
+  fun l => objMap (obj (c.boundary l))
 
-/-- The degree function for the outer `m^B` in the RHS: the `l`-th entry is
-    the target degree of `φ_{iₗ}` applied to the `l`-th block. -/
-def functorRHSOuterDeg
+/-- Degrees of the outputs of the functor components on the blocks of a composition. -/
+def functorCompositionOuterDeg
     (deg_trans : β_A →+ β_B)
     {n : ℕ}
     (deg : Fin n → β_A)
@@ -298,7 +387,7 @@ lemma RHS_compatible_deg
     {n : ℕ}
     (deg : Fin n → β_A)
     (c : Composition n) :
-    operationTargetDeg (β := β_B) (functorRHSOuterDeg β_A β_B deg_trans deg c) =
+    operationTargetDeg (β := β_B) (functorCompositionOuterDeg β_A β_B deg_trans deg c) =
     functorEqTargetDeg β_A β_B deg_trans deg := by
   have h_sum_deg_trans :
       ∑ l : Fin c.length, ∑ j : Fin (c.blocksFun l), deg_trans (deg (c.embedding l j)) =
@@ -374,12 +463,12 @@ lemma RHS_compatible_deg
   unfold shift_ofInt
   simp +decide
 
-/-- The RHS term for a composition `c = (i₁, …, iₖ)`:
-    `m^B_k(φ_{i₁}(block₁), …, φ_{iₖ}(blockₖ))`. -/
-def functorRHSTerm
+/-- The RHS term for a composition `c = (i₁, …, iₖ)` as a multilinear map
+    in the original inputs, with codomain transported to the final functor-equation target. -/
+def functorRHSTermMap
     (AHom : ObjA → ObjA → GradedRModule (β := β_A) (R := R))
     (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
-    (F : ObjA → ObjB)
+    (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
     (phi :
       {n : ℕ} → [NeZero n] →
@@ -387,7 +476,68 @@ def functorRHSTerm
       (deg : Fin n → β_A) →
       MultilinearMap R
         (fun i : Fin n => composableHomType AHom obj deg i)
-        (functorTargetType β_A β_B BHom F deg_trans obj deg))
+        (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
+    (m_B :
+      {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → ObjB) →
+      (deg : Fin n → β_B) →
+      MultilinearMap R
+        (fun i : Fin n => composableHomType BHom obj deg i)
+        (operationTargetType BHom obj deg))
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (c : Composition n) :
+    MultilinearMap R
+      (fun i : Fin n => composableHomType AHom obj deg i)
+      (functorEqTargetType β_A β_B BHom objMap deg_trans obj deg) := by
+  let outerDeg := functorCompositionOuterDeg β_A β_B deg_trans deg c
+  let outerObj := functorCompositionOuterObj objMap obj c
+  have houter : 0 < c.length := c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n))
+  letI : NeZero c.length := ⟨Nat.ne_of_gt houter⟩
+  have hsource : outerObj 0 = objMap (obj 0) := by
+    simp [outerObj, functorCompositionOuterObj]
+  have htarget : outerObj (Fin.last c.length) = objMap (obj (Fin.last n)) := by
+    simp [outerObj, functorCompositionOuterObj]
+  have hdeg :
+      operationTargetType BHom outerObj
+          (functorCompositionOuterDeg β_A β_B deg_trans deg c) =
+        functorEqTargetType β_A β_B BHom objMap deg_trans obj deg := by
+    dsimp [operationTargetType, functorEqTargetType]
+    rw [hsource, htarget]
+    exact congrArg _ (RHS_compatible_deg β_A β_B deg_trans deg c)
+  refine hdeg ▸ ?_
+  exact MultilinearMap.compComposition c (m_B outerObj outerDeg) (fun l => by
+    let blockDeg := compositionBlockDeg β_A deg c l
+    let blockObj := compositionBlockObj obj c l
+    letI : NeZero (c.blocksFun l) := ⟨by
+      have hpos : 0 < c.blocksFun l := c.one_le_blocksFun l
+      exact Nat.ne_of_gt hpos⟩
+    let blockPhi := phi blockObj blockDeg
+    have hblock :
+        functorTargetType β_A β_B BHom objMap deg_trans blockObj blockDeg =
+          composableHomType BHom outerObj outerDeg l := by
+      dsimp [functorTargetType, composableHomType, outerObj, functorCompositionOuterObj,
+        outerDeg, functorCompositionOuterDeg, blockObj, compositionBlockObj, blockDeg,
+        compositionBlockDeg]
+      congr
+      simpa using (c.sizeUpTo_succ' l).symm
+    exact hblock ▸ blockPhi)
+
+/-- The RHS term for a composition `c = (i₁, …, iₖ)`:
+    `m^B_k(φ_{i₁}(block₁), …, φ_{iₖ}(blockₖ))`. -/
+def functorRHSTerm
+    (AHom : ObjA → ObjA → GradedRModule (β := β_A) (R := R))
+    (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
+    (objMap : ObjA → ObjB)
+    (deg_trans : β_A →+ β_B)
+    (phi :
+      {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → ObjA) →
+      (deg : Fin n → β_A) →
+      MultilinearMap R
+        (fun i : Fin n => composableHomType AHom obj deg i)
+        (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
     (m_B :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjB) →
@@ -400,48 +550,13 @@ def functorRHSTerm
     (deg : Fin n → β_A)
     (x : ∀ i : Fin n, composableHomType AHom obj deg i)
     (c : Composition n) :
-    functorEqTargetType β_A β_B BHom F deg_trans obj deg := by
-  let outerDeg := functorRHSOuterDeg β_A β_B deg_trans deg c
-  let outerObj := functorRHSOuterObj F obj c
-  let phiOutputs : ∀ l : Fin c.length, composableHomType BHom outerObj outerDeg l := by
-    intro l
-    let blockDeg := compositionBlockDeg β_A deg c l
-    let blockObj := compositionBlockObj obj c l
-    let blockX : ∀ j : Fin (c.blocksFun l), composableHomType AHom blockObj blockDeg j := by
-      intro j
-      simpa [composableHomType, blockObj, compositionBlockObj, blockDeg, compositionBlockDeg]
-        using x (c.embedding l j)
-    letI : NeZero (c.blocksFun l) := ⟨by
-      have hpos : 0 < c.blocksFun l := c.one_le_blocksFun l
-      exact Nat.ne_of_gt hpos⟩
-    let blockPhi := phi blockObj blockDeg blockX
-    have hdeg :
-        functorTargetType β_A β_B BHom F deg_trans blockObj blockDeg =
-          composableHomType BHom outerObj outerDeg l := by
-      dsimp [functorTargetType, composableHomType, outerObj, functorRHSOuterObj,
-        outerDeg, functorRHSOuterDeg, blockObj, compositionBlockObj, blockDeg, compositionBlockDeg]
-      congr
-      simpa using (c.sizeUpTo_succ' l).symm
-    exact hdeg ▸ blockPhi
-  have houter : 0 < c.length := c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n))
-  letI : NeZero c.length := ⟨Nat.ne_of_gt houter⟩
-  let outer := m_B outerObj outerDeg phiOutputs
-  have hsource : outerObj 0 = F (obj 0) := by
-    simp [outerObj, functorRHSOuterObj]
-  have htarget : outerObj (Fin.last c.length) = F (obj (Fin.last n)) := by
-    simp [outerObj, functorRHSOuterObj]
-  have hdeg :
-      operationTargetType BHom outerObj outerDeg =
-        functorEqTargetType β_A β_B BHom F deg_trans obj deg := by
-    dsimp [operationTargetType, functorEqTargetType]
-    rw [hsource, htarget]
-    exact congrArg _ (RHS_compatible_deg β_A β_B deg_trans deg c)
-  exact hdeg ▸ outer
+    functorEqTargetType β_A β_B BHom objMap deg_trans obj deg := by
+  exact functorRHSTermMap β_A β_B AHom BHom objMap deg_trans phi m_B obj deg c x
 
 def functorRHSSum
     (AHom : ObjA → ObjA → GradedRModule (β := β_A) (R := R))
     (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
-    (F : ObjA → ObjB)
+    (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
     (phi :
       {n : ℕ} → [NeZero n] →
@@ -449,7 +564,7 @@ def functorRHSSum
       (deg : Fin n → β_A) →
       MultilinearMap R
         (fun i : Fin n => composableHomType AHom obj deg i)
-        (functorTargetType β_A β_B BHom F deg_trans obj deg))
+        (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
     (m_B :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjB) →
@@ -461,9 +576,9 @@ def functorRHSSum
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
     (x : ∀ i : Fin n, composableHomType AHom obj deg i) :
-    functorEqTargetType β_A β_B BHom F deg_trans obj deg :=
+    functorEqTargetType β_A β_B BHom objMap deg_trans obj deg :=
   ∑ c : Composition n,
-    functorRHSTerm β_A β_B AHom BHom F deg_trans phi m_B obj deg x c
+    functorRHSTerm β_A β_B AHom BHom objMap deg_trans phi m_B obj deg x c
 end RHS
 
 
@@ -472,20 +587,20 @@ end RHS
 def SatisfiesFunctorEquations
     (R : Type u) [CommRing R]
     (ObjA : Type x) (ObjB : Type y)
-    [A : AInfinityCategoryStruct β_A R ObjA]
-    [B : AInfinityCategoryStruct β_B R ObjB]
-    (F : @AInfinityFunctorData
-      β_A _ β_B _ R _ ObjA ObjB
-      A.toRLinearGQuiver B.toRLinearGQuiver) : Prop :=
+    [AInfinityCategoryStruct β_A R ObjA]
+    [AInfinityCategoryStruct β_B R ObjB]
+    (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) : Prop :=
   ∀ (n : ℕ) [NeZero n] (obj : Fin (n + 1) → ObjA) (deg : Fin n → β_A)
     (x : ∀ i : Fin n, composableHomType (GHom β_A R) obj deg i),
     functorLHSSum β_A β_B
       (GHom β_A R) (GHom β_B R)
-      F.F F.deg_trans F.deg_trans_ofInt F.phi A.m
+      F.objMap F.deg_trans F.deg_trans_ofInt F.phi
+      (AInfinityCategoryStruct.m (β := β_A) (R := R) (Obj := ObjA))
       obj deg x =
     functorRHSSum β_A β_B
       (GHom β_A R) (GHom β_B R)
-      F.F F.deg_trans F.phi B.m
+      F.objMap F.deg_trans F.phi
+      (AInfinityCategoryStruct.m (β := β_B) (R := R) (Obj := ObjB))
       obj deg x
 
 
@@ -496,17 +611,11 @@ end AInfinityFunctorData
 structure AInfinityFunctor
     (R : Type u) [CommRing R]
     (ObjA : Type x) (ObjB : Type y)
-    [A : AInfinityCategory β_A R ObjA]
-    [B : AInfinityCategory β_B R ObjB]
-    extends @AInfinityFunctorData
-      β_A _ β_B _ R _ ObjA ObjB
-      A.toAInfinityCategoryStruct.toRLinearGQuiver
-      B.toAInfinityCategoryStruct.toRLinearGQuiver where
+    [AInfinityCategory β_A R ObjA]
+    [AInfinityCategory β_B R ObjB]
+    extends AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB where
   satisfiesFunctorEquations :
     AInfinityFunctorData.SatisfiesFunctorEquations
-      (β_A := β_A) (β_B := β_B)
-      (A := A.toAInfinityCategoryStruct)
-      (B := B.toAInfinityCategoryStruct)
-      R ObjA ObjB toAInfinityFunctorData
+      (β_A := β_A) (β_B := β_B) R ObjA ObjB toAInfinityFunctorData
 
 end AInfinityFunctorTheory

@@ -316,6 +316,22 @@ def indexedStasheffXIn
     simpa [composableHomType, stasheffObjIn, stasheffDegIn]
       using x ⟨r + i.val, by omega⟩
 
+/-- Evaluating the inner input tuple just picks out the corresponding original input. -/
+lemma indexedStasheffXIn_apply
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, composableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hr : r + s ≤ n)
+    (i : Fin s) :
+    indexedStasheffXIn Hom obj deg x r s hr i = x ⟨r + i.val, by omega⟩ := by
+  simp [indexedStasheffXIn, composableHomType, stasheffObjIn, stasheffDegIn]
+
 /-- Helper: the inner value appearing in a Stasheff term. -/
 def indexedStasheffInner
     {R : Type u}
@@ -416,6 +432,67 @@ def indexedStasheffXOut
       have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
       simpa [composableHomType, stasheffObjOut, stasheffDegOut, hlt, heq, hgt, hsucc]
         using x ⟨i.val + s - 1, by omega⟩
+
+/-- Before the inserted block, the outer input tuple agrees with the original inputs. -/
+lemma indexedStasheffXOut_apply_of_lt
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => composableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, composableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (hlt : i.val < r) :
+    indexedStasheffXOut Hom m obj deg x r s hs hr i =
+      (by
+        simpa [composableHomType, stasheffObjOut, stasheffDegOut, hlt, Nat.le_of_lt hlt]
+          using x ⟨i.val, by omega⟩) := by
+  unfold indexedStasheffXOut
+  simp [composableHomType, stasheffObjOut, stasheffDegOut, hlt, Nat.le_of_lt hlt]
+
+/-- After the inserted block, the outer input tuple agrees with the shifted original inputs. -/
+lemma indexedStasheffXOut_apply_of_gt
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => composableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, composableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (hgt : r < i.val) :
+    indexedStasheffXOut Hom m obj deg x r s hs hr i =
+      (by
+        have hlt : ¬ i.val < r := by omega
+        have heq : i.val ≠ r := by omega
+        have hle : ¬ i.val ≤ r := by omega
+        have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
+        simpa [composableHomType, stasheffObjOut, stasheffDegOut, hlt, heq, hle, hsucc]
+          using x ⟨i.val + s - 1, by omega⟩) := by
+  unfold indexedStasheffXOut
+  have hlt : ¬ i.val < r := by omega
+  have heq : i.val ≠ r := by omega
+  have hle : ¬ i.val ≤ r := by omega
+  simp [composableHomType, stasheffObjOut, stasheffDegOut, hlt, heq, hle]
 
 /-- Helper: positivity of the outer arity in a Stasheff term. -/
 lemma indexedStasheffOuterArity_pos
@@ -541,7 +618,10 @@ lemma indexedStasheffXOut_middle_eq
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
     indexedStasheffXOut Hom m obj deg x r s hs hr (indexedStasheffMiddleIndex r s hr) =
-      cast (indexedStasheffMiddleTypeEq Hom obj deg r s hr)
+      cast
+        (congrArg
+          (fun M : ModuleCat R => (M : Type u))
+          (indexedStasheffMiddleModuleEq Hom obj deg r s hr))
         (indexedStasheffInner Hom m obj deg x r s hs hr) := by
   unfold indexedStasheffXOut
   simp [indexedStasheffMiddleIndex]
