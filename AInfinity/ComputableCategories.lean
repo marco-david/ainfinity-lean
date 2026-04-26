@@ -31,9 +31,9 @@ Computable version of `CategoryTheory.Limits.biprod`.
 -/
 def cbiprod : C := (cbicone X Y).pt
 
-@[inherit_doc] infixl:65 " ⊞ₘ " => cbiprod
+@[inherit_doc] infixl:65 " ⊞ᶜ " => cbiprod
 
-abbrev cbiprod.fst {X Y : C} : X ⊞ₘ Y ⟶ X := (computableBinaryBiproductData X Y).bicone.fst
-abbrev cbiprod.snd {X Y : C} : X ⊞ₘ Y ⟶ Y := (computableBinaryBiproductData X Y).bicone.snd
-abbrev cbiprod.inl {X Y : C} : X ⟶ X ⊞ₘ Y := (computableBinaryBiproductData X Y).bicone.inl
-abbrev cbiprod.inr {X Y : C} : Y ⟶ X ⊞ₘ Y := (computableBinaryBiproductData X Y).bicone.inr
+abbrev cbiprod.fst {X Y : C} : X ⊞ᶜ Y ⟶ X := (computableBinaryBiproductData X Y).bicone.fst
+abbrev cbiprod.snd {X Y : C} : X ⊞ᶜ Y ⟶ Y := (computableBinaryBiproductData X Y).bicone.snd
+abbrev cbiprod.inl {X Y : C} : X ⟶ X ⊞ᶜ Y := (computableBinaryBiproductData X Y).bicone.inl
+abbrev cbiprod.inr {X Y : C} : Y ⟶ X ⊞ᶜ Y := (computableBinaryBiproductData X Y).bicone.inr
