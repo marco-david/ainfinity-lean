@@ -21,14 +21,36 @@ abbrev BinaryBiproductData.mkOfMaps {C : Type*} [Category C] [HasZeroMorphisms C
   bicone := ⟨pt, fst, snd, inl, inr, inl_fst, inl_snd, inr_fst, inr_snd⟩
   isBilimit := {
     isLimit := {
-      lift s := sorry
-      fac s j := sorry
-      uniq s m := sorry
+      lift s := pair s.pt (s.π.app ⟨.left⟩) (s.π.app ⟨.right⟩)
+      fac s j := by
+        -- Written by Claude code
+        rcases j with ⟨_ | _⟩
+        · rw [BinaryBicone.toCone_π_app_left]; exact pair_fst _ _ _
+        · rw [BinaryBicone.toCone_π_app_right]; exact pair_snd _ _ _
+      uniq s m hm := by
+        -- Written by Claude code
+        have hl := hm ⟨.left⟩
+        have hr := hm ⟨.right⟩
+        simp [BinaryBicone.toCone_π_app_left] at hl
+        simp [BinaryBicone.toCone_π_app_right] at hr
+        rw [← hl, ← hr]
+        exact (pair_eta s.pt m).symm
     }
     isColimit := {
-      desc s := sorry
-      fac s j := sorry
-      uniq s m := sorry
+      desc s := copair s.pt (s.ι.app ⟨.left⟩) (s.ι.app ⟨.right⟩)
+      fac s j := by
+        -- Written by Claude code
+        rcases j with ⟨_ | _⟩
+        · rw [BinaryBicone.toCocone_ι_app_left]; exact inl_copair _ _ _
+        · rw [BinaryBicone.toCocone_ι_app_right]; exact inr_copair _ _ _
+      uniq s m hm := by
+        -- Written by Claude code
+        have hl := hm ⟨.left⟩
+        have hr := hm ⟨.right⟩
+        simp [BinaryBicone.toCocone_ι_app_left] at hl
+        simp [BinaryBicone.toCocone_ι_app_right] at hr
+        rw [← hl, ← hr]
+        exact (copair_eta s.pt m).symm
     }
   }
 
