@@ -131,7 +131,7 @@ abbrev cbiprod.snd {X Y : C} : X ⊞ᶜ Y ⟶ Y := (computableBinaryBiproductDat
 abbrev cbiprod.inl {X Y : C} : X ⟶ X ⊞ᶜ Y := (computableBinaryBiproductData X Y).bicone.inl
 abbrev cbiprod.inr {X Y : C} : Y ⟶ X ⊞ᶜ Y := (computableBinaryBiproductData X Y).bicone.inr
 
-noncomputable def cbiprod_iso_biprod : cbiprod X Y ≅ biprod X Y := sorry
+noncomputable def cbiprod_iso_biprod : X ⊞ᶜ Y ≅ X ⊞ Y := sorry
 
 end computable_biproduct
 
@@ -174,3 +174,6 @@ instance : HasZeroObject C where
   zero := ⟨𝟎, isZero_explicitZero⟩
 
 end explicit_zero
+
+def List.cbiprod {C : Type*} [Category C] [HasZeroMorphisms C] [ComputableBinaryBiproduct C]
+  [HasExplicitZeroObject C] : List C → C := foldl (· ⊞ᶜ ·) 𝟎

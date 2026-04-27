@@ -366,8 +366,8 @@ variable {D : Type*} [Category D] [Preadditive D]
 
 def extend [ComputableBinaryBiproduct D] [HasExplicitZeroObject D]
     (F : C ⥤ D) [F.Additive] : CMat_ C ⥤ D where
-  obj M := (M.toList.map F.obj).foldl (· ⊞ᶜ ·) 𝟎
-  map f := sorry
+  obj M := (M.toList.map F.obj).cbiprod
+  map {M N} f := sorry
 
 -- Also need that extend is additive
 
