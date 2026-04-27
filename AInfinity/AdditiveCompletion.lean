@@ -151,6 +151,20 @@ Same as `cbiprod_ι_equiv` but expressed with proper notation and thus with type
 -/
 def cbiprod_ι_equiv {M N : CMat_ C} : (M ⊞ᶜ N).ι ≃ M.ι ⊕ N.ι := cbiprod_ι_equiv'
 
+instance : IsEmpty ([]ₘ : CMat_ C).ι where
+  false i := isEmptyElim (by simpa using i.toFin)
+
+theorem hom_from_empty_eq_zero (h : []ₘ ⟶ M) : h = 0 := by
+  ext i j
+  exact isEmptyElim i
+
+theorem hom_to_empty_eq_zero (h : M ⟶ []ₘ) : h = 0 := by
+  ext i j
+  exact isEmptyElim j
+
+instance : HasExplicitZeroObject (CMat_ C) := .mkOfPreadditive (CMat_ C) []ₘ
+  hom_from_empty_eq_zero hom_to_empty_eq_zero
+
 -- Idea: Maybe we can translate the `HasFiniteBiproducts` instance from `CategoryTheory.Mat_` using
 -- an equivalence. I don't know if this would make it computable though, which we might need.
 
@@ -349,6 +363,13 @@ section lift
 
 variable {C : Type*} [Category C] [Preadditive C]
 variable {D : Type*} [Category D] [Preadditive D]
+
+def extend [ComputableBinaryBiproduct D] [HasExplicitZeroObject D]
+    (F : C ⥤ D) [F.Additive] : CMat_ C ⥤ D where
+  obj M := (M.toList.map F.obj).foldl (· ⊞ᶜ ·) 𝟎
+  map f := sorry
+
+-- Also need that extend is additive
 
 -- Unfortunately, we need to lift to some arbitrary computable category, not just CMat_
 -- These are candidate definitions until we get lifting to some arbitrary category

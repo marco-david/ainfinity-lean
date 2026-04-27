@@ -160,6 +160,16 @@ theorem explicitZeroFrom_eq_zero [HasZeroMorphisms C] (Y : C) : explicitZeroFrom
 
 theorem isZero_explicitZero : IsZero (𝟎 : C) := ⟨fun _ ↦ ⟨inferInstance⟩, fun _ ↦ ⟨inferInstance⟩⟩
 
+/--
+Special constructor for preadditive categories
+-/
+abbrev HasExplicitZeroObject.mkOfPreadditive (C : Type*) [Category C] [Preadditive C]
+    (zero : C) (h₁ : ∀ (Y : C) (h : zero ⟶ Y), h = 0) (h₂ : ∀ (Y : C) (h : Y ⟶ zero), h = 0)
+    : HasExplicitZeroObject C where
+  zero := zero
+  uniqueTo Y := ⟨⟨0⟩, h₁ Y⟩
+  uniqueFrom Y := ⟨⟨0⟩, h₂ Y⟩
+
 instance : HasZeroObject C where
   zero := ⟨𝟎, isZero_explicitZero⟩
 
