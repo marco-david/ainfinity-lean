@@ -121,18 +121,13 @@ instance : Preadditive (CMat_ C) where
   add_comp M N K f f' g := by ext; simp [Finset.sum_add_distrib]
   comp_add M N K f g g' := by ext; simp [Finset.sum_add_distrib]
 
-/-
-private def reindex_append : (CMat_.ofList (M.toList ++ N.toList)).ι ≃ M.ι ⊕ N.ι where
-  toFun i := by
-    have : (CMat_.ofList (M.toList ++ N.toList)).toList.length = M.toList.length + N.toList.length := sorry
-    have i' := finSumFinEquiv.symm (Fin.cast this i.toFin)
-    exact i'
-  invFun j := sorry
-  left_inv := sorry
-  right_inv := sorry
-  -/
-
 def biprod : CMat_ C := .ofList (M.toList ++ N.toList)
+
+def biprod_ι_equiv : (M.biprod N).ι ≃ M.ι ⊕ N.ι :=
+  have : (CMat_.ofList (M.toList ++ N.toList)).toList.length = M.toList.length + N.toList.length
+    := by simp
+  ι.finEquiv |>.trans (finCongr this) |>.trans finSumFinEquiv.symm
+    |>.trans (ι.finEquiv.symm.sumCongr ι.finEquiv.symm)
 
 instance : ComputableBinaryBiproduct (CMat_ C) where
   computableBinaryBiproductData P Q := .mkOfProduct P Q (pt := .ofList (P.toList ++ Q.toList))
