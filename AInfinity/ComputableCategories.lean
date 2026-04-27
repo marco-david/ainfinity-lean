@@ -6,7 +6,8 @@ public import Mathlib
 
 open CategoryTheory Limits
 
-abbrev BinaryBiproductData.mkOfMaps {C : Type*} [Category C] [HasZeroMorphisms C] (P Q : C)
+abbrev CategoryTheory.Limits.BinaryBiproductData.mkOfMaps
+    {C : Type*} [Category C] [HasZeroMorphisms C] (P Q : C)
     (pt : C) (fst : pt ⟶ P) (snd : pt ⟶ Q) (inl : P ⟶ pt) (inr : Q ⟶ pt)
     (pair : ∀ X, (X ⟶ P) → (X ⟶ Q) → (X ⟶ pt)) (copair : ∀ X, (P ⟶ X) → (Q ⟶ X) → (pt ⟶ X))
     (inl_fst : inl ≫ fst = 𝟙 P := by aesop) (inl_snd : inl ≫ snd = 0 := by aesop)
@@ -53,6 +54,31 @@ abbrev BinaryBiproductData.mkOfMaps {C : Type*} [Category C] [HasZeroMorphisms C
         exact (copair_eta s.pt m).symm
     }
   }
+
+/--
+In a preadditive category, you can construct a binary biproduct out of a product.
+-/
+abbrev CategoryTheory.Limits.BinaryBiproductData.mkOfProduct
+    {C : Type*} [Category C] [Preadditive C] (P Q : C)
+    (pt : C) (fst : pt ⟶ P) (snd : pt ⟶ Q) (pair : ∀ X, (X ⟶ P) → (X ⟶ Q) → (X ⟶ pt))
+    (pair_fst : ∀ X (f : X ⟶ P) (g : X ⟶ Q), pair X f g ≫ fst = f := by aesop)
+    (pair_snd : ∀ X (f : X ⟶ P) (g : X ⟶ Q), pair X f g ≫ snd = g := by aesop)
+    (pair_eta : ∀ X (h : X ⟶ pt), pair X (h ≫ fst) (h ≫ snd) = h := by aesop)
+    : BinaryBiproductData P Q := .mkOfMaps P Q pt
+      (fst := fst)
+      (snd := snd)
+      (inl := sorry)
+      (inr := sorry)
+      (pair := pair)
+      (copair := sorry)
+      (inl_fst := sorry) (inl_snd := sorry)
+      (inr_fst := sorry ) (inr_snd := sorry)
+      (pair_fst := pair_fst)
+      (pair_snd := pair_snd)
+      (inl_copair := sorry)
+      (inr_copair := sorry)
+      (pair_eta := sorry)
+      (copair_eta := sorry)
 
 class ComputableBinaryBiproduct (C : Type*) [Category C] [HasZeroMorphisms C] where
   computableBinaryBiproductData (P Q : C) : BinaryBiproductData P Q
