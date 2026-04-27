@@ -67,18 +67,35 @@ abbrev CategoryTheory.Limits.BinaryBiproductData.mkOfProduct
     : BinaryBiproductData P Q := .mkOfMaps P Q pt
       (fst := fst)
       (snd := snd)
-      (inl := sorry)
-      (inr := sorry)
+      (inl := pair P (𝟙 P) 0)
+      (inr := pair Q 0 (𝟙 Q))
       (pair := pair)
-      (copair := sorry)
-      (inl_fst := sorry) (inl_snd := sorry)
-      (inr_fst := sorry ) (inr_snd := sorry)
+      (copair := fun X f g => fst ≫ f + snd ≫ g)
+      -- These proofs were written by Claude code
+      (inl_fst := pair_fst P (𝟙 P) 0) (inl_snd := pair_snd P (𝟙 P) 0)
+      (inr_fst := pair_fst Q 0 (𝟙 Q)) (inr_snd := pair_snd Q 0 (𝟙 Q))
       (pair_fst := pair_fst)
       (pair_snd := pair_snd)
-      (inl_copair := sorry)
-      (inr_copair := sorry)
-      (pair_eta := sorry)
-      (copair_eta := sorry)
+      (inl_copair := fun X f g => by
+        simp only [Preadditive.comp_add, ← Category.assoc, pair_fst, pair_snd,
+          Category.id_comp, zero_comp, add_zero])
+      (inr_copair := fun X f g => by
+        simp only [Preadditive.comp_add, ← Category.assoc, pair_fst, pair_snd,
+          Category.id_comp, zero_comp, zero_add])
+      (pair_eta := pair_eta)
+      (copair_eta := fun X h => by
+        have key : fst ≫ pair P (𝟙 P) 0 + snd ≫ pair Q 0 (𝟙 Q) = 𝟙 pt := by
+          have h1 : pair pt fst snd = fst ≫ pair P (𝟙 P) 0 + snd ≫ pair Q 0 (𝟙 Q) := by
+            have := pair_eta pt (fst ≫ pair P (𝟙 P) 0 + snd ≫ pair Q 0 (𝟙 Q))
+            simp only [Preadditive.add_comp, Category.assoc, pair_fst, pair_snd,
+              Category.comp_id, comp_zero, add_zero, zero_add] at this
+            exact this
+          have h2 : pair pt fst snd = 𝟙 pt := by
+            have := pair_eta pt (𝟙 pt)
+            simp only [Category.id_comp] at this
+            exact this
+          exact h1.symm.trans h2
+        simp only [← Category.assoc, ← Preadditive.add_comp, key, Category.id_comp])
 
 class ComputableBinaryBiproduct (C : Type*) [Category C] [HasZeroMorphisms C] where
   computableBinaryBiproductData (P Q : C) : BinaryBiproductData P Q
