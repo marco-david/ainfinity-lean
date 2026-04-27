@@ -97,6 +97,8 @@ abbrev CategoryTheory.Limits.BinaryBiproductData.mkOfProduct
           exact h1.symm.trans h2
         simp only [← Category.assoc, ← Preadditive.add_comp, key, Category.id_comp])
 
+section computable_biproduct
+
 class ComputableBinaryBiproduct (C : Type*) [Category C] [HasZeroMorphisms C] where
   computableBinaryBiproductData (P Q : C) : BinaryBiproductData P Q
 
@@ -130,3 +132,35 @@ abbrev cbiprod.inl {X Y : C} : X ⟶ X ⊞ᶜ Y := (computableBinaryBiproductDat
 abbrev cbiprod.inr {X Y : C} : Y ⟶ X ⊞ᶜ Y := (computableBinaryBiproductData X Y).bicone.inr
 
 noncomputable def cbiprod_iso_biprod : cbiprod X Y ≅ biprod X Y := sorry
+
+end computable_biproduct
+
+section explicit_zero
+
+class HasExplicitZeroObject (C : Type*) [Category C] where
+  zero : C
+  uniqueTo (Y : C) : Unique (zero ⟶ Y)
+  uniqueFrom (Y : C) : Unique (Y ⟶ zero)
+
+notation "𝟎" => HasExplicitZeroObject.zero
+
+variable {C : Type*} [Category C] [HasExplicitZeroObject C]
+
+instance (Y : C) : Unique (𝟎 ⟶ Y) := HasExplicitZeroObject.uniqueTo Y
+instance (Y : C) : Unique (Y ⟶ 𝟎) := HasExplicitZeroObject.uniqueFrom Y
+
+def explicitZeroTo (Y : C) : 𝟎 ⟶ Y := default
+def explicitZeroFrom (Y : C) : Y ⟶ 𝟎 := default
+
+theorem explicitZeroTo_eq_zero [HasZeroMorphisms C] (Y : C) : explicitZeroTo Y = 0 :=
+  (Unique.uniq _ 0).symm
+
+theorem explicitZeroFrom_eq_zero [HasZeroMorphisms C] (Y : C) : explicitZeroFrom Y = 0 :=
+  (Unique.uniq _ 0).symm
+
+theorem isZero_explicitZero : IsZero (𝟎 : C) := ⟨fun _ ↦ ⟨inferInstance⟩, fun _ ↦ ⟨inferInstance⟩⟩
+
+instance : HasZeroObject C where
+  zero := ⟨𝟎, isZero_explicitZero⟩
+
+end explicit_zero
