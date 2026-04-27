@@ -30,38 +30,48 @@ theorem toList_singleton : [A]ₘ.toList = [A] := rfl
 
 end lists
 
-section definition
-variable {C : Type*} [Category C] [Preadditive C] (M N K : CMat_ C)
+section indexing
+
+variable {C : Type*} {M : CMat_ C}
 
 /--
 Mirrors the API of `CategoryTheory.Mat_.ι`.
 This is irreducible because it is effectively irreducible in `Mat_`, and we should mirror the API.
 -/
 @[irreducible]
-def ι : Type := Fin M.toList.length
+def ι (M : CMat_ C) : Type := Fin M.toList.length
 
 /- Auxillary definitions that are used to avoid defeq abuse. -/
 unseal ι in
-def ι.toFin (i : M.ι) : Fin M.toList.length := i
+def ι.toFin {M : CMat_ C} (i : M.ι) : Fin M.toList.length := i
 unseal ι in
-def ι.ofFin (i : Fin M.toList.length) : M.ι := i
+def ι.ofFin {M : CMat_ C} (i : Fin M.toList.length) : M.ι := i
+
+@[simp]
+theorem ι.ofFin_toFin {M : CMat_ C} (i : M.ι) : ι.ofFin i.toFin = i := rfl
+@[simp]
+theorem ι.toFin_ofFin {M : CMat_ C} (i : Fin M.toList.length) : (ι.ofFin i).toFin = i := rfl
+
+def ι.finEquiv {M : CMat_ C} : M.ι ≃ Fin M.toList.length where
+  toFun := ι.toFin
+  invFun := ι.ofFin
+  left_inv i := by dsimp
+  right_inv j := by dsimp
 
 unseal ι in
 instance fintype : Fintype M.ι := inferInstanceAs <| Fintype (Fin M.toList.length)
 unseal ι in
 instance : DecidableEq M.ι := inferInstanceAs <| DecidableEq (Fin M.toList.length)
 
-omit [Category C] [Preadditive C] in
-unseal ι in
-theorem ι.toFin_ofFin (i : Fin M.toList.length) : (ι.ofFin M i).toFin = i := rfl
-
-omit [Category C] [Preadditive C] in
-unseal ι in
-theorem ι.ofFin_toFin (i : M.ι) : ι.ofFin M i.toFin = i := rfl
-
 /-- Mirrors the API of `CategoryTheory.Mat_.X` -/
 @[irreducible]
 def X : M.ι → C := fun i ↦ M.toList[i.toFin]
+
+end indexing
+
+section category
+
+variable {C : Type*} [Category C] [Preadditive C] (M N K : CMat_ C)
 
 /-- Mirrors the API of `CategoryTheory.Mat_.Hom` -/
 def Hom : Type* := DMatrix M.ι N.ι fun i j => M.X i ⟶ N.X j
@@ -110,6 +120,19 @@ instance : AddCommGroup (M ⟶ N) := inferInstanceAs <| AddCommGroup (DMatrix M.
 instance : Preadditive (CMat_ C) where
   add_comp M N K f f' g := by ext; simp [Finset.sum_add_distrib]
   comp_add M N K f g g' := by ext; simp [Finset.sum_add_distrib]
+
+/-
+private def reindex_append : (CMat_.ofList (M.toList ++ N.toList)).ι ≃ M.ι ⊕ N.ι where
+  toFun i := by
+    have : (CMat_.ofList (M.toList ++ N.toList)).toList.length = M.toList.length + N.toList.length := sorry
+    have i' := finSumFinEquiv.symm (Fin.cast this i.toFin)
+    exact i'
+  invFun j := sorry
+  left_inv := sorry
+  right_inv := sorry
+  -/
+
+def biprod : CMat_ C := .ofList (M.toList ++ N.toList)
 
 instance : ComputableBinaryBiproduct (CMat_ C) where
   computableBinaryBiproductData P Q := .mkOfProduct P Q (pt := .ofList (P.toList ++ Q.toList))
@@ -209,7 +232,7 @@ instance : (toMat_ C).IsEquivalence where
   full := inferInstance
   essSurj := inferInstance
 
-end definition
+end category
 
 section embedding
 
