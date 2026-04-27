@@ -1,6 +1,7 @@
 module
 
 public import Mathlib
+public import AInfinity.ComputableCategories
 
 @[expose] public section
 
@@ -26,15 +27,6 @@ variable {C : Type*} (A : C) (M N K : CMat_ C)
 theorem toList_empty : ([]ₘ : CMat_ C).toList = [] := rfl
 
 theorem toList_singleton : [A]ₘ.toList = [A] := rfl
-
-/-- Computable version of `CategoryTheory.Limits.biprod`. -/
-def cbiprod : CMat_ C := CMat_.ofList (M.toList ++ N.toList)
-
--- `m` stands for "matrix"
-@[inherit_doc] infixl:65 " ⊞ₘ " => cbiprod
-
-theorem cbiprod_assoc : M ⊞ₘ N ⊞ₘ K = M ⊞ₘ (N ⊞ₘ K) := by
-  simp [cbiprod]
 
 end lists
 
@@ -118,6 +110,13 @@ instance : AddCommGroup (M ⟶ N) := inferInstanceAs <| AddCommGroup (DMatrix M.
 instance : Preadditive (CMat_ C) where
   add_comp M N K f f' g := by ext; simp [Finset.sum_add_distrib]
   comp_add M N K f g g' := by ext; simp [Finset.sum_add_distrib]
+
+instance : ComputableBinaryBiproduct (CMat_ C) where
+  computableBinaryBiproductData P Q := .mkOfProduct P Q (pt := .ofList (P.toList ++ Q.toList))
+    (fst := sorry) (snd := sorry) (pair := sorry)
+    (pair_fst := sorry)
+    (pair_snd := sorry)
+    (pair_eta := sorry)
 
 -- Idea: Maybe we can translate the `HasFiniteBiproducts` instance from `CategoryTheory.Mat_` using
 -- an equivalence. I don't know if this would make it computable though, which we might need.
