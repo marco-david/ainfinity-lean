@@ -121,13 +121,23 @@ instance : Preadditive (CMat_ C) where
   add_comp M N K f f' g := by ext; simp [Finset.sum_add_distrib]
   comp_add M N K f g g' := by ext; simp [Finset.sum_add_distrib]
 
-def biprod : CMat_ C := .ofList (M.toList ++ N.toList)
+def cbiprod : CMat_ C := .ofList (M.toList ++ N.toList)
 
-def biprod_ι_equiv : (M.biprod N).ι ≃ M.ι ⊕ N.ι :=
+def cbiprod_ι_equiv' {M N : CMat_ C} : (M.cbiprod N).ι ≃ M.ι ⊕ N.ι :=
   have : (CMat_.ofList (M.toList ++ N.toList)).toList.length = M.toList.length + N.toList.length
     := by simp
   ι.finEquiv |>.trans (finCongr this) |>.trans finSumFinEquiv.symm
     |>.trans (ι.finEquiv.symm.sumCongr ι.finEquiv.symm)
+
+theorem X_symm_cbiprod_ι_equiv'_inl (i : M.ι) :
+    (M.cbiprod N).X (cbiprod_ι_equiv'.symm (.inl i)) = M.X i := by
+  unfold X
+  sorry
+
+theorem X_symm_cbiprod_ι_equiv'_inr (i : N.ι) :
+    (M.cbiprod N).X (cbiprod_ι_equiv'.symm (.inr i)) = N.X i := by
+  unfold X
+  sorry
 
 instance : ComputableBinaryBiproduct (CMat_ C) where
   computableBinaryBiproductData P Q := .mkOfProduct P Q (pt := .ofList (P.toList ++ Q.toList))
@@ -135,6 +145,11 @@ instance : ComputableBinaryBiproduct (CMat_ C) where
     (pair_fst := sorry)
     (pair_snd := sorry)
     (pair_eta := sorry)
+
+/--
+Same as `cbiprod_ι_equiv` but expressed with proper notation and thus with types
+-/
+def cbiprod_ι_equiv {M N : CMat_ C} : (M ⊞ᶜ N).ι ≃ M.ι ⊕ N.ι := cbiprod_ι_equiv'
 
 -- Idea: Maybe we can translate the `HasFiniteBiproducts` instance from `CategoryTheory.Mat_` using
 -- an equivalence. I don't know if this would make it computable though, which we might need.
