@@ -375,11 +375,9 @@ def extend [ComputableBinaryBiproduct D] [HasExplicitZeroObject D]
 -- These are candidate definitions until we get lifting to some arbitrary category
 -- These also look suspiciously similar to a monad
 
-def bind : CMat_ (CMat_ C) ⥤ CMat_ C := sorry
+def bind : CMat_ (CMat_ C) ⥤ CMat_ C := extend (𝟭 (CMat_ C))
 
-def mapCMat_ (F : C ⥤ D) : CMat_ C ⥤ CMat_ D := sorry
-
-def lift (F : C ⥤ CMat_ C) : CMat_ C ⥤ CMat_ C := mapCMat_ F ⋙ bind
+def mapCMat_ (F : C ⥤ D) [F.Additive] : CMat_ C ⥤ CMat_ D := extend (F ⋙ embedding D)
 
 end lift
 
