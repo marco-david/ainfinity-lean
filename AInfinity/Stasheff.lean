@@ -696,12 +696,11 @@ lemma indexedStasheffOuter_eq_zero_of_inner_eq_zero
     (hr : r + s ≤ n)
     (hinner : indexedStasheffInner Hom m obj deg x r s hs hr = 0) :
     indexedStasheffOuter Hom m obj deg x r s hs hr = 0 := by
-  let i0 := indexedStasheffMiddleIndex r s hr
   dsimp [indexedStasheffOuter]
   letI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
   exact MultilinearMap.map_coord_zero
     (m (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr))
-    i0
+    (indexedStasheffMiddleIndex r s hr)
     (indexedStasheffXOut_middle_eq_zero_of_inner_eq_zero Hom m obj deg x r s hs hr hinner)
 
 /-- The final transported Stasheff term vanishes exactly when the outer value vanishes. -/

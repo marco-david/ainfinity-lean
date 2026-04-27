@@ -293,6 +293,70 @@ private lemma identity_functorLHSTerm_eq_main
     exact congr_arg_heq x (Fin.ext (Nat.zero_add i₁.val))
   exact m_heq_of_obj_deg_eq (β := β) (R := R) (Obj := Obj) hobj hdeg _ _ hxin
 
+/-
+If one of the inner multilinear maps in a composition is zero,
+    the entire composition is zero.
+-/
+private lemma compComposition_eq_zero_of_inner_zero
+    {n : ℕ} (c : Composition n)
+    {M : Fin n → Type*} {N : Fin c.length → Type*} {P : Type*}
+    [∀ i, AddCommMonoid (M i)] [∀ l, AddCommMonoid (N l)] [AddCommMonoid P]
+    [∀ i, Module R (M i)] [∀ l, Module R (N l)] [Module R P]
+    (g : MultilinearMap R N P)
+    (f : (l : Fin c.length) → MultilinearMap R (fun j => M (c.embedding l j)) (N l))
+    (l0 : Fin c.length)
+    (hf : f l0 = 0) :
+    AInfinityFunctorData.MultilinearMap.compComposition c g f = 0 := by
+  ext x;
+  convert g.map_coord_zero l0 _;
+  aesop
+
+/-
+Transporting a zero multilinear map along a codomain equality gives the zero map.
+-/
+private lemma eqRec_multilinearMap_zero
+    {ι : Type*} [DecidableEq ι] [Fintype ι]
+    {M₁ : ι → Type u} [∀ i, AddCommMonoid (M₁ i)] [∀ i, Module R (M₁ i)]
+    {M₂ M₂' : ModuleCat.{u} R}
+    (h : M₂ = M₂') :
+    (h ▸ (0 : MultilinearMap R M₁ M₂)) = (0 : MultilinearMap R M₁ M₂') := by
+  aesop
+
+/-
+The `functorRHSTermMap` is the zero multilinear map whenever one of the inner
+    phi-maps is zero (which happens for the identity functor at any block of size > 1).
+-/
+private lemma functorRHSTermMap_eq_zero_of_block_phi_zero
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (c : Composition n)
+    (l0 : Fin c.length)
+    [NeZero (c.blocksFun l0)]
+    (hphi_zero : identityPhi (β := β) (R := R) (Obj := Obj)
+      (AInfinityFunctorData.compositionBlockObj obj c l0)
+      (AInfinityFunctorData.compositionBlockDeg β deg c l0) = 0) :
+    AInfinityFunctorData.functorRHSTermMap
+      β β
+      (GHom β R) (GHom β R)
+      id (identityDegTrans β)
+      (identityPhi (β := β) (R := R) (Obj := Obj))
+      (AInfinityCategoryStruct.m (β := β) (R := R) (Obj := Obj))
+      obj deg c = 0 := by
+  contrapose! hphi_zero;
+  intro h;
+  apply hphi_zero;
+  simp +decide [ AInfinityFunctorData.functorRHSTermMap ];
+  rw [ compComposition_eq_zero_of_inner_zero ];
+  rotate_left;
+  exact l0;
+  · rw [h]
+    refine eqRec_multilinearMap_zero (R := R)
+      (ι := Fin (c.blocksFun l0))
+      (M₁ := fun j => composableHomType (GHom β R) obj deg (c.embedding l0 j)) ?_
+  · refine eqRec_multilinearMap_zero (R := R)
+      (ι := Fin n)
+      (M₁ := fun i => composableHomType (GHom β R) obj deg i) ?_
 
 private lemma composition_exists_block_gt_one_of_ne_ones
     {n : ℕ}
@@ -319,88 +383,22 @@ private lemma identity_functorRHSTerm_eq_zero_of_ne_ones
       (AInfinityCategoryStruct.m (β := β) (R := R) (Obj := Obj))
       obj deg x c = 0 := by
   classical
-  obtain ⟨l0, hl0⟩ :=
-    composition_exists_block_gt_one_of_ne_ones (c := c) hc
-  let outerDeg := AInfinityFunctorData.functorCompositionOuterDeg β β (identityDegTrans β) deg c
-  let outerObj := AInfinityFunctorData.functorCompositionOuterObj id obj c
-  let phiOutputs : ∀ l : Fin c.length, composableHomType (GHom β R) outerObj outerDeg l := by
-    intro l
-    let blockDeg := AInfinityFunctorData.compositionBlockDeg β deg c l
-    let blockObj := AInfinityFunctorData.compositionBlockObj obj c l
-    let blockX : ∀ j : Fin (c.blocksFun l), composableHomType (GHom β R) blockObj blockDeg j := by
-      intro j
-      simpa [composableHomType, blockObj, AInfinityFunctorData.compositionBlockObj,
-        blockDeg, AInfinityFunctorData.compositionBlockDeg]
-        using x (c.embedding l j)
-    letI : NeZero (c.blocksFun l) := ⟨Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one (c.one_le_blocksFun l))⟩
-    let blockPhi := identityPhi (β := β) (R := R) (Obj := Obj) blockObj blockDeg blockX
-    have hdegBlock :
-        functorTargetType β β (GHom β R) id (identityDegTrans β) blockObj blockDeg =
-          composableHomType (GHom β R) outerObj outerDeg l := by
-      dsimp [functorTargetType, composableHomType, outerObj, AInfinityFunctorData.functorCompositionOuterObj,
-        outerDeg, AInfinityFunctorData.functorCompositionOuterDeg, blockObj,
-        AInfinityFunctorData.compositionBlockObj, blockDeg, AInfinityFunctorData.compositionBlockDeg]
-      congr
-      simpa using (c.sizeUpTo_succ' l).symm
-    exact hdegBlock ▸ blockPhi
-  have houter : 0 < c.length := c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n))
-  letI : NeZero c.length := ⟨Nat.ne_of_gt houter⟩
-  let outer :=
-    (AInfinityCategoryStruct.m (β := β) (R := R) (Obj := Obj)) outerObj outerDeg phiOutputs
-  have hsource : outerObj 0 = obj 0 := by
-    simp [outerObj, AInfinityFunctorData.functorCompositionOuterObj]
-  have htarget : outerObj (Fin.last c.length) = obj (Fin.last n) := by
-    simp [outerObj, AInfinityFunctorData.functorCompositionOuterObj]
-  have hdeg :
-      operationTargetType (GHom β R) outerObj outerDeg =
-        AInfinityFunctorData.functorEqTargetType β β (GHom β R) id (identityDegTrans β) obj deg := by
-    dsimp [operationTargetType, AInfinityFunctorData.functorEqTargetType]
-    rw [hsource, htarget]
-    exact congrArg _ (AInfinityFunctorData.RHS_compatible_deg
-      (β_A := β) (β_B := β)
-      (deg_trans := identityDegTrans β)
-      deg c)
-  let blockDeg := AInfinityFunctorData.compositionBlockDeg β deg c l0
-  let blockObj := AInfinityFunctorData.compositionBlockObj obj c l0
-  let blockX : ∀ j : Fin (c.blocksFun l0), composableHomType (GHom β R) blockObj blockDeg j := by
-    intro j
-    simpa [composableHomType, blockObj, AInfinityFunctorData.compositionBlockObj,
-      blockDeg, AInfinityFunctorData.compositionBlockDeg]
-      using x (c.embedding l0 j)
-  letI : NeZero (c.blocksFun l0) := ⟨Nat.ne_of_gt (lt_trans Nat.zero_lt_one hl0)⟩
-  let blockPhi := identityPhi (β := β) (R := R) (Obj := Obj) blockObj blockDeg blockX
-  have hblockMap : identityPhi (β := β) (R := R) (Obj := Obj) blockObj blockDeg = 0 :=
-    identityPhi_eq_zero_of_ne_one (β := β) (R := R) (Obj := Obj) blockObj blockDeg (by omega)
-  have hdegBlock :
-      functorTargetType β β (GHom β R) id (identityDegTrans β) blockObj blockDeg =
-        composableHomType (GHom β R) outerObj outerDeg l0 := by
-    dsimp [functorTargetType, composableHomType, outerObj, AInfinityFunctorData.functorCompositionOuterObj,
-      outerDeg, AInfinityFunctorData.functorCompositionOuterDeg, blockObj,
-      AInfinityFunctorData.compositionBlockObj, blockDeg, AInfinityFunctorData.compositionBlockDeg]
-    congr
-    simpa using (c.sizeUpTo_succ' l0).symm
-  have hblockPhi_zero : blockPhi = 0 := by
-    dsimp [blockPhi]
-    simp [hblockMap]
-  have hphi0 : phiOutputs l0 = 0 := by
-    simpa [phiOutputs, blockDeg, blockObj, blockX, blockPhi,
-      AInfinityFunctorData.compositionBlockObj, AInfinityFunctorData.compositionBlockDeg,
-      eqRec_eq_cast] using
-      (cast_eq_zero_iff_of_module_eq (R := R) hdegBlock blockPhi).2 hblockPhi_zero
-  have houter_zero : outer = 0 := by
-    dsimp [outer]
-    exact MultilinearMap.map_coord_zero
-      ((AInfinityCategoryStruct.m (β := β) (R := R) (Obj := Obj)) outerObj outerDeg)
-      l0 hphi0
-  have hcast_outer_zero :
-      cast (congrArg (fun M : ModuleCat R => (M : Type u)) hdeg) outer = 0 := by
-    exact (cast_eq_zero_iff_of_module_eq (R := R) hdeg outer).2 houter_zero
-  unfold AInfinityFunctorData.functorRHSTerm AInfinityFunctorData.functorRHSTermMap;
-  unfold AInfinityFunctorData.MultilinearMap.compComposition;
-  simp +zetaDelta at *;
-  rw [ multilinearMap_eqRec_apply ];
-  --grind +suggestions
-  sorry
+  obtain ⟨l0, hl0⟩ := composition_exists_block_gt_one_of_ne_ones (c := c) hc
+  letI : NeZero (c.blocksFun l0) :=
+    ⟨Nat.ne_of_gt (lt_of_lt_of_le Nat.zero_lt_one (c.one_le_blocksFun l0))⟩
+  have hphi_zero : identityPhi (β := β) (R := R) (Obj := Obj)
+      (AInfinityFunctorData.compositionBlockObj obj c l0)
+      (AInfinityFunctorData.compositionBlockDeg β deg c l0) = 0 :=
+    identityPhi_eq_zero_of_ne_one (β := β) (R := R) (Obj := Obj) _ _ (by
+      exact Nat.ne_of_gt hl0)
+  have hmap := functorRHSTermMap_eq_zero_of_block_phi_zero
+    (β := β) (R := R) (Obj := Obj) obj deg c l0 hphi_zero
+  show (AInfinityFunctorData.functorRHSTermMap
+      β β (GHom β R) (GHom β R) id (identityDegTrans β)
+      (identityPhi (β := β) (R := R) (Obj := Obj))
+      (AInfinityCategoryStruct.m (β := β) (R := R) (Obj := Obj))
+      obj deg c) x = 0
+  simp [hmap]
 
 /-- Generalized HEq for `m` across arity, object, degree, and input changes. -/
 private lemma m_heq_of_arity_eq
