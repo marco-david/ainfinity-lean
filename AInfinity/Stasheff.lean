@@ -349,9 +349,9 @@ def indexedStasheffInner
     (r s : ℕ)
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
-    operationTargetType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) := by
+    operationTargetType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) :=
   letI : NeZero s := ⟨by omega⟩
-  exact m (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr)
+  m (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr)
     (indexedStasheffXIn Hom obj deg x r s hr)
 
 /-- Helper: the middle index in the outer tuple of a Stasheff term. -/
@@ -395,6 +395,67 @@ lemma indexedStasheffMiddleTypeEq
   exact congrArg (fun M : ModuleCat R => (M : Type u))
     (indexedStasheffMiddleModuleEq Hom obj deg r s hr)
 
+/-- Before the inserted block, the original input type matches the outer input type. -/
+lemma indexedStasheffXOutTypeEq_of_lt
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (hlt : i.val < r) :
+    ((ComposableHomType Hom obj deg ⟨i.val, by omega⟩ : ModuleCat R) : Type u) =
+      ((ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) i :
+        ModuleCat R) : Type u) := by
+  simp [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, Nat.le_of_lt hlt]
+
+/-- At the inserted block, the inner output type matches the outer middle input type. -/
+lemma indexedStasheffXOutTypeEq_of_eq
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (heq : i.val = r) :
+    ((operationTargetType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) :
+        ModuleCat R) : Type u) =
+      ((ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) i :
+        ModuleCat R) : Type u) := by
+  have hi : indexedStasheffMiddleIndex r s hr = i := by
+    apply Fin.ext
+    simp [indexedStasheffMiddleIndex, heq]
+  simpa [hi] using indexedStasheffMiddleTypeEq Hom obj deg r s hr
+
+/-- After the inserted block, the shifted original input type matches the outer input type. -/
+lemma indexedStasheffXOutTypeEq_of_gt
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (hlt : ¬ i.val < r)
+    (heq : i.val ≠ r) :
+    ((ComposableHomType Hom obj deg ⟨i.val + s - 1, by omega⟩ : ModuleCat R) : Type u) =
+      ((ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) i :
+        ModuleCat R) : Type u) := by
+  have hgt : ¬ i.val ≤ r := by omega
+  have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
+  simp [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, heq, hgt, hsucc]
+
 /-- Helper: the input tuple for the outer operation in a Stasheff term. -/
 def indexedStasheffXOut
     {R : Type u}
@@ -414,23 +475,16 @@ def indexedStasheffXOut
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
     ∀ i : Fin (n + 1 - s),
-      ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) i := by
-  intro i
-  by_cases hlt : i.val < r
-  · simpa [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, Nat.le_of_lt hlt]
-      using x ⟨i.val, by omega⟩
-  · by_cases heq : i.val = r
-    · have hi : i = indexedStasheffMiddleIndex r s hr := by
-        apply Fin.ext
-        simp [indexedStasheffMiddleIndex, heq]
-      subst hi
-      exact
-        cast (indexedStasheffMiddleTypeEq Hom obj deg r s hr)
-          (indexedStasheffInner Hom m obj deg x r s hs hr)
-    · have hgt : ¬ i.val ≤ r := by omega
-      have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
-      simpa [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, heq, hgt, hsucc]
-        using x ⟨i.val + s - 1, by omega⟩
+      ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) i :=
+  fun i =>
+    if hlt : i.val < r then
+      cast (indexedStasheffXOutTypeEq_of_lt Hom obj deg r s hr i hlt) (x ⟨i.val, by omega⟩)
+    else if heq : i.val = r then
+      cast (indexedStasheffXOutTypeEq_of_eq Hom obj deg r s hr i heq)
+        (indexedStasheffInner Hom m obj deg x r s hs hr)
+    else
+      cast (indexedStasheffXOutTypeEq_of_gt Hom obj deg r s hr i hlt heq)
+        (x ⟨i.val + s - 1, by omega⟩)
 
 /-- Before the inserted block, the outer input tuple agrees with the original inputs. -/
 lemma indexedStasheffXOut_apply_of_lt
@@ -519,9 +573,9 @@ def indexedStasheffOuter
     (r s : ℕ)
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
-    operationTargetType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) := by
+    operationTargetType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) :=
   letI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
-  exact m (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr)
+  m (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr)
     (indexedStasheffXOut Hom m obj deg x r s hs hr)
 
 /-- Helper: the `ModuleCat` equality from the outer target to the final Stasheff target. -/
