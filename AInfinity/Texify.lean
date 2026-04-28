@@ -11,32 +11,34 @@ open ProofWidgets.Jsx
 universe u
 
 class Texify (α : Type u) where
-  texify : α → String
+  protected texify : α → String
 
-meta def texifyToHtml {α : Type u} [Texify α] (a : α) : ProofWidgets.Html :=
-  let md := s!"$${Texify.texify a}$$";
-  <MarkdownDisplay contents={md} />
+def texify {α : Type u} [Texify α] : α → String := Texify.texify
+
+def texifyToMd {α : Type u} [Texify α] (a : α) : String :=
+  s!"$${texify a}$$"
 
 -- Based on https://github.com/kmill/LeanTeX/blob/d66db4582b6cb4d9fa0b6309168103a248a5fd46/LeanTeX/Widget.lean#L9
-meta def displayHtml (html : ProofWidgets.Html) (stx : Syntax) : CoreM Unit := do
+meta def displayMd (md : String) (stx : Syntax) : CoreM Unit := do
+  let html := <MarkdownDisplay contents={md} />
   Widget.savePanelWidgetInfo
     (hash HtmlDisplayPanel.javascript)
     (return json% { html: $(← Server.RpcEncodable.rpcEncode html) })
     stx
 
-meta unsafe def evalHtmlUnsafe (stx : Term) : TermElabM Html := do
-  let newStx ← `(texifyToHtml $stx)
-  Term.evalTerm _ (mkConst ``Html) newStx
+meta unsafe def evalStringUnsafe (stx : Term) : TermElabM String := do
+  let newStx ← `(texifyToMd $stx)
+  Term.evalTerm _ (mkConst ``String) newStx
 
 /--
 Evaluates a term of type `ProofWidgets.Html`
 -/
-@[implemented_by evalHtmlUnsafe]
-meta opaque evalHtml : Term → TermElabM Html
+@[implemented_by evalStringUnsafe]
+meta opaque evalString : Term → TermElabM String
 
 elab tk:"#texify" t:term : command => do
-  let term ← liftTermElabM <| evalHtml t
-  liftCoreM <| displayHtml term tk
+  let term ← liftTermElabM <| evalString t
+  liftCoreM <| displayMd term tk
 
 instance : Texify Nat where
   texify n := s!"{n}"
