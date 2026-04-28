@@ -9,7 +9,7 @@ open CategoryTheory Finset AInfinityTheory
 
 noncomputable section
 
-namespace AInfinityCategoryTheory
+namespace AInfinityTheory
 
 universe u v w
 variable (β : Type v) [Grading β]
@@ -19,10 +19,10 @@ class AInfinityCategoryStruct
     extends RLinearGQuiver (β := β) R Obj where
   m :
     {n : ℕ} → [NeZero n] →
-    (obj : Fin ((n : ℕ) + 1) → Obj) →
-    (deg : Fin (n : ℕ) → β) →
+    (obj : Fin (n + 1) → Obj) →
+    (deg : Fin n → β) →
     MultilinearMap R
-      (fun i : Fin (n : ℕ) => composableHomType (GHom β R) obj deg i)
+      (fun i : Fin n => ComposableHomType (GHom β R) obj deg i)
       (operationTargetType (GHom β R) obj deg)
 
 namespace AInfinityCategoryStruct
@@ -36,7 +36,7 @@ def stasheffSum
     {n : ℕ}
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
-    (x : ∀ i : Fin n, composableHomType (GHom β R) obj deg i) :
+    (x : ∀ i : Fin n, ComposableHomType (GHom β R) obj deg i) :
     (GHom β R) (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
   indexedStasheffSum (GHom β R) m obj deg x
 
@@ -60,4 +60,4 @@ variable (Obj : Type w)
 
 end AInfinityCategory
 
-end AInfinityCategoryTheory
+end AInfinityTheory

@@ -6,11 +6,11 @@ public import AInfinity.AInfinityCategory
 
 @[expose] public section
 
-open CategoryTheory AInfinityTheory AInfinityCategoryTheory
+open CategoryTheory AInfinityTheory
 
 noncomputable section
 
-namespace AInfinityFunctorTheory
+namespace AInfinityTheory
 
 universe u v w x y
 variable (β_A : Type v) [Grading β_A]
@@ -58,7 +58,7 @@ structure AInfinityFunctorData
     (obj : Fin (n + 1) → ObjA) →
     (deg : Fin n → β_A) →
     MultilinearMap R
-      (fun i : Fin n => composableHomType (GHom β_A R) obj deg i)
+      (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
       (functorTargetType β_A β_B (GHom β_B R) objMap deg_trans obj deg)
 
 
@@ -240,19 +240,19 @@ def functorLHSTerm
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType AHom obj deg i)
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
         (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
     (m_A :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType AHom obj deg i)
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
         (operationTargetType AHom obj deg))
     {n : ℕ}
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : ∀ i : Fin n, composableHomType AHom obj deg i)
+    (x : ∀ i : Fin n, ComposableHomType AHom obj deg i)
     (r s : ℕ)
     (hs : 1 ≤ s)
     (hr : r + s ≤ n) :
@@ -261,7 +261,7 @@ def functorLHSTerm
   let outerN := n + 1 - s
   let degOut := stasheffDegOut deg r s hr
   let objOut := stasheffObjOut obj r s hr
-  let xOut : ∀ i : Fin outerN, composableHomType AHom objOut degOut i :=
+  let xOut : ∀ i : Fin outerN, ComposableHomType AHom objOut degOut i :=
     indexedStasheffXOut AHom m_A obj deg x r s hs hr
   have houterN : 0 < outerN := by
     dsimp [outerN]
@@ -300,23 +300,23 @@ def functorLHSSum
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType AHom obj deg i)
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
         (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
     (m_A :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType AHom obj deg i)
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
         (operationTargetType AHom obj deg))
     {n : ℕ}
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : ∀ i : Fin n, composableHomType AHom obj deg i) :
+    (x : ∀ i : Fin n, ComposableHomType AHom obj deg i) :
     functorEqTargetType β_A β_B BHom objMap deg_trans obj deg :=
   ∑ r ∈ (Finset.range (n + 1)).attach,
     ∑ s ∈ (Finset.Ico 1 (n - r.1 + 1)).attach,
-      let h : validStasheffIndices n r.1 s.1 :=
+      let h : ValidStasheffIndices n r.1 s.1 :=
         validStasheffIndices_of_mem_ranges (n := n) r.2 s.2
       (stasheffSign deg r.1 s.1 h.2) •
         (functorLHSTerm β_A β_B AHom BHom objMap deg_trans deg_trans_ofInt phi m_A
@@ -475,21 +475,21 @@ def functorRHSTermMap
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType AHom obj deg i)
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
         (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
     (m_B :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjB) →
       (deg : Fin n → β_B) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType BHom obj deg i)
+        (fun i : Fin n => ComposableHomType BHom obj deg i)
         (operationTargetType BHom obj deg))
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
     (c : Composition n) :
     MultilinearMap R
-      (fun i : Fin n => composableHomType AHom obj deg i)
+      (fun i : Fin n => ComposableHomType AHom obj deg i)
       (functorEqTargetType β_A β_B BHom objMap deg_trans obj deg) := by
   let outerDeg := functorCompositionOuterDeg β_A β_B deg_trans deg c
   let outerObj := functorCompositionOuterObj objMap obj c
@@ -516,8 +516,8 @@ def functorRHSTermMap
     let blockPhi := phi blockObj blockDeg
     have hblock :
         functorTargetType β_A β_B BHom objMap deg_trans blockObj blockDeg =
-          composableHomType BHom outerObj outerDeg l := by
-      dsimp [functorTargetType, composableHomType, outerObj, functorCompositionOuterObj,
+          ComposableHomType BHom outerObj outerDeg l := by
+      dsimp [functorTargetType, ComposableHomType, outerObj, functorCompositionOuterObj,
         outerDeg, functorCompositionOuterDeg, blockObj, compositionBlockObj, blockDeg,
         compositionBlockDeg]
       congr
@@ -536,19 +536,19 @@ def functorRHSTerm
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType AHom obj deg i)
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
         (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
     (m_B :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjB) →
       (deg : Fin n → β_B) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType BHom obj deg i)
+        (fun i : Fin n => ComposableHomType BHom obj deg i)
         (operationTargetType BHom obj deg))
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : ∀ i : Fin n, composableHomType AHom obj deg i)
+    (x : ∀ i : Fin n, ComposableHomType AHom obj deg i)
     (c : Composition n) :
     functorEqTargetType β_A β_B BHom objMap deg_trans obj deg := by
   exact functorRHSTermMap β_A β_B AHom BHom objMap deg_trans phi m_B obj deg c x
@@ -563,19 +563,19 @@ def functorRHSSum
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType AHom obj deg i)
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
         (functorTargetType β_A β_B BHom objMap deg_trans obj deg))
     (m_B :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjB) →
       (deg : Fin n → β_B) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType BHom obj deg i)
+        (fun i : Fin n => ComposableHomType BHom obj deg i)
         (operationTargetType BHom obj deg))
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : ∀ i : Fin n, composableHomType AHom obj deg i) :
+    (x : ∀ i : Fin n, ComposableHomType AHom obj deg i) :
     functorEqTargetType β_A β_B BHom objMap deg_trans obj deg :=
   ∑ c : Composition n,
     functorRHSTerm β_A β_B AHom BHom objMap deg_trans phi m_B obj deg x c
@@ -591,7 +591,7 @@ def SatisfiesFunctorEquations
     [AInfinityCategoryStruct β_B R ObjB]
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) : Prop :=
   ∀ (n : ℕ) [NeZero n] (obj : Fin (n + 1) → ObjA) (deg : Fin n → β_A)
-    (x : ∀ i : Fin n, composableHomType (GHom β_A R) obj deg i),
+    (x : ∀ i : Fin n, ComposableHomType (GHom β_A R) obj deg i),
     functorLHSSum β_A β_B
       (GHom β_A R) (GHom β_B R)
       F.objMap F.deg_trans F.deg_trans_ofInt F.phi
@@ -618,4 +618,4 @@ structure AInfinityFunctor
     AInfinityFunctorData.SatisfiesFunctorEquations
       (β_A := β_A) (β_B := β_B) R ObjA ObjB toAInfinityFunctorData
 
-end AInfinityFunctorTheory
+end AInfinityTheory

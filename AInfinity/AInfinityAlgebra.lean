@@ -5,7 +5,7 @@ public import AInfinity.AInfinityCategory
 
 @[expose] public section
 
-open CategoryTheory Finset AInfinityTheory AInfinityCategoryTheory
+open CategoryTheory Finset AInfinityTheory
 
 noncomputable section
 
@@ -37,7 +37,7 @@ def toPreCategory
   Hom _ _ := A
   m := by
     intro n obj deg
-    simpa [composableHomType] using X.m deg
+    simpa [ComposableHomType] using X.m deg
 
 /-- The full Stasheff sum in arity `n`, with Koszul signs. -/
 def stasheffSum

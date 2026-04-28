@@ -5,11 +5,12 @@ public import AInfinity.AInfinityFunctorComposition
 
 @[expose] public section
 
-open CategoryTheory Finset AInfinityTheory AInfinityCategoryTheory AInfinityFunctorTheory
+open CategoryTheory Finset AInfinityTheory
 
 noncomputable section
 
-namespace AInfinityFunctorExamples
+namespace AInfinityTheory
+namespace FunctorExamples
 
 universe u v w
 
@@ -29,27 +30,27 @@ variable [AInfinityCategoryStruct β R Obj]
 lemma identityPhiOneTargetModuleEq
     (obj : Fin 2 → Obj)
     (deg : Fin 1 → β) :
-    composableHomType (GHom β R) obj deg 0 =
+    ComposableHomType (GHom β R) obj deg 0 =
       functorTargetType β β (GHom β R) id (identityDegTrans β) obj deg := by
-  simp [functorTargetType, functorTargetDeg, composableHomType, identityDegTrans, shift_ofInt]
+  simp [functorTargetType, functorTargetDeg, ComposableHomType, identityDegTrans, shift_ofInt]
 
 /-- The arity-one structure map of the identity A∞ functor. -/
 def identityPhiOne
     (obj : Fin 2 → Obj)
     (deg : Fin 1 → β) :
     MultilinearMap R
-      (fun i : Fin 1 => composableHomType (GHom β R) obj deg i)
+      (fun i : Fin 1 => ComposableHomType (GHom β R) obj deg i)
       (functorTargetType β β (GHom β R) id (identityDegTrans β) obj deg) := by
   classical
   let f :
       MultilinearMap R
-        (fun i : Fin 1 => composableHomType (GHom β R) obj deg i)
-        (composableHomType (GHom β R) obj deg 0) :=
+        (fun i : Fin 1 => ComposableHomType (GHom β R) obj deg i)
+        (ComposableHomType (GHom β R) obj deg 0) :=
     MultilinearMap.mk'
       (R := R)
       (ι := Fin 1)
-      (M₁ := fun i : Fin 1 => composableHomType (GHom β R) obj deg i)
-      (M₂ := composableHomType (GHom β R) obj deg 0)
+      (M₁ := fun i : Fin 1 => ComposableHomType (GHom β R) obj deg i)
+      (M₂ := ComposableHomType (GHom β R) obj deg 0)
       (fun x => x 0)
       (by
         intro m i x y
@@ -68,7 +69,7 @@ def identityPhi
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β) :
     MultilinearMap R
-      (fun i : Fin n => composableHomType (GHom β R) obj deg i)
+      (fun i : Fin n => ComposableHomType (GHom β R) obj deg i)
       (functorTargetType β β (GHom β R) id (identityDegTrans β) obj deg) := by
   classical
   by_cases hn : n = 1
@@ -127,7 +128,7 @@ private lemma multilinearMap_eqRec_apply
 private lemma identityPhiOne_apply
     (obj : Fin 2 → Obj)
     (deg : Fin 1 → β)
-    (x : ∀ i : Fin 1, composableHomType (GHom β R) obj deg i) :
+    (x : ∀ i : Fin 1, ComposableHomType (GHom β R) obj deg i) :
     identityPhiOne (β := β) (R := R) (Obj := Obj) obj deg x =
       cast
         (congrArg
@@ -142,7 +143,7 @@ private lemma identity_functorLHSTerm_eq_zero_of_ne_one
     {n : ℕ}
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
-    (x : ∀ i : Fin n, composableHomType (GHom β R) obj deg i)
+    (x : ∀ i : Fin n, ComposableHomType (GHom β R) obj deg i)
     (r s : ℕ)
     (hs : 1 ≤ s)
     (hr : r + s ≤ n)
@@ -159,7 +160,7 @@ private lemma identity_functorLHSTerm_eq_zero_of_ne_one
   let outerN := n + 1 - s
   let degOut := stasheffDegOut deg r s hr
   let objOut := stasheffObjOut obj r s hr
-  let xOut : ∀ i : Fin outerN, composableHomType (GHom β R) objOut degOut i :=
+  let xOut : ∀ i : Fin outerN, ComposableHomType (GHom β R) objOut degOut i :=
     indexedStasheffXOut
       (GHom β R)
       (AInfinityCategoryStruct.m (β := β) (R := R) (Obj := Obj))
@@ -206,7 +207,7 @@ private lemma identity_functorLHSTerm_eq_zero_of_ne_one
 /-- When the arity k equals 1, identityPhi acts as identity (up to HEq). -/
 private lemma identityPhi_heq_of_eq_one {k : ℕ} [NeZero k] (hk : k = 1)
     (obj' : Fin (k + 1) → Obj) (deg' : Fin k → β)
-    (x' : ∀ i : Fin k, composableHomType (GHom β R) obj' deg' i) :
+    (x' : ∀ i : Fin k, ComposableHomType (GHom β R) obj' deg' i) :
     HEq (identityPhi (β := β) (R := R) (Obj := Obj) obj' deg' x')
          (x' ⟨0, by omega⟩) := by
   subst hk
@@ -219,8 +220,8 @@ private lemma m_heq_of_obj_deg_eq
     {O₁ O₂ : Fin (n + 1) → Obj}
     {D₁ D₂ : Fin n → β}
     (hO : O₁ = O₂) (hD : D₁ = D₂)
-    (X₁ : ∀ i, composableHomType (GHom β R) O₁ D₁ i)
-    (X₂ : ∀ i, composableHomType (GHom β R) O₂ D₂ i)
+    (X₁ : ∀ i, ComposableHomType (GHom β R) O₁ D₁ i)
+    (X₂ : ∀ i, ComposableHomType (GHom β R) O₂ D₂ i)
     (hX : HEq X₁ X₂) :
     HEq (@AInfinityCategoryStruct.m _ _ _ _ _ _ n inst₁ O₁ D₁ X₁)
          (@AInfinityCategoryStruct.m _ _ _ _ _ _ n inst₂ O₂ D₂ X₂) := by
@@ -233,8 +234,8 @@ private lemma m_xIn_heq_x_aux
     {n : ℕ} [NeZero n]
     {O₁ : Fin (n + 1) → Obj} {D₁ : Fin n → β}
     {O₂ : Fin (n + 1) → Obj} {D₂ : Fin n → β}
-    (X₁ : ∀ i : Fin n, composableHomType (GHom β R) O₁ D₁ i)
-    (X₂ : ∀ i : Fin n, composableHomType (GHom β R) O₂ D₂ i)
+    (X₁ : ∀ i : Fin n, ComposableHomType (GHom β R) O₁ D₁ i)
+    (X₂ : ∀ i : Fin n, ComposableHomType (GHom β R) O₂ D₂ i)
     (hO : O₁ = O₂) (hD : D₁ = D₂)
     (hX : ∀ i, HEq (X₁ i) (X₂ i)) :
     HEq X₁ X₂ := by
@@ -246,7 +247,7 @@ private lemma identity_functorLHSTerm_eq_main
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
-    (x : ∀ i : Fin n, composableHomType (GHom β R) obj deg i) :
+    (x : ∀ i : Fin n, ComposableHomType (GHom β R) obj deg i) :
     AInfinityFunctorData.functorLHSTerm
       β β
       (GHom β R) (GHom β R)
@@ -353,10 +354,10 @@ private lemma functorRHSTermMap_eq_zero_of_block_phi_zero
   · rw [h]
     refine eqRec_multilinearMap_zero (R := R)
       (ι := Fin (c.blocksFun l0))
-      (M₁ := fun j => composableHomType (GHom β R) obj deg (c.embedding l0 j)) ?_
+      (M₁ := fun j => ComposableHomType (GHom β R) obj deg (c.embedding l0 j)) ?_
   · refine eqRec_multilinearMap_zero (R := R)
       (ι := Fin n)
-      (M₁ := fun i => composableHomType (GHom β R) obj deg i) ?_
+      (M₁ := fun i => ComposableHomType (GHom β R) obj deg i) ?_
 
 private lemma composition_exists_block_gt_one_of_ne_ones
     {n : ℕ}
@@ -372,7 +373,7 @@ private lemma identity_functorRHSTerm_eq_zero_of_ne_ones
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
-    (x : ∀ i : Fin n, composableHomType (GHom β R) obj deg i)
+    (x : ∀ i : Fin n, ComposableHomType (GHom β R) obj deg i)
     (c : Composition n)
     (hc : c ≠ Composition.ones n) :
     AInfinityFunctorData.functorRHSTerm
@@ -407,8 +408,8 @@ private lemma m_heq_of_arity_eq
     {O₁ : Fin (n₁ + 1) → Obj} {O₂ : Fin (n₂ + 1) → Obj}
     {D₁ : Fin n₁ → β} {D₂ : Fin n₂ → β}
     (hO : HEq O₁ O₂) (hD : HEq D₁ D₂)
-    (X₁ : ∀ i, composableHomType (GHom β R) O₁ D₁ i)
-    (X₂ : ∀ i, composableHomType (GHom β R) O₂ D₂ i)
+    (X₁ : ∀ i, ComposableHomType (GHom β R) O₁ D₁ i)
+    (X₂ : ∀ i, ComposableHomType (GHom β R) O₂ D₂ i)
     (hX : HEq X₁ X₂) :
     HEq (@AInfinityCategoryStruct.m _ _ _ _ _ _ n₁ inst₁ O₁ D₁ X₁)
          (@AInfinityCategoryStruct.m _ _ _ _ _ _ n₂ inst₂ O₂ D₂ X₂) := by
@@ -434,7 +435,7 @@ private lemma identity_functorRHSTerm_eq_main
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → Obj)
     (deg : Fin n → β)
-    (x : ∀ i : Fin n, composableHomType (GHom β R) obj deg i) :
+    (x : ∀ i : Fin n, ComposableHomType (GHom β R) obj deg i) :
     AInfinityFunctorData.functorRHSTerm
       β β
       (GHom β R) (GHom β R)
@@ -545,7 +546,7 @@ theorem identitySatisfiesFunctorEquations :
           omega
         have houter : n + 1 - s.1 ≠ 1 := by
           omega
-        have hvalid : validStasheffIndices n 0 s.1 := by
+        have hvalid : ValidStasheffIndices n 0 s.1 := by
           exact validStasheffIndices_of_mem_ranges (n := n) (by simp) s.2
         simp [identity_functorLHSTerm_eq_zero_of_ne_one
           (β := β) (R := R) (Obj := Obj)
@@ -555,7 +556,7 @@ theorem identitySatisfiesFunctorEquations :
     · intro r hr hrne
       apply Finset.sum_eq_zero
       intro s hs
-      have hvalid : validStasheffIndices n r.1 s.1 := by
+      have hvalid : ValidStasheffIndices n r.1 s.1 := by
         exact validStasheffIndices_of_mem_ranges (n := n) r.2 s.2
       have hrpos : 0 < r.1 := by
         have hrne' : r.1 ≠ 0 := by
@@ -631,4 +632,5 @@ theorem identityFunctor_comp
 
 end Composition
 
-end AInfinityFunctorExamples
+end FunctorExamples
+end AInfinityTheory

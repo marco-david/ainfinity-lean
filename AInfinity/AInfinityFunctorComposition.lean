@@ -6,11 +6,11 @@ public import AInfinity.AInfinityFunctor
 
 @[expose] public section
 
-open CategoryTheory AInfinityTheory AInfinityCategoryTheory
+open CategoryTheory AInfinityTheory
 
 noncomputable section
 
-namespace AInfinityFunctorTheory
+namespace AInfinityTheory
 
 universe u v w x y z t
 
@@ -105,7 +105,7 @@ def compTermMultilinearMap
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType AHom obj deg i)
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
         (functorTargetType β_A β_B BHom F_objMap F_deg_trans obj deg))
     (G_objMap : ObjB → ObjC)
     (G_deg_trans : β_B →+ β_C)
@@ -115,14 +115,14 @@ def compTermMultilinearMap
       (obj : Fin (n + 1) → ObjB) →
       (deg : Fin n → β_B) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType BHom obj deg i)
+        (fun i : Fin n => ComposableHomType BHom obj deg i)
         (functorTargetType β_B β_C CHom G_objMap G_deg_trans obj deg))
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
     (c : Composition n) :
     MultilinearMap R
-      (fun i : Fin n => composableHomType AHom obj deg i)
+      (fun i : Fin n => ComposableHomType AHom obj deg i)
       (functorTargetType β_A β_C CHom (G_objMap ∘ F_objMap)
         (G_deg_trans.comp F_deg_trans) obj deg) := by
   let outerDeg := functorCompositionOuterDeg β_A β_B F_deg_trans deg c
@@ -155,8 +155,8 @@ def compTermMultilinearMap
     let blockPhi := F_phi blockObj blockDeg
     have hblock :
         functorTargetType β_A β_B BHom F_objMap F_deg_trans blockObj blockDeg =
-          composableHomType BHom outerObj outerDeg l := by
-      dsimp [functorTargetType, composableHomType, outerObj, functorCompositionOuterObj,
+          ComposableHomType BHom outerObj outerDeg l := by
+      dsimp [functorTargetType, ComposableHomType, outerObj, functorCompositionOuterObj,
         outerDeg, functorCompositionOuterDeg, blockObj, compositionBlockObj, blockDeg,
         compositionBlockDeg]
       congr
@@ -176,7 +176,7 @@ def compPhi
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType AHom obj deg i)
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
         (functorTargetType β_A β_B BHom F_objMap F_deg_trans obj deg))
     (G_objMap : ObjB → ObjC)
     (G_deg_trans : β_B →+ β_C)
@@ -186,13 +186,13 @@ def compPhi
       (obj : Fin (n + 1) → ObjB) →
       (deg : Fin n → β_B) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType BHom obj deg i)
+        (fun i : Fin n => ComposableHomType BHom obj deg i)
         (functorTargetType β_B β_C CHom G_objMap G_deg_trans obj deg))
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A) :
     MultilinearMap R
-      (fun i : Fin n => composableHomType AHom obj deg i)
+      (fun i : Fin n => ComposableHomType AHom obj deg i)
       (functorTargetType β_A β_C CHom (G_objMap ∘ F_objMap)
         (G_deg_trans.comp F_deg_trans) obj deg) :=
   ∑ c : Composition n,
@@ -280,7 +280,7 @@ private abbrev compAssocLeftPhiExpanded
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType (GHom β_A R) obj deg i)
+        (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
         (functorTargetType β_A β_D (GHom β_D R)
           (H.objMap ∘ (G.comp F).objMap)
           (H.deg_trans.comp (G.comp F).deg_trans)
@@ -312,7 +312,7 @@ private abbrev compAssocRightPhiExpanded
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => composableHomType (GHom β_A R) obj deg i)
+        (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
         (functorTargetType β_A β_D (GHom β_D R)
           ((H.comp G).objMap ∘ F.objMap)
           ((H.comp G).deg_trans.comp F.deg_trans)
@@ -520,4 +520,4 @@ protected abbrev AInfinityFunctor.comp
     AInfinityFunctor (β_A := β_A) (β_B := β_C) R ObjA ObjC :=
   AInfinityFunctor.compAux G F
 
-end AInfinityFunctorTheory
+end AInfinityTheory

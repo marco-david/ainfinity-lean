@@ -5,11 +5,12 @@ public import AInfinity.AInfinityCategory
 
 @[expose] public section
 
-open CategoryTheory Finset AInfinityTheory AInfinityCategoryTheory
+open CategoryTheory Finset AInfinityTheory
 
 noncomputable section
 
-namespace AInfinityExamples
+namespace AInfinityTheory
+namespace Examples
 
 universe u
 
@@ -113,7 +114,7 @@ lemma concentratedAt0Map_two_zero_zero_apply
   toRLinearGQuiver := concentratedAt0Quiver (R := R) (S := S)
   m := by
     intro n _ obj deg
-    simpa [composableHomType, operationTargetType, concentratedAt0] using
+    simpa [ComposableHomType, operationTargetType, concentratedAt0] using
       concentratedAt0Map (R := R) (S := S) deg
 
 @[simp]
@@ -123,7 +124,7 @@ lemma concentratedAt0CategoryData_m_ne_two
     (deg : Fin n → ℤ)
     (hn : n ≠ 2) :
     (concentratedAt0CategoryData (R := R) (S := S)).m obj deg = 0 := by
-  simpa [concentratedAt0CategoryData, composableHomType, operationTargetType, concentratedAt0] using
+  simpa [concentratedAt0CategoryData, ComposableHomType, operationTargetType, concentratedAt0] using
     concentratedAt0Map_ne_two (R := R) (S := S) deg hn
 
 @[simp]
@@ -132,7 +133,7 @@ lemma concentratedAt0CategoryData_m_two_left_ne_zero
     (deg : Fin 2 → ℤ)
     (h0 : deg 0 ≠ 0) :
     (concentratedAt0CategoryData (R := R) (S := S)).m obj deg = 0 := by
-  simpa [concentratedAt0CategoryData, composableHomType, operationTargetType, concentratedAt0] using
+  simpa [concentratedAt0CategoryData, ComposableHomType, operationTargetType, concentratedAt0] using
     concentratedAt0Map_two_left_ne_zero (R := R) (S := S) deg h0
 
 @[simp]
@@ -142,7 +143,7 @@ lemma concentratedAt0CategoryData_m_two_right_ne_zero
     (h0 : deg 0 = 0)
     (h1 : deg 1 ≠ 0) :
     (concentratedAt0CategoryData (R := R) (S := S)).m obj deg = 0 := by
-  simpa [concentratedAt0CategoryData, composableHomType, operationTargetType, concentratedAt0] using
+  simpa [concentratedAt0CategoryData, ComposableHomType, operationTargetType, concentratedAt0] using
     concentratedAt0Map_two_right_ne_zero (R := R) (S := S) deg h0 h1
 
 lemma concentratedAt0CategoryData_m_two_zero_zero_apply
@@ -167,7 +168,7 @@ lemma concentratedAt0CategoryData_m_eq_zero_of_coord_zero
     (obj : Fin (n + 1) → OneObj)
     (deg : Fin n → ℤ)
     (x : ∀ i : Fin n,
-      composableHomType
+      ComposableHomType
         (fun _ _ => concentratedAt0 (R := R) (S := S))
         obj deg i)
     (i : Fin n)
@@ -182,7 +183,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_eq_zero_of_ne_three
     (obj : Fin (n + 1) → OneObj)
     (deg : Fin n → ℤ)
     (x : ∀ i : Fin n,
-      composableHomType
+      ComposableHomType
         (fun _ _ => concentratedAt0 (R := R) (S := S))
         obj deg i)
     (r s : ℕ)
@@ -223,7 +224,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_eq_zero_of_s_ne_two
     (obj : Fin 4 → OneObj)
     (deg : Fin 3 → ℤ)
     (x : ∀ i : Fin 3,
-      composableHomType
+      ComposableHomType
         (fun _ _ => concentratedAt0 (R := R) (S := S))
         obj deg i)
     (r s : ℕ)
@@ -254,15 +255,15 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
       (concentratedAt0CategoryData (R := R) (S := S)).m
       obj (fun _ : Fin 3 => 0)
       (fun i => by
-        simpa [composableHomType, concentratedAt0] using x i)
+        simpa [ComposableHomType, concentratedAt0] using x i)
       0 2 (by omega) (by omega) =
       (x 0 * x 1) * x 2 := by
   let x' : ∀ i : Fin 3,
-      composableHomType
+      ComposableHomType
         (fun _ _ => concentratedAt0 (R := R) (S := S))
         obj (fun _ : Fin 3 => 0) i :=
     fun i => by
-      simpa [composableHomType, concentratedAt0] using x i
+      simpa [ComposableHomType, concentratedAt0] using x i
   have hinner :
       indexedStasheffInner
         (fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -287,7 +288,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
     fin_cases i <;> simp [stasheffDegOut, hinnerDeg]
   let z : ∀ i : Fin 2, ModuleCat.of R S :=
     fun i => by
-      simpa [composableHomType, concentratedAt0, hdegOut] using
+      simpa [ComposableHomType, concentratedAt0, hdegOut] using
         indexedStasheffXOut
           (fun _ _ => concentratedAt0 (R := R) (S := S))
           (concentratedAt0CategoryData (R := R) (S := S)).m
@@ -328,7 +329,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
         (indexedStasheffXOut
           (fun _ _ => concentratedAt0 (R := R) (S := S))
           (concentratedAt0CategoryData (R := R) (S := S)).m
-          obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega)))        
+          obj (fun _ : Fin 3 => 0) x' 0 2 (by omega) (by omega)))
   have houter0 :
       indexedStasheffOuter
         (fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -372,15 +373,15 @@ lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_zero_degrees
       (concentratedAt0CategoryData (R := R) (S := S)).m
       obj (fun _ : Fin 3 => 0)
       (fun i => by
-        simpa [composableHomType, concentratedAt0] using x i)
+        simpa [ComposableHomType, concentratedAt0] using x i)
       1 2 (by omega) (by omega) =
       x 0 * (x 1 * x 2) := by
   let x' : ∀ i : Fin 3,
-      composableHomType
+      ComposableHomType
         (fun _ _ => concentratedAt0 (R := R) (S := S))
         obj (fun _ : Fin 3 => 0) i :=
     fun i => by
-      simpa [composableHomType, concentratedAt0] using x i
+      simpa [ComposableHomType, concentratedAt0] using x i
   have hinner :
       indexedStasheffInner
         (fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -404,7 +405,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_zero_degrees
     fin_cases i <;> simp [stasheffDegOut, hinnerDeg]
   let z : ∀ i : Fin 2, ModuleCat.of R S :=
     fun i => by
-      simpa [composableHomType, concentratedAt0, hdegOut] using
+      simpa [ComposableHomType, concentratedAt0, hdegOut] using
         indexedStasheffXOut
           (fun _ _ => concentratedAt0 (R := R) (S := S))
           (concentratedAt0CategoryData (R := R) (S := S)).m
@@ -485,7 +486,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_eq_zero_of_not_all_zero
     (obj : Fin 4 → OneObj)
     (deg : Fin 3 → ℤ)
     (x : ∀ i : Fin 3,
-      composableHomType
+      ComposableHomType
         (fun _ _ => concentratedAt0 (R := R) (S := S))
         obj deg i)
     (hdeg : deg ≠ fun _ : Fin 3 => (0 : ℤ)) :
@@ -543,7 +544,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_eq_zero_of_not_all_zero
     (obj : Fin 4 → OneObj)
     (deg : Fin 3 → ℤ)
     (x : ∀ i : Fin 3,
-      composableHomType
+      ComposableHomType
         (fun _ _ => concentratedAt0 (R := R) (S := S))
         obj deg i)
     (hdeg : deg ≠ fun _ : Fin 3 => (0 : ℤ)) :
@@ -608,7 +609,7 @@ theorem concentratedAt0CategoryData_satisfiesStasheff :
     · subst hdeg
       let xS : ∀ i : Fin 3, ModuleCat.of R S :=
         fun i => by
-          simpa [composableHomType, concentratedAt0] using x i
+          simpa [ComposableHomType, concentratedAt0] using x i
       have hterm02 :
           indexedStasheffTerm
             (fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -738,7 +739,7 @@ theorem concentratedAt0CategoryData_satisfiesStasheff :
       intro r hr
       refine Finset.sum_eq_zero ?_
       intro s hs
-      have hvalid : validStasheffIndices 3 (r : ℕ) (s : ℕ) :=
+      have hvalid : ValidStasheffIndices 3 (r : ℕ) (s : ℕ) :=
         validStasheffIndices_of_mem_ranges (n := 3) r.2 s.2
       by_cases hs2 : (s : ℕ) = 2
       · have hr01 : (r : ℕ) = 0 ∨ (r : ℕ) = 1 := by
@@ -802,7 +803,7 @@ theorem concentratedAt0CategoryData_satisfiesStasheff :
     intro r hr
     refine Finset.sum_eq_zero ?_
     intro s hs
-    have hvalid : validStasheffIndices n (r : ℕ) (s : ℕ) :=
+    have hvalid : ValidStasheffIndices n (r : ℕ) (s : ℕ) :=
       validStasheffIndices_of_mem_ranges (n := n) r.2 s.2
     have hterm :
         indexedStasheffTerm
@@ -830,4 +831,5 @@ theorem concentratedAt0CategoryData_satisfiesStasheff :
   satisfiesStasheff := concentratedAt0CategoryData_satisfiesStasheff (R := R) (S := S)
 
 
-end AInfinityExamples
+end Examples
+end AInfinityTheory
