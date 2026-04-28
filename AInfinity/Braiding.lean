@@ -61,3 +61,36 @@ def full₁ {A B : CochainComplex (CMat_ (KLRWCategory n R)) ℤ} (f : A ⟶ B)
 
 def full₂ {A B C : CochainComplex (CMat_ (KLRWCategory n R)) ℤ}
   (f : A ⟶ B) (g : B ⟶ C) : β.full₀ A ⟶ β.full₀ C := sorry
+
+
+def PositiveTranspositionBraidingData (k : Fin (n + 1)) : BraidingFunctorData R n where
+  gen₀ := fun A =>
+    if specialPosition then
+      specialCaseObj A k
+    else
+      generalCaseObj A
+  gen₁ := fun f =>
+    if specialPosition then
+      specialCaseMor f k
+    else
+      generalCaseMor f
+  gen₂ := fun f g i x =>
+    sorry -- gen_2 does not seem to be defined as the correct type
+
+where
+  specialPosition (A : KLRWCategory n R) (k : ℕ): bool :=
+    A.positioning = k
+  specialCaseObj (A : KLRWCategory n R) (k : ℕ) :=
+  { X := fun i =>
+      match i with
+      | 0 => sorry -- T_k-1 + T_k+1
+      | 1 => sorry -- T_k in add
+      | _ => sorry -- zero
+    d := myDifferentials -- indexed by 1
+    d_comp_d := sorry }
+  generalCaseObj (A : KLRWCategory n R) (k : ℕ) :=
+    sorry -- Should just return A but as a cochain complex
+  specialCaseMor f k :=
+    sorry
+  generalCaseMor f :=
+    sorry
