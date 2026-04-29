@@ -1,5 +1,9 @@
-import Mathlib
-import AInfinity.AdditiveCompletion
+module
+
+public import Mathlib
+public import AInfinity.AdditiveCompletion
+
+@[expose] public section
 
 open CategoryTheory Limits
 

@@ -1,6 +1,10 @@
-import Mathlib
-import AInfinity.AdditiveCompletion
-import AInfinity.BoundedCochainComplex
+module
+
+public import Mathlib
+public import AInfinity.AdditiveCompletion
+public import AInfinity.BoundedCochainComplex
+
+@[expose] public section
 
 open CategoryTheory
 
