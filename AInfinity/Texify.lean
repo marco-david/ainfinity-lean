@@ -14,7 +14,7 @@ universe u
 class Texify (α : Type u) where
   protected texify : α → String
   /-- If further constructions that make use of this should add parentheses around it -/
-  protected requiresParentheses : Bool := false
+  protected requiresParentheses : Bool
 
 def texify {α : Type u} [Texify α] : α → String := Texify.texify
 
@@ -68,6 +68,8 @@ elab tk:"#texify" t:term : command => do
 
 instance : Texify Nat where
   texify n := s!"{n}"
+  requiresParentheses := false
 
 instance : Texify Int where
   texify n := s!"{n}"
+  requiresParentheses := false
