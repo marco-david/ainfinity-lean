@@ -2,6 +2,7 @@ module
 
 public import Lean
 public import ProofWidgets
+public import Lean.Compiler.Options
 
 public section
 
@@ -28,7 +29,22 @@ meta def displayMd (md : String) (stx : Syntax) : CoreM Unit := do
 
 meta unsafe def evalStringUnsafe (stx : Term) : TermElabM String := do
   let newStx ← `(texifyToMd $stx)
-  Term.evalTerm _ (mkConst ``String) newStx
+  /-
+  Without these options, we would get weird errors like
+  ```
+  Invalid `meta` definition `_tmp✝`, `SimplexCategory.mk` is not accessible here;
+  consider adding `public meta import Mathlib.AlgebraicTopology.SimplexCategory.Defs`
+  ```
+  These options are a solution suggested by Robin Arnez:
+  https://leanprover.zulipchat.com/#narrow/channel/239415-metaprogramming-.2F-tactics/topic/SimplexCategory.2Emk.20.2B.20module.20system.20breaks.20evalTerm/near/591707795
+  -/
+  withOptions (fun opts =>
+    if Elab.inServer.get opts then
+      Compiler.compiler.checkMeta.set opts false
+    else
+      Compiler.compiler.relaxedMetaCheck.set opts true) do
+  withOptions (Compiler.compiler.postponeCompile.set · false) do
+    Term.evalTerm _ (mkConst ``String) newStx
 
 /--
 Evaluates a term of type `ProofWidgets.Html`
