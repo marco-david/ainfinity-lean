@@ -14,7 +14,7 @@ variable {R : Type u} [CommRing R] [CharP R 2] [DecidableEq R] {n : ℕ}
 structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq R] (n : ℕ) where
   gen₀ : KLRWCategory n R → CochainComplex (CMat_ (KLRWCategory n R)) ℤ
   gen₁ : {A B : KLRWCategory n R} → (A ⟶ B) → (gen₀ A ⟶ gen₀ B)
-  gen₂ : {A B C : KLRWCategory n R} → (A ⟶ B) → (B ⟶ C) → ∀ (i : ℤ), (gen₀ A).X i → (gen₀ B).X (i - 1)
+  gen₂ : {A B C : KLRWCategory n R} → (A ⟶ B) → (B ⟶ C) → ∀ (i : ℤ), (gen₀ A).X i ⟶ (gen₀ C).X (i - 1)
   -- invoke shift functor from boundedcochaincomplexes
 
   --SFₙ axioms. Note:
@@ -62,35 +62,172 @@ def full₁ {A B : CochainComplex (CMat_ (KLRWCategory n R)) ℤ} (f : A ⟶ B)
 def full₂ {A B C : CochainComplex (CMat_ (KLRWCategory n R)) ℤ}
   (f : A ⟶ B) (g : B ⟶ C) : β.full₀ A ⟶ β.full₀ C := sorry
 
+-- Transposition braiding data starts here
+def isInterior (k : Fin (n + 1)) : Bool :=
+  0 < k.1 ∧ k.1 < n
 
-def PositiveTranspositionBraidingData (k : Fin (n + 1)) : BraidingFunctorData R n where
-  gen₀ := fun A =>
-    if specialPosition then
-      specialCaseObj A k
-    else
-      generalCaseObj A
-  gen₁ := fun f =>
-    if specialPosition then
-      specialCaseMor f k
-    else
-      generalCaseMor f
-  gen₂ := fun f g i x =>
-    sorry -- gen_2 does not seem to be defined as the correct type
+def specialPosition (A : KLRWCategory n R) (k : Fin (n + 1)) : Bool :=
+  A.positioning == k
 
-where
-  specialPosition (A : KLRWCategory n R) (k : ℕ): bool :=
-    A.positioning = k
-  specialCaseObj (A : KLRWCategory n R) (k : ℕ) :=
+lemma isInterior_spec {k : Fin (n + 1)} (hk : isInterior (n := n) k = true) :
+    0 < k.1 ∧ k.1 < n := by
+  simpa [isInterior] using hk
+
+def leftNeighbor (k : Fin (n + 1)) (hk : isInterior (n := n) k = true) : KLRWCategory n R :=
+  ⟨⟨k.1 - 1, by
+    have hk' := isInterior_spec (n := n) hk
+    omega⟩⟩
+
+def rightNeighbor (k : Fin (n + 1)) (hk : isInterior (n := n) k = true) : KLRWCategory n R :=
+  ⟨⟨k.1 + 1, by
+    have hk' := isInterior_spec (n := n) hk
+    omega⟩⟩
+
+noncomputable def asCC (A : KLRWCategory n R) : CochainComplex (CMat_ (KLRWCategory n R)) ℤ :=
+  (CochainComplex.singleFunctor (CMat_ (KLRWCategory n R)) 0).obj [A]ₘ
+--returns A as a chain complex with only nonzero degree being 0 which is [A]_m
+--differential should be 0
+
+def specialDifferential (A : KLRWCategory n R) (k : Fin (n + 1)) (hk : isInterior k = true) :
+    [leftNeighbor (R := R) k hk, rightNeighbor (R := R) k hk]ₘ ⟶ [A]ₘ :=
+  fun _ _ => StrandSpace.dots R 1
+
+def specialCaseObj (A : KLRWCategory n R) (k : Fin (n + 1)) (hk : isInterior k = true) :
+    CochainComplex (CMat_ (KLRWCategory n R)) ℤ :=
   { X := fun i =>
       match i with
-      | 0 => sorry -- T_k-1 + T_k+1
-      | 1 => sorry -- T_k in add
-      | _ => sorry -- zero
-    d := myDifferentials -- indexed by 1
-    d_comp_d := sorry }
-  generalCaseObj (A : KLRWCategory n R) (k : ℕ) :=
-    sorry -- Should just return A but as a cochain complex
-  specialCaseMor f k :=
-    sorry
-  generalCaseMor f :=
-    sorry
+      | 0 => [leftNeighbor (R := R) k hk, rightNeighbor (R := R) k hk]ₘ
+      | 1 => [A]ₘ
+      | _ => 𝟎
+    d := fun i j =>
+      if hij : i = 0 ∧ j = 1 then
+        by
+          rcases hij with ⟨rfl, rfl⟩
+          exact specialDifferential (R := R) A k hk
+      else
+        0 --only non-zero morphism should be between 0 and 1, pair of maps with N=1
+    shape := by
+      intro i j hij
+      by_cases h01 : i = 0 ∧ j = 1
+      · exfalso
+        rcases h01 with ⟨rfl, rfl⟩
+        exact hij (by simp [ComplexShape.up, ComplexShape.up'])
+      · simp [h01]
+    d_comp_d' := by
+      intro i j l hij hjl
+      by_cases h01 : i = 0 ∧ j = 1
+      · rcases h01 with ⟨rfl, rfl⟩
+        rw [dif_pos (by simp)]
+        split_ifs with h
+        · rcases h with ⟨h₁, _⟩
+          simp at h₁
+        · exact Limits.comp_zero
+      · rw [dif_neg h01]
+        split_ifs with h
+        · exact Limits.zero_comp
+        · exact Limits.zero_comp }
+
+def shiftStrands (f : StrandSpace R) : StrandSpace R :=
+  f.sum (fun i r => r • StrandSpace.dots R (i + 1))
+
+def singletonMap {A B : KLRWCategory n R} (f : A ⟶ B) : [A]ₘ ⟶ [B]ₘ :=
+  fun _ _ => f
+
+def diagonalNeighborMap {A B : KLRWCategory n R} (f : A ⟶ B) :
+    [A, B]ₘ ⟶ [A, B]ₘ :=
+  fun i j => if i.toFin = j.toFin then f else 0
+
+def leftToSingletonMap {A B C : KLRWCategory n R} (f : A ⟶ C) : [A, B]ₘ ⟶ [C]ₘ :=
+  fun i _ => if i.toFin.1 = 0 then f else 0
+
+def rightToSingletonMap {A B C : KLRWCategory n R} (f : B ⟶ C) : [A, B]ₘ ⟶ [C]ₘ :=
+  fun i _ => if i.toFin.1 = 1 then f else 0
+
+def singletonToNeighborsMap {A B C : KLRWCategory n R} (fLeft fRight : A ⟶ B) :
+    [A]ₘ ⟶ [B, C]ₘ :=
+  fun _ j => if j.toFin.1 = 0 then fLeft else fRight
+
+def specialSpecialMor {A B : KLRWCategory n R} (f : A ⟶ B) (k : Fin (n + 1))
+    (hk : isInterior k = true) :
+    specialCaseObj (R := R) A k hk ⟶ specialCaseObj (R := R) B k hk :=
+  { f := fun i =>
+      match i with
+      | 0 =>
+          diagonalNeighborMap
+            (A := leftNeighbor (R := R) k hk) (B := rightNeighbor (R := R) k hk) f
+      | 1 => singletonMap f
+      | _ => 0
+    comm' := sorry
+    }
+
+def specialToGeneralMor {A B : KLRWCategory n R} (f : A ⟶ B) (k : Fin (n + 1))
+    (hk : isInterior k = true) :
+    specialCaseObj (R := R) A k hk ⟶ asCC B :=
+  { f := fun i =>
+      match i with
+      | 0 =>
+          if h : B.positioning.1 < A.positioning.1 then
+            leftToSingletonMap
+              (A := leftNeighbor (R := R) k hk) (B := rightNeighbor (R := R) k hk) f
+          else
+            rightToSingletonMap
+              (A := leftNeighbor (R := R) k hk) (B := rightNeighbor (R := R) k hk) f
+      | _ => 0
+    comm' := sorry
+        }
+
+def generalToSpecialMor {A B : KLRWCategory n R} (f : A ⟶ B) (k : Fin (n + 1))
+    (hk : isInterior k = true) :
+    asCC A ⟶ specialCaseObj (R := R) B k hk :=
+  { f := fun i =>
+      match i with
+      | 0 =>
+          if h : B.positioning.1 < A.positioning.1 then
+            singletonToNeighborsMap
+              (A := A) (B := leftNeighbor (R := R) k hk) (C := rightNeighbor (R := R) k hk)
+              f (shiftStrands (R := R) f)
+          else
+            singletonToNeighborsMap
+              (A := A) (B := leftNeighbor (R := R) k hk) (C := rightNeighbor (R := R) k hk)
+              (shiftStrands (R := R) f) f
+      | _ => 0
+    comm' := sorry
+    }
+
+noncomputable def generalGeneralMor {A B : KLRWCategory n R} (f : A ⟶ B) :
+    asCC A ⟶ asCC B :=
+  (CochainComplex.singleFunctor (CMat_ (KLRWCategory n R)) 0).map (singletonMap f)
+
+noncomputable def transpositionObj (k : Fin (n + 1)) (A : KLRWCategory n R) :
+    CochainComplex (CMat_ (KLRWCategory n R)) ℤ := by
+  if hk : isInterior k = true then
+    if hA : specialPosition A k = true then
+      exact specialCaseObj A k hk
+    else
+      exact asCC A
+  else
+    exact asCC A
+
+noncomputable def transpositionMor (k : Fin (n + 1)) {A B : KLRWCategory n R} (f : A ⟶ B) :
+    transpositionObj (R := R) k A ⟶ transpositionObj (R := R) k B := by
+  match hA : specialPosition A k, hB : specialPosition B k, hk : isInterior k with
+  | true, true, true =>
+      simpa [transpositionObj, hA, hB, hk] using specialSpecialMor (R := R) f k hk
+  | true, false, true =>
+      simpa [transpositionObj, hA, hB, hk] using specialToGeneralMor (R := R) f k hk
+  | false, true, true =>
+      simpa [transpositionObj, hA, hB, hk] using generalToSpecialMor (R := R) f k hk
+  | false, false, true =>
+      simpa [transpositionObj, hA, hB, hk] using generalGeneralMor (R := R) f
+  | _, _, false =>
+      simpa [transpositionObj, hk] using generalGeneralMor (R := R) f
+
+
+noncomputable def PositiveTransposition (k : Fin (n + 1)) : BraidingFunctorData R n where
+  gen₀ := transpositionObj (R := R) k
+  gen₁ := fun {A B} f => transpositionMor (R := R) k f
+  gen₂ := fun f g i x =>
+    sorry -- gen_2 does not seem to be defined as the correct type
+  SF₂ := sorry
+  SF₃ := sorry
+  SF₄ := sorry
