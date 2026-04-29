@@ -27,15 +27,15 @@ variable (S : Type u) [CommRing S] [Algebra R S]
 def concentratedAt0 : GradedRModule (β := ℤ) R :=
   fun i => if i = 0 then ModuleCat.of R S else ModuleCat.of R PUnit
 
-abbrev OneObj : Type := PUnit
+abbrev OneObj (_S : Type u) : Type := PUnit
 
-abbrev oneObjHom : OneObj → OneObj → GradedRModule (β := ℤ) R :=
+abbrev oneObjHom : OneObj S → OneObj S → GradedRModule (β := ℤ) R :=
   fun _ _ => concentratedAt0 (R := R) (S := S)
 
-@[reducible] def concentratedAt0Quiver
+instance concentratedAt0Quiver
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S] :
-    RLinearGQuiver (β := ℤ) R OneObj where
+    RLinearGQuiver (β := ℤ) R (OneObj S) where
   GHom' _ _ := concentratedAt0 (R := R) (S := S)
 
 def degreeZeroMul :
@@ -109,10 +109,10 @@ lemma concentratedAt0Map_two_zero_zero_apply
     concentratedAt0Map (R := R) (S := S) (fun _ : Fin 2 => 0) x = x 0 * x 1 := by
   rfl
 
-@[reducible] def concentratedAt0CategoryData
+instance concentratedAt0CategoryData
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S] :
-    AInfinityCategoryStruct (β := ℤ) R OneObj where
+    AInfinityCategoryStruct (β := ℤ) R (OneObj S) where
   toRLinearGQuiver := concentratedAt0Quiver (R := R) (S := S)
   m := by
     intro n _ obj deg
@@ -124,7 +124,7 @@ lemma concentratedAt0CategoryData_m_ne_two
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
     {n : ℕ} [NeZero n]
-    (obj : Fin (n + 1) → OneObj)
+    (obj : Fin (n + 1) → OneObj S)
     (deg : Fin n → ℤ)
     (hn : n ≠ 2) :
     (concentratedAt0CategoryData (R := R) (S := S)).m obj deg = 0 := by
@@ -135,7 +135,7 @@ lemma concentratedAt0CategoryData_m_ne_two
 lemma concentratedAt0CategoryData_m_two_left_ne_zero
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
-    (obj : Fin 3 → OneObj)
+    (obj : Fin 3 → OneObj S)
     (deg : Fin 2 → ℤ)
     (h0 : deg 0 ≠ 0) :
     (concentratedAt0CategoryData (R := R) (S := S)).m obj deg = 0 := by
@@ -146,7 +146,7 @@ lemma concentratedAt0CategoryData_m_two_left_ne_zero
 lemma concentratedAt0CategoryData_m_two_right_ne_zero
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
-    (obj : Fin 3 → OneObj)
+    (obj : Fin 3 → OneObj S)
     (deg : Fin 2 → ℤ)
     (h0 : deg 0 = 0)
     (h1 : deg 1 ≠ 0) :
@@ -157,7 +157,7 @@ lemma concentratedAt0CategoryData_m_two_right_ne_zero
 lemma concentratedAt0CategoryData_m_two_zero_zero_apply
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
-    (obj : Fin 3 → OneObj)
+    (obj : Fin 3 → OneObj S)
     (x : ∀ _ : Fin 2, ModuleCat.of R S) :
     (concentratedAt0CategoryData (R := R) (S := S)).m
       obj (fun _ : Fin 2 => 0) x = x 0 * x 1 := by
@@ -177,7 +177,7 @@ lemma concentratedAt0CategoryData_m_eq_zero_of_coord_zero
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
     {n : ℕ} [NeZero n]
-    (obj : Fin (n + 1) → OneObj)
+    (obj : Fin (n + 1) → OneObj S)
     (deg : Fin n → ℤ)
     (x : ∀ i : Fin n,
       ComposableHomType
@@ -194,7 +194,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_eq_zero_of_ne_three
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
     {n : ℕ} [NeZero n]
-    (obj : Fin (n + 1) → OneObj)
+    (obj : Fin (n + 1) → OneObj S)
     (deg : Fin n → ℤ)
     (x : ∀ i : Fin n,
       ComposableHomType
@@ -237,7 +237,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_eq_zero_of_ne_three
 lemma concentratedAt0CategoryData_stasheffTerm_eq_zero_of_s_ne_two
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
-    (obj : Fin 4 → OneObj)
+    (obj : Fin 4 → OneObj S)
     (deg : Fin 3 → ℤ)
     (x : ∀ i : Fin 3,
       ComposableHomType
@@ -266,7 +266,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_eq_zero_of_s_ne_two
 lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
-    (obj : Fin 4 → OneObj)
+    (obj : Fin 4 → OneObj S)
     (x : Fin 3 → ModuleCat.of R S) :
     indexedStasheffTerm
       (fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -386,7 +386,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
 lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_zero_degrees
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
-    (obj : Fin 4 → OneObj)
+    (obj : Fin 4 → OneObj S)
     (x : Fin 3 → ModuleCat.of R S) :
     indexedStasheffTerm
       (fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -505,7 +505,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_zero_degrees
 lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_eq_zero_of_not_all_zero
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
-    (obj : Fin 4 → OneObj)
+    (obj : Fin 4 → OneObj S)
     (deg : Fin 3 → ℤ)
     (x : ∀ i : Fin 3,
       ComposableHomType
@@ -565,7 +565,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_eq_zero_of_not_all_zero
 lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_eq_zero_of_not_all_zero
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S]
-    (obj : Fin 4 → OneObj)
+    (obj : Fin 4 → OneObj S)
     (deg : Fin 3 → ℤ)
     (x : ∀ i : Fin 3,
       ComposableHomType
@@ -626,7 +626,7 @@ private lemma stasheffSign_zero_deg_1_2 :
 theorem concentratedAt0CategoryData_satisfiesStasheff
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S] :
-    @AInfinityCategoryStruct.SatisfiesStasheff ℤ _ R _ OneObj
+    @AInfinityCategoryStruct.SatisfiesStasheff ℤ _ R _ (OneObj S)
       (concentratedAt0CategoryData (R := R) (S := S)) := by
   intro n _ obj deg x
   by_cases hn : n = 3
@@ -851,10 +851,10 @@ theorem concentratedAt0CategoryData_satisfiesStasheff
       simp
     simpa [hvalid] using hsmul
 
-@[reducible] def concentratedAt0Category
+instance concentratedAt0Category
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S] :
-    AInfinityCategory (β := ℤ) R OneObj where
+    AInfinityCategory (β := ℤ) R (OneObj S) where
   toAInfinityCategoryStruct := concentratedAt0CategoryData (R := R) (S := S)
   satisfiesStasheff := concentratedAt0CategoryData_satisfiesStasheff (R := R) (S := S)
 

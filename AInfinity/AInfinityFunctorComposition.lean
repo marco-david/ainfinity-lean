@@ -93,6 +93,92 @@ lemma comp_compatible_deg
   simp +decide [← h_shift_sum, add_assoc, shift_ofInt]
   simp +decide [← map_nsmul]
 
+/-- Transport from the outer target of a composition term to the target of the
+composite functor component. -/
+lemma comp_term_target_module_eq
+    (CHom : ObjC → ObjC → GradedRModule (β := β_C) (R := R))
+    (F_objMap : ObjA → ObjB)
+    (F_deg_trans : β_A →+ β_B)
+    (G_objMap : ObjB → ObjC)
+    (G_deg_trans : β_B →+ β_C)
+    (G_deg_trans_ofInt : ∀ n : ℤ, G_deg_trans (Grading.ofInt n) = Grading.ofInt n)
+    {n : ℕ}
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (c : Composition n) :
+    functorTargetType β_B β_C CHom G_objMap G_deg_trans
+        (functorCompositionOuterObj F_objMap obj c)
+        (functorCompositionOuterDeg β_A β_B F_deg_trans deg c) =
+      functorTargetType β_A β_C CHom (G_objMap ∘ F_objMap)
+        (G_deg_trans.comp F_deg_trans) obj deg := by
+  have hsource : functorCompositionOuterObj F_objMap obj c 0 = F_objMap (obj 0) := by
+    simp [functorCompositionOuterObj]
+  have htarget :
+      functorCompositionOuterObj F_objMap obj c (Fin.last c.length) = F_objMap (obj (Fin.last n)) := by
+    simp [functorCompositionOuterObj]
+  dsimp [functorTargetType]
+  rw [hsource, htarget]
+  exact congrArg
+    (CHom (G_objMap (F_objMap (obj 0)))
+      (G_objMap (F_objMap (obj (Fin.last n)))))
+    (comp_compatible_deg β_A β_B β_C
+      F_deg_trans G_deg_trans G_deg_trans_ofInt deg c)
+
+/-- Transport from an `F`-block output to the corresponding input of the outer
+`G`-component in a composition term. -/
+lemma comp_term_block_module_eq
+    (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
+    (F_objMap : ObjA → ObjB)
+    (F_deg_trans : β_A →+ β_B)
+    {n : ℕ}
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (c : Composition n)
+    (l : Fin c.length) :
+    functorTargetType β_A β_B BHom F_objMap F_deg_trans
+        (compositionBlockObj obj c l) (compositionBlockDeg β_A deg c l) =
+      ComposableHomType BHom
+        (functorCompositionOuterObj F_objMap obj c)
+        (functorCompositionOuterDeg β_A β_B F_deg_trans deg c) l := by
+  dsimp [functorTargetType, ComposableHomType, functorCompositionOuterObj,
+    functorCompositionOuterDeg, compositionBlockObj, compositionBlockDeg]
+  congr
+  simpa using (c.sizeUpTo_succ' l).symm
+
+/-- The `l`-th block map used in a single composition term. -/
+def compTermBlock
+    (AHom : ObjA → ObjA → GradedRModule (β := β_A) (R := R))
+    (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
+    (F_objMap : ObjA → ObjB)
+    (F_deg_trans : β_A →+ β_B)
+    (F_phi :
+      {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → ObjA) →
+      (deg : Fin n → β_A) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType AHom obj deg i)
+        (functorTargetType β_A β_B BHom F_objMap F_deg_trans obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (c : Composition n)
+    (l : Fin c.length) :
+    MultilinearMap R
+      (fun j => ComposableHomType AHom obj deg (c.embedding l j))
+      (ComposableHomType BHom
+        (functorCompositionOuterObj F_objMap obj c)
+        (functorCompositionOuterDeg β_A β_B F_deg_trans deg c) l) :=
+  letI : NeZero (c.blocksFun l) := ⟨Nat.ne_of_gt (c.one_le_blocksFun l)⟩
+  cast
+    (congrArg
+      (fun M : ModuleCat R =>
+        MultilinearMap R
+          (fun j => ComposableHomType AHom obj deg (c.embedding l j))
+          M)
+      (comp_term_block_module_eq β_A β_B
+        BHom F_objMap F_deg_trans obj deg c l))
+    (F_phi (compositionBlockObj obj c l) (compositionBlockDeg β_A deg c l))
+
 /-- The multilinear map for a single functor-composition term. -/
 def compTermMultilinearMap
     (AHom : ObjA → ObjA → GradedRModule (β := β_A) (R := R))
@@ -124,44 +210,22 @@ def compTermMultilinearMap
     MultilinearMap R
       (fun i : Fin n => ComposableHomType AHom obj deg i)
       (functorTargetType β_A β_C CHom (G_objMap ∘ F_objMap)
-        (G_deg_trans.comp F_deg_trans) obj deg) := by
-  let outerDeg := functorCompositionOuterDeg β_A β_B F_deg_trans deg c
-  let outerObj := functorCompositionOuterObj F_objMap obj c
-  have houter : 0 < c.length := c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n))
-  letI : NeZero c.length := ⟨Nat.ne_of_gt houter⟩
-  have hsource : outerObj 0 = F_objMap (obj 0) := by
-    simp [outerObj, functorCompositionOuterObj]
-  have htarget : outerObj (Fin.last c.length) = F_objMap (obj (Fin.last n)) := by
-    simp [outerObj, functorCompositionOuterObj]
-  have htargetType :
-      functorTargetType β_B β_C CHom G_objMap G_deg_trans outerObj
-        outerDeg =
-      functorTargetType β_A β_C CHom (G_objMap ∘ F_objMap)
-        (G_deg_trans.comp F_deg_trans) obj deg := by
-    dsimp [functorTargetType]
-    rw [hsource, htarget]
-    exact congrArg
-      (CHom (G_objMap (F_objMap (obj 0)))
-        (G_objMap (F_objMap (obj (Fin.last n)))))
-      (comp_compatible_deg β_A β_B β_C
-        F_deg_trans G_deg_trans G_deg_trans_ofInt deg c)
-  refine htargetType ▸ ?_
-  exact MultilinearMap.compComposition c (G_phi outerObj outerDeg) (fun l => by
-    let blockDeg := compositionBlockDeg β_A deg c l
-    let blockObj := compositionBlockObj obj c l
-    letI : NeZero (c.blocksFun l) := ⟨by
-      have hpos : 0 < c.blocksFun l := c.one_le_blocksFun l
-      exact Nat.ne_of_gt hpos⟩
-    let blockPhi := F_phi blockObj blockDeg
-    have hblock :
-        functorTargetType β_A β_B BHom F_objMap F_deg_trans blockObj blockDeg =
-          ComposableHomType BHom outerObj outerDeg l := by
-      dsimp [functorTargetType, ComposableHomType, outerObj, functorCompositionOuterObj,
-        outerDeg, functorCompositionOuterDeg, blockObj, compositionBlockObj, blockDeg,
-        compositionBlockDeg]
-      congr
-      simpa using (c.sizeUpTo_succ' l).symm
-    exact hblock ▸ blockPhi)
+        (G_deg_trans.comp F_deg_trans) obj deg) :=
+  letI : NeZero c.length := ⟨Nat.ne_of_gt (c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n)))⟩
+  cast
+    (congrArg
+      (fun M : ModuleCat R =>
+        MultilinearMap R
+          (fun i : Fin n => ComposableHomType AHom obj deg i)
+          M)
+      (comp_term_target_module_eq β_A β_B β_C
+        CHom F_objMap F_deg_trans G_objMap G_deg_trans G_deg_trans_ofInt obj deg c))
+    (MultilinearMap.compComposition c
+      (G_phi
+        (functorCompositionOuterObj F_objMap obj c)
+        (functorCompositionOuterDeg β_A β_B F_deg_trans deg c))
+      (compTermBlock β_A β_B
+        AHom BHom F_objMap F_deg_trans F_phi obj deg c))
 
 /-- The raw `n`-th component of the composite functor, obtained by summing the
 composition terms over all ordered compositions of `n`. -/
@@ -208,26 +272,6 @@ variable [RLinearGQuiver β_A R ObjA]
 variable [RLinearGQuiver β_B R ObjB]
 variable [RLinearGQuiver β_C R ObjC]
 
-/-- Auxiliary implementation of raw `A∞` functor composition, with the inner
-functor listed first. -/
-def compAux
-    (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
-    (G : AInfinityFunctorData (β_A := β_B) (β_B := β_C) R ObjB ObjC) :
-    AInfinityFunctorData (β_A := β_A) (β_B := β_C) R ObjA ObjC where
-  objMap := G.objMap ∘ F.objMap
-  deg_trans := G.deg_trans.comp F.deg_trans
-  deg_trans_ofInt n := by
-    simp [AddMonoidHom.comp_apply, F.deg_trans_ofInt, G.deg_trans_ofInt]
-  deg_trans_sign b := by
-    simp [AddMonoidHom.comp_apply, F.deg_trans_sign, G.deg_trans_sign]
-  phi := by
-    intro n _ obj deg
-    exact compPhi β_A β_B β_C
-      (GHom β_A R) (GHom β_B R) (GHom β_C R)
-      F.objMap F.deg_trans F.phi
-      G.objMap G.deg_trans G.deg_trans_ofInt G.phi
-      obj deg
-
 end StructureComposition
 
 end AInfinityFunctorData
@@ -245,10 +289,19 @@ protected abbrev AInfinityFunctorData.comp
     [RLinearGQuiver β_C R ObjC]
     (G : AInfinityFunctorData (β_A := β_B) (β_B := β_C) R ObjB ObjC)
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
-    AInfinityFunctorData (β_A := β_A) (β_B := β_C) R ObjA ObjC :=
-  AInfinityFunctorData.compAux
-    (β_A := β_A) (β_B := β_B) (β_C := β_C)
-    F G
+    AInfinityFunctorData (β_A := β_A) (β_B := β_C) R ObjA ObjC where
+  objMap := G.objMap ∘ F.objMap
+  deg_trans := G.deg_trans.comp F.deg_trans
+  deg_trans_ofInt := fun n => by
+    simp [AddMonoidHom.comp_apply, F.deg_trans_ofInt, G.deg_trans_ofInt]
+  deg_trans_sign := fun b => by
+    simp [AddMonoidHom.comp_apply, F.deg_trans_sign, G.deg_trans_sign]
+  phi := fun obj deg =>
+    AInfinityFunctorData.compPhi β_A β_B β_C
+      (GHom β_A R) (GHom β_B R) (GHom β_C R)
+      F.objMap F.deg_trans F.phi
+      G.objMap G.deg_trans G.deg_trans_ofInt G.phi
+      obj deg
 
 /-! ## Basic properties of functor composition -/
 
@@ -333,7 +386,7 @@ private abbrev compAssocRightPhiExpanded
 
 /-- First field of `comp_assoc`.
 
-This should be proved by unfolding `AInfinityFunctorData.comp` and `compAux`,
+This should be proved by unfolding `AInfinityFunctorData.comp`,
 then reducing to associativity of ordinary function composition. -/
 private lemma comp_assoc_objMap
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
@@ -356,7 +409,7 @@ private lemma comp_assoc_deg_trans
 /-- Transport lemma for the `deg_trans_ofInt` field in `comp_assoc`.
 
 This proof should use `comp_assoc_deg_trans` first, then reduce the remaining
-goal to extensionality on `ℤ` followed by the defining formulas for `compAux`. -/
+goal to extensionality on `ℤ` followed by the defining formulas for `comp`. -/
 private lemma comp_assoc_deg_trans_ofInt
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     (G : AInfinityFunctorData (β_A := β_B) (β_B := β_C) R ObjB ObjC)
@@ -392,7 +445,7 @@ private lemma comp_assoc_phi_expand_left
 /-- Unfold the outermost composition on the right-hand side.
 
 This is the right-bracketed analogue of `comp_assoc_phi_expand_left`, and it
-should also be essentially definitional after unfolding `comp` and `compAux`. -/
+should also be essentially definitional after unfolding `comp`. -/
 private lemma comp_assoc_phi_expand_right
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     (G : AInfinityFunctorData (β_A := β_B) (β_B := β_C) R ObjB ObjC)
@@ -492,15 +545,6 @@ theorem comp_satisfies_functor_equations
       (G.toAInfinityFunctorData.comp F.toAInfinityFunctorData) := by
   sorry
 
-/-- Composition of `A∞` functors, written in mathlib order so `G.comp F` is
-the composite `G ∘ F`. -/
-def compAux
-    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
-    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
-    AInfinityFunctor (β_A := β_A) (β_B := β_C) R ObjA ObjC where
-  toAInfinityFunctorData := G.toAInfinityFunctorData.comp F.toAInfinityFunctorData
-  satisfiesFunctorEquations := comp_satisfies_functor_equations F G
-
 end BasicProperties
 end AInfinityFunctor
 
@@ -517,7 +561,8 @@ protected abbrev AInfinityFunctor.comp
     [AInfinityCategory β_C R ObjC]
     (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
     (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
-    AInfinityFunctor (β_A := β_A) (β_B := β_C) R ObjA ObjC :=
-  AInfinityFunctor.compAux G F
+    AInfinityFunctor (β_A := β_A) (β_B := β_C) R ObjA ObjC where
+  toAInfinityFunctorData := G.toAInfinityFunctorData.comp F.toAInfinityFunctorData
+  satisfiesFunctorEquations := AInfinityFunctor.comp_satisfies_functor_equations F G
 
 end AInfinityTheory
