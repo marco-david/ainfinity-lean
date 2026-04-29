@@ -13,14 +13,8 @@ structure CMat_ (C : Type*) where
     toList : List C
 
 instance (C : Type*) [Texify C] : Texify (CMat_ C) where
-  texify x :=
-    -- ex: [a, b₂, c] ↦ ["a", "b_2", "c"]
-    let texStrings := x.toList.map texify
-    -- ex: ["a", "b_2 \oplus d", "c"] ↦
-    --  "\left( {a} \right) \oplus \left( {b_2 \oplus d} \right) \oplus \left( {c} \right)"
-    texStrings.map (s!"\\left( \{{·}} \\right)") |> r" \oplus ".intercalate
-
-#texify CMat_.ofList [CMat_.ofList [1,2,3]]
+  texify x := x.toList.map texifyWithBracketsAndParenthesesIfNecessary |> r" \oplus ".intercalate
+  requiresParentheses := true
 
 syntax (name := «term[_,]ₘ») "[" withoutPosition(term,*,?) "]ₘ" : term
 

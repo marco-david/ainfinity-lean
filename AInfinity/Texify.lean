@@ -13,8 +13,18 @@ universe u
 
 class Texify (α : Type u) where
   protected texify : α → String
+  /-- If further constructions that make use of this should add parentheses around it -/
+  protected requiresParentheses : Bool := false
 
 def texify {α : Type u} [Texify α] : α → String := Texify.texify
+
+def texifyWithBrackets {α : Type u} [Texify α] (x : α) := s!"\{{texify x}}"
+
+def texifyWithBracketsAndParenthesesIfNecessary {α : Type u} [Texify α] (x : α) :=
+  if Texify.requiresParentheses α then
+    s!"\{\\left({texify x}\\right)}"
+  else
+    s!"\{{texify x}}"
 
 def texifyToMd {α : Type u} [Texify α] (a : α) : String :=
   s!"$${texify a}$$"
