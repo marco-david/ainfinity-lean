@@ -29,6 +29,22 @@ https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/Finsup
 -/
 abbrev StrandSpace (R : Type u) [CommRing R] : Type u := Π₀ _ : ℕ, R
 
+instance [ToString R] : Texify (StrandSpace R) where
+  texify x :=
+    -- Not sure if this computationally efficient
+    x.support.sort (· ≥ ·) |>.map (termString x) |> " + ".intercalate
+  where termString (x : ℕ → R) (i : ℕ) :=
+    let coefficient := x i
+    if i = 0 then
+      toString coefficient
+    else
+      let coefficientString :=
+        if coefficient = 1 then ""
+        else if coefficient = -1 then "-"
+        else toString coefficient
+      let powerString := if i = 1 then "" else s!"^\{{i}}"
+      s!"{coefficientString}s{powerString}"
+
 abbrev StrandSpace.dots (R : Type u) [CommRing R] (n : ℕ) : StrandSpace R :=
   DFinsupp.single n 1
 
