@@ -13,7 +13,8 @@ structure CMat_ (C : Type*) where
     toList : List C
 
 instance (C : Type*) [Texify C] : Texify (CMat_ C) where
-  texify x := x.toList.map texifyWithBracketsAndParenthesesIfNecessary |> r" \oplus ".intercalate
+  texify x := if x.toList = [] then "0" else
+    x.toList.map texifyWithBracketsAndParenthesesIfNecessary |> r" \oplus ".intercalate
   requiresParentheses := true
 
 syntax (name := «term[_,]ₘ») "[" withoutPosition(term,*,?) "]ₘ" : term
