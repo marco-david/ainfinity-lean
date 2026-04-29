@@ -4,7 +4,7 @@ import AInfinity.BoundedCochainComplex
 
 open CategoryTheory
 
-namespace AInfinityCategoryTheory
+namespace AInfinityTheory
 
 universe v u
 variable {R : Type u} [CommRing R] [DecidableEq R] (C : Type u) [Category C]
@@ -138,4 +138,4 @@ abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Typ
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   BoundedCochainComplex (AddKLRWCategory n R)
 
-end AInfinityCategoryTheory
+end AInfinityTheory

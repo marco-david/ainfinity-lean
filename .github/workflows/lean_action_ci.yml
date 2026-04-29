@@ -20,3 +20,14 @@ jobs:
       - uses: leanprover/lean-action@v1
       # We are disabling this for now, since it seems to regenerate docs for all of Mathlib, which takes too long.
       # - uses: leanprover-community/docgen-action@v1
+    
+  mk-all: # runs the lake exe mk_all command so that the blueprint generation does not complain
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+      - name: Run mk_all
+        run: lake exe mk_all

@@ -1,0 +1,68 @@
+\chapter{A-infinity Algebras}
+
+\begin{definition}[\Ainf{}-algebra structure]
+\lean{AInfinityAlgebraTheory.AInfinityAlgStruct}
+\label{AInfinityAlgebraTheory.AInfinityAlgStruct}
+\leanok
+\uses{AInfinityTheory.GradedRModule, AInfinityTheory.operationTargetDeg}
+Let $A$ be a graded $R$-module. An \Ainf{}-algebra structure on $A$ consists of
+multilinear operations
+\[
+  m_n : A(d_0) \otimes \cdots \otimes A(d_{n-1})
+    \to A\!\left(\sum_i d_i + 2 - n\right)
+\]
+for every positive arity $n$ and every choice of input degrees.
+\end{definition}
+
+\begin{definition}[Algebra to precategory]
+\lean{AInfinityAlgebraTheory.AInfinityAlgStruct.toPreCategory}
+\label{AInfinityAlgebraTheory.AInfinityAlgStruct.toPreCategory}
+\leanok
+\uses{AInfinityAlgebraTheory.AInfinityAlgStruct, AInfinityCategoryTheory.AInfinityPreCategory}
+Any \Ainf{}-algebra structure determines a one-object \Ainf{}-precategory, with
+object type \lean{PUnit} and constant hom-module equal to the underlying graded
+module.
+\end{definition}
+
+\begin{definition}[Algebra Stasheff sum]
+\lean{AInfinityAlgebraTheory.AInfinityAlgStruct.stasheffSum}
+\label{AInfinityAlgebraTheory.AInfinityAlgStruct.stasheffSum}
+\leanok
+\uses{AInfinityAlgebraTheory.AInfinityAlgStruct, AInfinityAlgebraTheory.AInfinityAlgStruct.toPreCategory}
+The Stasheff sum of an \Ainf{}-algebra is the Stasheff sum of its associated
+one-object \Ainf{}-precategory.
+\end{definition}
+
+\begin{definition}[Algebra Stasheff property]
+\lean{AInfinityAlgebraTheory.AInfinityAlgStruct.satisfiesStasheff}
+\label{AInfinityAlgebraTheory.AInfinityAlgStruct.satisfiesStasheff}
+\leanok
+\uses{AInfinityAlgebraTheory.AInfinityAlgStruct.stasheffSum}
+An \Ainf{}-algebra structure satisfies the Stasheff identities when every one of
+its Stasheff sums is zero.
+\end{definition}
+
+\begin{definition}[\Ainf{}-algebra]
+\lean{AInfinityAlgebraTheory.AInfinityAlgebra}
+\label{AInfinityAlgebraTheory.AInfinityAlgebra}
+\leanok
+\uses{AInfinityAlgebraTheory.AInfinityAlgStruct, AInfinityAlgebraTheory.AInfinityAlgStruct.satisfiesStasheff}
+An \Ainf{}-algebra is an \Ainf{}-algebra structure together with a proof of the
+Stasheff identities.
+\end{definition}
+
+\begin{lemma}[Stasheff sum vanishes in an \Ainf{}-algebra]
+\lean{AInfinityAlgebraTheory.AInfinityAlgebra.stasheff_eq_zero}
+\label{AInfinityAlgebraTheory.AInfinityAlgebra.stasheff_eq_zero}
+\leanok
+\uses{AInfinityAlgebraTheory.AInfinityAlgebra, AInfinityAlgebraTheory.AInfinityAlgStruct.stasheffSum}
+For an \Ainf{}-algebra, every algebraic Stasheff sum is equal to zero.
+\end{lemma}
+
+\begin{definition}[\Ainf{}-algebra to precategory]
+\lean{AInfinityAlgebraTheory.AInfinityAlgebra.toPreCategory}
+\label{AInfinityAlgebraTheory.AInfinityAlgebra.toPreCategory}
+\leanok
+\uses{AInfinityAlgebraTheory.AInfinityAlgebra, AInfinityAlgebraTheory.AInfinityAlgStruct.toPreCategory}
+An \Ainf{}-algebra canonically determines a one-object \Ainf{}-precategory.
+\end{definition}
