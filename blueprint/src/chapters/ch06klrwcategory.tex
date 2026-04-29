@@ -113,7 +113,72 @@ $$
 \end{aligned}
 $$
 
-In addition to these functions, there must also be proofs that they satisfy $A_\infty$ relations (to be specified).
+
+In addition to these functions, there must also be proofs that they satisfy $A_\infty$ relations.
+
+Our KLRW category only has composition $\mu_2$, and no higher products. Similarly, the beta-functor has no components higher than $\beta_2$. Therefore the general $[\text{SF}_n]$ axioms for A-infinity functors reduce to a finite list. They are, in particular, the following axioms.
+
+\textbf{[SF\textsubscript{1}].}
+For all $f \in \Hom_{\KLRW}(A, B)$,
+$$
+  \delta_{\beta_0(B)} \circ \beta_1(f) + \beta_1(f) \circ \delta_{\beta_0(A)} = 0.
+$$
+That is, $\beta_1(f)$ is a chain map from $\beta_0(A)$ to $\beta_0(B)$.
+
+\begin{remark}
+  This axiom is automatic from the typing of $\beta_1$: its codomain
+  consists of morphisms of cochain complexes, which by definition
+  commute with differentials.
+\end{remark}
+
+\textbf{[SF\textsubscript{2}].}
+For all composable $f \in \Hom_{\KLRW}(A, B)$ and $g \in \Hom_{\KLRW}(B, C)$,
+$$
+  \beta_1(g \circ f) + \beta_1(g) \circ \beta_1(f)
+  = \delta_{\beta_0(C)} \circ \beta_2(f, g) + \beta_2(f, g) \circ \delta_{\beta_0(A)}.
+$$
+That is, $\beta_1$ is functorial up to the homotopy provided by $\beta_2$.
+
+\begin{remark}
+  This is the axiom that gives Maurer--Cartan preservation. If
+  $\delta$ is a differential on a complex over $\operatorname{Add}(\KLRW)$
+  (i.e.\ $\delta^2 = 0$), then the formula
+  $\delta' = \widehat{\beta}_1(\delta) + \widehat{\beta}_2(\delta, \delta)$
+  satisfies $(\delta')^2 = 0$, where $\widehat{\beta}_i$ denotes the matrix
+  extension.
+\end{remark}
+
+\textbf{[SF\textsubscript{3}].}
+For all composable $f \in \Hom_{\KLRW}(A, B)$,
+$g \in \Hom_{\KLRW}(B, C)$, and $h \in \Hom_{\KLRW}(C, D)$,
+$$
+  \beta_2(f, h \circ g) + \beta_2(g \circ f, h)
+  = \beta_2(f, g) \circ \beta_1(h) + \beta_1(f) \circ \beta_2(g, h).
+$$
+That is, $\beta_2$ satisfies a cocycle condition intertwining source
+composition with the target composition mediated by $\beta_1$.
+
+\begin{remark}
+  This axiom is needed for iterated cone constructions: when lifting
+  a map through a double cone, the correction at the second step must
+  be compatible with the correction at the first step.
+\end{remark}
+
+\textbf{[SF\textsubscript{4}].}
+For all composable $f \in \Hom_{\KLRW}(A, B)$,
+$g \in \Hom_{\KLRW}(B, C)$, $h \in \Hom_{\KLRW}(C, D)$, and
+$k \in \Hom_{\KLRW}(D, E)$,
+$$
+  \beta_2(f, g) \circ \beta_2(h, k) = 0.
+$$
+
+\begin{remark}
+  Since $\beta_2$ produces degree $-1$ maps, their composition has degree
+  $-2$. This axiom says this composition vanishes, ensuring no higher
+  obstructions arise. For $n \geq 5$, all $[\mathrm{SF}_n]$ axioms are
+  automatically satisfied because every term involves either $\beta_k$
+  with $k \geq 3$ or $\mu_k$ with $k \geq 3$, both of which are zero.
+\end{remark}
 
 One can understand these functions as specifying how the functor acts on the generating elements of our chain complex category. The action of the functor is as follows.
 
@@ -143,3 +208,5 @@ We may call the upper chain complex $A^*_{[0,n-1]}$, and the lower $A^*_{[n,n]}[
 
 Assuming we know how $\overline{\beta}_0$ acts on these two chain complexes, we will state how it acts on $A^*$. First, take the direct sum:
 $$\overline{\beta}_0(A^*) = \overline{\beta}_0(A^*_{[0,n-1]}) \oplus \overline{\beta}_0(A^*_{[n,n]}[-1])$$
+
+\subsection{Generating the data}

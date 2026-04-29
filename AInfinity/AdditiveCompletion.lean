@@ -1,6 +1,8 @@
 module
 
 public import Mathlib
+public import AInfinity.ComputableCategories
+public import AInfinity.Texify
 
 @[expose] public section
 
@@ -10,40 +12,72 @@ structure CMat_ (C : Type*) where
   ofList ::
     toList : List C
 
+instance (C : Type*) [Texify C] : Texify (CMat_ C) where
+  texify x := if x.toList = [] then "0" else
+    x.toList.map texifyWithBracketsAndParenthesesIfNecessary |> r" \oplus ".intercalate
+  requiresParentheses := true
+
+syntax (name := «term[_,]ₘ») "[" withoutPosition(term,*,?) "]ₘ" : term
+
+macro_rules
+  | `([ $elems,* ]ₘ) => `(CMat_.ofList [ $elems,* ])
+
+recommended_spelling "empty" for "[]ₘ" in [«term[_,]ₘ»]
+recommended_spelling "singleton" for "[x]ₘ" in [«term[_,]ₘ»]
+
 namespace CMat_
 
-section definition
-variable {C : Type*} [Category C] [Preadditive C] (M N K : CMat_ C)
+section lists
+variable {C : Type*} (A : C) (M N K : CMat_ C)
+
+theorem toList_empty : ([]ₘ : CMat_ C).toList = [] := rfl
+
+theorem toList_singleton : [A]ₘ.toList = [A] := rfl
+
+end lists
+
+section indexing
+
+variable {C : Type*} {M : CMat_ C}
 
 /--
 Mirrors the API of `CategoryTheory.Mat_.ι`.
 This is irreducible because it is effectively irreducible in `Mat_`, and we should mirror the API.
 -/
 @[irreducible]
-def ι : Type := Fin M.toList.length
+def ι (M : CMat_ C) : Type := Fin M.toList.length
 
 /- Auxillary definitions that are used to avoid defeq abuse. -/
 unseal ι in
-def ι.toFin (i : M.ι) : Fin M.toList.length := i
+def ι.toFin {M : CMat_ C} (i : M.ι) : Fin M.toList.length := i
 unseal ι in
-def ι.ofFin (i : Fin M.toList.length) : M.ι := i
+def ι.ofFin {M : CMat_ C} (i : Fin M.toList.length) : M.ι := i
+
+@[simp]
+theorem ι.ofFin_toFin {M : CMat_ C} (i : M.ι) : ι.ofFin i.toFin = i := rfl
+@[simp]
+theorem ι.toFin_ofFin {M : CMat_ C} (i : Fin M.toList.length) : (ι.ofFin i).toFin = i := rfl
+
+def ι.finEquiv {M : CMat_ C} : M.ι ≃ Fin M.toList.length where
+  toFun := ι.toFin
+  invFun := ι.ofFin
+  left_inv i := by dsimp
+  right_inv j := by dsimp
 
 unseal ι in
 instance fintype : Fintype M.ι := inferInstanceAs <| Fintype (Fin M.toList.length)
 unseal ι in
 instance : DecidableEq M.ι := inferInstanceAs <| DecidableEq (Fin M.toList.length)
 
-omit [Category C] [Preadditive C] in
-unseal ι in
-theorem ι.toFin_ofFin (i : Fin M.toList.length) : (ι.ofFin M i).toFin = i := rfl
-
-omit [Category C] [Preadditive C] in
-unseal ι in
-theorem ι.ofFin_toFin (i : M.ι) : ι.ofFin M i.toFin = i := rfl
-
 /-- Mirrors the API of `CategoryTheory.Mat_.X` -/
 @[irreducible]
 def X : M.ι → C := fun i ↦ M.toList[i.toFin]
+
+end indexing
+
+section category
+
+variable {C : Type*} [Category C] [Preadditive C] (M N K : CMat_ C)
 
 /-- Mirrors the API of `CategoryTheory.Mat_.Hom` -/
 def Hom : Type* := DMatrix M.ι N.ι fun i j => M.X i ⟶ N.X j
@@ -92,6 +126,50 @@ instance : AddCommGroup (M ⟶ N) := inferInstanceAs <| AddCommGroup (DMatrix M.
 instance : Preadditive (CMat_ C) where
   add_comp M N K f f' g := by ext; simp [Finset.sum_add_distrib]
   comp_add M N K f g g' := by ext; simp [Finset.sum_add_distrib]
+
+def cbiprod : CMat_ C := .ofList (M.toList ++ N.toList)
+
+def cbiprod_ι_equiv' {M N : CMat_ C} : (M.cbiprod N).ι ≃ M.ι ⊕ N.ι :=
+  have : (CMat_.ofList (M.toList ++ N.toList)).toList.length = M.toList.length + N.toList.length
+    := by simp
+  ι.finEquiv |>.trans (finCongr this) |>.trans finSumFinEquiv.symm
+    |>.trans (ι.finEquiv.symm.sumCongr ι.finEquiv.symm)
+
+theorem X_symm_cbiprod_ι_equiv'_inl (i : M.ι) :
+    (M.cbiprod N).X (cbiprod_ι_equiv'.symm (.inl i)) = M.X i := by
+  unfold X
+  sorry
+
+theorem X_symm_cbiprod_ι_equiv'_inr (i : N.ι) :
+    (M.cbiprod N).X (cbiprod_ι_equiv'.symm (.inr i)) = N.X i := by
+  unfold X
+  sorry
+
+instance : ComputableBinaryBiproduct (CMat_ C) where
+  computableBinaryBiproductData P Q := .mkOfProduct P Q (pt := .ofList (P.toList ++ Q.toList))
+    (fst := sorry) (snd := sorry) (pair := sorry)
+    (pair_fst := sorry)
+    (pair_snd := sorry)
+    (pair_eta := sorry)
+
+/--
+Same as `cbiprod_ι_equiv` but expressed with proper notation and thus with types
+-/
+def cbiprod_ι_equiv {M N : CMat_ C} : (M ⊞ᶜ N).ι ≃ M.ι ⊕ N.ι := cbiprod_ι_equiv'
+
+instance : IsEmpty ([]ₘ : CMat_ C).ι where
+  false i := isEmptyElim (by simpa using i.toFin)
+
+theorem hom_from_empty_eq_zero (h : []ₘ ⟶ M) : h = 0 := by
+  ext i j
+  exact isEmptyElim i
+
+theorem hom_to_empty_eq_zero (h : M ⟶ []ₘ) : h = 0 := by
+  ext i j
+  exact isEmptyElim j
+
+instance : HasExplicitZeroObject (CMat_ C) := .mkOfPreadditive (CMat_ C) []ₘ
+  hom_from_empty_eq_zero hom_to_empty_eq_zero
 
 -- Idea: Maybe we can translate the `HasFiniteBiproducts` instance from `CategoryTheory.Mat_` using
 -- an equivalence. I don't know if this would make it computable though, which we might need.
@@ -184,16 +262,7 @@ instance : (toMat_ C).IsEquivalence where
   full := inferInstance
   essSurj := inferInstance
 
-/-- Computable version of `CategoryTheory.Limits.biprod` -/
-def cbiprod : CMat_ C := CMat_.ofList (M.toList ++ N.toList)
-
-@[inherit_doc] infixl:65 " ⊞ₖ " => cbiprod
-
-omit [Category C] [Preadditive C]
-theorem cbiprod_assoc : M ⊞ₖ N ⊞ₖ K = M ⊞ₖ (N ⊞ₖ K) := by
-  simp [cbiprod]
-
-end definition
+end category
 
 section embedding
 
@@ -203,7 +272,7 @@ variable (C : Type*)
 This is not a simp lemma because I am worried that this is often an equality of types.
 But I think this could work as a simp lemma, I'm just not sure if it would cause defeq issues.
 -/
-theorem apply_X_ofList_singleton {A : C} (i : (CMat_.ofList [A]).ι) :
+theorem apply_X_ofList_singleton {A : C} (i : [A]ₘ.ι) :
     (CMat_.ofList [A]).X i = A := by
   -- Cleaned-up Aristotle proof
   simp only [X, List.length_cons, List.length_nil, Nat.reduceAdd, ι.toFin]
@@ -212,13 +281,13 @@ theorem apply_X_ofList_singleton {A : C} (i : (CMat_.ofList [A]).ι) :
   rfl
 
 unseal ι in
-theorem ofList_singleton_card {A : C} : Fintype.card (CMat_.ofList [A]).ι = 1 := by
+theorem singleton_ι_card {A : C} : Fintype.card [A]ₘ.ι = 1 := by
   -- Cleaned-up Aristotle proof
   simp [CMat_.ι]
 
 -- Aristotle proof
 unseal ι in
-instance ofList_singleton_unique {A : C} : Unique (CMat_.ofList [A]).ι :=
+instance singleton_ι_unique {A : C} : Unique [A]ₘ.ι :=
   inferInstanceAs (Unique (Fin 1))
 
 variable [Category C] [Preadditive C]
@@ -249,7 +318,7 @@ theorem X_embedding {A : C} (i : ((embedding C).obj A).ι) : ((embedding C).obj 
   apply_X_ofList_singleton C i
 
 -- Aristotle generated definition
-instance {A : C} : Unique ((embedding C).obj A).ι := ofList_singleton_unique C
+instance {A : C} : Unique ((embedding C).obj A).ι := singleton_ι_unique C
 
 namespace Embedding
 
@@ -295,6 +364,28 @@ instance : Functor.Additive (embedding C) where
 end Embedding
 
 end embedding
+
+section lift
+
+variable {C : Type*} [Category C] [Preadditive C]
+variable {D : Type*} [Category D] [Preadditive D]
+
+def extend [ComputableBinaryBiproduct D] [HasExplicitZeroObject D]
+    (F : C ⥤ D) [F.Additive] : CMat_ C ⥤ D where
+  obj M := (M.toList.map F.obj).cbiprod
+  map {M N} f := sorry
+
+-- Also need that extend is additive
+
+-- Unfortunately, we need to lift to some arbitrary computable category, not just CMat_
+-- These are candidate definitions until we get lifting to some arbitrary category
+-- These also look suspiciously similar to a monad
+
+def bind : CMat_ (CMat_ C) ⥤ CMat_ C := extend (𝟭 (CMat_ C))
+
+def mapCMat_ (F : C ⥤ D) [F.Additive] : CMat_ C ⥤ CMat_ D := extend (F ⋙ embedding D)
+
+end lift
 
 -- TODO: Pick a simp normal form
 -- TODO: implement Repr using cibiprod and the embedding

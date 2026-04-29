@@ -1,6 +1,8 @@
 module
 
 public import Mathlib
+public import AInfinity.Texify
+public meta import AInfinity.Texify
 public import AInfinity.AdditiveCompletion
 public import AInfinity.BoundedCochainComplex
 
@@ -16,6 +18,10 @@ variable {n : ℕ}
 
 structure KLRWCategory (n : ℕ) (R : Type u) where
   positioning : Fin (n + 1)
+
+instance : Texify (KLRWCategory n R) where
+  texify x := s!"T_\{{x.positioning}}"
+  requiresParentheses := false
 
 def compShift {n : ℕ} {R : Type u}
     (X Y Z : KLRWCategory n R) : ℕ :=
@@ -51,6 +57,23 @@ Uses DFinsupp because Finsupp is not currently computable. See
 https://leanprover.zulipchat.com/#narrow/channel/113489-new-members/topic/Finsupp.20noncomputability
 -/
 abbrev StrandSpace (R : Type u) [CommRing R] : Type u := Π₀ _ : ℕ, R
+
+instance [ToString R] : Texify (StrandSpace R) where
+  texify x :=
+    -- Not sure if this computationally efficient
+    x.support.sort (· ≥ ·) |>.map (termString x) |> " + ".intercalate
+  requiresParentheses := true
+  where termString (x : ℕ → R) (i : ℕ) :=
+    let coefficient := x i
+    if i = 0 then
+      toString coefficient
+    else
+      let coefficientString :=
+        if coefficient = 1 then ""
+        else if coefficient = -1 then "-"
+        else toString coefficient
+      let powerString := if i = 1 then "" else s!"^\{{i}}"
+      s!"{coefficientString}s{powerString}"
 
 abbrev StrandSpace.dots (R : Type u) [CommRing R] (n : ℕ) : StrandSpace R :=
   DFinsupp.single n 1
