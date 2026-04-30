@@ -20,10 +20,8 @@ def h : T₀ ⟶ T₁ := StrandSpace.dots ℤ 3
 instance (C : Type*) [Category C] [Preadditive C] [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
     Texify (CMat_.Hom M N) where
   texify x :=
-    if M.toList.length = 0 ∧ N.toList.length = 0 then
+    if M.toList.length = 0 ∨ N.toList.length = 0 then
       "0"
-    else if M.toList.length = 0 ∨ N.toList.length = 0 then
-      s!"0^\{{N.toList.length} \\times {M.toList.length}}"
     else
       let getEntry (i : Fin N.toList.length) (j : Fin M.toList.length) : String :=
         texifyWithBrackets (x (CMat_.ι.ofFin j) (CMat_.ι.ofFin i))
@@ -99,9 +97,10 @@ instance (C : Type*) [Category C] [Preadditive C] [Limits.HasZeroObject C] [Texi
   requiresParentheses := true
 
 def X : ℤ → AddKLRWCategory 3 ℤ
-| 0 => [T₀]ₘ
+| 0 => [T₀,T₁]ₘ
+| 1 => [T₀,T₁]ₘ
 | _ => 𝟎
-def cc : KLRWComplexCategory 3 ℤ := BoundedCochainComplex.mk' X {0} sorry 0 (by
+def cc : KLRWComplexCategory 3 ℤ := BoundedCochainComplex.mk' X {0,1} sorry 0 (by
   intro i hi
   fin_cases hi <;> sorry
 )
