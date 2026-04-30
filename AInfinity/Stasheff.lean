@@ -12,7 +12,7 @@ noncomputable section
 namespace AInfinityTheory
 
 universe u v w
-variable {β : Type v} [Grading β]
+variable {β : Type v} [GradingIndex β]
 variable {n : ℕ}
 
 /-- Target degree of the `n`-ary operation `m`. -/
@@ -314,7 +314,7 @@ def indexedStasheffXIn
     ∀ i : Fin s, ComposableHomType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) i :=
   fun i => x ⟨r + i.val, by omega⟩
 
-omit [Grading β] in
+omit [GradingIndex β] in
 /-- Evaluating the inner input tuple just picks out the corresponding original input. -/
 lemma indexedStasheffXIn_apply
     {R : Type u}
@@ -838,9 +838,9 @@ lemma indexedStasheffTerm_eq_zero_of_inner_map_eq_zero
 def stasheffSignParity
     (deg : Fin n → β)
     (r s : ℕ)
-    (hr : r + s ≤ n) : Parity :=
-  (∑ i : Fin (n - r - s), Grading.sign (deg ⟨r + s + i.val, by omega⟩)) -
-    ((n - r - s : ℕ) : Parity)
+    (hr : r + s ≤ n) : ZMod 2 :=
+  (∑ i : Fin (n - r - s), parity (deg ⟨r + s + i.val, by omega⟩)) -
+    ((n - r - s : ℕ) : ZMod 2)
 
 /-- The sign `(-1)^(|a_{r+s+1}| + ⋯ + |a_n| - t)` as an integer,
     for a valid Stasheff index pair. -/
@@ -876,7 +876,7 @@ def indexedStasheffSum
 /-- The Stasheff identities for object-indexed A∞ operations. -/
 def indexedSatisfiesStasheff
     (β : Type v)
-    [Grading β]
+    [GradingIndex β]
     (R : Type u)
     [CommRing R]
     {Obj : Type w}

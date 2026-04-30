@@ -14,9 +14,9 @@ namespace AInfinityTheory
 
 universe u v w x y z t
 
-variable (β_A : Type v) [Grading β_A]
-variable (β_B : Type w) [Grading β_B]
-variable (β_C : Type x) [Grading β_C]
+variable (β_A : Type v) [GradingIndex β_A]
+variable (β_B : Type w) [GradingIndex β_B]
+variable (β_C : Type x) [GradingIndex β_C]
 
 namespace AInfinityFunctorData
 
@@ -30,7 +30,7 @@ recovers the target degree of the composite component. -/
 lemma comp_compatible_deg
     (F_deg_trans : β_A →+ β_B)
     (G_deg_trans : β_B →+ β_C)
-    (G_deg_trans_ofInt : ∀ n : ℤ, G_deg_trans (Grading.ofInt n) = Grading.ofInt n)
+    (G_deg_trans_ofInt : ∀ n : ℤ, G_deg_trans (GradingIndex.ofInt n) = GradingIndex.ofInt n)
     {n : ℕ}
     (deg : Fin n → β_A)
     (c : Composition n) :
@@ -101,7 +101,7 @@ lemma comp_term_target_module_eq
     (F_deg_trans : β_A →+ β_B)
     (G_objMap : ObjB → ObjC)
     (G_deg_trans : β_B →+ β_C)
-    (G_deg_trans_ofInt : ∀ n : ℤ, G_deg_trans (Grading.ofInt n) = Grading.ofInt n)
+    (G_deg_trans_ofInt : ∀ n : ℤ, G_deg_trans (GradingIndex.ofInt n) = GradingIndex.ofInt n)
     {n : ℕ}
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
@@ -195,7 +195,7 @@ def compTermMultilinearMap
         (functorTargetType β_A β_B BHom F_objMap F_deg_trans obj deg))
     (G_objMap : ObjB → ObjC)
     (G_deg_trans : β_B →+ β_C)
-    (G_deg_trans_ofInt : ∀ n : ℤ, G_deg_trans (Grading.ofInt n) = Grading.ofInt n)
+    (G_deg_trans_ofInt : ∀ n : ℤ, G_deg_trans (GradingIndex.ofInt n) = GradingIndex.ofInt n)
     (G_phi :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjB) →
@@ -244,7 +244,7 @@ def compPhi
         (functorTargetType β_A β_B BHom F_objMap F_deg_trans obj deg))
     (G_objMap : ObjB → ObjC)
     (G_deg_trans : β_B →+ β_C)
-    (G_deg_trans_ofInt : ∀ n : ℤ, G_deg_trans (Grading.ofInt n) = Grading.ofInt n)
+    (G_deg_trans_ofInt : ∀ n : ℤ, G_deg_trans (GradingIndex.ofInt n) = GradingIndex.ofInt n)
     (G_phi :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjB) →
@@ -279,9 +279,9 @@ end AInfinityFunctorData
 /-- Composition of raw `A∞` functor data, written in mathlib order so
 `G.comp F` is the composite `G ∘ F`. -/
 protected abbrev AInfinityFunctorData.comp
-    {β_A : Type v} [Grading β_A]
-    {β_B : Type w} [Grading β_B]
-    {β_C : Type x} [Grading β_C]
+    {β_A : Type v} [GradingIndex β_A]
+    {β_B : Type w} [GradingIndex β_B]
+    {β_C : Type x} [GradingIndex β_C]
     {R : Type u} [CommRing R]
     {ObjA : Type y} {ObjB : Type z} {ObjC : Type t}
     [RLinearGQuiver β_A R ObjA]
@@ -309,10 +309,10 @@ namespace AInfinityFunctorData
 
 section BasicProperties
 
-variable {β_A : Type v} [Grading β_A]
-variable {β_B : Type w} [Grading β_B]
-variable {β_C : Type x} [Grading β_C]
-variable {β_D : Type*} [Grading β_D]
+variable {β_A : Type v} [GradingIndex β_A]
+variable {β_B : Type w} [GradingIndex β_B]
+variable {β_C : Type x} [GradingIndex β_C]
+variable {β_D : Type*} [GradingIndex β_D]
 variable {R : Type u} [CommRing R]
 variable {ObjA : Type y} {ObjB : Type z} {ObjC : Type t} {ObjD : Type*}
 variable [RLinearGQuiver β_A R ObjA]
@@ -527,9 +527,9 @@ namespace AInfinityFunctor
 
 section BasicProperties
 
-variable {β_A : Type v} [Grading β_A]
-variable {β_B : Type w} [Grading β_B]
-variable {β_C : Type x} [Grading β_C]
+variable {β_A : Type v} [GradingIndex β_A]
+variable {β_B : Type w} [GradingIndex β_B]
+variable {β_C : Type x} [GradingIndex β_C]
 variable {R : Type u} [CommRing R]
 variable {ObjA : Type y} {ObjB : Type z} {ObjC : Type t}
 variable [AInfinityCategory β_A R ObjA]
@@ -551,9 +551,9 @@ end AInfinityFunctor
 /-- Composition of `A∞` functors, written in mathlib order so
 `G.comp F` is the composite `G ∘ F`. -/
 protected abbrev AInfinityFunctor.comp
-    {β_A : Type v} [Grading β_A]
-    {β_B : Type w} [Grading β_B]
-    {β_C : Type x} [Grading β_C]
+    {β_A : Type v} [GradingIndex β_A]
+    {β_B : Type w} [GradingIndex β_B]
+    {β_C : Type x} [GradingIndex β_C]
     {R : Type u} [CommRing R]
     {ObjA : Type y} {ObjB : Type z} {ObjC : Type t}
     [AInfinityCategory β_A R ObjA]

@@ -10,18 +10,38 @@ namespace AInfinityTheory
 
 universe u v w
 
-abbrev Parity := ZMod 2
+/-- A grading index is an additive commutative group with a distinguished unit
+element, together with a parity map to `ZMod 2`. The distinguished unit is used
+to realize integer degree shifts via the canonical map `ℤ →+ β`. -/
+class GradingIndex (β : Type u) extends AddCommGroupWithOne β where
+  protected parity : β →+ ZMod 2
+  protected parity_one : parity 1 = 1
 
-class Grading (β : Type u) extends AddCommGroup β where
-  ofInt : ℤ →+ β
-  sign : β →+ Parity
-  sign_ofInt: ∀ n : ℤ, sign (ofInt n) = (n : Parity)
+/-- The parity homomorphism attached to a grading index. -/
+def parity {β : Type u} [GradingIndex β] : β →+ ZMod 2 :=
+  GradingIndex.parity
 
---TODO make beta explicit
-def shift_ofInt {β} [Grading β] (n : ℤ) : β :=
-  Grading.ofInt n
+/-- The canonical additive homomorphism from `ℤ` into a grading index. -/
+def GradingIndex.ofInt {β : Type u} [GradingIndex β] : ℤ →+ β :=
+  Int.castAddHom β
 
-variable (β : Type v) [Grading β]
+/-- The parity of the distinguished unit is odd. -/
+@[simp]
+theorem parity_one {β : Type u} [GradingIndex β] : parity (1 : β) = 1 :=
+  GradingIndex.parity_one
+
+/-- The parity map agrees with integer casts modulo `2`. -/
+@[simp]
+theorem parity_intCast {β : Type u} [GradingIndex β] (n : ℤ) :
+    parity (n : β) = (n : ZMod 2) := by
+  rw [← zsmul_one n, map_zsmul, parity_one, zsmul_one]
+
+/-- The canonical degree shift by an integer. Keeping this wrapper makes degree
+formulas read naturally throughout the project. -/
+def shift_ofInt {β} [GradingIndex β] (n : ℤ) : β :=
+  GradingIndex.ofInt n
+
+variable (β : Type v) [GradingIndex β]
 
 abbrev GradedRModule (R : Type u) [CommRing R] :=
   GradedObject β (ModuleCat.{u} R)

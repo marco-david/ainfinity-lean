@@ -13,8 +13,8 @@ noncomputable section
 namespace AInfinityTheory
 
 universe u v w x y
-variable (β_A : Type v) [Grading β_A]
-variable (β_B : Type w) [Grading β_B]
+variable (β_A : Type v) [GradingIndex β_A]
+variable (β_B : Type w) [GradingIndex β_B]
 
 /-- Target degree of `φ_n` applied to inputs of the given degrees.
     `φ_n` has degree `1 − n`, so the output lives in
@@ -49,9 +49,9 @@ structure AInfinityFunctorData
   /-- Group homofunctor translating degrees from `β_A` to `β_B`. -/
   deg_trans : β_A →+ β_B
   /-- `deg_trans` is compatible with the integer embeddings. -/
-  deg_trans_ofInt : ∀ n : ℤ, deg_trans (Grading.ofInt n) = Grading.ofInt n
-  /-- `deg_trans` preserves sign/parity. -/
-  deg_trans_sign : ∀ b : β_A, Grading.sign (deg_trans b) = Grading.sign b
+  deg_trans_ofInt : ∀ n : ℤ, deg_trans (GradingIndex.ofInt n) = GradingIndex.ofInt n
+  /-- `deg_trans` preserves parity. -/
+  deg_trans_sign : ∀ b : β_A, parity (deg_trans b) = parity b
 
   phi :
     {n : ℕ} → [NeZero n] →
@@ -217,7 +217,7 @@ section LHS
 lemma LHS_compatible_deg
     {n : ℕ}
     (deg_trans : β_A →+ β_B)
-    (deg_trans_ofInt : ∀ k : ℤ, deg_trans (Grading.ofInt k) = Grading.ofInt k)
+    (deg_trans_ofInt : ∀ k : ℤ, deg_trans (GradingIndex.ofInt k) = GradingIndex.ofInt k)
     (deg : Fin n → β_A)
     (r s : ℕ)
     (hr : r + s ≤ n) :
@@ -234,7 +234,7 @@ lemma functor_lhs_target_module_eq
     (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
     (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
-    (deg_trans_ofInt : ∀ n : ℤ, deg_trans (Grading.ofInt n) = Grading.ofInt n)
+    (deg_trans_ofInt : ∀ n : ℤ, deg_trans (GradingIndex.ofInt n) = GradingIndex.ofInt n)
     {n : ℕ}
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
@@ -261,7 +261,7 @@ lemma functor_lhs_target_eq
     (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
     (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
-    (deg_trans_ofInt : ∀ n : ℤ, deg_trans (Grading.ofInt n) = Grading.ofInt n)
+    (deg_trans_ofInt : ∀ n : ℤ, deg_trans (GradingIndex.ofInt n) = GradingIndex.ofInt n)
     {n : ℕ}
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
@@ -278,7 +278,7 @@ def functorLHSTerm
     (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
     (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
-    (deg_trans_ofInt : ∀ n : ℤ, deg_trans (Grading.ofInt n) = Grading.ofInt n)
+    (deg_trans_ofInt : ∀ n : ℤ, deg_trans (GradingIndex.ofInt n) = GradingIndex.ofInt n)
     (phi :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjA) →
@@ -312,7 +312,7 @@ def functorLHSSum
     (BHom : ObjB → ObjB → GradedRModule (β := β_B) (R := R))
     (objMap : ObjA → ObjB)
     (deg_trans : β_A →+ β_B)
-    (deg_trans_ofInt : ∀ n : ℤ, deg_trans (Grading.ofInt n) = Grading.ofInt n)
+    (deg_trans_ofInt : ∀ n : ℤ, deg_trans (GradingIndex.ofInt n) = GradingIndex.ofInt n)
     (phi :
       {n : ℕ} → [NeZero n] →
       (obj : Fin (n + 1) → ObjA) →
@@ -474,7 +474,7 @@ lemma RHS_compatible_deg
     convert h_sum_target_deg using 2
     · aesop
     · rw [← h_sum_blocksFun]
-      exact map_sum (Grading.ofInt) _ _
+      exact map_sum (GradingIndex.ofInt) _ _
   convert congr_arg (fun x : β_B => x + shift_ofInt (2 - (c.length : ℤ))) h_sum_target_deg using 1
   unfold functorEqTargetDeg
   simp +decide [add_assoc]

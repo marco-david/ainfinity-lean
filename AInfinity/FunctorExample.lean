@@ -14,7 +14,7 @@ namespace FunctorExamples
 
 universe u v w
 
-variable (β : Type v) [Grading β]
+variable (β : Type v) [GradingIndex β]
 variable (R : Type u) [CommRing R]
 variable (Obj : Type w)
 
@@ -709,8 +709,8 @@ end Functor
 
 section Composition
 
-variable {β_A : Type*} [Grading β_A]
-variable {β_B : Type*} [Grading β_B]
+variable {β_A : Type*} [GradingIndex β_A]
+variable {β_B : Type*} [GradingIndex β_B]
 variable {ObjA : Type*} {ObjB : Type*}
 variable [AInfinityCategory β_A R ObjA]
 variable [AInfinityCategory β_B R ObjB]

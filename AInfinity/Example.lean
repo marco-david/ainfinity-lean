@@ -14,11 +14,10 @@ namespace Examples
 
 universe u
 
-local instance : Grading ℤ where
-  toAddCommGroup := inferInstance
-  ofInt := AddMonoidHom.id ℤ
-  sign := Int.castAddHom Parity
-  sign_ofInt n := by
+local instance : GradingIndex ℤ where
+  toAddCommGroupWithOne := inferInstance
+  parity := Int.castAddHom (ZMod 2)
+  parity_one := by
     simp
 
 variable (R : Type u) [CommRing R]
