@@ -81,13 +81,21 @@ instance {V : Type*} [Category V] [Preadditive V] [DecidablePred (Limits.IsZero 
   else
     Decidable.isFalse sorry
 
-instance (C : Type*) [Category C] [Preadditive C] [Limits.HasZeroObject C]
+def BoundedCochainComplex.toTexRow {C : Type*} [Category C] [Preadditive C] [Limits.HasZeroObject C]
+    [Texify C] [∀ (X Y : C), Texify (X ⟶ Y)] (A : BoundedCochainComplex C)
+    (leftmost rightmost : ℤ) : String := Id.run do
+    let mut res := ""
+    for i in leftmost...rightmost do
+      res := res ++ s!"{texifyWithBrackets (A.X i)} @>{texifyWithBrackets (A.d i (i + 1))}>>"
+    res := res ++ s!"{texifyWithBrackets (A.X rightmost)}"
+    return r"\begin{CD}" ++ res ++ r"\end{CD}"
+
+instance (C : Type*) [Category C] [Preadditive C] [Limits.HasZeroObject C] [Texify C]
   [∀ (X Y : C), Texify (X ⟶ Y)] : Texify (BoundedCochainComplex C) where
-  texify x := r"
-  @V{f_{n+1}}VV               @V{f_n}VV             @V{f_{n-1}}VV \\
-  B_{n+1} @>{\partial_{n+1}'}>> B_n @>{\partial_n'}>> B_{n-1}
-  \end{CD}
-  "
+  texify A := Id.run do
+    let leftmost := -2
+    let rightmost := 2
+    return r"\begin{CD}" ++ A.toTexRow leftmost rightmost ++ r"\end{CD}"
   requiresParentheses := true
 
 def X : ℤ → AddKLRWCategory 3 ℤ
@@ -97,3 +105,5 @@ def cc : KLRWComplexCategory 3 ℤ := BoundedCochainComplex.mk' X {0} sorry 0 (b
   intro i hi
   fin_cases hi <;> sorry
 )
+
+#texify cc
