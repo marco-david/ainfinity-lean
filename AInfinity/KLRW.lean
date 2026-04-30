@@ -203,7 +203,6 @@ abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Typ
   CMat_ (KLRWCategory n R)
 
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
-  -- TODO: Change to BoundedCochainComplex (need to figure out zero objects for this to work)
-  CochainComplex (AddKLRWCategory n R) ℤ
+  BoundedCochainComplex (AddKLRWCategory n R)
 
 end AInfinityTheory

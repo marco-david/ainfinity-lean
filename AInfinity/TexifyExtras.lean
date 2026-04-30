@@ -48,3 +48,52 @@ def g : [T₀, T₁]ₘ ⟶ [T₀, T₁]ₘ := CMat_.Hom.ofFin _ _ fun
 | 1, 1 => StrandSpace.dots ℤ 1
 
 #texify g ≫ g
+
+-- TODO: Make this work well with `List.toFinsupp`, except you need to cast from ℕ to ℤ
+
+def BoundedCochainComplex.mk' {V : Type*} [Category V] [HasExplicitZeroObject V]
+  [DecidablePred (Limits.IsZero : V → Prop)]
+  [Preadditive V] (X : ℤ → V) (supersetOfSupport : Finset ℤ)
+  (h : ∀ i : ℤ, ¬ Limits.IsZero (X i) → i ∈ supersetOfSupport)
+  (d : ∀ i : ℤ, X i ⟶ X (i + 1))
+  (hd : ∀ i ∈ supersetOfSupport, d i ≫ d (i + 1) = 0) : BoundedCochainComplex V :=
+  BoundedCochainComplex.mkOfBounded (CochainComplex.of X d hi) h
+  where hi (i : ℤ) : d i ≫ d (i + 1) = 0 := (by
+    by_cases hc : i ∈ supersetOfSupport
+    · exact hd i hc
+    · rw [hc.imp_symm (h i) |>.eq_zero_of_src (d i)]
+      simp)
+
+/--
+The KLRW Category lacks zero objects
+-/
+theorem AInfinityTheory.KLRWCategory.not_isZero (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ)
+  (A : KLRWCategory n R) : ¬ Limits.IsZero A := sorry
+
+instance (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ) :
+    DecidablePred (Limits.IsZero : KLRWCategory n R → Prop) :=
+  fun A ↦ Decidable.isFalse (A.not_isZero)
+
+instance {V : Type*} [Category V] [Preadditive V] [DecidablePred (Limits.IsZero : V → Prop)] :
+    DecidablePred (Limits.IsZero : CMat_ V → Prop) := fun M ↦
+  if h : M.toList.all (Limits.IsZero ·) then
+    Decidable.isTrue sorry
+  else
+    Decidable.isFalse sorry
+
+instance (C : Type*) [Category C] [Preadditive C] [Limits.HasZeroObject C]
+  [∀ (X Y : C), Texify (X ⟶ Y)] : Texify (BoundedCochainComplex C) where
+  texify x := r"
+  @V{f_{n+1}}VV               @V{f_n}VV             @V{f_{n-1}}VV \\
+  B_{n+1} @>{\partial_{n+1}'}>> B_n @>{\partial_n'}>> B_{n-1}
+  \end{CD}
+  "
+  requiresParentheses := true
+
+def X : ℤ → AddKLRWCategory 3 ℤ
+| 0 => [T₀]ₘ
+| _ => 𝟎
+def cc : KLRWComplexCategory 3 ℤ := BoundedCochainComplex.mk' X {0} sorry 0 (by
+  intro i hi
+  fin_cases hi <;> sorry
+)
