@@ -82,11 +82,9 @@ def identityFunctorData :
     AInfinityFunctorData (β_A := β) (β_B := β) R Obj Obj where
   objMap := id
   deg_trans := identityDegTrans β
-  deg_trans_ofInt n := rfl
-  deg_trans_sign b := rfl
-  phi := by
-    intro n _ obj deg
-    exact identityPhi (β := β) (R := R) (Obj := Obj) obj deg
+  deg_trans_ofInt _n := rfl
+  deg_trans_sign _b := rfl
+  phi := identityPhi (β := β) (R := R) (Obj := Obj)
 
 @[simp]
 lemma identityPhi_eq_zero_of_ne_one
