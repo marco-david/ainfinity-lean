@@ -16,7 +16,6 @@ def T₁ : KLRWCategory 3 ℤ := ⟨1⟩
 def T₂ : KLRWCategory 3 ℤ := ⟨2⟩
 
 def h : T₀ ⟶ T₁ := StrandSpace.dots ℤ 3
-#texify h
 
 instance (C : Type*) [Category C] [Preadditive C] [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
     Texify (CMat_.Hom M N) where
@@ -32,4 +31,11 @@ instance (C : Type*) [Category C] [Preadditive C] [∀ (X Y : C), Texify (X ⟶ 
 instance (C : Type*) [Category C] [Preadditive C] [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
     Texify (M ⟶ N) := inferInstanceAs (Texify (CMat_.Hom M N))
 
-#texify CMat_.embedding _ |>.map h
+unseal CMat_.ι CMat_.X in
+def g : [T₀, T₁]ₘ ⟶ [T₀, T₁]ₘ
+| (0 : Fin _), (0 : Fin _) => StrandSpace.dots ℤ 1
+| (1 : Fin _), (0 : Fin _) => StrandSpace.dots ℤ 1
+| (0 : Fin _), (1 : Fin _) => StrandSpace.dots ℤ 1
+| (1 : Fin _), (1 : Fin _) => StrandSpace.dots ℤ 1
+
+#texify g ≫ g

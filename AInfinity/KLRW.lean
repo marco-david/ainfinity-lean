@@ -61,7 +61,11 @@ abbrev StrandSpace (R : Type u) [CommRing R] : Type u := Π₀ _ : ℕ, R
 instance [ToString R] : Texify (StrandSpace R) where
   texify x :=
     -- Not sure if this computationally efficient
-    x.support.sort (· ≥ ·) |>.map (termString x) |> " + ".intercalate
+    let support := x.support
+    if support = ∅ then
+      "0"
+    else
+      support.sort (· ≥ ·) |>.map (termString x) |> " + ".intercalate
   requiresParentheses := true
   where termString (x : ℕ → R) (i : ℕ) :=
     let coefficient := x i
