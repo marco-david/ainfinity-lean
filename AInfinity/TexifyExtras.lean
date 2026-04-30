@@ -37,10 +37,14 @@ instance (C : Type*) [Category C] [Preadditive C] [∀ (X Y : C), Texify (X ⟶ 
     Texify (M ⟶ N) := inferInstanceAs (Texify (CMat_.Hom M N))
 
 unseal CMat_.ι CMat_.X in
-def g : [T₀, T₁]ₘ ⟶ [T₀, T₁]ₘ
-| (0 : Fin _), (0 : Fin _) => StrandSpace.dots ℤ 1
-| (1 : Fin _), (0 : Fin _) => StrandSpace.dots ℤ 1
-| (0 : Fin _), (1 : Fin _) => StrandSpace.dots ℤ 1
-| (1 : Fin _), (1 : Fin _) => StrandSpace.dots ℤ 1
+def CMat_.Hom.ofFin {C : Type*} [Category C] [Preadditive C] (xs ys : List C)
+    (f : Π (i : Fin xs.length) (j : Fin ys.length), xs[i] ⟶ ys[j]) :
+    CMat_.ofList xs ⟶ CMat_.ofList ys := f
+
+def g : [T₀, T₁]ₘ ⟶ [T₀, T₁]ₘ := CMat_.Hom.ofFin _ _ fun
+| 0, 0 => StrandSpace.dots ℤ 1
+| 1, 0 => StrandSpace.dots ℤ 1
+| 0, 1 => StrandSpace.dots ℤ 1
+| 1, 1 => StrandSpace.dots ℤ 1
 
 #texify g ≫ g
