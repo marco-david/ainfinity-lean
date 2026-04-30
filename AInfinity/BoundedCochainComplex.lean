@@ -151,4 +151,13 @@ def liftEndofunctorCompEmbed
 
 end LiftEndofunctor
 
+def shiftFunctor [DecidablePred (IsZero : V → Prop)] (n : ℤ) :
+    BoundedCochainComplex V ⥤ BoundedCochainComplex V :=
+  liftEndofunctor (CochainComplex.shiftFunctor V n) (fun A ↦ A.support.image (· - n)) <| by
+    intro X i hi
+    rw [Finset.mem_image]
+    refine ⟨i + n, ?_, by abel⟩
+    exact (X.not_isZero_iff_mem_support (i + n)).mp (by simpa using hi)
+
+
 end BoundedCochainComplex
