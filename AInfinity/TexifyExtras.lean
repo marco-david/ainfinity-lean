@@ -20,12 +20,17 @@ def h : T₀ ⟶ T₁ := StrandSpace.dots ℤ 3
 instance (C : Type*) [Category C] [Preadditive C] [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
     Texify (CMat_.Hom M N) where
   texify x :=
-    let getEntry (i : Fin N.toList.length) (j : Fin M.toList.length) : String :=
-      texifyWithBrackets (x (CMat_.ι.ofFin j) (CMat_.ι.ofFin i))
-    let getRow (i : Fin N.toList.length) : String :=
-      Finset.univ.sort.map (getEntry i) |> " & ".intercalate
-    let entries : String := Finset.univ.sort.map getRow |> r" \\ ".intercalate
-    r"\begin{pmatrix} " ++ entries ++ r" \end{pmatrix}"
+    if M.toList.length = 0 ∧ N.toList.length = 0 then
+      "0"
+    else if M.toList.length = 0 ∨ N.toList.length = 0 then
+      s!"0^\{{N.toList.length} \\times {M.toList.length}}"
+    else
+      let getEntry (i : Fin N.toList.length) (j : Fin M.toList.length) : String :=
+        texifyWithBrackets (x (CMat_.ι.ofFin j) (CMat_.ι.ofFin i))
+      let getRow (i : Fin N.toList.length) : String :=
+        Finset.univ.sort.map (getEntry i) |> " & ".intercalate
+      let entries : String := Finset.univ.sort.map getRow |> r" \\ ".intercalate
+      r"\begin{pmatrix} " ++ entries ++ r" \end{pmatrix}"
   requiresParentheses := false
 
 instance (C : Type*) [Category C] [Preadditive C] [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
