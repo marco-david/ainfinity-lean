@@ -8,6 +8,8 @@ public import AInfinity.AdditiveCompletion
 
 open CategoryTheory AInfinityTheory
 
+/-
+
 universe u v w
 variable {R : Type u} [CommRing R] [CharP R 2] [DecidableEq R] {n : ℕ}
 
@@ -61,3 +63,5 @@ def full₁ {A B : CochainComplex (CMat_ (KLRWCategory n R)) ℤ} (f : A ⟶ B)
 
 def full₂ {A B C : CochainComplex (CMat_ (KLRWCategory n R)) ℤ}
   (f : A ⟶ B) (g : B ⟶ C) : β.full₀ A ⟶ β.full₀ C := sorry
+
+-/
