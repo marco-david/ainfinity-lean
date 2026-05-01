@@ -47,8 +47,14 @@ jobs:
           lint: false # change later
           mk_all-check: true
 
-      - name: Compile blueprint and documentation
-        uses: leanprover-community/docgen-action@deed0cdc44dd8e5de07a300773eb751d33e32fc8 # 2025-10-26
+      - name: Build project documentation.
+        id: build-docgen
+        uses: leanprover-community/docgen-action@main
         with:
           blueprint: true
-          homepage: home_page
+
+      #- name: Compile blueprint and documentation
+      #  uses: leanprover-community/docgen-action@deed0cdc44dd8e5de07a300773eb751d33e32fc8 # 2025-10-26
+      #  with:
+      #    blueprint: true
+      #    homepage: home_page
