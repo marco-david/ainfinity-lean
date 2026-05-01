@@ -5,6 +5,10 @@ on:
   #   branches:
   #     - master # Trigger on pushes to the default branch
   workflow_dispatch:        # Allow manual triggering of the workflow from the GitHub Actions interface
+  workflow_run:
+    workflows: ["Lean Action CI"]   # runs action when blueprint is compiled
+    types:
+      - completed
 
 # Cancel previous runs if a new commit is pushed to the same PR or branch
 concurrency:
@@ -58,3 +62,15 @@ jobs:
       #  with:
       #    blueprint: true
       #    homepage: home_page
+
+  # Deployment job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build_project
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
