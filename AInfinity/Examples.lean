@@ -20,22 +20,22 @@ def X : ℤ → AddKLRWCategory 3 ℤ
 
 def d : (i : ℤ) → X i ⟶ X (i + 1)
 | 0 => CMat_.Hom.ofFin _ _ fun
-  | 0, 0 => StrandSpace.dots ℤ 1
-  | 1, 0 => StrandSpace.dots ℤ 1
-  | 0, 1 => StrandSpace.dots ℤ 1
-  | 1, 1 => StrandSpace.dots ℤ 1
+  | 0, 0 => 2 • StrandSpace.dots ℤ 2
+  | 1, 0 => 0
+  | 0, 1 => 2 • StrandSpace.dots ℤ 0
+  | 1, 1 => 2 • StrandSpace.dots ℤ 1
 | _ => 0
 
 def g : (i : ℤ) → X i ⟶ X i
 | 0 => CMat_.Hom.ofFin _ _ fun
   | 0, 0 => StrandSpace.dots ℤ 2
-  | 1, 0 => StrandSpace.dots ℤ 0
-  | 0, 1 => StrandSpace.dots ℤ 1
+  | 1, 0 => 0
+  | 0, 1 => StrandSpace.dots ℤ 0
   | 1, 1 => StrandSpace.dots ℤ 1
 | 1 => CMat_.Hom.ofFin _ _ fun
   | 0, 0 => StrandSpace.dots ℤ 2
-  | 1, 0 => StrandSpace.dots ℤ 0
-  | 0, 1 => StrandSpace.dots ℤ 1
+  | 1, 0 => 0
+  | 0, 1 => StrandSpace.dots ℤ 0
   | 1, 1 => StrandSpace.dots ℤ 1
 | _ => 0
 
