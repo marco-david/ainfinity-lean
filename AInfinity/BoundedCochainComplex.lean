@@ -87,6 +87,25 @@ instance : Linear R (BoundedCochainComplex V) where
   smul_comp _ _ _ r f g := Hom.ext (Linear.smul_comp _ _ _ r f.hom g.hom)
   comp_smul _ _ _ f r g := Hom.ext (Linear.comp_smul _ _ _ f.hom r g.hom)
 
+def of [DecidablePred (IsZero : V → Prop)]
+    (X : ℤ → V) (support : Finset ℤ)
+    (h : ∀ i : ℤ, ¬ IsZero (X i) ↔ i ∈ support)
+    (d : ∀ i : ℤ, X i ⟶ X (i + 1))
+    (hd : ∀ i : ℤ, d i ≫ d (i + 1) = 0) : BoundedCochainComplex V :=
+  ⟨CochainComplex.of X d hd, support, h⟩
+
+def ofHom [DecidablePred (IsZero : V → Prop)]
+    (X : ℤ → V) (support_X : Finset ℤ) (d_X : ∀ i : ℤ, X i ⟶ X (i + 1))
+    (h_X : ∀ i : ℤ, ¬ IsZero (X i) ↔ i ∈ support_X)
+    (sq_X : ∀ i : ℤ, d_X i ≫ d_X (i + 1) = 0)
+    (Y : ℤ → V) (support_Y : Finset ℤ) (d_Y : ∀ i : ℤ, Y i ⟶ Y (i + 1))
+    (h_Y : ∀ i : ℤ, ¬ IsZero (Y i) ↔ i ∈ support_Y)
+    (sq_Y : ∀ i : ℤ, d_Y i ≫ d_Y (i + 1) = 0)
+    (f : ∀ i : ℤ, X i ⟶ Y i)
+    (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1))
+    : of X support_X h_X d_X sq_X ⟶ of Y support_Y h_Y d_Y sq_Y :=
+  ⟨CochainComplex.ofHom X d_X sq_X Y d_Y sq_Y f comm⟩
+
 /-- Build a `BoundedCochainComplex` from a `CochainComplex` together with a finite
 superset of its true support. -/
 def mkOfBounded
