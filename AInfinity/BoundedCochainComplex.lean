@@ -185,4 +185,49 @@ def liftEndofunctorCompEmbed
 
 end LiftEndofunctor
 
+def toTexRow {C : Type*} [Category C] [Preadditive C] [Limits.HasZeroObject C]
+    [Texify C] [∀ (X Y : C), Texify (X ⟶ Y)] (A : BoundedCochainComplex C)
+    (leftmost rightmost : ℤ) (placeDifferentialsBelow : Bool := false) : String := Id.run do
+    let mut res := ""
+    for i in leftmost...rightmost do
+      if placeDifferentialsBelow then
+        res := res ++ s!"{texifyWithBrackets (A.X i)} @>>{texifyWithBrackets (A.d i (i + 1))}>"
+      else
+        res := res ++ s!"{texifyWithBrackets (A.X i)} @>{texifyWithBrackets (A.d i (i + 1))}>>"
+    res := res ++ s!"{texifyWithBrackets (A.X rightmost)}"
+    return res
+
+def Hom.toTexRow {C : Type*} [Category C] [Preadditive C]
+    [Limits.HasZeroObject C] [Texify C] [∀ (X Y : C), Texify (X ⟶ Y)]
+    {A B : BoundedCochainComplex C}
+    (h : A ⟶ B) (leftmost rightmost : ℤ) : String := Id.run do
+    let mut res := ""
+    for i in leftmost...rightmost do
+      res := res ++ s!"@V{texifyWithBrackets (h.f i)}VV"
+    return res
+
+instance (C : Type*) [Category C] [Preadditive C] [Limits.HasZeroObject C] [Texify C]
+  [∀ (X Y : C), Texify (X ⟶ Y)] : Texify (BoundedCochainComplex C) where
+  texify A := Id.run do
+    let (leftmost, rightmost) := if h : A.support.Nonempty then
+      (A.support.min' h - 1, A.support.max' h + 1)
+    else (-1, 1)
+    return r"\begin{CD}" ++ A.toTexRow leftmost rightmost ++ r"\end{CD}"
+  requiresParentheses := true
+
+instance (C : Type*) [Category C] [Preadditive C] [Limits.HasZeroObject C] [Texify C]
+  [∀ (X Y : C), Texify (X ⟶ Y)] (A B : BoundedCochainComplex C) : Texify (A ⟶ B) where
+  texify h := Id.run do
+    let (leftmostA, rightmostA) := if h : A.support.Nonempty then
+      (A.support.min' h - 1, A.support.max' h + 1)
+    else (-1, 1)
+    let (leftmostB, rightmostB) := if h : B.support.Nonempty then
+      (B.support.min' h - 1, B.support.max' h + 1)
+    else (-1, 1)
+    let leftmost := min leftmostA leftmostB
+    let rightmost := max rightmostA rightmostB
+    return r"\begin{CD}" ++ A.toTexRow leftmost rightmost ++ r"\\" ++ h.toTexRow leftmost rightmost
+      ++ r"\\" ++ B.toTexRow leftmost rightmost true ++ r"\end{CD}"
+  requiresParentheses := true
+
 end BoundedCochainComplex

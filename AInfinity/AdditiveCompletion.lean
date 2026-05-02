@@ -195,6 +195,13 @@ theorem hom_to_empty_eq_zero (h : M ⟶ []ₘ) : h = 0 := by
 instance : HasExplicitZeroObject (CMat_ C) := .mkOfPreadditive (CMat_ C) []ₘ
   hom_from_empty_eq_zero hom_to_empty_eq_zero
 
+instance {V : Type*} [Category V] [Preadditive V] [DecidablePred (Limits.IsZero : V → Prop)] :
+    DecidablePred (Limits.IsZero : CMat_ V → Prop) := fun M ↦
+  if h : M.toList.all (Limits.IsZero ·) then
+    Decidable.isTrue sorry
+  else
+    Decidable.isFalse sorry
+
 -- Idea: Maybe we can translate the `HasFiniteBiproducts` instance from `CategoryTheory.Mat_` using
 -- an equivalence. I don't know if this would make it computable though, which we might need.
 
