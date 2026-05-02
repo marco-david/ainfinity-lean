@@ -11,16 +11,13 @@ open CategoryTheory AInfinityTheory
 def T₀ : KLRWCategory 3 ℤ := ⟨0⟩
 def T₁ : KLRWCategory 3 ℤ := ⟨1⟩
 def T₂ : KLRWCategory 3 ℤ := ⟨2⟩
-
-def h : T₀ ⟶ T₁ := StrandSpace.dots ℤ 3
+def T₃ : KLRWCategory 3 ℤ := ⟨3⟩
 
 def g : [T₀, T₁]ₘ ⟶ [T₀, T₁]ₘ := CMat_.Hom.ofFin _ _ fun
 | 0, 0 => StrandSpace.dots ℤ 1
 | 1, 0 => StrandSpace.dots ℤ 1
 | 0, 1 => StrandSpace.dots ℤ 1
 | 1, 1 => StrandSpace.dots ℤ 1
-
-#texify g ≫ g
 
 def X : ℤ → AddKLRWCategory 3 ℤ
 | 0 => [T₀,T₁]ₘ
