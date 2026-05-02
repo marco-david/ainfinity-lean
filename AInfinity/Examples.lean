@@ -8,9 +8,6 @@ public import AInfinity.AdditiveCompletion
 
 open CategoryTheory AInfinityTheory
 
-instance (R : Type*) [CommRing R] [DecidableEq R] [ToString R] (n : ℕ) (S T : KLRWCategory n R) :
-  Texify (S ⟶ T) := inferInstanceAs (Texify (StrandSpace R))
-
 def T₀ : KLRWCategory 3 ℤ := ⟨0⟩
 def T₁ : KLRWCategory 3 ℤ := ⟨1⟩
 def T₂ : KLRWCategory 3 ℤ := ⟨2⟩
@@ -24,9 +21,6 @@ def g : [T₀, T₁]ₘ ⟶ [T₀, T₁]ₘ := CMat_.Hom.ofFin _ _ fun
 | 1, 1 => StrandSpace.dots ℤ 1
 
 #texify g ≫ g
-
--- TODO: Make a constructor for BoundedCochainComplex work well with `List.toFinsupp`,
--- except you need to cast from ℕ to ℤ
 
 def X : ℤ → AddKLRWCategory 3 ℤ
 | 0 => [T₀,T₁]ₘ

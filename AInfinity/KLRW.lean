@@ -199,6 +199,9 @@ instance : Preadditive (KLRWCategory n R) where
         (fun j s₁ s₂ => by simp [mul_add, add_smul])]
     simp only [DFinsupp.sum, Finset.sum_add_distrib]
 
+instance (R : Type*) [CommRing R] [DecidableEq R] [ToString R] (n : ℕ) (S T : KLRWCategory n R) :
+  Texify (S ⟶ T) := inferInstanceAs (Texify (StrandSpace R))
+
 /--
 The KLRW Category lacks zero objects
 -/
