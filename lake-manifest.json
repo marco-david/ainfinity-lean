@@ -16,7 +16,7 @@
    "subDir": null,
    "scope": "",
    "rev": "2c96309e0de1b916d1a0b74c8119fddc7bf7da51",
-   "name": "«doc-gen4»",
+   "name": "doc-gen4",
    "manifestFile": "lake-manifest.json",
    "inputRev": "v4.30.0-rc1",
    "inherited": false,
