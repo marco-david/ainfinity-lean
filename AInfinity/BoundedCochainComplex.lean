@@ -34,6 +34,9 @@ between the underlying complexes, packaged in a one-field structure (mirroring
 structure Hom (c₁ c₂ : BoundedCochainComplex V) where
   hom : c₁.toHomologicalComplex ⟶ c₂.toHomologicalComplex
 
+abbrev Hom.f {c₁ c₂ : BoundedCochainComplex V} (h : Hom c₁ c₂) (i : ℤ) : c₁.X i ⟶ c₂.X i :=
+  h.hom.f i
+
 instance : Category (BoundedCochainComplex V) where
   Hom := Hom
   id _ := ⟨𝟙 _⟩
@@ -105,6 +108,18 @@ def ofHom [DecidablePred (IsZero : V → Prop)]
     (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1))
     : of X support_X h_X d_X sq_X ⟶ of Y support_Y h_Y d_Y sq_Y :=
   ⟨CochainComplex.ofHom X d_X sq_X Y d_Y sq_Y f comm⟩
+
+theorem ofHom_f [DecidablePred (IsZero : V → Prop)]
+    (X : ℤ → V) (support_X : Finset ℤ) (d_X : ∀ i : ℤ, X i ⟶ X (i + 1))
+    (h_X : ∀ i : ℤ, ¬ IsZero (X i) ↔ i ∈ support_X)
+    (sq_X : ∀ i : ℤ, d_X i ≫ d_X (i + 1) = 0)
+    (Y : ℤ → V) (support_Y : Finset ℤ) (d_Y : ∀ i : ℤ, Y i ⟶ Y (i + 1))
+    (h_Y : ∀ i : ℤ, ¬ IsZero (Y i) ↔ i ∈ support_Y)
+    (sq_Y : ∀ i : ℤ, d_Y i ≫ d_Y (i + 1) = 0)
+    (f : ∀ i : ℤ, X i ⟶ Y i)
+    (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1)) (i : ℤ)
+    : (ofHom X support_X d_X h_X sq_X Y support_Y d_Y h_Y sq_Y f comm).f i = f i :=
+  CochainComplex.ofHom_f X d_X sq_X Y d_Y sq_Y f comm i
 
 /-- Build a `BoundedCochainComplex` from a `CochainComplex` together with a finite
 superset of its true support. -/

@@ -47,35 +47,8 @@ def g : [T₀, T₁]ₘ ⟶ [T₀, T₁]ₘ := CMat_.Hom.ofFin _ _ fun
 
 #texify g ≫ g
 
--- TODO: Make this work well with `List.toFinsupp`, except you need to cast from ℕ to ℤ
-
--- TODO: Rename to "of"
-def BoundedCochainComplex.mk' {V : Type*} [Category V] [Limits.HasZeroObject V]
-  [DecidablePred (Limits.IsZero : V → Prop)]
-  [Preadditive V] (X : ℤ → V) (supersetOfSupport : Finset ℤ)
-  (h : ∀ i : ℤ, ¬ Limits.IsZero (X i) → i ∈ supersetOfSupport)
-  (d : ∀ i : ℤ, X i ⟶ X (i + 1))
-  (hd : ∀ i ∈ supersetOfSupport, d i ≫ d (i + 1) = 0) : BoundedCochainComplex V :=
-  BoundedCochainComplex.mkOfBounded (CochainComplex.of X d hi) h
-  where hi (i : ℤ) : d i ≫ d (i + 1) = 0 := (by
-    by_cases hc : i ∈ supersetOfSupport
-    · exact hd i hc
-    · rw [hc.imp_symm (h i) |>.eq_zero_of_src (d i)]
-      simp)
-
-def BoundedCochainComplex.mk'Hom {V : Type*} [Category V] [Limits.HasZeroObject V]
-  [DecidablePred (Limits.IsZero : V → Prop)]
-  [Preadditive V] (X : ℤ → V) (supersetOfSupportX : Finset ℤ)
-  (hx : ∀ i : ℤ, ¬ Limits.IsZero (X i) → i ∈ supersetOfSupportX)
-  (dx : ∀ i : ℤ, X i ⟶ X (i + 1))
-  (hdx : ∀ i ∈ supersetOfSupportX, dx i ≫ dx (i + 1) = 0)
-  (Y : ℤ → V) (supersetOfSupportY : Finset ℤ)
-  (hy : ∀ i : ℤ, ¬ Limits.IsZero (Y i) → i ∈ supersetOfSupportY)
-  (dy : ∀ i : ℤ, Y i ⟶ Y (i + 1))
-  (hdy : ∀ i ∈ supersetOfSupportY, dy i ≫ dy (i + 1) = 0)
-  : BoundedCochainComplex.mk' X supersetOfSupportX hx dx hdx ⟶
-    BoundedCochainComplex.mk' Y supersetOfSupportY hy dy hdy :=
-  ⟨CochainComplex.ofHom X dx sorry Y dy sorry sorry sorry⟩
+-- TODO: Make a constructor for BoundedCochainComplex work well with `List.toFinsupp`,
+-- except you need to cast from ℕ to ℤ
 
 /--
 The KLRW Category lacks zero objects
