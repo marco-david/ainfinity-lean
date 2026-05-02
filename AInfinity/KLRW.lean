@@ -199,6 +199,16 @@ instance : Preadditive (KLRWCategory n R) where
         (fun j s₁ s₂ => by simp [mul_add, add_smul])]
     simp only [DFinsupp.sum, Finset.sum_add_distrib]
 
+/--
+The KLRW Category lacks zero objects
+-/
+theorem KLRWCategory.not_isZero (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ)
+  (A : KLRWCategory n R) : ¬ Limits.IsZero A := sorry
+
+instance (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ) :
+    DecidablePred (Limits.IsZero : KLRWCategory n R → Prop) :=
+  fun A ↦ Decidable.isFalse (A.not_isZero)
+
 abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   CMat_ (KLRWCategory n R)
 

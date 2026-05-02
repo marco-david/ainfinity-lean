@@ -72,7 +72,6 @@ instance : DecidableEq M.ι := inferInstanceAs <| DecidableEq (Fin M.toList.leng
 /-- Mirrors the API of `CategoryTheory.Mat_.X` -/
 @[irreducible]
 def X : M.ι → C := fun i ↦ M.toList[i.toFin]
-
 end indexing
 
 section category
@@ -104,6 +103,31 @@ instance : Category (CMat_ C) where
     simp_rw [Hom.comp, CategoryTheory.Preadditive.sum_comp, CategoryTheory.Preadditive.comp_sum,
       Category.assoc]
     rw [Finset.sum_comm]
+
+instance [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
+    Texify (CMat_.Hom M N) where
+  texify x :=
+    if M.toList.length = 0 ∨ N.toList.length = 0 then
+      "0"
+    else
+      let getEntry (i : Fin N.toList.length) (j : Fin M.toList.length) : String :=
+        texifyWithBrackets (x (CMat_.ι.ofFin j) (CMat_.ι.ofFin i))
+      let getRow (i : Fin N.toList.length) : String :=
+        Finset.univ.sort.map (getEntry i) |> " & ".intercalate
+      let entries : String := Finset.univ.sort.map getRow |> r" \\ ".intercalate
+      r"\begin{pmatrix} " ++ entries ++ r" \end{pmatrix}"
+  requiresParentheses := false
+
+instance [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
+    Texify (M ⟶ N) := inferInstanceAs (Texify (CMat_.Hom M N))
+
+unseal ι X in
+/--
+Constructor for explicit morphisms, e.g. in interactive use
+-/
+def Hom.ofFin {C : Type*} [Category C] [Preadditive C] (xs ys : List C)
+    (f : Π (i : Fin xs.length) (j : Fin ys.length), xs[i] ⟶ ys[j]) :
+    ofList xs ⟶ ofList ys := f
 
 -- These theorems and instances are almost directly copied from `CategoryTheory.Mat_`.
 @[ext] theorem hom_ext {M N : CMat_ C} (f g : M ⟶ N) (H : ∀ i j, f i j = g i j) : f = g :=
