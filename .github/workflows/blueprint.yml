@@ -57,11 +57,11 @@ jobs:
         with:
           blueprint: true
 
-      #- name: Compile blueprint and documentation
-      #  uses: leanprover-community/docgen-action@deed0cdc44dd8e5de07a300773eb751d33e32fc8 # 2025-10-26
-      #  with:
-      #    blueprint: true
-      #    homepage: home_page
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
 
   # Deployment job
   deploy:
