@@ -72,6 +72,7 @@ instance : DecidableEq M.ι := inferInstanceAs <| DecidableEq (Fin M.toList.leng
 /-- Mirrors the API of `CategoryTheory.Mat_.X` -/
 @[irreducible]
 def X : M.ι → C := fun i ↦ M.toList[i.toFin]
+
 end indexing
 
 section category
