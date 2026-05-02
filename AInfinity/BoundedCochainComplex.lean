@@ -202,7 +202,7 @@ def Hom.toTexRow {C : Type*} [Category C] [Preadditive C]
     {A B : BoundedCochainComplex C}
     (h : A ⟶ B) (leftmost rightmost : ℤ) : String := Id.run do
     let mut res := ""
-    for i in leftmost...rightmost do
+    for i in leftmost...=rightmost do
       res := res ++ s!"@V{texifyWithBrackets (h.f i)}VV"
     return res
 
