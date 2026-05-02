@@ -2,9 +2,6 @@ import AInfinity.AInfinityAlgebra
 import AInfinity.AInfinityCategory
 import AInfinity.AdditiveCompletion
 import AInfinity.BoundedCochainComplex
-import AInfinity.Braiding
-import AInfinity.ComputableCategories
 import AInfinity.Grading
 import AInfinity.KLRW
 import AInfinity.Stasheff
-import AInfinity.Texify

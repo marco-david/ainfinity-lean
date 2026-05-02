@@ -5,10 +5,6 @@ on:
   #   branches:
   #     - master # Trigger on pushes to the default branch
   workflow_dispatch:        # Allow manual triggering of the workflow from the GitHub Actions interface
-  workflow_run:
-    workflows: ["Lean Action CI"]   # runs action when blueprint is compiled
-    types:
-      - completed
 
 # Cancel previous runs if a new commit is pushed to the same PR or branch
 concurrency:
@@ -51,9 +47,8 @@ jobs:
           lint: false # change later
           mk_all-check: true
 
-      - name: Build project documentation & deploy
-        id: build-docgen
-        uses: leanprover-community/docgen-action@main
+      - name: Compile blueprint and documentation
+        uses: leanprover-community/docgen-action@deed0cdc44dd8e5de07a300773eb751d33e32fc8 # 2025-10-26
         with:
           blueprint: true
-          deploy: true
+          homepage: home_page
