@@ -393,7 +393,7 @@ private lemma comp_assoc_objMap
     (G : AInfinityFunctorData (β_A := β_B) (β_B := β_C) R ObjB ObjC)
     (H : AInfinityFunctorData (β_A := β_C) (β_B := β_D) R ObjC ObjD) :
     (H.comp (G.comp F)).objMap = ((H.comp G).comp F).objMap := by
-  sorry
+  rfl
 
 /-- Second field of `comp_assoc`.
 
@@ -404,7 +404,7 @@ private lemma comp_assoc_deg_trans
     (G : AInfinityFunctorData (β_A := β_B) (β_B := β_C) R ObjB ObjC)
     (H : AInfinityFunctorData (β_A := β_C) (β_B := β_D) R ObjC ObjD) :
     (H.comp (G.comp F)).deg_trans = ((H.comp G).comp F).deg_trans := by
-  sorry
+  rfl
 
 /-- Transport lemma for the `deg_trans_ofInt` field in `comp_assoc`.
 
@@ -415,7 +415,7 @@ private lemma comp_assoc_deg_trans_ofInt
     (G : AInfinityFunctorData (β_A := β_B) (β_B := β_C) R ObjB ObjC)
     (H : AInfinityFunctorData (β_A := β_C) (β_B := β_D) R ObjC ObjD) :
     HEq (H.comp (G.comp F)).deg_trans_ofInt (((H.comp G).comp F).deg_trans_ofInt) := by
-  sorry
+  rfl
 
 /-- Transport lemma for the `deg_trans_sign` field in `comp_assoc`.
 
@@ -426,7 +426,7 @@ private lemma comp_assoc_deg_trans_sign
     (G : AInfinityFunctorData (β_A := β_B) (β_B := β_C) R ObjB ObjC)
     (H : AInfinityFunctorData (β_A := β_C) (β_B := β_D) R ObjC ObjD) :
     HEq (H.comp (G.comp F)).deg_trans_sign (((H.comp G).comp F).deg_trans_sign) := by
-  sorry
+  rfl
 
 /-- Unfold the outermost composition on the left-hand side.
 
@@ -440,7 +440,7 @@ private lemma comp_assoc_phi_expand_left
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A) :
     (H.comp (G.comp F)).phi obj deg = compAssocLeftPhiExpanded F G H obj deg := by
-  sorry
+  rfl
 
 /-- Unfold the outermost composition on the right-hand side.
 
@@ -454,7 +454,7 @@ private lemma comp_assoc_phi_expand_right
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A) :
     ((H.comp G).comp F).phi obj deg = compAssocRightPhiExpanded F G H obj deg := by
-  sorry
+  rfl
 
 /-- Core combinatorial reindexing step for associativity of the `phi`-field.
 

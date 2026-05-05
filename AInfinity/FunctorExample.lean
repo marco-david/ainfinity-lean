@@ -715,14 +715,7 @@ variable {ObjA : Type*} {ObjB : Type*}
 variable [AInfinityCategory β_A R ObjA]
 variable [AInfinityCategory β_B R ObjB]
 
-/-- The `phi`-field of `F.comp identity` after unfolding only the outermost
-composition.
-
-This is the natural starting point for the right-identity proof on raw functor
-data. The eventual proof should next analyze the sum over `Composition n`:
-the `Composition.ones n` summand should reduce to `F.phi obj deg`, while every
-other composition should vanish because the identity functor has only an
-arity-one component. -/
+/-- Expanded `phi`-field for the raw right-identity law. -/
 private abbrev compIdentityFunctorPhiExpanded
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     {n : ℕ} → [NeZero n] →
@@ -748,14 +741,7 @@ private abbrev compIdentityFunctorPhiExpanded
       F.phi
       obj deg
 
-/-- The `phi`-field of `identity.comp F` after unfolding only the outermost
-composition.
-
-For the left-identity proof, the same outer sum over `Composition n` appears,
-but now the outer functor is the identity. The intended strategy is again:
-isolate the `Composition.ones n` term, show it reduces to `F.phi obj deg`, and
-show that all remaining compositions vanish because some outer identity block
-has arity strictly greater than one. -/
+/-- Expanded `phi`-field for the raw left-identity law. -/
 private abbrev identityFunctorCompPhiExpanded
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     {n : ℕ} → [NeZero n] →
@@ -781,60 +767,95 @@ private abbrev identityFunctorCompPhiExpanded
       (identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).phi
       obj deg
 
-/-- Object-map field for the right-identity law on raw functor data.
-
-This should be a one-line proof after unfolding `AInfinityFunctorData.comp`,
-`identityFunctorData`, and `identityDegTrans`, then simplifying ordinary
-function composition. -/
+/-- Object-map field for the raw right-identity law. -/
 private lemma comp_identityFunctorData_objMap
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     (F.comp (identityFunctorData (β := β_A) (R := R) (Obj := ObjA))).objMap = F.objMap := by
-  sorry
+  exact funext fun x => by simp +decide [identityFunctorData ] ;
 
-/-- Degree-translation field for the right-identity law on raw functor data.
-
-The proof should mirror `comp_identityFunctorData_objMap`, but now on
-`AddMonoidHom`s. After unfolding, use that `identityDegTrans` is the identity
-homomorphism and simplify `AddMonoidHom.comp`. -/
+/-- Degree-translation field for the raw right-identity law. -/
 private lemma comp_identityFunctorData_degTrans
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     (F.comp (identityFunctorData (β := β_A) (R := R) (Obj := ObjA))).deg_trans = F.deg_trans := by
-  sorry
+  exact AddMonoidHom.comp_id F.deg_trans
 
-/-- Transport lemma for the `deg_trans_ofInt` field in the raw right-identity
-law.
-
-Recommended proof steps:
-1. Rewrite the dependent codomain using `comp_identityFunctorData_degTrans`.
-2. Reduce `HEq` to pointwise equality on `ℤ`.
-3. Unfold `AInfinityFunctorData.comp`, `identityFunctorData`, and use the
-   defining formula for `F.deg_trans_ofInt`. -/
+/-- Integer-degree compatibility field for the raw right-identity law. -/
 private lemma comp_identityFunctorData_degTransOfInt
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     HEq
       (F.comp (identityFunctorData (β := β_A) (R := R) (Obj := ObjA))).deg_trans_ofInt
       F.deg_trans_ofInt := by
-  sorry
+  exact HEq.refl (F.comp (identityFunctorData β_A R ObjA)).deg_trans_ofInt
 
-/-- Transport lemma for the `deg_trans_sign` field in the raw right-identity
-law.
-
-This should follow exactly the same pattern as
-`comp_identityFunctorData_degTransOfInt`, but with the parity-preservation
-field. The only substantive input should be `F.deg_trans_sign`. -/
+/-- Parity-compatibility field for the raw right-identity law. -/
 private lemma comp_identityFunctorData_degTransSign
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     HEq
       (F.comp (identityFunctorData (β := β_A) (R := R) (Obj := ObjA))).deg_trans_sign
       F.deg_trans_sign := by
-  sorry
+  congr! 2
 
-/-- First unfolding step for the `phi`-field in the raw right-identity law.
 
-This lemma should be essentially definitional: unfold only the outermost
-`AInfinityFunctorData.comp` and package the result as
-`compIdentityFunctorPhiExpanded`. Keeping this separate prevents the later
-proof from repeatedly unfolding the same large definition. -/
+private lemma compTermBlock_eq_zero_of_phi_zero
+    {n : ℕ}
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (c : Composition n)
+    (l : Fin c.length)
+    [NeZero (c.blocksFun l)]
+    (hphi : (identityFunctorData (β := β_A) (R := R) (Obj := ObjA)).phi
+      (AInfinityFunctorData.compositionBlockObj obj c l)
+      (AInfinityFunctorData.compositionBlockDeg β_A deg c l) = 0) :
+    AInfinityFunctorData.compTermBlock β_A β_A
+      (GHom β_A R) (GHom β_A R)
+      id (identityDegTrans β_A)
+      (identityFunctorData (β := β_A) (R := R) (Obj := ObjA)).phi
+      obj deg c l = 0 := by
+  simp [AInfinityFunctorData.compTermBlock, hphi];
+  apply cast_multilinearMap_zero;
+  nontriviality;
+  exact
+    AInfinityFunctorData.functor_rhs_block_module_eq β_A β_A (GHom β_A R)
+      (identityFunctorData β_A R ObjA).objMap (identityFunctorData β_A R ObjA).deg_trans obj deg c l
+
+/-- A left outer identity summand vanishes when the composition length is not one. -/
+private lemma compTermMultilinearMap_outer_identity_eq_zero_of_length_ne_one
+    (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (c : Composition n)
+    (hlen : c.length ≠ 1) :
+    AInfinityFunctorData.compTermMultilinearMap β_A β_B β_B
+      (GHom β_A R) (GHom β_B R) (GHom β_B R)
+      F.objMap F.deg_trans F.phi
+      id (identityDegTrans β_B)
+      (by intro k; rfl)
+      (identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).phi
+      obj deg c = 0 := by
+  unfold AInfinityFunctorData.compTermMultilinearMap;
+  unfold AInfinityFunctorData.MultilinearMap.compComposition; simp +decide [ hlen ] ;
+  apply cast_multilinearMap_zero;
+  unfold functorTargetType; simp +decide [ AInfinityFunctorData.functorCompositionOuterObj, identityFunctorData ] ;
+  unfold functorTargetDeg; simp +decide [ AInfinityFunctorData.functorCompositionOuterDeg ] ;
+  unfold functorTargetDeg; simp +decide [ AInfinityFunctorData.compositionBlockDeg ] ;
+  have h_sum : ∑ x : Fin c.length, ∑ x_1 : Fin (c.blocksFun x), F.deg_trans (deg ((c.embedding x) x_1)) = ∑ i : Fin n, F.deg_trans (deg i) := by
+    have h_sum : ∑ x : Fin c.length, ∑ x_1 : Fin (c.blocksFun x), F.deg_trans (deg ((c.embedding x) x_1)) = ∑ x ∈ Finset.univ.biUnion (fun x : Fin c.length => Finset.image (fun x_1 : Fin (c.blocksFun x) => (c.embedding x) x_1) Finset.univ), F.deg_trans (deg x) := by
+      rw [ Finset.sum_biUnion ];
+      · exact Finset.sum_congr rfl fun _ _ => by rw [ Finset.sum_image <| by simp +decide [ Function.Injective ] ] ;
+      · intro x _ y _ hxy; simp +decide [ Finset.disjoint_left ] ;
+        grind +suggestions;
+    convert h_sum using 2;
+    ext x; simp [Composition.embedding];
+    have := c.mem_range_embedding x; aesop;
+  simp +decide [ h_sum, Finset.sum_add_distrib, shift_ofInt ];
+  simp +decide [ GradingIndex.ofInt ];
+  simp +decide [ add_assoc ];
+  norm_cast;
+  simp +decide [ Composition.blocksFun ]
+
+
+/-- Unfolding of the raw right-identity `phi`-field. -/
 private lemma comp_identityFunctorData_phi_expand
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     {n : ℕ} [NeZero n]
@@ -842,24 +863,74 @@ private lemma comp_identityFunctorData_phi_expand
     (deg : Fin n → β_A) :
     (F.comp (identityFunctorData (β := β_A) (R := R) (Obj := ObjA))).phi obj deg =
       compIdentityFunctorPhiExpanded (R := R) F obj deg := by
-  sorry
+  rfl
 
-/-- Vanishing of non-`ones` summands in the right-identity `phi` proof.
+private lemma compTermMultilinearMap_eq_zero_of_block_zero
+    (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (c : Composition n)
+    (l0 : Fin c.length)
+    (hblock : AInfinityFunctorData.compTermBlock β_A β_A
+      (GHom β_A R) (GHom β_A R)
+      id (identityDegTrans β_A)
+      (identityFunctorData (β := β_A) (R := R) (Obj := ObjA)).phi
+      obj deg c l0 = 0) :
+    AInfinityFunctorData.compTermMultilinearMap β_A β_A β_B
+      (GHom β_A R) (GHom β_A R) (GHom β_B R)
+      id (identityDegTrans β_A)
+      (identityFunctorData (β := β_A) (R := R) (Obj := ObjA)).phi
+      F.objMap F.deg_trans F.deg_trans_ofInt F.phi
+      obj deg c = 0 := by
+  classical
+  letI : NeZero c.length :=
+    ⟨Nat.ne_of_gt (c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n)))⟩
+  let blocks :
+      (l : Fin c.length) →
+        MultilinearMap R
+          (fun j => ComposableHomType (GHom β_A R) obj deg (c.embedding l j))
+          (ComposableHomType (GHom β_A R)
+            (AInfinityFunctorData.functorCompositionOuterObj id obj c)
+            (AInfinityFunctorData.functorCompositionOuterDeg β_A β_A (identityDegTrans β_A) deg c) l) :=
+    fun l =>
+      AInfinityFunctorData.compTermBlock β_A β_A
+        (GHom β_A R) (GHom β_A R)
+        id (identityDegTrans β_A)
+        (identityFunctorData (β := β_A) (R := R) (Obj := ObjA)).phi
+        obj deg c l
+  have hblocks_zero : blocks l0 = 0 := by
+    simpa [blocks] using hblock
+  have hinner_zero :
+      AInfinityFunctorData.MultilinearMap.compComposition (R := R)
+        (M := fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
+        (N := fun l : Fin c.length =>
+          ComposableHomType (GHom β_A R)
+            (AInfinityFunctorData.functorCompositionOuterObj id obj c)
+            (AInfinityFunctorData.functorCompositionOuterDeg β_A β_A (identityDegTrans β_A) deg c) l)
+        c
+        (F.phi
+          (AInfinityFunctorData.functorCompositionOuterObj id obj c)
+          (AInfinityFunctorData.functorCompositionOuterDeg β_A β_A (identityDegTrans β_A) deg c))
+        blocks = 0 := by
+    ext x'
+    dsimp [AInfinityFunctorData.MultilinearMap.compComposition]
+    exact
+      (F.phi
+        (AInfinityFunctorData.functorCompositionOuterObj id obj c)
+        (AInfinityFunctorData.functorCompositionOuterDeg β_A β_A (identityDegTrans β_A) deg c)).map_coord_zero
+          l0 (by simp [hblocks_zero])
+  unfold AInfinityFunctorData.compTermMultilinearMap
+  rw [hinner_zero]
+  exact
+    (cast_multilinearMap_zero (R := R)
+    (ι := Fin n)
+    (M₁ := fun i => ComposableHomType (GHom β_A R) obj deg i)
+    (AInfinityFunctorData.comp_term_target_module_eq β_A β_A β_B
+      (GHom β_B R) id (identityDegTrans β_A) F.objMap F.deg_trans F.deg_trans_ofInt obj deg c))
 
-What the future prover should do:
-1. Unfold `compIdentityFunctorPhiExpanded` far enough to expose the summand
-   `AInfinityFunctorData.compTermMultilinearMap`.
-2. Use `composition_exists_block_gt_one_of_ne_ones` from earlier in this file
-   to choose a block of size `> 1`.
-3. Show that the corresponding inner block map coming from
-   `identityFunctorData.phi` is zero via
-   `identityFunctorData_phi_eq_zero_of_ne_one`.
-4. Feed that zero block into
-   `compComposition_eq_zero_of_inner_zero` or a directly analogous helper for
-   `AInfinityFunctorData.compTermMultilinearMap`.
 
-The important point is that every nontrivial composition forces at least one
-identity component of arity greater than one, hence the whole term vanishes. -/
+/-- Non-`ones` summands vanish in the raw right-identity `phi` sum. -/
 private lemma comp_identityFunctorData_phi_term_eq_zero_of_ne_ones
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     {n : ℕ} [NeZero n]
@@ -877,26 +948,31 @@ private lemma comp_identityFunctorData_phi_term_eq_zero_of_ne_ones
       F.deg_trans_ofInt
       F.phi
       obj deg c = 0 := by
-  sorry
+  obtain ⟨l, hl⟩ : ∃ l : Fin c.length, 1 < c.blocksFun l := by
+    exact composition_exists_block_gt_one_of_ne_ones c hc
+  generalize_proofs at *;
+  apply compTermMultilinearMap_eq_zero_of_block_zero;
+  convert compTermBlock_eq_zero_of_phi_zero _ _ _ _ _ _;
+  exact l;
+  exact ⟨ by linarith ⟩;
+  grind +suggestions
 
-/-- Identification of the `Composition.ones n` summand in the right-identity
-`phi` proof.
 
-Suggested route:
-1. Unfold `AInfinityFunctorData.compTermMultilinearMap`,
-   `AInfinityFunctorData.compTermBlock`, and
-   `AInfinityFunctorData.MultilinearMap.compComposition` for `Composition.ones`.
-2. Use `Composition.ones_length`, `Composition.ones_blocksFun`, and
-   `Composition.ones_embedding` from the composition API to simplify the outer
-   object string, outer degrees, and the block embeddings.
-3. Invoke `identityPhi_heq_of_eq_one` from the proof of
-   `identitySatisfiesFunctorEquations` to replace each identity block output by
-   the original input.
-4. Remove the transport casts exactly as in
-   `identity_functorRHSTerm_eq_main`, whose proof is the closest local model.
 
-After these simplifications, the remaining multilinear map should be exactly
-`F.phi obj deg`. -/
+/-- Transport `F.phi` across equal arities, objects, degrees, and inputs. -/
+private lemma phi_heq_of_arity_eq
+    (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    {n₁ n₂ : ℕ} {inst₁ : NeZero n₁} {inst₂ : NeZero n₂}
+    (hn : n₁ = n₂)
+    {O₁ : Fin (n₁ + 1) → ObjA} {O₂ : Fin (n₂ + 1) → ObjA}
+    {D₁ : Fin n₁ → β_A} {D₂ : Fin n₂ → β_A}
+    (hO : HEq O₁ O₂) (hD : HEq D₁ D₂)
+    (X₁ : ∀ i, ComposableHomType (GHom β_A R) O₁ D₁ i)
+    (X₂ : ∀ i, ComposableHomType (GHom β_A R) O₂ D₂ i)
+    (hX : HEq X₁ X₂) :
+    HEq (F.phi O₁ D₁ X₁) (F.phi O₂ D₂ X₂) := by
+  cases inst₁ ; cases inst₂ ; aesop
+
 private lemma comp_identityFunctorData_phi_term_eq_main
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     {n : ℕ} [NeZero n]
@@ -912,17 +988,65 @@ private lemma comp_identityFunctorData_phi_term_eq_main
       F.deg_trans_ofInt
       F.phi
       obj deg (Composition.ones n) = F.phi obj deg := by
-  sorry
+  classical
+  ext x
+  unfold AInfinityFunctorData.compTermMultilinearMap
+  rw [multilinearMap_cast_apply (R := R)
+      (h := AInfinityFunctorData.comp_term_target_module_eq β_A β_A β_B
+        (GHom β_B R) id (identityDegTrans β_A) F.objMap F.deg_trans F.deg_trans_ofInt obj deg
+        (Composition.ones n))]
+  apply eq_of_heq
+  refine HEq.trans (cast_heq _ _) ?_
+  simp only [AInfinityFunctorData.MultilinearMap.compComposition]
+  refine phi_heq_of_arity_eq R F (Composition.ones_length n) ?_ ?_ _ _ ?_
+  ·
+    apply Function.hfunext (by simp [Composition.ones_length])
+    intro l₁ l₂ hl
+    have hl_eq : l₁.val = l₂.val :=
+      (Fin.heq_ext_iff (by simp [Composition.ones_length])).mp hl
+    dsimp [AInfinityFunctorData.functorCompositionOuterObj]
+    simp only [Composition.boundary, Composition.ones_sizeUpTo]
+    have hle : l₁.val ≤ n := by
+      have h1 := l₁.isLt
+      have h2 := Composition.ones_length n
+      omega
+    exact heq_of_eq (congrArg obj (Fin.ext (show min l₁.val n = l₂.val by omega)))
+  ·
+    apply Function.hfunext (by simp [Composition.ones_length])
+    intro l₁ l₂ hl
+    have hl_eq : l₁.val = l₂.val :=
+      (Fin.heq_ext_iff (by simp [Composition.ones_length])).mp hl
+    dsimp [AInfinityFunctorData.functorCompositionOuterDeg,
+      AInfinityFunctorData.compositionBlockDeg]
+    dsimp [functorTargetDeg, identityDegTrans, shift_ofInt]
+    have hblock : (Composition.ones n).blocksFun l₁ = 1 := Composition.ones_blocksFun n l₁
+    simp only [hblock, Nat.cast_one, sub_self, map_zero, add_zero]
+    haveI : Subsingleton (Fin ((Composition.ones n).blocksFun l₁)) := by
+      rw [hblock]; exact inferInstance
+    rw [Fintype.sum_subsingleton _ ⟨0, by rw [hblock]; exact Nat.one_pos⟩]
+    have hemb := Composition.ones_embedding l₁ (by rw [hblock]; exact Nat.one_pos)
+    exact heq_of_eq (congrArg deg (by rw [Fin.ext_iff] at hemb ⊢; simpa using hemb.trans hl_eq))
+  ·
+    apply Function.hfunext (by simp [Composition.ones_length])
+    intro l₁ l₂ hl
+    have hl_eq : l₁.val = l₂.val :=
+      (Fin.heq_ext_iff (by simp [Composition.ones_length])).mp hl
+    have hblock : (Composition.ones n).blocksFun l₁ = 1 := Composition.ones_blocksFun n l₁
+    haveI : NeZero ((Composition.ones n).blocksFun l₁) := ⟨by rw [hblock]; exact one_ne_zero⟩
+    unfold AInfinityFunctorData.compTermBlock
+    refine HEq.trans
+      (heq_of_eq <|
+        multilinearMap_cast_apply (R := R)
+          (h := AInfinityFunctorData.comp_term_block_module_eq β_A β_A
+            (GHom β_A R) id (identityDegTrans β_A)
+            obj deg (Composition.ones n) l₁)
+          _ _) ?_
+    refine HEq.trans (cast_heq _ _) ?_
+    refine HEq.trans (identityPhi_heq_of_eq_one (β := β_A) (R := R) (Obj := ObjA) hblock _ _ _) ?_
+    have hemb := Composition.ones_embedding l₁ (by rw [hblock]; exact Nat.one_pos)
+    exact HEq.trans (congr_arg_heq x hemb) (congr_arg_heq x (Fin.ext hl_eq))
 
-/-- The `phi`-field for the raw right-identity law.
-
-This should be a short assembly lemma:
-1. Rewrite with `comp_identityFunctorData_phi_expand`.
-2. Unfold the outer `compPhi` sum.
-3. Use `Finset.sum_eq_single (Composition.ones n)`.
-4. Discharge the main term with `comp_identityFunctorData_phi_term_eq_main`.
-5. Discharge all other terms with
-   `comp_identityFunctorData_phi_term_eq_zero_of_ne_ones`. -/
+/-- `Phi`-field for the raw right-identity law. -/
 private lemma comp_identityFunctorData_phi
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     {n : ℕ} [NeZero n]
@@ -930,69 +1054,49 @@ private lemma comp_identityFunctorData_phi
     (deg : Fin n → β_A) :
     (F.comp (identityFunctorData (β := β_A) (R := R) (Obj := ObjA))).phi obj deg =
       F.phi obj deg := by
-  sorry
+  rw [comp_identityFunctorData_phi_expand];
+  simp [compIdentityFunctorPhiExpanded];
+  unfold AInfinityFunctorData.compPhi;
+  rw [ Finset.sum_eq_single ( Composition.ones n ) ] <;> simp +contextual [ comp_identityFunctorData_phi_term_eq_main, comp_identityFunctorData_phi_term_eq_zero_of_ne_ones ]
 
-/-- Raw right-identity law for `A∞` functor data.
-
-The intended final proof should use the structure extensionality theorem for
-`AInfinityFunctorData`, with the preceding helper lemmas solving the fields in
-the order they appear:
-`objMap`, `deg_trans`, `deg_trans_ofInt`, `deg_trans_sign`, and `phi`. -/
+/-- Raw right-identity law for `A∞` functor data. -/
 private theorem comp_identityFunctorData
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     F.comp (identityFunctorData (β := β_A) (R := R) (Obj := ObjA)) = F := by
-  sorry
+  obtain ⟨objMap, deg_trans, deg_trans_ofInt, deg_trans_sign, phi⟩ := F;
+  congr! 1;
+  ext n hn obj deg;
+  convert congr_arg ( fun f => f ‹_› ) ( comp_identityFunctorData_phi ( β_A := β_A ) ( R := R ) ( ObjA := ObjA ) ( β_B := β_B ) ( ObjB := ObjB ) { objMap := objMap, deg_trans := deg_trans, deg_trans_ofInt := deg_trans_ofInt, deg_trans_sign := deg_trans_sign, phi := phi } obj deg ) using 1
 
-/-- Object-map field for the left-identity law on raw functor data.
-
-As in the right-identity proof, this should be a direct simplification after
-unfolding `AInfinityFunctorData.comp` and `identityFunctorData`. -/
+/-- Object-map field for the raw left-identity law. -/
 private lemma identityFunctor_compData_objMap
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     ((identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).comp F).objMap = F.objMap := by
-  sorry
+  simp [identityFunctorData]
 
-/-- Degree-translation field for the left-identity law on raw functor data.
-
-The only real input here should be that `identityDegTrans` is the identity
-homomorphism. After unfolding, simplify `AddMonoidHom.comp` in the opposite
-order from the right-identity lemma. -/
+/-- Degree-translation field for the raw left-identity law. -/
 private lemma identityFunctor_compData_degTrans
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     ((identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).comp F).deg_trans = F.deg_trans := by
-  sorry
+  aesop
 
-/-- Transport lemma for the `deg_trans_ofInt` field in the raw left-identity
-law.
-
-Use `identityFunctor_compData_degTrans` first, then prove pointwise equality on
-`ℤ` by unfolding the composite field formula. -/
+/-- Integer-degree compatibility field for the raw left-identity law. -/
 private lemma identityFunctor_compData_degTransOfInt
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     HEq
       ((identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).comp F).deg_trans_ofInt
       F.deg_trans_ofInt := by
-  sorry
+  congr! 2
 
-/-- Transport lemma for the `deg_trans_sign` field in the raw left-identity
-law.
-
-This is the parity analogue of
-`identityFunctor_compData_degTransOfInt`; the proof should be completely
-parallel. -/
+/-- Parity-compatibility field for the raw left-identity law. -/
 private lemma identityFunctor_compData_degTransSign
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     HEq
       ((identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).comp F).deg_trans_sign
       F.deg_trans_sign := by
-  sorry
+  congr! 2
 
-/-- First unfolding step for the `phi`-field in the raw left-identity law.
-
-This is the exact left-identity analogue of
-`comp_identityFunctorData_phi_expand`. The later combinatorial proof should
-work with `identityFunctorCompPhiExpanded` instead of repeatedly unfolding
-`AInfinityFunctorData.comp`. -/
+/-- Unfolding of the raw left-identity `phi`-field. -/
 private lemma identityFunctor_compData_phi_expand
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     {n : ℕ} [NeZero n]
@@ -1000,28 +1104,26 @@ private lemma identityFunctor_compData_phi_expand
     (deg : Fin n → β_A) :
     ((identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).comp F).phi obj deg =
       identityFunctorCompPhiExpanded (R := R) F obj deg := by
-  sorry
+  exact Eq.symm
+    (AInfinityFunctorData.compPhi.congr_simp β_A β_B β_B
+      (GHom β_A R) (GHom β_B R) (GHom β_B R)
+      F.objMap F.deg_trans
+      (fun {n} [NeZero n] => F.phi)
+      (fun {n} [NeZero n] => F.phi)
+      rfl id (identityDegTrans β_B)
+      (identityFunctorData._proof_1 β_B)
+      (fun {n} [NeZero n] => (identityFunctorData β_B R ObjB).phi)
+      (fun {n} [NeZero n] => (identityFunctorData β_B R ObjB).phi)
+      rfl obj deg)
 
-/-- Vanishing of non-`ones` summands in the left-identity `phi` proof.
-
-The future proof should be modeled directly on
-`identity_functorRHSTerm_eq_zero_of_ne_ones` from earlier in this file:
-1. pick a block of size `> 1` using
-   `composition_exists_block_gt_one_of_ne_ones`,
-2. show the corresponding outer identity component is zero using
-   `identityPhi_eq_zero_of_ne_one`,
-3. conclude the entire term vanishes because the outer multilinear map itself
-   is zero after transport.
-
-Compared with the right-identity lemma, the zero now occurs in the outer
-identity functor component rather than in an inner block. -/
-private lemma identityFunctor_compData_phi_term_eq_zero_of_ne_ones
+/-- Non-single-block summands vanish in the raw left-identity `phi` sum. -/
+private lemma identityFunctor_compData_phi_term_eq_zero_of_ne_single
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
     (c : Composition n)
-    (hc : c ≠ Composition.ones n) :
+    (hc : c ≠ Composition.single n (Nat.pos_of_ne_zero (NeZero.ne n))) :
     AInfinityFunctorData.compTermMultilinearMap β_A β_B β_B
       (GHom β_A R) (GHom β_B R) (GHom β_B R)
       F.objMap
@@ -1032,20 +1134,15 @@ private lemma identityFunctor_compData_phi_term_eq_zero_of_ne_ones
       (by intro k; rfl)
       (identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).phi
       obj deg c = 0 := by
-  sorry
+  contrapose! hc;
+  by_cases h : c.length = 1;
+  · obtain ⟨x, hx⟩ : ∃ x, c.blocks = [x] := by
+      exact List.length_eq_one_iff.mp h;
+    cases c ; aesop;
+  · exact False.elim
+      (hc (compTermMultilinearMap_outer_identity_eq_zero_of_length_ne_one R F obj deg c h))
 
-/-- Identification of the `Composition.ones n` summand in the left-identity
-`phi` proof.
-
-This should be proved by following the simplification pattern in
-`identity_functorRHSTerm_eq_main`, but now with `F` in the inner blocks and the
-identity functor on the outside:
-1. unfold `compTermMultilinearMap`,
-2. simplify the outer object and degree data for `Composition.ones`,
-3. identify each block output with the corresponding original input to the
-   outer identity component,
-4. use `identityPhi_heq_of_eq_one` to collapse that outer identity component to
-   the value of `F.phi obj deg`. -/
+/-- The `Composition.single n` summand in the raw left-identity `phi` sum. -/
 private lemma identityFunctor_compData_phi_term_eq_main
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     {n : ℕ} [NeZero n]
@@ -1060,13 +1157,61 @@ private lemma identityFunctor_compData_phi_term_eq_main
       (identityDegTrans β_B)
       (by intro k; rfl)
       (identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).phi
-      obj deg (Composition.ones n) = F.phi obj deg := by
-  sorry
+      obj deg (Composition.single n (Nat.pos_of_ne_zero (NeZero.ne n))) = F.phi obj deg := by
+  classical
+  ext x
+  unfold AInfinityFunctorData.compTermMultilinearMap
+  rw [multilinearMap_cast_apply (R := R)
+      (h := AInfinityFunctorData.comp_term_target_module_eq β_A β_B β_B
+        (GHom β_B R) F.objMap F.deg_trans id (identityDegTrans β_B) (by intro k; rfl) obj deg
+        (Composition.single n (Nat.pos_of_ne_zero (NeZero.ne n))))]
+  apply eq_of_heq
+  refine HEq.trans (cast_heq _ _) ?_
+  have hsingle_len := Composition.single_length (Nat.pos_of_ne_zero (NeZero.ne n))
+  haveI : NeZero (Composition.single n (Nat.pos_of_ne_zero (NeZero.ne n))).length :=
+    ⟨by rw [hsingle_len]; exact one_ne_zero⟩
+  refine HEq.trans
+    (identityPhi_heq_of_eq_one (β := β_B) (R := R) (Obj := ObjB) hsingle_len _ _ _) ?_
+  have hblock : (Composition.single n (Nat.pos_of_ne_zero (NeZero.ne n))).blocksFun
+    ⟨0, by rw [hsingle_len]; exact Nat.one_pos⟩ = n :=
+    Composition.single_blocksFun _ _
+  haveI : NeZero ((Composition.single n (Nat.pos_of_ne_zero (NeZero.ne n))).blocksFun
+    ⟨0, by rw [hsingle_len]; exact Nat.one_pos⟩) := ⟨by rw [hblock]; exact NeZero.ne n⟩
+  unfold AInfinityFunctorData.compTermBlock
+  refine HEq.trans
+    (heq_of_eq <|
+      multilinearMap_cast_apply (R := R)
+        (h := AInfinityFunctorData.comp_term_block_module_eq β_A β_B
+          (GHom β_B R) F.objMap F.deg_trans
+          obj deg (Composition.single n _) ⟨0, by rw [hsingle_len]; exact Nat.one_pos⟩)
+        _ _) ?_
+  refine HEq.trans (cast_heq _ _) ?_
+  refine phi_heq_of_arity_eq R F hblock ?_ ?_ _ _ ?_
+  ·
+    apply Function.hfunext (by rw [hblock])
+    intro i₁ i₂ hi
+    have hi_eq : i₁.val = i₂.val :=
+      (Fin.heq_ext_iff (by rw [hblock])).mp hi
+    dsimp [AInfinityFunctorData.compositionBlockObj]
+    simp only [Composition.single, Composition.sizeUpTo]
+    exact heq_of_eq (congrArg obj (Fin.ext (by simp; omega)))
+  ·
+    apply Function.hfunext (by rw [hblock])
+    intro j₁ j₂ hj
+    have hj_eq : j₁.val = j₂.val :=
+      (Fin.heq_ext_iff (by rw [hblock])).mp hj
+    dsimp [AInfinityFunctorData.compositionBlockDeg]
+    have hemb := Composition.single_embedding (Nat.pos_of_ne_zero (NeZero.ne n)) j₁
+    exact heq_of_eq (congrArg deg (by rw [Fin.ext_iff] at hemb ⊢; simpa using hemb.trans hj_eq))
+  ·
+    apply Function.hfunext (by rw [hblock])
+    intro j₁ j₂ hj
+    have hj_eq : j₁.val = j₂.val :=
+      (Fin.heq_ext_iff (by rw [hblock])).mp hj
+    have hemb := Composition.single_embedding (Nat.pos_of_ne_zero (NeZero.ne n)) j₁
+    exact HEq.trans (congr_arg_heq x hemb) (congr_arg_heq x (Fin.ext hj_eq))
 
-/-- The `phi`-field for the raw left-identity law.
-
-The intended proof is the same short `sum_eq_single` assembly as in
-`comp_identityFunctorData_phi`, but now using the left-identity helper lemmas. -/
+/-- `Phi`-field for the raw left-identity law. -/
 private lemma identityFunctor_compData_phi
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB)
     {n : ℕ} [NeZero n]
@@ -1074,45 +1219,53 @@ private lemma identityFunctor_compData_phi
     (deg : Fin n → β_A) :
     ((identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).comp F).phi obj deg =
       F.phi obj deg := by
-  sorry
+  rw [ identityFunctor_compData_phi_expand ];
+  unfold identityFunctorCompPhiExpanded;
+  unfold AInfinityFunctorData.compPhi;
+  rw [ Finset.sum_eq_single ( Composition.single n ( Nat.pos_of_ne_zero ( NeZero.ne n ) ) ) ] <;> simp +contextual [ identityFunctor_compData_phi_term_eq_main, identityFunctor_compData_phi_term_eq_zero_of_ne_single ]
 
-/-- Raw left-identity law for `A∞` functor data.
-
-Once the helper lemmas above are filled in, the final proof should again be a
-straightforward application of structure extensionality for
-`AInfinityFunctorData`. -/
+/-- Raw left-identity law for `A∞` functor data. -/
 private theorem identityFunctor_compData
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     (identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).comp F = F := by
-  sorry
-
+  obtain ⟨objMap, deg_trans, deg_trans_ofInt, deg_trans_sign, phi⟩ := F
+  congr! 1
+  ext n hn obj deg
+  convert congr_arg (fun f => f ‹_›)
+    (identityFunctor_compData_phi
+      (β_A := β_A) (R := R) (ObjA := ObjA)
+      (β_B := β_B) (ObjB := ObjB)
+      { objMap := objMap
+        deg_trans := deg_trans
+        deg_trans_ofInt := deg_trans_ofInt
+        deg_trans_sign := deg_trans_sign
+        phi := phi }
+      obj deg) using 1
 
 /-- Composing an `A∞` functor on the right with the identity functor on its source
 gives back the original functor. -/
 theorem comp_identityFunctor
     (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     F.comp (identityFunctor (β := β_A) (R := R) (Obj := ObjA)) = F := by
-  -- Suggested final assembly:
-  -- 1. Reduce from `AInfinityFunctor` equality to equality of the underlying
-  --    `AInfinityFunctorData`.
-  -- 2. Apply `comp_identityFunctorData` to the raw data.
-  -- 3. Use proof irrelevance for the `satisfiesFunctorEquations` field.
-  sorry
+  have h_ext : ∀ (F G : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB), F.toAInfinityFunctorData = G.toAInfinityFunctorData → F = G := by
+    intros F G h_eq
+    cases F
+    cases G
+    aesop;
+  apply h_ext;
+  apply comp_identityFunctorData
+
 
 /-- Composing an `A∞` functor on the left with the identity functor on its target
 gives back the original functor. -/
 theorem identityFunctor_comp
     (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     (identityFunctor (β := β_B) (R := R) (Obj := ObjB)).comp F = F := by
-  -- Suggested final assembly:
-  -- 1. Reduce to the raw-data equality `identityFunctor_compData`.
-  -- 2. Reuse proof irrelevance for the final proposition-valued field.
-  -- 3. Keep this theorem tiny so all real work lives in the helper lemmas
-  --    above.
-  sorry
+  cases F;
+  congr! 1;
+  apply AInfinityTheory.FunctorExamples.identityFunctor_compData
 
 end Composition
 
 end FunctorExamples
 end AInfinityTheory
-
