@@ -7,7 +7,7 @@ public import AInfinity.AdditiveCompletion
 
 open CategoryTheory AInfinityTheory
 
-/-
+
 universe u v w
 variable {R : Type u} [CommRing R] [CharP R 2] [DecidableEq R] {n : ℕ}
 
@@ -231,4 +231,3 @@ noncomputable def PositiveTransposition (k : Fin (n + 1)) : BraidingFunctorData 
   SF₂ := sorry
   SF₃ := sorry
   SF₄ := sorry
-
