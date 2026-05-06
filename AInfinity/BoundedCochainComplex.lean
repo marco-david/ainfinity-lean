@@ -34,6 +34,9 @@ between the underlying complexes, packaged in a one-field structure (mirroring
 structure Hom (c₁ c₂ : BoundedCochainComplex V) where
   hom : c₁.toHomologicalComplex ⟶ c₂.toHomologicalComplex
 
+abbrev Hom.f {c₁ c₂ : BoundedCochainComplex V} (h : Hom c₁ c₂) (i : ℤ) : c₁.X i ⟶ c₂.X i :=
+  h.hom.f i
+
 instance : Category (BoundedCochainComplex V) where
   Hom := Hom
   id _ := ⟨𝟙 _⟩
@@ -86,6 +89,37 @@ instance : Linear R (BoundedCochainComplex V) where
   homModule c₁ c₂ := Equiv.module R (homEquiv (c₁ := c₁) (c₂ := c₂))
   smul_comp _ _ _ r f g := Hom.ext (Linear.smul_comp _ _ _ r f.hom g.hom)
   comp_smul _ _ _ f r g := Hom.ext (Linear.comp_smul _ _ _ f.hom r g.hom)
+
+def of [DecidablePred (IsZero : V → Prop)]
+    (X : ℤ → V) (support : Finset ℤ)
+    (h : ∀ i : ℤ, ¬ IsZero (X i) ↔ i ∈ support)
+    (d : ∀ i : ℤ, X i ⟶ X (i + 1))
+    (hd : ∀ i : ℤ, d i ≫ d (i + 1) = 0) : BoundedCochainComplex V :=
+  ⟨CochainComplex.of X d hd, support, h⟩
+
+def ofHom [DecidablePred (IsZero : V → Prop)]
+    (X : ℤ → V) (support_X : Finset ℤ) (d_X : ∀ i : ℤ, X i ⟶ X (i + 1))
+    (h_X : ∀ i : ℤ, ¬ IsZero (X i) ↔ i ∈ support_X)
+    (sq_X : ∀ i : ℤ, d_X i ≫ d_X (i + 1) = 0)
+    (Y : ℤ → V) (support_Y : Finset ℤ) (d_Y : ∀ i : ℤ, Y i ⟶ Y (i + 1))
+    (h_Y : ∀ i : ℤ, ¬ IsZero (Y i) ↔ i ∈ support_Y)
+    (sq_Y : ∀ i : ℤ, d_Y i ≫ d_Y (i + 1) = 0)
+    (f : ∀ i : ℤ, X i ⟶ Y i)
+    (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1))
+    : of X support_X h_X d_X sq_X ⟶ of Y support_Y h_Y d_Y sq_Y :=
+  ⟨CochainComplex.ofHom X d_X sq_X Y d_Y sq_Y f comm⟩
+
+theorem ofHom_f [DecidablePred (IsZero : V → Prop)]
+    (X : ℤ → V) (support_X : Finset ℤ) (d_X : ∀ i : ℤ, X i ⟶ X (i + 1))
+    (h_X : ∀ i : ℤ, ¬ IsZero (X i) ↔ i ∈ support_X)
+    (sq_X : ∀ i : ℤ, d_X i ≫ d_X (i + 1) = 0)
+    (Y : ℤ → V) (support_Y : Finset ℤ) (d_Y : ∀ i : ℤ, Y i ⟶ Y (i + 1))
+    (h_Y : ∀ i : ℤ, ¬ IsZero (Y i) ↔ i ∈ support_Y)
+    (sq_Y : ∀ i : ℤ, d_Y i ≫ d_Y (i + 1) = 0)
+    (f : ∀ i : ℤ, X i ⟶ Y i)
+    (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1)) (i : ℤ)
+    : (ofHom X support_X d_X h_X sq_X Y support_Y d_Y h_Y sq_Y f comm).f i = f i :=
+  CochainComplex.ofHom_f X d_X sq_X Y d_Y sq_Y f comm i
 
 /-- Build a `BoundedCochainComplex` from a `CochainComplex` together with a finite
 superset of its true support. -/
@@ -150,5 +184,50 @@ def liftEndofunctorCompEmbed
   Iso.refl _
 
 end LiftEndofunctor
+
+def toTexRow {C : Type*} [Category C] [Preadditive C] [Limits.HasZeroObject C]
+    [Texify C] [∀ (X Y : C), Texify (X ⟶ Y)] (A : BoundedCochainComplex C)
+    (leftmost rightmost : ℤ) (placeDifferentialsBelow : Bool := false) : String := Id.run do
+    let mut res := ""
+    for i in leftmost...rightmost do
+      if placeDifferentialsBelow then
+        res := res ++ s!"{texifyWithBrackets (A.X i)} @>>{texifyWithBrackets (A.d i (i + 1))}>"
+      else
+        res := res ++ s!"{texifyWithBrackets (A.X i)} @>{texifyWithBrackets (A.d i (i + 1))}>>"
+    res := res ++ s!"{texifyWithBrackets (A.X rightmost)}"
+    return res
+
+def Hom.toTexRow {C : Type*} [Category C] [Preadditive C]
+    [Limits.HasZeroObject C] [Texify C] [∀ (X Y : C), Texify (X ⟶ Y)]
+    {A B : BoundedCochainComplex C}
+    (h : A ⟶ B) (leftmost rightmost : ℤ) : String := Id.run do
+    let mut res := ""
+    for i in leftmost...=rightmost do
+      res := res ++ s!"@V{texifyWithBrackets (h.f i)}VV"
+    return res
+
+instance (C : Type*) [Category C] [Preadditive C] [Limits.HasZeroObject C] [Texify C]
+  [∀ (X Y : C), Texify (X ⟶ Y)] : Texify (BoundedCochainComplex C) where
+  texify A := Id.run do
+    let (leftmost, rightmost) := if h : A.support.Nonempty then
+      (A.support.min' h - 1, A.support.max' h + 1)
+    else (-1, 1)
+    return r"\begin{CD}" ++ A.toTexRow leftmost rightmost ++ r"\end{CD}"
+  requiresParentheses := true
+
+instance (C : Type*) [Category C] [Preadditive C] [Limits.HasZeroObject C] [Texify C]
+  [∀ (X Y : C), Texify (X ⟶ Y)] (A B : BoundedCochainComplex C) : Texify (A ⟶ B) where
+  texify h := Id.run do
+    let (leftmostA, rightmostA) := if h : A.support.Nonempty then
+      (A.support.min' h - 1, A.support.max' h + 1)
+    else (-1, 1)
+    let (leftmostB, rightmostB) := if h : B.support.Nonempty then
+      (B.support.min' h - 1, B.support.max' h + 1)
+    else (-1, 1)
+    let leftmost := min leftmostA leftmostB
+    let rightmost := max rightmostA rightmostB
+    return r"\begin{CD}" ++ A.toTexRow leftmost rightmost ++ r"\\" ++ h.toTexRow leftmost rightmost
+      ++ r"\\" ++ B.toTexRow leftmost rightmost true ++ r"\end{CD}"
+  requiresParentheses := true
 
 end BoundedCochainComplex

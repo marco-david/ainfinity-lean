@@ -61,7 +61,11 @@ abbrev StrandSpace (R : Type u) [CommRing R] : Type u := Π₀ _ : ℕ, R
 instance [ToString R] : Texify (StrandSpace R) where
   texify x :=
     -- Not sure if this computationally efficient
-    x.support.sort (· ≥ ·) |>.map (termString x) |> " + ".intercalate
+    let support := x.support
+    if support = ∅ then
+      "0"
+    else
+      support.sort (· ≥ ·) |>.map (termString x) |> " + ".intercalate
   requiresParentheses := true
   where termString (x : ℕ → R) (i : ℕ) :=
     let coefficient := x i
@@ -195,11 +199,23 @@ instance : Preadditive (KLRWCategory n R) where
         (fun j s₁ s₂ => by simp [mul_add, add_smul])]
     simp only [DFinsupp.sum, Finset.sum_add_distrib]
 
+instance (R : Type*) [CommRing R] [DecidableEq R] [ToString R] (n : ℕ) (S T : KLRWCategory n R) :
+  Texify (S ⟶ T) := inferInstanceAs (Texify (StrandSpace R))
+
+/--
+The KLRW Category lacks zero objects
+-/
+theorem KLRWCategory.not_isZero (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ)
+  (A : KLRWCategory n R) : ¬ Limits.IsZero A := sorry
+
+instance (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ) :
+    DecidablePred (Limits.IsZero : KLRWCategory n R → Prop) :=
+  fun A ↦ Decidable.isFalse (A.not_isZero)
+
 abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   CMat_ (KLRWCategory n R)
 
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
-  -- TODO: Change to BoundedCochainComplex (need to figure out zero objects for this to work)
-  CochainComplex (AddKLRWCategory n R) ℤ
+  BoundedCochainComplex (AddKLRWCategory n R)
 
 end AInfinityTheory
