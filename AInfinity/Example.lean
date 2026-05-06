@@ -660,10 +660,10 @@ theorem concentratedAt0CategoryData_satisfiesStasheff
 
       unfold indexedStasheffSum;
       rw [ Finset.sum_eq_add ( ⟨ 0, by decide ⟩ ) ( ⟨ 1, by decide ⟩ ) ];
-      · rw [ Finset.sum_eq_single ⟨ 2, by decide ⟩, Finset.sum_eq_single ⟨ 2, by decide ⟩ ] <;> simp +decide [ * ];
+      · rw [ Finset.sum_eq_single ⟨ 2, by decide ⟩, Finset.sum_eq_single ⟨ 2, by decide ⟩ ] <;> simp? +decide [ * ];
         · erw [ hterm02, hterm12, stasheffSign_zero_deg_0_2, stasheffSign_zero_deg_1_2 ] ; simp +decide [ hassoc ];
         · intro a ha₁ ha₂ ha₃
-          interval_cases a <;> simp +decide at ha₃ ⊢
+          interval_cases a <;> simp +decide only [Fin.isValue] at ha₃ ⊢
           have hterm :
               indexedStasheffTerm
                 (fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -684,7 +684,7 @@ theorem concentratedAt0CategoryData_satisfiesStasheff
             simp
           simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
         · intro a ha₁ ha₂ ha₃
-          interval_cases a <;> simp +decide [ * ] at ha₃ ⊢
+          interval_cases a <;> simp +decide only [Fin.isValue] at ha₃ ⊢
           · have hterm :
                 indexedStasheffTerm
                   (fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -724,7 +724,8 @@ theorem concentratedAt0CategoryData_satisfiesStasheff
               simp
             simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
       · simp +decide;
-      · intro c hc hne; fin_cases c <;> simp +decide at hne hc ⊢;
+      · intro c hc hne; fin_cases c <;> simp +decide only [Fin.isValue, Fin.reduceLast,
+        Nat.reduceAdd, range_val, Nat.reduceSub] at hne hc ⊢;
         · rw [Finset.sum_eq_single ⟨ 1, by decide ⟩]
           · have hterm :
                 indexedStasheffTerm

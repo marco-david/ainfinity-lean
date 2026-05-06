@@ -223,7 +223,8 @@ lemma stasheffDegOut_sum_core
           fun ⟨a, ha⟩ => by linarith [Fin.is_lt a]
         ⟩
   · exact Finset.disjoint_filter.mpr fun _ _ _ _ => by linarith
-  · simp +contextual [Finset.disjoint_left]
+  · simp +contextual only [gt_iff_lt, disjoint_left, mem_union, mem_filter, mem_univ, true_and,
+    not_lt]
     exact fun a ha => ha.elim (fun ha => le_of_lt ha) fun ha => ha.le
   · ext i
     cases lt_trichotomy i.val r <;> aesop
@@ -599,7 +600,7 @@ lemma indexedStasheffTargetModuleEq
     omega
   have htarget :
       stasheffObjOut obj r s hr (Fin.last (n + 1 - s)) = obj (Fin.last n) := by
-    simp [stasheffObjOut, Fin.last, hlast_gt]
+    simp only [stasheffObjOut, Fin.last, hlast_gt, ↓reduceDIte]
     congr
     omega
   calc

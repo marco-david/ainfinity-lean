@@ -103,7 +103,7 @@ lemma Composition.update_comp_same_block
       Function.update (fun j => m (c.embedding l₀ j)) j₀ v := by
   ext j
   by_cases h : c.embedding l₀ j = c.embedding l₀ j₀
-  · simp +decide [h, Function.update]
+  · simp? +decide [h, Function.update]
     have := (c.embedding l₀).injective h
     aesop
   · aesop
@@ -226,7 +226,7 @@ lemma LHS_compatible_deg
       unfold functorTargetDeg functorEqTargetDeg;
       convert congr_arg ( fun x : β_A => deg_trans x + shift_ofInt ( 1 - ( n + 1 - s : ℤ ) ) ) ( stasheffDegOut_sum_core deg r s hr ) using 1;
       · simp +decide [ Nat.cast_sub ( by linarith : s ≤ n + 1 ) ];
-      · simp +decide [ shift_ofInt, deg_trans_ofInt ];
+      · simp? +decide [ shift_ofInt, deg_trans_ofInt ];
         abel1
 
 /-- Transport from the outer LHS term target to the functor-equation target. -/
@@ -249,7 +249,7 @@ lemma functor_lhs_target_module_eq
     omega
   have htarget :
       stasheffObjOut obj r s hr (Fin.last (n + 1 - s)) = obj (Fin.last n) := by
-    simp [stasheffObjOut, Fin.last, hlast_gt]
+    simp? [stasheffObjOut, Fin.last, hlast_gt]
     congr
     omega
   dsimp [functorTargetType, functorEqTargetType]
@@ -416,7 +416,7 @@ lemma RHS_compatible_deg
             Finset.univ =
           Finset.univ := by
       ext i
-      simp [Finset.mem_image]
+      simp? [Finset.mem_image]
       obtain ⟨l, hl⟩ : ∃ l : Fin c.length, i ∈ Finset.image (fun j => c.embedding l j) Finset.univ := by
         have h_partition :
             ∀ i : Fin n, ∃ l : Fin c.length, i ∈ Finset.image (fun j => c.embedding l j) Finset.univ := by
@@ -444,10 +444,10 @@ lemma RHS_compatible_deg
             have h_range : i.val - c.sizeUpTo l.val < c.blocksFun l := by
               rw [tsub_lt_iff_left] <;> try linarith! [Fin.is_lt i]
               convert hl₁ using 1
-              simp +decide [Composition.sizeUpTo_succ]
+              simp? +decide [Composition.sizeUpTo_succ]
               ring!
             use ⟨i.val - c.sizeUpTo l.val, h_range⟩
-            simp +decide [Fin.ext_iff]
+            simp? +decide [Fin.ext_iff]
             omega
           generalize_proofs at *
           exact h_exists_a
@@ -460,7 +460,7 @@ lemma RHS_compatible_deg
     rw [h_sum_eq, Finset.sum_sigma']
     rfl
   have h_sum_blocksFun : ∑ l : Fin c.length, (1 - (c.blocksFun l : ℤ)) = (c.length : ℤ) - n := by
-    simp +decide
+    simp? +decide
     norm_cast
     aesop
   have h_sum_target_deg :
@@ -477,7 +477,7 @@ lemma RHS_compatible_deg
       exact map_sum (GradingIndex.ofInt) _ _
   convert congr_arg (fun x : β_B => x + shift_ofInt (2 - (c.length : ℤ))) h_sum_target_deg using 1
   unfold functorEqTargetDeg
-  simp +decide [add_assoc]
+  simp? +decide [add_assoc]
   unfold shift_ofInt
   simp +decide
 

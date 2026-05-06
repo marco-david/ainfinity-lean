@@ -183,7 +183,7 @@ private lemma identity_functorLHSTerm_eq_zero_of_ne_one
     dsimp [outerN]
     omega
   have htarget : objOut (Fin.last outerN) = obj (Fin.last n) := by
-    simp [objOut, stasheffObjOut, Fin.last, hlast_gt]
+    simp? [objOut, stasheffObjOut, Fin.last, hlast_gt]
     congr
     omega
   have hdeg :
@@ -199,7 +199,7 @@ private lemma identity_functorLHSTerm_eq_zero_of_ne_one
         (deg_trans_ofInt := by intro k; rfl)
         deg r s hr
   unfold AInfinityFunctorData.functorLHSTerm
-  simp [degOut, objOut, xOut, outer, houter_zero]
+  simp? [degOut, objOut, xOut, outer, houter_zero]
   simpa [eqRec_eq_cast] using cast_zero_of_module_eq (R := R) hdeg
 
 /-- When the arity k equals 1, identityPhi acts as identity (up to HEq). -/
@@ -811,7 +811,7 @@ private lemma compTermBlock_eq_zero_of_phi_zero
       id (identityDegTrans β_A)
       (identityFunctorData (β := β_A) (R := R) (Obj := ObjA)).phi
       obj deg c l = 0 := by
-  simp [AInfinityFunctorData.compTermBlock, hphi];
+  simp? [AInfinityFunctorData.compTermBlock, hphi];
   apply cast_multilinearMap_zero;
   nontriviality;
   exact
@@ -834,23 +834,23 @@ private lemma compTermMultilinearMap_outer_identity_eq_zero_of_length_ne_one
       (identityFunctorData (β := β_B) (R := R) (Obj := ObjB)).phi
       obj deg c = 0 := by
   unfold AInfinityFunctorData.compTermMultilinearMap;
-  unfold AInfinityFunctorData.MultilinearMap.compComposition; simp +decide [ hlen ] ;
+  unfold AInfinityFunctorData.MultilinearMap.compComposition; simp? +decide [ hlen ] ;
   apply cast_multilinearMap_zero;
-  unfold functorTargetType; simp +decide [ AInfinityFunctorData.functorCompositionOuterObj, identityFunctorData ] ;
-  unfold functorTargetDeg; simp +decide [ AInfinityFunctorData.functorCompositionOuterDeg ] ;
-  unfold functorTargetDeg; simp +decide [ AInfinityFunctorData.compositionBlockDeg ] ;
+  unfold functorTargetType; simp? +decide [ AInfinityFunctorData.functorCompositionOuterObj, identityFunctorData ] ;
+  unfold functorTargetDeg; simp? +decide [ AInfinityFunctorData.functorCompositionOuterDeg ] ;
+  unfold functorTargetDeg; simp? +decide [ AInfinityFunctorData.compositionBlockDeg ] ;
   have h_sum : ∑ x : Fin c.length, ∑ x_1 : Fin (c.blocksFun x), F.deg_trans (deg ((c.embedding x) x_1)) = ∑ i : Fin n, F.deg_trans (deg i) := by
     have h_sum : ∑ x : Fin c.length, ∑ x_1 : Fin (c.blocksFun x), F.deg_trans (deg ((c.embedding x) x_1)) = ∑ x ∈ Finset.univ.biUnion (fun x : Fin c.length => Finset.image (fun x_1 : Fin (c.blocksFun x) => (c.embedding x) x_1) Finset.univ), F.deg_trans (deg x) := by
       rw [ Finset.sum_biUnion ];
       · exact Finset.sum_congr rfl fun _ _ => by rw [ Finset.sum_image <| by simp +decide [ Function.Injective ] ] ;
-      · intro x _ y _ hxy; simp +decide [ Finset.disjoint_left ] ;
+      · intro x _ y _ hxy; simp? +decide [ Finset.disjoint_left ] ;
         grind +suggestions;
     convert h_sum using 2;
-    ext x; simp [Composition.embedding];
+    ext x; simp? [Composition.embedding];
     have := c.mem_range_embedding x; aesop;
-  simp +decide [ h_sum, Finset.sum_add_distrib, shift_ofInt ];
-  simp +decide [ GradingIndex.ofInt ];
-  simp +decide [ add_assoc ];
+  simp? +decide [ h_sum, Finset.sum_add_distrib, shift_ofInt ];
+  simp? +decide [ GradingIndex.ofInt ];
+  simp? +decide [ add_assoc ];
   norm_cast;
   simp +decide [ Composition.blocksFun ]
 
@@ -1055,7 +1055,7 @@ private lemma comp_identityFunctorData_phi
     (F.comp (identityFunctorData (β := β_A) (R := R) (Obj := ObjA))).phi obj deg =
       F.phi obj deg := by
   rw [comp_identityFunctorData_phi_expand];
-  simp [compIdentityFunctorPhiExpanded];
+  simp? [compIdentityFunctorPhiExpanded];
   unfold AInfinityFunctorData.compPhi;
   rw [ Finset.sum_eq_single ( Composition.ones n ) ] <;> simp +contextual [ comp_identityFunctorData_phi_term_eq_main, comp_identityFunctorData_phi_term_eq_zero_of_ne_ones ]
 
@@ -1194,7 +1194,7 @@ private lemma identityFunctor_compData_phi_term_eq_main
       (Fin.heq_ext_iff (by rw [hblock])).mp hi
     dsimp [AInfinityFunctorData.compositionBlockObj]
     simp only [Composition.single, Composition.sizeUpTo]
-    exact heq_of_eq (congrArg obj (Fin.ext (by simp; omega)))
+    exact heq_of_eq (congrArg obj (Fin.ext (by simp?; omega)))
   ·
     apply Function.hfunext (by rw [hblock])
     intro j₁ j₂ hj
