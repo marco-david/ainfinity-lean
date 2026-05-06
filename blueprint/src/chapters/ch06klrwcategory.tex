@@ -134,7 +134,7 @@ That is, $\beta_1(f)$ is a chain map from $\beta_0(A)$ to $\beta_0(B)$.
 \textbf{[SF\textsubscript{2}].}
 For all composable $f \in \Hom_{\KLRW}(A, B)$ and $g \in \Hom_{\KLRW}(B, C)$,
 $$
-  \beta_1(g \circ f) + \beta_1(g) \circ \beta_1(f)
+  \beta_1(g \circ f) - \beta_1(g) \circ \beta_1(f)
   = \delta_{\beta_0(C)} \circ \beta_2(f, g) + \beta_2(f, g) \circ \delta_{\beta_0(A)}.
 $$
 That is, $\beta_1$ is functorial up to the homotopy provided by $\beta_2$.
@@ -152,8 +152,8 @@ That is, $\beta_1$ is functorial up to the homotopy provided by $\beta_2$.
 For all composable $f \in \Hom_{\KLRW}(A, B)$,
 $g \in \Hom_{\KLRW}(B, C)$, and $h \in \Hom_{\KLRW}(C, D)$,
 $$
-  \beta_2(f, h \circ g) + \beta_2(g \circ f, h)
-  = \beta_2(f, g) \circ \beta_1(h) + \beta_1(f) \circ \beta_2(g, h).
+  \beta_2(f, h \circ g) - \beta_2(g \circ f, h)
+  = \beta_1(h) \circ \beta_2(f, g) -  \beta_2(g, h)\circ \beta_1(f).
 $$
 That is, $\beta_2$ satisfies a cocycle condition intertwining source
 composition with the target composition mediated by $\beta_1$.
@@ -169,7 +169,7 @@ For all composable $f \in \Hom_{\KLRW}(A, B)$,
 $g \in \Hom_{\KLRW}(B, C)$, $h \in \Hom_{\KLRW}(C, D)$, and
 $k \in \Hom_{\KLRW}(D, E)$,
 $$
-  \beta_2(f, g) \circ \beta_2(h, k) = 0.
+  \beta_2(h, k) \circ \beta_2(f, g)= 0.
 $$
 
 \begin{remark}

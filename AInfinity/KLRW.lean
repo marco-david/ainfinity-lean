@@ -1,6 +1,9 @@
 module
 
-public import Mathlib
+public import Mathlib.Algebra.Homology.HomologicalComplex
+public import Mathlib.Algebra.Lie.OfAssociative
+public import Mathlib.CategoryTheory.Preadditive.Mat
+public import Mathlib.GroupTheory.GroupAction.Ring
 
 @[expose] public section
 
@@ -141,3 +144,5 @@ abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] :
   CochainComplex (AddKLRWCategory n R) ℤ
 
 end AInfinityTheory
+
+#min_imports

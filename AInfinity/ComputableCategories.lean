@@ -1,6 +1,8 @@
 module
 
-public import Mathlib
+public import Mathlib.CategoryTheory.Limits.Shapes.BinaryBiproducts
+public import Mathlib.CategoryTheory.Preadditive.Basic
+public import Mathlib.Combinatorics.Quiver.ReflQuiver
 
 @[expose] public section
 
@@ -177,3 +179,5 @@ end explicit_zero
 
 def List.cbiprod {C : Type*} [Category C] [HasZeroMorphisms C] [ComputableBinaryBiproduct C]
   [HasExplicitZeroObject C] : List C → C := foldl (· ⊞ᶜ ·) 𝟎
+
+#min_imports
