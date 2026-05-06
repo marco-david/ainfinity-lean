@@ -144,5 +144,3 @@ abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] :
   CochainComplex (AddKLRWCategory n R) ℤ
 
 end AInfinityTheory
-
-#min_imports

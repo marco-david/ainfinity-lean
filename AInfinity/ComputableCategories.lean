@@ -179,5 +179,3 @@ end explicit_zero
 
 def List.cbiprod {C : Type*} [Category C] [HasZeroMorphisms C] [ComputableBinaryBiproduct C]
   [HasExplicitZeroObject C] : List C → C := foldl (· ⊞ᶜ ·) 𝟎
-
-#min_imports
