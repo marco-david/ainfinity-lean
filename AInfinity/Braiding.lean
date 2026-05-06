@@ -230,3 +230,4 @@ noncomputable def PositiveTransposition (k : Fin (n + 1)) : BraidingFunctorData 
   SF₂ := sorry
   SF₃ := sorry
   SF₄ := sorry
+
