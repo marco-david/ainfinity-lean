@@ -15,6 +15,9 @@ structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq
   gen₀ : KLRWCategory n R → CochainComplex (CMat_ (KLRWCategory n R)) ℤ
   gen₁ : {A B : KLRWCategory n R} → (A ⟶ B) → (gen₀ A ⟶ gen₀ B)
   gen₂ : {A B C : KLRWCategory n R} → (A ⟶ B) → (B ⟶ C) → ∀ (i : ℤ), (gen₀ A).X i ⟶ (gen₀ C).X (i - 1)
+  -- is there an alternate way we want to type this? Do we have a
+  -- shorthand for degree whatever chain complex maps?
+  -- The maps are themselves a chain complex split by their degree
 
   -- SF₁ is automatic from the typing of gen₁: it is a chain map.
   --
