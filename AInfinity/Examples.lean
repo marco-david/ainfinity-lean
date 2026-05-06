@@ -43,5 +43,5 @@ def A : KLRWComplexCategory 3 ℤ := BoundedCochainComplex.of X {0,1} sorry d so
 
 def f : A ⟶ A := BoundedCochainComplex.ofHom _ _ _ _ _ _ _ _ _ _ g sorry
 
--- #texify f
--- #texify f ≫ f
+#texify f
+#texify f ≫ f

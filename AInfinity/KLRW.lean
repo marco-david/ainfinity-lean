@@ -205,10 +205,18 @@ instance (R : Type*) [CommRing R] [DecidableEq R] [ToString R] (n : ℕ) (S T : 
 /--
 The KLRW Category lacks zero objects
 -/
-theorem KLRWCategory.not_isZero (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ)
-  (A : KLRWCategory n R) : ¬ Limits.IsZero A := sorry
+theorem KLRWCategory.not_isZero (R : Type*) [CommRing R] [DecidableEq R] [Nontrivial R] (n : ℕ)
+    (A : KLRWCategory n R) : ¬ Limits.IsZero A := by
+  intro hA
+  have h_id_zero : (𝟙 A : A ⟶ A) = 0 := hA.eq_of_src (𝟙 A) 0
+  have h_eval : (StrandSpace.dots R 0) 0 = (0 : StrandSpace R) 0 :=
+    congrArg (fun f : StrandSpace R => f 0) h_id_zero
+  rw [StrandSpace.dots] at h_eval
+  rw [DFinsupp.single_eq_same] at h_eval
+  change (1 : R) = 0 at h_eval
+  exact one_ne_zero h_eval
 
-instance (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ) :
+instance (R : Type*) [CommRing R] [DecidableEq R] [Nontrivial R] (n : ℕ) :
     DecidablePred (Limits.IsZero : KLRWCategory n R → Prop) :=
   fun A ↦ Decidable.isFalse (A.not_isZero)
 
