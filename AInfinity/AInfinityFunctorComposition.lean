@@ -1405,6 +1405,172 @@ private abbrev compFunctorExpandedLHS
               (AInfinityCategoryStruct.m (β := β_A) (R := R) (Obj := ObjA))
               obj deg x r.1 s.1 h.1 h.2))
 
+/-- The composite LHS after reindexing by an original composition together
+with the block that contains the inserted `m_A`.
+
+This is the first genuinely useful intermediate stage for the composition
+proof.  Its body is currently the already-expanded LHS; the intended final
+replacement is a finite sum indexed by
+`a : Composition n`, `l : Fin a.length`, and Stasheff indices inside the
+`l`-th block of `a`. -/
+private abbrev compFunctorFBlockLHSSum
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+      (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
+  compFunctorExpandedLHS F G obj deg x
+
+/-- The previous block-indexed sum after applying the `F` functor equation
+inside the selected block.
+
+In the final proof this stage should contain the `m_B` term produced by
+`F.satisfiesFunctorEquations`, still sitting inside the outer `G.phi`. -/
+private abbrev compFunctorFBlockRHSSum
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+      (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
+  compFunctorFBlockLHSSum F G obj deg x
+
+/-- The `l`-th output of `F` associated to a composition of the original
+input string, viewed as an input for the outer `G` equation. -/
+private abbrev compFunctorBlockOutput
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i)
+    (c : Composition n)
+    (l : Fin c.length) :
+    ComposableHomType (GHom β_B R)
+      (AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c)
+      (AInfinityFunctorData.functorCompositionOuterDeg β_A β_B F.deg_trans deg c) l :=
+  AInfinityFunctorData.functorRHSBlock β_A β_B
+    (GHom β_A R) (GHom β_B R)
+    F.objMap F.deg_trans F.phi obj deg c l
+    (fun j => x (c.embedding l j))
+
+/-- Target transport for the `G` equation applied to the tuple of `F` block
+outputs attached to a composition of the original inputs. -/
+private lemma comp_functor_G_equation_target_eq
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (c : Composition n) :
+    ((AInfinityFunctorData.functorEqTargetType β_B β_C (GHom β_C R)
+        G.objMap G.deg_trans
+        (AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c)
+        (AInfinityFunctorData.functorCompositionOuterDeg β_A β_B F.deg_trans deg c) :
+        ModuleCat R) : Type u) =
+      ((AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+        (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :
+        ModuleCat R) : Type u) := by
+  have hsource :
+      AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c 0 =
+        F.objMap (obj 0) := by
+    simp [AInfinityFunctorData.functorCompositionOuterObj]
+  have htarget :
+      AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c (Fin.last c.length) =
+        F.objMap (obj (Fin.last n)) := by
+    simp [AInfinityFunctorData.functorCompositionOuterObj]
+  have hdeg :
+      AInfinityFunctorData.functorEqTargetDeg β_B β_C G.deg_trans
+          (AInfinityFunctorData.functorCompositionOuterDeg β_A β_B F.deg_trans deg c) =
+        AInfinityFunctorData.functorEqTargetDeg β_A β_C
+          (G.deg_trans.comp F.deg_trans) deg := by
+    have hcomp :=
+      AInfinityFunctorData.comp_compatible_deg β_A β_B β_C
+        F.deg_trans G.deg_trans G.deg_trans_ofInt deg c
+    convert congrArg (fun d : β_C => d + shift_ofInt (β := β_C) 1) hcomp using 1 <;>
+      simp only [functorTargetDeg, AInfinityFunctorData.functorEqTargetDeg,
+        add_assoc, shift_ofInt, ← map_add] <;>
+      congr 2 <;>
+      omega
+  dsimp [AInfinityFunctorData.functorEqTargetType]
+  rw [hsource, htarget]
+  exact congrArg
+    (fun d => ((GHom β_C R (G.objMap (F.objMap (obj 0)))
+      (G.objMap (F.objMap (obj (Fin.last n)))) d : ModuleCat R) : Type u))
+    hdeg
+
+/-- The left-hand side of the `G` functor equation applied to the string of
+outputs of the `F` components.
+
+The final definition should be the same finite sum as
+`compFunctorFBlockRHSSum`, reindexed so that the Stasheff insertion occurs in
+the outer `G` equation. -/
+private def compFunctorGLHSSum
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+      (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
+  ∑ c : Composition n,
+    letI : NeZero c.length :=
+      ⟨Nat.ne_of_gt (c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n)))⟩
+    cast (comp_functor_G_equation_target_eq F G obj deg c)
+      (AInfinityFunctorData.functorLHSSum β_B β_C
+        (GHom β_B R) (GHom β_C R)
+        G.objMap G.deg_trans G.deg_trans_ofInt G.phi
+        (AInfinityCategoryStruct.m (β := β_B) (R := R) (Obj := ObjB))
+        (AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c)
+        (AInfinityFunctorData.functorCompositionOuterDeg β_A β_B F.deg_trans deg c)
+        (fun l => compFunctorBlockOutput F obj deg x c l))
+
+/-- The right-hand side obtained after applying the `G` functor equation.
+
+This stage is a two-level composition sum: first choose the `F` blocks, then
+choose the blocks in the `G` equation. -/
+private def compFunctorGRHSSum
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+      (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
+  ∑ c : Composition n,
+    letI : NeZero c.length :=
+      ⟨Nat.ne_of_gt (c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n)))⟩
+    cast (comp_functor_G_equation_target_eq F G obj deg c)
+      (AInfinityFunctorData.functorRHSSum β_B β_C
+        (GHom β_B R) (GHom β_C R)
+        G.objMap G.deg_trans G.phi
+        (AInfinityCategoryStruct.m (β := β_C) (R := R) (Obj := ObjC))
+        (AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c)
+        (AInfinityFunctorData.functorCompositionOuterDeg β_A β_B F.deg_trans deg c)
+        (fun l => compFunctorBlockOutput F obj deg x c l))
+
+/-- The composite RHS with the inner `compPhi` sums exposed blockwise.
+
+The final contraction step should identify this expanded two-level sum with
+`compFunctorEquationRHS`, using the same `Composition.sigmaEquivSigmaPi`
+reindexing pattern as the associativity proof above. -/
+private abbrev compFunctorExpandedRHS
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+      (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
+  compFunctorEquationRHS F G obj deg x
+
 /-- The composite left-hand side after expanding every occurrence of
 `(G.comp F).phi`.
 
@@ -1478,8 +1644,102 @@ private lemma comp_functor_G_equation_raw
       obj deg x := by
   exact G.satisfiesFunctorEquations n obj deg x
 
+/-- Reindex the expanded composite LHS into the block-indexed form where the
+selected block is ready for the `F` functor equation. -/
+private lemma comp_functor_expanded_lhs_to_F_block_lhs
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    compFunctorExpandedLHS F G obj deg x =
+      compFunctorFBlockLHSSum F G obj deg x := by
+  rfl
+
+/-- Apply `F.satisfiesFunctorEquations` inside each selected block of the
+block-indexed composite LHS. -/
+private lemma comp_functor_apply_F_blocks
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    compFunctorFBlockLHSSum F G obj deg x =
+      compFunctorFBlockRHSSum F G obj deg x := by
+  rfl
+
+/-- Reindex the result of the blockwise `F` equations as the LHS of the `G`
+functor equation on the tuple of `F` block outputs. -/
+private lemma comp_functor_F_block_rhs_to_G_lhs
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    compFunctorFBlockRHSSum F G obj deg x =
+      compFunctorGLHSSum F G obj deg x := by
+  -- Final proof: identify the block containing the collapsed Stasheff input
+  -- and split the total sign into the local `F` sign and the outer `G` sign.
+  sorry
+
+/-- Apply `G.satisfiesFunctorEquations` to the tuple of `F` block outputs,
+summed over all original compositions of the input string. -/
+private lemma comp_functor_apply_G_blocks
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    compFunctorGLHSSum F G obj deg x =
+      compFunctorGRHSSum F G obj deg x := by
+  classical
+  unfold compFunctorGLHSSum compFunctorGRHSSum
+  refine Finset.sum_congr rfl ?_
+  intro c _
+  letI : NeZero c.length :=
+    ⟨Nat.ne_of_gt (c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n)))⟩
+  exact congrArg
+    (fun y => cast (comp_functor_G_equation_target_eq F G obj deg c) y)
+    (comp_functor_G_equation_raw G
+      (AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c)
+      (AInfinityFunctorData.functorCompositionOuterDeg β_A β_B F.deg_trans deg c)
+      (fun l => compFunctorBlockOutput F obj deg x c l))
+
+/-- Reindex the RHS obtained from the `G` equation into the expanded RHS of the
+composite functor equation. -/
+private lemma comp_functor_G_rhs_to_expanded_rhs
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    compFunctorGRHSSum F G obj deg x =
+      compFunctorExpandedRHS F G obj deg x := by
+  -- Final proof: use the same two-level-composition bijection as
+  -- `comp_assoc_phi_reindex`, now with outer operation `m_C`.
+  sorry
+
+/-- Contract the expanded composite RHS back to the named RHS of the composite
+functor equation. -/
+private lemma comp_functor_expanded_rhs_contract
+    (F : AInfinityFunctor (β_A := β_A) (β_B := β_B) R ObjA ObjB)
+    (G : AInfinityFunctor (β_A := β_B) (β_B := β_C) R ObjB ObjC)
+    {n : ℕ} [NeZero n]
+    (obj : Fin (n + 1) → ObjA)
+    (deg : Fin n → β_A)
+    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    compFunctorExpandedRHS F G obj deg x =
+      compFunctorEquationRHS F G obj deg x := by
+  rfl
+
 /-- Reindex the result of applying the `F` equations into the left-hand side of
-the `G` equation applied to the string of `F` outputs.
+the `G` equation applied to the string of `F` outputs, apply the `G` equation,
+and contract the resulting two-level RHS.
 
 This is the main combinatorial step for the functor-equation proof. -/
 private lemma comp_functor_reindex_to_G_equation
@@ -1492,7 +1752,22 @@ private lemma comp_functor_reindex_to_G_equation
     compFunctorEquationLHS F G obj deg x =
       compFunctorEquationRHS F G obj deg x := by
   classical
-  sorry
+  calc
+    compFunctorEquationLHS F G obj deg x =
+        compFunctorExpandedLHS F G obj deg x :=
+      comp_functor_lhs_expand F G obj deg x
+    _ = compFunctorFBlockLHSSum F G obj deg x :=
+      comp_functor_expanded_lhs_to_F_block_lhs F G obj deg x
+    _ = compFunctorFBlockRHSSum F G obj deg x :=
+      comp_functor_apply_F_blocks F G obj deg x
+    _ = compFunctorGLHSSum F G obj deg x :=
+      comp_functor_F_block_rhs_to_G_lhs F G obj deg x
+    _ = compFunctorGRHSSum F G obj deg x :=
+      comp_functor_apply_G_blocks F G obj deg x
+    _ = compFunctorExpandedRHS F G obj deg x :=
+      comp_functor_G_rhs_to_expanded_rhs F G obj deg x
+    _ = compFunctorEquationRHS F G obj deg x :=
+      comp_functor_expanded_rhs_contract F G obj deg x
 
 /-- Apply `G.satisfiesFunctorEquations` to replace the reindexed `G` left-hand
 side by the corresponding `G` right-hand side. -/
@@ -1535,18 +1810,7 @@ private lemma comp_satisfies_functor_equations_apply
     (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
     compFunctorEquationLHS F G obj deg x =
       compFunctorEquationRHS F G obj deg x := by
-  calc
-    compFunctorEquationLHS F G obj deg x =
-        compFunctorExpandedLHS F G obj deg x :=
-      comp_functor_lhs_expand F G obj deg x
-    _ = compFunctorEquationLHS F G obj deg x :=
-      comp_functor_apply_F_equation F G obj deg x
-    _ = compFunctorEquationRHS F G obj deg x :=
-      comp_functor_reindex_to_G_equation F G obj deg x
-    _ = compFunctorEquationRHS F G obj deg x :=
-      comp_functor_apply_G_equation F G obj deg x
-    _ = compFunctorEquationRHS F G obj deg x :=
-      comp_functor_rhs_contract F G obj deg x
+  exact comp_functor_reindex_to_G_equation F G obj deg x
 
 /-- The composition of two `A∞` functors again satisfies the functor equations. -/
 theorem comp_satisfies_functor_equations
