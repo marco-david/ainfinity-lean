@@ -2,6 +2,7 @@ module
 
 public import Mathlib
 public import AInfinity.ComputableCategories
+public import AInfinity.Texify
 
 @[expose] public section
 
@@ -10,6 +11,11 @@ open CategoryTheory
 structure CMat_ (C : Type*) where
   ofList ::
     toList : List C
+
+instance (C : Type*) [Texify C] : Texify (CMat_ C) where
+  texify x := if x.toList = [] then "0" else
+    x.toList.map texifyWithBracketsAndParenthesesIfNecessary |> r" \oplus ".intercalate
+  requiresParentheses := true
 
 syntax (name := «term[_,]ₘ») "[" withoutPosition(term,*,?) "]ₘ" : term
 
@@ -99,6 +105,31 @@ instance : Category (CMat_ C) where
       Category.assoc]
     rw [Finset.sum_comm]
 
+instance [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
+    Texify (CMat_.Hom M N) where
+  texify x :=
+    if M.toList.length = 0 ∨ N.toList.length = 0 then
+      "0"
+    else
+      let getEntry (i : Fin N.toList.length) (j : Fin M.toList.length) : String :=
+        texifyWithBrackets (x (CMat_.ι.ofFin j) (CMat_.ι.ofFin i))
+      let getRow (i : Fin N.toList.length) : String :=
+        Finset.univ.sort.map (getEntry i) |> " & ".intercalate
+      let entries : String := Finset.univ.sort.map getRow |> r" \\ ".intercalate
+      r"\begin{pmatrix} " ++ entries ++ r" \end{pmatrix}"
+  requiresParentheses := false
+
+instance [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
+    Texify (M ⟶ N) := inferInstanceAs (Texify (CMat_.Hom M N))
+
+unseal ι X in
+/--
+Constructor for explicit morphisms, e.g. in interactive use
+-/
+def Hom.ofFin {C : Type*} [Category C] [Preadditive C] (xs ys : List C)
+    (f : Π (i : Fin xs.length) (j : Fin ys.length), xs[i] ⟶ ys[j]) :
+    ofList xs ⟶ ofList ys := f
+
 -- These theorems and instances are almost directly copied from `CategoryTheory.Mat_`.
 @[ext] theorem hom_ext {M N : CMat_ C} (f g : M ⟶ N) (H : ∀ i j, f i j = g i j) : f = g :=
   DMatrix.ext_iff.mp H
@@ -164,6 +195,13 @@ theorem hom_to_empty_eq_zero (h : M ⟶ []ₘ) : h = 0 := by
 
 instance : HasExplicitZeroObject (CMat_ C) := .mkOfPreadditive (CMat_ C) []ₘ
   hom_from_empty_eq_zero hom_to_empty_eq_zero
+
+instance {V : Type*} [Category V] [Preadditive V] [DecidablePred (Limits.IsZero : V → Prop)] :
+    DecidablePred (Limits.IsZero : CMat_ V → Prop) := fun M ↦
+  if h : M.toList.all (Limits.IsZero ·) then
+    Decidable.isTrue sorry
+  else
+    Decidable.isFalse sorry
 
 -- Idea: Maybe we can translate the `HasFiniteBiproducts` instance from `CategoryTheory.Mat_` using
 -- an equivalence. I don't know if this would make it computable though, which we might need.
