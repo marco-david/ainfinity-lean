@@ -38,4 +38,4 @@ jobs:
         uses: dwrensha/docgen-action@a3f8189646977363717917b605e6de25f9704656
         with:
           blueprint: true
-          homepage: "."
+          homepage: "homepage"
