@@ -660,7 +660,7 @@ theorem concentratedAt0CategoryData_satisfiesStasheff
 
       unfold indexedStasheffSum;
       rw [ Finset.sum_eq_add ( ⟨ 0, by decide ⟩ ) ( ⟨ 1, by decide ⟩ ) ];
-      · rw [ Finset.sum_eq_single ⟨ 2, by decide ⟩, Finset.sum_eq_single ⟨ 2, by decide ⟩ ] <;> simp? +decide [ * ];
+      · rw [ Finset.sum_eq_single ⟨ 2, by decide ⟩, Finset.sum_eq_single ⟨ 2, by decide ⟩ ] <;> simp +decide [ * ];
         · erw [ hterm02, hterm12, stasheffSign_zero_deg_0_2, stasheffSign_zero_deg_1_2 ] ; simp +decide [ hassoc ];
         · intro a ha₁ ha₂ ha₃
           interval_cases a <;> simp +decide only [Fin.isValue] at ha₃ ⊢
