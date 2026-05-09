@@ -98,8 +98,7 @@ where $0 \le i \le m-1$ and $0 \le j \le n-1$.
   $F$ into a fully faithful functor $F:\BK(\C) \to K^\bullet (\C)$.
 \end{definition}
 
-\section{\texorpdfstring{$\beta$}{beta}-functor}
-
+\section{Functor data and functor action}
 
 \subsection{Functor data}
 We will now specify the data needed to define how a braiding functor acts. Let $R, S, T \in \mathcal{KLRW}$.
@@ -112,7 +111,6 @@ $$
 \beta_2 &\colon & \operatorname{Hom}(R,S) \times \operatorname{Hom}(S,T) &\to \operatorname{Hom}(\beta_0(R), \beta_0(T))
 \end{aligned}
 $$
-
 
 In addition to these functions, there must also be proofs that they satisfy $A_\infty$ relations.
 
@@ -134,7 +132,7 @@ That is, $\beta_1(f)$ is a chain map from $\beta_0(A)$ to $\beta_0(B)$.
 \textbf{[SF\textsubscript{2}].}
 For all composable $f \in \Hom_{\KLRW}(A, B)$ and $g \in \Hom_{\KLRW}(B, C)$,
 $$
-  \beta_1(g \circ f) + \beta_1(g) \circ \beta_1(f)
+  \beta_1(g \circ f) - \beta_1(g) \circ \beta_1(f)
   = \delta_{\beta_0(C)} \circ \beta_2(f, g) + \beta_2(f, g) \circ \delta_{\beta_0(A)}.
 $$
 That is, $\beta_1$ is functorial up to the homotopy provided by $\beta_2$.
@@ -149,11 +147,11 @@ That is, $\beta_1$ is functorial up to the homotopy provided by $\beta_2$.
 \end{remark}
 
 \textbf{[SF\textsubscript{3}].}
-For all composable $f \in \Hom_{\KLRW}(A, B)$,
+For all $f \in \Hom_{\KLRW}(A, B)$,
 $g \in \Hom_{\KLRW}(B, C)$, and $h \in \Hom_{\KLRW}(C, D)$,
 $$
-  \beta_2(f, h \circ g) + \beta_2(g \circ f, h)
-  = \beta_2(f, g) \circ \beta_1(h) + \beta_1(f) \circ \beta_2(g, h).
+  \beta_2(f, h \circ g) - \beta_2(g \circ f, h)
+  = \beta_1(h) \circ \beta_2(f, g) -  \beta_2(g, h)\circ \beta_1(f).
 $$
 That is, $\beta_2$ satisfies a cocycle condition intertwining source
 composition with the target composition mediated by $\beta_1$.
@@ -169,7 +167,7 @@ For all composable $f \in \Hom_{\KLRW}(A, B)$,
 $g \in \Hom_{\KLRW}(B, C)$, $h \in \Hom_{\KLRW}(C, D)$, and
 $k \in \Hom_{\KLRW}(D, E)$,
 $$
-  \beta_2(f, g) \circ \beta_2(h, k) = 0.
+  \beta_2(h, k) \circ \beta_2(f, g)= 0.
 $$
 
 \begin{remark}
@@ -180,33 +178,102 @@ $$
   with $k \geq 3$ or $\mu_k$ with $k \geq 3$, both of which are zero.
 \end{remark}
 
+
 One can understand these functions as specifying how the functor acts on the generating elements of our chain complex category. The action of the functor is as follows.
 
 \subsection{Functor action}
+\subsubsection{Defining $\beta_0.add$}
 Firstly, we may extend the functions acting on $\mathcal{KLRW}$ to act on $\operatorname{Add}(\mathcal{KLRW})$ in a linear sense. We define:
 $$\widehat{\beta}_0 \colon \operatorname{Add}(\mathcal{KLRW}) \to K^*$$
 by setting:
 $$\widehat{\beta}_0\left(\bigoplus_i S_i\right) = \bigoplus_i \beta_0(S_i)$$
 
+\subsubsection{Defining $\beta_1.add$}
 Extending the remaining two functions requires more care.
 
 For $\beta_1$, let $\bigoplus_i A_i$ and $\bigoplus_j B_j$ be objects in $\operatorname{Add}(\mathcal{KLRW})$. Let $f \in \operatorname{Hom}\left(\bigoplus_i A_i, \bigoplus_j B_j\right)$. For each pair $k, l$, we project $f$ to its component $f_{k,l} \in \operatorname{Hom}(A_k, B_l)$. We now create $g_{k,l} \in \operatorname{Hom}\left(\widehat{\beta}_0\left(\bigoplus_i A_i\right), \widehat{\beta}_0\left(\bigoplus_j B_j\right)\right)$ by extending this morphism. Formally, $g_{k,l}$ is constructed by composing the canonical projection, the mapped component, and the canonical injection:
 $$\widehat{\beta}_0\left(\bigoplus_i A_i\right) \twoheadrightarrow {\beta}_0(A_k) \xrightarrow{\beta_1(f_{k,l})} {\beta}_0(B_l) \hookrightarrow \widehat{\beta}_0\left(\bigoplus_j B_j\right)$$
 
-
+\subsubsection{Defining $\beta_2.add$}
 
 For $\beta_2$, we construct the extension $\widehat{\beta}_2$ analogously.
 
-Note now that if $A^* \in K^*$, then we may write $A^*$ as the cone of the following chain map:
-$$\begin{array}{ccccccccc}
-0 & \to & A_0 & \to & \cdots & \to & A_{n-1} & \to & 0 \\
-  &     & \downarrow & & & & \downarrow & & \\
-0 & \to & 0   & \to & \cdots & \to & A_n     & \to & 0
-\end{array}$$
+\subsubsection{Defining $\beta_0.full$}
 
-We may call the upper chain complex $A^*_{[0,n-1]}$, and the lower $A^*_{[n,n]}[-1]$ (shifted by $-1$ because $A_{n-1}$ and $A_n$ need the same homological grading).
+\paragraph{Idea}
 
-Assuming we know how $\overline{\beta}_0$ acts on these two chain complexes, we will state how it acts on $A^*$. First, take the direct sum:
-$$\overline{\beta}_0(A^*) = \overline{\beta}_0(A^*_{[0,n-1]}) \oplus \overline{\beta}_0(A^*_{[n,n]}[-1])$$
+We now define the action of $\beta$ on a chain complex, i.e. the function
 
-\subsection{Generating the data}
+\begin{equation*}
+    \beta_0.full: K^*AddKLRW
+\rightarrow K^*AddKLRW.
+\end{equation*}
+
+The idea is as follows. The definition takes use of chain complexes of block matrices, i.e. elements in $K^*AddAddKLRW$. After constructing an element there, we project into $K^*AddKLRW$.
+
+Let $A^*$ denote the following cochain complex
+
+\[
+\cdots \to 0 \to A^{\ell} \xrightarrow{d^{\ell}} A^{\ell+1} \xrightarrow{d^{\ell+1}} \cdots \xrightarrow{d^{r-1}} A^{r} \to 0 \to \cdots
+\]
+
+For any $A^i$, consider $B_i ^*:=\beta_0.add(A^i)$ to be the following cochain complex:
+
+\[
+\cdots \to 0 \to B^{\ell_i}_{i} \xrightarrow{f_i^{\ell_i}} B^{\ell_i+1}_{i} \xrightarrow{f_i^{\ell_i+1}} \cdots \xrightarrow{f_i^{r_i-1}} B^{r_i}_{i} \to 0 \to \cdots
+\]
+where the left and right bounds are $l_i$ and $r_i$.
+
+For any $d^i:A^i -> A^{i+1}$, we get $g_i:=\beta_1.add(d^i): B_i ^* \to B_{i+1}^*$. For any two $d^i:A^i -> A^{i+1}, d^{i+1}:A^{i+1} -> A^{i+2}$, we get $h_i:=\beta_2.add(d^i,d^{i+1}): B_i ^* \to B_{i+2}^*[1]$. This gives rise to the following lattice:
+
+\input{chapters/diagrams/diagram.tex}
+
+The cochain complex which we want, is then obtained by taking direct sums along the diagonals. The $A_\infty$-relations ensure that the resulting object is a cochain complex.
+
+\paragraph{Detailed Construction}
+Refer to the objects $A^*, B_i^*, g_i, h_i$ as defined above.
+
+Construct first the following object in $K^* AddAddKLRW$.
+
+The objects of the chain complex will be $\mathbb{Z}$-indexed, where each entry is a list of elements in $AddKLRW$. For an index $k$, the element will be the list $\overline{B}^k:=[B_l ^k, B_{l+1}^{k-1},\dots ,B_r ^{k-r+l}]$.
+
+The bounds are as follows. If $L_i$ and $R_i$ is the lower and upper bound of $B_i$, then our lower bound will be $min(L_i-i)$ and the upper bound will be $max(R_i-i)$. The entry will be the $0$-list outside the bounds.
+
+The morphisms will be block matrices, where each entry in the matrix is a morphism between entries in the lists (and thus matrices). For $k$ in these bounds, the morphism $\overline{B}^k\to \overline{B}^{k+1}$ is given by the lower-triangular matrix of the form
+
+
+\[
+\begin{pmatrix}
+f & 0 & 0 & 0 & \cdots & 0 \\
+g & f & 0 & 0 & \cdots & 0 \\
+h & g & f & 0 & \cdots & 0 \\
+0 & h & g & f & \cdots & 0 \\
+\vdots & \vdots & \vdots & \vdots & \ddots & \vdots \\
+0 & 0 & 0 & 0 & \cdots & f
+\end{pmatrix}
+\]
+
+The $f$'s are the differentials of $B^*_i$, the $g$'s are the chain maps, and the $h$'s are the correction maps. Indices are omitted, but should be possible to infer.
+
+For this to be a differential, it would need to square to 0. This gives rise to the following equations:
+
+\begin{align}
+f^2 &= 0 \label{eq:f-squared}\\
+fg + gf &= 0 \label{eq:anticomm-fg}\\
+fh + g^2 + hf &= 0 \label{eq:cross-term}\\
+gh + hg &= 0 \label{eq:anticomm-gh}\\
+h^2 &= 0 \label{eq:h-squared}
+\end{align}
+
+These can be interpreted as follows:
+
+\begin{itemize}
+    \item Equation \ref{eq:f-squared} ensures $f$ is a differential.
+    \item Equation \ref{eq:anticomm-fg} ensures $g$ is a chain map: it is $SF_1$ applied to the input differential $d^i$.
+    \item Equation \ref{eq:cross-term}, \ref{eq:anticomm-gh} and \ref{eq:h-squared} are the equations corresponding to $SF_2$, $SF_3$ and $SF_4$ respectively, after simplifying with the source differential relation $d^{i+1}d^i=0$.
+\end{itemize}
+
+
+
+
+\section{Generating the beta data}
