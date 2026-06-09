@@ -1,0 +1,63 @@
+module
+
+public import Mathlib
+
+@[expose] public section
+
+namespace KLRW
+
+structure SimpleDigraph (V : Type*) extends Digraph V where
+  loopless : ∀ x : V, ¬ Adj x x
+
+inductive StrandColor where
+  | red   : StrandColor
+  | black : StrandColor
+  deriving DecidableEq
+
+structure KLRWReq (n : Nat) where
+  DirGraph : SimpleDigraph (Fin n)
+  dᵢ : Fin n → Nat
+  red_strands : Fin n → Nat
+
+def num_black (v : Vector (Fin n × StrandColor) m) (k : Nat) : Nat :=
+  (v.toList.filter (fun p => p.1.val == k && p.2 == StrandColor.black)).length
+
+def num_red (v : Vector (Fin n × StrandColor) m) (k : Nat) : Nat :=
+  (v.toList.filter (fun p => p.1.val == k && p.2 == StrandColor.red)).length
+
+structure KLRWSet (blueprint : KLRWReq n) m where
+  strand_seq : Vector (Fin n × StrandColor) m
+  num_black_right : ∀ (i : Fin n), KLRWReq.dᵢ blueprint i = num_black (strand_seq) i
+  num_red_right : ∀ (i : Fin n), KLRWReq.red_strands blueprint i = num_red (strand_seq) i
+
+
+-- Examples of the previous structures
+
+def exGraph : SimpleDigraph (Fin 3) where
+  Adj i j := i.val < j.val
+  loopless := by
+    intro i h
+    exact Nat.lt_irrefl i.val h
+
+def exReq : KLRWReq 3 where
+  DirGraph := exGraph
+  dᵢ := ![2, 1, 0]
+  red_strands := ![1, 0, 1]
+
+def exObj : KLRWSet exReq 5 where
+  strand_seq := ⟨#[(⟨0, by omega⟩, StrandColor.black),
+                  (⟨0, by omega⟩, StrandColor.black),
+                  (⟨0, by omega⟩, StrandColor.red),
+                  (⟨1, by omega⟩, StrandColor.black),
+                  (⟨2, by omega⟩, StrandColor.red)], by simp⟩
+  num_black_right := by
+    intro i
+    fin_cases i <;> decide
+  num_red_right := by
+    intro i
+    fin_cases i <;> decide
+
+
+
+
+ end KLRW
