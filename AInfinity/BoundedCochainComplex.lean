@@ -185,6 +185,14 @@ def liftEndofunctorCompEmbed
 
 end LiftEndofunctor
 
+def shiftFunctor [DecidablePred (IsZero : V → Prop)] (n : ℤ) :
+    BoundedCochainComplex V ⥤ BoundedCochainComplex V :=
+  liftEndofunctor (CochainComplex.shiftFunctor V n) (fun A ↦ A.support.image (· - n)) <| by
+    intro X i hi
+    rw [Finset.mem_image]
+    refine ⟨i + n, ?_, by abel⟩
+    exact (X.not_isZero_iff_mem_support (i + n)).mp (by simpa using hi)
+
 def toTexRow {C : Type*} [Category C] [Preadditive C] [Limits.HasZeroObject C]
     [Texify C] [∀ (X Y : C), Texify (X ⟶ Y)] (A : BoundedCochainComplex C)
     (leftmost rightmost : ℤ) (placeDifferentialsBelow : Bool := false) : String := Id.run do
