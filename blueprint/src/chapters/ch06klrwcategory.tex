@@ -98,7 +98,7 @@ where $0 \le i \le m-1$ and $0 \le j \le n-1$.
   $F$ into a fully faithful functor $F:\BK(\C) \to K^\bullet (\C)$.
 \end{definition}
 
-\section{\texorpdfstring{$\beta$}{beta}-functor}
+\section{Functor data and functor action}
 
 \subsection{Functor data}
 We will now specify the data needed to define how a braiding functor acts. Let $R, S, T \in \mathcal{KLRW}$.
@@ -162,7 +162,7 @@ where the left and right bounds are $l_i$ and $r_i$.
 
 For any $d^i:A^i -> A^{i+1}$, we get $g_i:=\beta_1.add(d^i): B_i ^* \to B_{i+1}^*$. For any two $d^i:A^i -> A^{i+1}, d^{i+1}:A^{i+1} -> A^{i+2}$, we get $h_i:=\beta_2.add(d^i,d^{i+1}): B_i ^* \to B_{i+2}^*[1]$. This gives rise to the following lattice:
 
-\input{diagram.tex}
+\input{chapters/diagrams/diagram.tex}
 
 The cochain complex which we want, is then obtained by taking direct sums along the diagonals. The $A_\infty$-relations ensure that the resulting object is a cochain complex.
 
@@ -209,14 +209,14 @@ These can be interpreted as follows:
     \item Equation \ref{eq:cross-term}, \ref{eq:anticomm-gh} and \ref{eq:h-squared} are the equations corresponding to $SF_2$, $SF_3$ and $SF_4$ respectively, after simplifying with the source differential relation $d^{i+1}d^i=0$.
 \end{itemize}
 
-\subsection{Satisfying A-$\infty$ axioms}
+\subsection{Satisfying A-\texorpdfstring{$\infty$}{infinity} axioms}
 
 The category $K^\bullet(\operatorname{Add}(KLRW))$ only has differential $\mu_1$ and composition $\mu_2$. Similarly, the braiding functor has no components higher than $\beta_2$. Therefore the general $[\text{SF}_n]$ axioms for A-$\infty$ functors reduce to a finite list. They are, in particular, the following axioms.
 
 \textbf{[SF\textsubscript{1}].}
 For all $f \in \Hom_{\KLRW}(A, B)$,
 $$
-  \delta_{\beta_0(B)}(\beta_1(f)) + \beta_1(\delta_{\beta_0(A)}(f)) = 0.
+  \delta_{\beta_0(B)} \circ \beta_1(f) + \beta_1(f) \circ \delta_{\beta_0(A)} = 0.
 $$
 That is, $\beta_1(f)$ is a chain map from $\beta_0(A)$ to $\beta_0(B)$.
 
@@ -228,14 +228,17 @@ That is, $\beta_1(f)$ is a chain map from $\beta_0(A)$ to $\beta_0(B)$.
 
 \textbf{[SF\textsubscript{2}].}
 For all composable $f \in \Hom_{\KLRW}(A, B)$ and $g \in \Hom_{\KLRW}(B, C)$,
-$$\beta_2(f, \mu_1^A(g)) + \beta_2(\mu_1^A(f), g) + \beta_1(\mu_2^A(f, g)) = \mu_2^B(\beta_1(f), \beta_1(g)) + \mu_1^B(\beta_2(f, g))$$
+$$
+  \beta_1(g \circ f) - \beta_1(g) \circ \beta_1(f)
+  = \delta_{\beta_0(C)} \circ \beta_2(f, g) + \beta_2(f, g) \circ \delta_{\beta_0(A)}.
+$$
 
 \textbf{[SF\textsubscript{3}].}
 For all $f \in \Hom_{\KLRW}(A, B)$,
 $g \in \Hom_{\KLRW}(B, C)$, and $h \in \Hom_{\KLRW}(C, D)$,
 $$
-  \beta_2(f, \mu_2^A(g, h)) - \beta_2(\mu_2^A(f, g), h)
-  = \mu_2^B(\beta_1(f), \beta_2(g, h)) -  \mu_2^B(\beta_2(f, g), \beta_1(h)).
+  \beta_2(f, h \circ g) - \beta_2(g \circ f, h)
+  = \beta_1(h) \circ \beta_2(f, g) -  \beta_2(g, h)\circ \beta_1(f).
 $$
 
 \textbf{[SF\textsubscript{4}].}
@@ -243,7 +246,7 @@ For all (composable) $f \in \Hom_{\KLRW}(A, B)$,
 $g \in \Hom_{\KLRW}(B, C)$, $h \in \Hom_{\KLRW}(C, D)$, and
 $k \in \Hom_{\KLRW}(D, E)$,
 $$
-  \mu_2^B(\beta_2(f, g), \beta_2(h, k))= 0.
+  \beta_2(h, k) \circ \beta_2(f, g)= 0.
 $$
 
 \begin{remark}
@@ -257,21 +260,6 @@ $$
 
 \end{remark}
 
-\section{Proofs of the braiding functor satisfying A-$\infty$ axioms}
-
-\subsection{$\beta.add$ axioms}
-Ultimately we would like to satisfy the above A-$\infty$ axioms. However to do so, we will first show that the corresponding A-$\infty$ axioms are satisfied for $\beta.add: \KLRW \to K^\bullet(\Add(\KLRW))$. Note that within $\KLRW$ there is no suitable notion of a differential, though composition is defined.
-
-Therefore terms are dropped from each $[SF_i]$:
-\begin{itemize}
-    \item \textbf{[SF\textsubscript{1}].}
-    $0 = \mu_1^B(\beta_1(f))$
-    \item \textbf{[SF\textsubscript{2}].}
-    $\beta_1(\mu_2^A(f, g)) = \mu_2^B(\beta_1(f), \beta_1(g)) + \mu_1^B(\beta_2(f, g)).$
-    \item \textbf{[SF\textsubscript{3}].}
-    $\beta_2(f, \mu_2^A(g, h)) + \beta_2 (\mu_2^A(f, g), h) = \mu_2^B(\beta_1(f), \beta_2(g, h)) + \mu_2^B(\beta_2(f, g), h) .$
-    \item \textbf{[SF\textsubscript{4}].}
-    $0 = \mu_2^B(\beta_2(f, g), \beta_2(h, k))$.
-\end{itemize}
+\section{Proofs of the braiding functor satisfying A-\texorpdfstring{$\infty$}{infinity} axioms}
 
 \section{Generating the beta data}
