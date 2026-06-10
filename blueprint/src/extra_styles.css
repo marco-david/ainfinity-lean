@@ -23,3 +23,8 @@ div.corollary_thmcontent {
 div.proof_content {
 	border-left: .08rem solid grey;
 }
+
+.content img {
+	max-width: 100% !important;
+	height: auto !important;
+}
