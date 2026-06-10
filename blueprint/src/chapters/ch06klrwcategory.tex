@@ -107,87 +107,24 @@ We will now specify the data needed to define how a braiding functor acts. Let $
 The data of a braiding functor is given by the following functions:
 $$
 \begin{aligned}
-\beta_0 &\colon & \mathcal{KLRW} &\to K^* \\
+\beta_0 &\colon & \mathcal{KLRW} &\to K^\bullet  \\
 \beta_1 &\colon & \operatorname{Hom}(R,S) &\to \operatorname{Hom}(\beta_0(R), \beta_0(S)) \\
 \beta_2 &\colon & \operatorname{Hom}(R,S) \times \operatorname{Hom}(S,T) &\to \operatorname{Hom}(\beta_0(R), \beta_0(T))
 \end{aligned}
 $$
 
-
 In addition to these functions, there must also be proofs that they satisfy $A_\infty$ relations.
-
-Our KLRW category only has composition $\mu_2$, and no higher products. Similarly, the beta-functor has no components higher than $\beta_2$. Therefore the general $[\text{SF}_n]$ axioms for A-infinity functors reduce to a finite list. They are, in particular, the following axioms.
-
-\textbf{[SF\textsubscript{1}].}
-For all $f \in \Hom_{\KLRW}(A, B)$,
-$$
-  \delta_{\beta_0(B)} \circ \beta_1(f) + \beta_1(f) \circ \delta_{\beta_0(A)} = 0.
-$$
-That is, $\beta_1(f)$ is a chain map from $\beta_0(A)$ to $\beta_0(B)$.
-
-\begin{remark}
-  This axiom is automatic from the typing of $\beta_1$: its codomain
-  consists of morphisms of cochain complexes, which by definition
-  commute with differentials.
-\end{remark}
-
-\textbf{[SF\textsubscript{2}].}
-For all composable $f \in \Hom_{\KLRW}(A, B)$ and $g \in \Hom_{\KLRW}(B, C)$,
-$$
-  \beta_1(g \circ f) - \beta_1(g) \circ \beta_1(f)
-  = \delta_{\beta_0(C)} \circ \beta_2(f, g) + \beta_2(f, g) \circ \delta_{\beta_0(A)}.
-$$
-That is, $\beta_1$ is functorial up to the homotopy provided by $\beta_2$.
-
-\begin{remark}
-  This is the axiom that gives Maurer--Cartan preservation. If
-  $\delta$ is a differential on a complex over $\operatorname{Add}(\KLRW)$
-  (i.e.\ $\delta^2 = 0$), then the formula
-  $\delta' = \widehat{\beta}_1(\delta) + \widehat{\beta}_2(\delta, \delta)$
-  satisfies $(\delta')^2 = 0$, where $\widehat{\beta}_i$ denotes the matrix
-  extension.
-\end{remark}
-
-\textbf{[SF\textsubscript{3}].}
-For all composable $f \in \Hom_{\KLRW}(A, B)$,
-$g \in \Hom_{\KLRW}(B, C)$, and $h \in \Hom_{\KLRW}(C, D)$,
-$$
-  \beta_2(f, h \circ g) - \beta_2(g \circ f, h)
-  = \beta_1(h) \circ \beta_2(f, g) -  \beta_2(g, h)\circ \beta_1(f).
-$$
-That is, $\beta_2$ satisfies a cocycle condition intertwining source
-composition with the target composition mediated by $\beta_1$.
-
-\begin{remark}
-  This axiom is needed for iterated cone constructions: when lifting
-  a map through a double cone, the correction at the second step must
-  be compatible with the correction at the first step.
-\end{remark}
-
-\textbf{[SF\textsubscript{4}].}
-For all composable $f \in \Hom_{\KLRW}(A, B)$,
-$g \in \Hom_{\KLRW}(B, C)$, $h \in \Hom_{\KLRW}(C, D)$, and
-$k \in \Hom_{\KLRW}(D, E)$,
-$$
-  \beta_2(h, k) \circ \beta_2(f, g)= 0.
-$$
-
-\begin{remark}
-  Since $\beta_2$ produces degree $-1$ maps, their composition has degree
-  $-2$. This axiom says this composition vanishes, ensuring no higher
-  obstructions arise. For $n \geq 5$, all $[\mathrm{SF}_n]$ axioms are
-  automatically satisfied because every term involves either $\beta_k$
-  with $k \geq 3$ or $\mu_k$ with $k \geq 3$, both of which are zero.
-\end{remark}
 
 One can understand these functions as specifying how the functor acts on the generating elements of our chain complex category. The action of the functor is as follows.
 
-\subsection{Functor action}
+\subsection{The action of braiding on generators}
+\subsubsection{Defining $\beta_0.add$}
 Firstly, we may extend the functions acting on $\mathcal{KLRW}$ to act on $\operatorname{Add}(\mathcal{KLRW})$ in a linear sense. We define:
-$$\widehat{\beta}_0 \colon \operatorname{Add}(\mathcal{KLRW}) \to K^*$$
+$$\widehat{\beta}_0 \colon \operatorname{Add}(\mathcal{KLRW}) \to K^\bullet$$
 by setting:
 $$\widehat{\beta}_0\left(\bigoplus_i S_i\right) = \bigoplus_i \beta_0(S_i)$$
 
+\subsubsection{Defining $\beta_1.add$}
 Extending the remaining two functions requires more care.
 
 For $\beta_1$, let $\bigoplus_i A_i$ and $\bigoplus_j B_j$ be objects in $\operatorname{Add}(\mathcal{KLRW})$. Let $f \in \operatorname{Hom}\left(\bigoplus_i A_i, \bigoplus_j B_j\right)$. For each pair $k, l$, we project $f$ to its component $f_{k,l} \in \operatorname{Hom}(A_k, B_l)$. We now create $g_{k,l} \in \operatorname{Hom}\left(\widehat{\beta}_0\left(\bigoplus_i A_i\right), \widehat{\beta}_0\left(\bigoplus_j B_j\right)\right)$ by extending this morphism. Formally, $g_{k,l}$ is constructed by composing the canonical projection, the mapped component, and the canonical injection:
@@ -197,6 +134,7 @@ $$\widehat{\beta}_0\left(\bigoplus_i A_i\right) \twoheadrightarrow {\beta}_0(A_k
 
 For $\beta_2$, we construct the extension $\widehat{\beta}_2$ analogously.
 
+\subsection{The action of braiding on the entire category}
 \subsubsection{Defining $\beta_0.full$}
 
 \paragraph{Idea}
@@ -204,11 +142,11 @@ For $\beta_2$, we construct the extension $\widehat{\beta}_2$ analogously.
 We now define the action of $\beta$ on a chain complex, i.e. the function
 
 \begin{equation*}
-    \beta_0.full: K^*AddKLRW
-\rightarrow K^*AddKLRW.
+    \beta_0.full: K^\bullet AddKLRW
+\rightarrow K^\bullet AddKLRW.
 \end{equation*}
 
-The idea is as follows. The definition takes use of chain complexes of block matrices, i.e. elements in $K^*AddAddKLRW$. After constructing an element there, we project into $K^*AddKLRW$.
+The idea is as follows. The definition takes use of chain complexes of block matrices, i.e. elements in $K^\bullet AddAddKLRW$. After constructing an element there, we project into $K^\bullet AddKLRW$.
 
 Let $A^*$ denote the following cochain complex
 
@@ -225,14 +163,14 @@ where the left and right bounds are $l_i$ and $r_i$.
 
 For any $d^i:A^i -> A^{i+1}$, we get $g_i:=\beta_1.add(d^i): B_i ^* \to B_{i+1}^*$. For any two $d^i:A^i -> A^{i+1}, d^{i+1}:A^{i+1} -> A^{i+2}$, we get $h_i:=\beta_2.add(d^i,d^{i+1}): B_i ^* \to B_{i+2}^*[1]$. This gives rise to the following lattice:
 
-\input{chapters/diagrams/klrw-diagram.tex}
+\input{diagram.tex}
 
 The cochain complex which we want, is then obtained by taking direct sums along the diagonals. The $A_\infty$-relations ensure that the resulting object is a cochain complex.
 
 \paragraph{Detailed Construction}
 Refer to the objects $A^*, B_i^*, g_i, h_i$ as defined above.
 
-Construct first the following object in $K^* AddAddKLRW$.
+Construct first the following object in $K^\bullet AddAddKLRW$.
 
 The objects of the chain complex will be $\mathbb{Z}$-indexed, where each entry is a list of elements in $AddKLRW$. For an index $k$, the element will be the list $\overline{B}^k:=[B_l ^k, B_{l+1}^{k-1},\dots ,B_r ^{k-r+l}]$.
 
@@ -272,4 +210,68 @@ These can be interpreted as follows:
     \item Equation \ref{eq:cross-term}, \ref{eq:anticomm-gh} and \ref{eq:h-squared} are the equations corresponding to $SF_2$, $SF_3$ and $SF_4$ respectively, after simplifying with the source differential relation $d^{i+1}d^i=0$.
 \end{itemize}
 
-Thus the $SF_n$ relations are exactly what ensure that the lower-triangular total differential squares to zero, up to the chosen sign convention.
+\subsection{Satisfying A-$\infty$ axioms}
+
+The category $K^\bullet(\operatorname{Add}(KLRW))$ only has differential $\mu_1$ and composition $\mu_2$. Similarly, the braiding functor has no components higher than $\beta_2$. Therefore the general $[\text{SF}_n]$ axioms for A-$\infty$ functors reduce to a finite list. They are, in particular, the following axioms.
+
+\textbf{[SF\textsubscript{1}].}
+For all $f \in \Hom_{\KLRW}(A, B)$,
+$$
+  \delta_{\beta_0(B)}(\beta_1(f)) + \beta_1(\delta_{\beta_0(A)}(f)) = 0.
+$$
+That is, $\beta_1(f)$ is a chain map from $\beta_0(A)$ to $\beta_0(B)$.
+
+\begin{remark}
+  This axiom is automatic from the typing of $\beta_1$: its codomain
+  consists of morphisms of cochain complexes, which by definition
+  commute with differentials.
+\end{remark}
+
+\textbf{[SF\textsubscript{2}].}
+For all composable $f \in \Hom_{\KLRW}(A, B)$ and $g \in \Hom_{\KLRW}(B, C)$,
+$$\beta_2(f, \mu_1^A(g)) + \beta_2(\mu_1^A(f), g) + \beta_1(\mu_2^A(f, g)) = \mu_2^B(\beta_1(f), \beta_1(g)) + \mu_1^B(\beta_2(f, g))$$
+
+\textbf{[SF\textsubscript{3}].}
+For all $f \in \Hom_{\KLRW}(A, B)$,
+$g \in \Hom_{\KLRW}(B, C)$, and $h \in \Hom_{\KLRW}(C, D)$,
+$$
+  \beta_2(f, \mu_2^A(g, h)) - \beta_2(\mu_2^A(f, g), h)
+  = \mu_2^B(\beta_1(f), \beta_2(g, h)) -  \mu_2^B(\beta_2(f, g), \beta_1(h)).
+$$
+
+\textbf{[SF\textsubscript{4}].}
+For all (composable) $f \in \Hom_{\KLRW}(A, B)$,
+$g \in \Hom_{\KLRW}(B, C)$, $h \in \Hom_{\KLRW}(C, D)$, and
+$k \in \Hom_{\KLRW}(D, E)$,
+$$
+  \mu_2^B(\beta_2(f, g), \beta_2(h, k))= 0.
+$$
+
+\begin{remark}
+  Since $\beta_2$ produces degree $-1$ maps, their composition has degree
+  $-2$. This axiom says this composition vanishes. For $n \geq 5$, all $[\mathrm{SF}_n]$ axioms are
+  identically zero because every term involves either $\beta_k$
+  with $k \geq 3$ or $\mu_k$ with $k \geq 3$, both of which are zero.
+\end{remark}
+
+\begin{remark}
+
+\end{remark}
+
+\section{Proofs of the braiding functor satisfying A-$\infty$ axioms}
+
+Ultimately we would like to satisfy the given A-$\infty$ axioms: to do so, we will first show that the corresponding A-$\infty$ axioms are satisfied for $\beta.add: \KLRW \to K^\bullet(\Add(\KLRW))$. Note that within $\KLRW$ there is no suitable notion of a differential, though composition is defined.
+
+Therefore terms are dropped from each $[SF_i]$:
+\begin{itemize}
+    \item \textbf{[SF\textsubscript{1}].}
+    $0 = \mu_1^B(\beta_1(f))$
+    \item \textbf{[SF\textsubscript{2}].}
+    $\beta_1(\mu_2^A(f, g)) = \mu_2^B(\beta_1(f), \beta_1(g)) + \mu_1^B(\beta_2(f, g)).$
+    \item \textbf{[SF\textsubscript{3}].}
+    $\beta_2(f, \mu_2^A(g, h)) + \beta_2 (\mu_2^A(f, g), h) = \mu_2^B(\beta_1(f), \beta_2(g, h)) + \mu_2^B(\beta_2(f, g), h) .$
+    \item \textbf{[SF\textsubscript{4}].}
+    $0 = \mu_2^B(\beta_2(f, g), \beta_2(h, k))$.
+\end{itemize}
+
+\section{Generating the beta data}

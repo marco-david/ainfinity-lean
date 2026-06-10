@@ -11,3 +11,8 @@ blueprint/lean_decls
 blueprint/src/.tmp/
 blueprint/src/*.pdf
 blueprint/src/*.synctex.gz
+blueprint/src/*.aux
+blueprint/src/*.fdb_latexmk
+blueprint/src/*.fls
+blueprint/src/*.log
+blueprint/src/*.out
