@@ -92,11 +92,20 @@ where $0 \le i \le m-1$ and $0 \le j \le n-1$.
 
 \section{Bounded Cochain Complexes}
 \begin{definition}
-  Let $\BK(\C)$ denote the set of bounded cochain complexes in $\C$. THen
+  Let $\BK(\C)$ denote the full subcategory of bounded cochain complexes in $\C$. Then
   there is a function $F:\BK(\C)\to K^\bullet(\C)$ which forgets the finiteness.
   Then we equip $\BK(\C)$ with the induced category structure of $F$ which makes
   $F$ into a fully faithful functor $F:\BK(\C) \to K^\bullet (\C)$.
 \end{definition}
+
+Furthermore, we regard $\BK(\C)$ as an A-infinity category with:
+\begin{itemize}
+  \item $m_1$ is the Hom differential. Acted on degree $p$ morphisms $f^i:A^i\to B^{i+p}$,
+  its action is $m_1(f)=d_B\circ f-(-1)^{|f|}f\circ d_A$. Componentwise,
+  it evaluates $(m_1 f)^i = d_B^{i+p}\circ f^i - (-1)^p f^{i+1}\circ d_A^i$.
+  \item $m_2$ is composition. Its action is $$m_2(f, g) = g\circ f \in \Hom^{p+q}(A^\bullet, C^\bullet).$$
+  \item $m_i = 0$ for $i\ge 3$.
+\end{itemize}
 
 \section{Functor data and functor action}
 
@@ -261,5 +270,35 @@ $$
 \end{remark}
 
 \section{Proofs of the braiding functor satisfying A-\texorpdfstring{$\infty$}{infinity} axioms}
+
+\subsection{\texorpdfstring{\beta.gen}{β.gen} axioms  }
+Ultimately we would like to satisfy the above A-$\infty$ axioms. However to do so, we will first show that the corresponding A-$\infty$ axioms are satisfied for $\beta.gen: \KLRW \to K^\bullet(\Add(\KLRW))$. Note that within $\KLRW$ there is no suitable notion of a differential, though composition is defined.
+
+Therefore terms are dropped from each $[SF_i]$:
+\begin{itemize}
+    \item \textbf{[SF\textsubscript{1}].}
+    $0 = \mu_1^B(\beta_1(f))$
+    \item \textbf{[SF\textsubscript{2}].}
+    $\beta_1(\mu_2^A(f, g)) = \mu_2^B(\beta_1(f), \beta_1(g)) + \mu_1^B(\beta_2(f, g)).$
+    \item \textbf{[SF\textsubscript{3}].}
+    $\beta_2(f, \mu_2^A(g, h)) + \beta_2 (\mu_2^A(f, g), h) = \mu_2^B(\beta_1(f), \beta_2(g, h)) + \mu_2^B(\beta_2(f, g), h) .$
+    \item \textbf{[SF\textsubscript{4}].}
+    $0 = \mu_2^B(\beta_2(f, g), \beta_2(h, k))$.
+\end{itemize}
+
+Here, $\beta$ refers to $\beta.gen$. Showing that these hold for the $\beta.gen$ data is not difficult, and involves checking instantiations of the axioms for all morphisms, pairs of morphisms, triplets of morphisms, and quadruplets of morphisms, respectively.
+
+\subsection{\texorpdfstring{\beta.add}{β.add} axioms}
+
+Note that for $\beta.add: \Add(\KLRW)\to K^{\bullet}(\Add(\KLRW))$, the source category still has composition and no differential, so the SF axioms remain the same. Therefore leveraging the $\beta.gen$ axioms to show the $\beta.add$ axioms is not difficult. Let us denote the SF axioms for $\beta.add$ as \textbf{[SF\textsubscript{i}']}.
+
+For \textbf{[SF\textsubscript{1}']}, consider any morphism $f\in \operatorname{Hom}\left(\bigoplus_i A_i, \bigoplus_j B_j\right)$. Harkening back to the definition, $\beta.add_1(f) = \sum_{k, l}g_{k, l}$, where $k, l$ are pairs of component vector spaces. Hence we rewrite $$0=\mu_1^B(\sum_{k, l}g_{k, l})=\sum_{k, l}\mu_1^B(g_{k, l})$$ by bilinearity, and notice that each term is zero due to \textbf{[SF\textsubscript{1}]} for each term.
+
+\textbf{[SF\textsubscript{2}']}. Similarly, by bilinearity of composition and linearity of the target differential, we may write
+\begin{align*} \sum_{k, l, m}\beta_1.add(\mu_2^A(f_{k, l}, g_{l, m})) = &\sum_{k, l, m}\mu_2^B(\beta_1.add(f_{k, l}), \beta_1.add(g_{l, m})) \\ &+ \sum_{k, l, m}\mu_1^B(\beta_2.add(f_{k, l}, g_{l, m}))\end{align*} Since $\beta.add = \beta.gen$ on components, we can substitute $n^4$ copies of \textbf{[SF\textsubscript{2}]} (one for each pair of component morphisms) to see that this holds.
+
+Proofs of \textbf{[SF\textsubscript{3}']} and \textbf{[SF\textsubscript{4}']} hold similarly, by bilinearity of composition and linearity of the differential.
+
+\subsection{\texorpdfstring{\beta.full}{β.full} axioms}
 
 \section{Generating the beta data}
