@@ -25,6 +25,7 @@ abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
   (∑ i, deg i) + shift_ofInt (3 - (n : ℤ))
 
+/-- Valid index pairs for an arity-`n` Stasheff summand. -/
 abbrev ValidStasheffIndices (n r s : ℕ) : Prop :=
   1 ≤ s ∧ r + s ≤ n
 
@@ -99,6 +100,7 @@ def stasheffObjOut
     else
       obj ⟨i.val + s - 1, by omega⟩
 
+/-- Combine the two operation-degree shifts in a nested Stasheff term. -/
 private lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
     shift_ofInt (β := β) (2 - (s : ℤ)) + shift_ofInt (2 - ((n + 1 - s : ℕ) : ℤ)) =
     shift_ofInt (3 - (n : ℤ)) := by
@@ -116,6 +118,7 @@ private lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
   symm
   apply map_add
 
+/-- The finite ranges used in the Stasheff sum produce valid index pairs. -/
 lemma validStasheffIndices_of_mem_ranges
     {r s : ℕ}
     (hr : r ∈ Finset.range (n + 1))
