@@ -238,10 +238,7 @@ noncomputable def transpositionMor (k : Fin (n + 1)) {A B : KLRWCategory n R} (f
 
 
 noncomputable def PositiveTransposition (k : Fin (n + 1)) : BraidingFunctorData R n where
-  gen₀ := transpositionObj (R := R) k
-  gen₁ := fun {A B} f => transpositionMor (R := R) k f
-  gen₂ := fun f g i x =>
-    sorry -- gen_2 does not seem to be defined as the correct type
-  SF₂ := sorry
-  SF₃ := sorry
-  SF₄ := sorry
+  gen₀ := fun A => BoundedCochainComplex.mkOfBounded (transpositionObj (R := R) k A)
+      (supersetOfSupport := {0, 1}) (by sorry)
+  gen₁ := fun {A B} f => BoundedCochainComplex.homMk (transpositionMor (R := R) k f)
+  gen₂ := fun {A B C} _f _g => sorry
