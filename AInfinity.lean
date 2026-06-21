@@ -1,10 +1,13 @@
-import AInfinity.AInfinityAlgebra
 import AInfinity.AInfinityCategory
+import AInfinity.AInfinityFunctor
+import AInfinity.AInfinityFunctorComposition
 import AInfinity.AdditiveCompletion
 import AInfinity.BoundedCochainComplex
 import AInfinity.Braiding
 import AInfinity.ComputableCategories
+import AInfinity.Example
 import AInfinity.Examples
+import AInfinity.FunctorExample
 import AInfinity.Grading
 import AInfinity.KLRW
 import AInfinity.Stasheff
