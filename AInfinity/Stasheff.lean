@@ -12,7 +12,7 @@ noncomputable section
 namespace AInfinityTheory
 
 universe u v w
-variable {β : Type v} [Grading β]
+variable {β : Type v} [GradingIndex β]
 variable {n : ℕ}
 
 /-- Target degree of the `n`-ary operation `m`. -/
@@ -25,11 +25,11 @@ abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
   (∑ i, deg i) + shift_ofInt (3 - (n : ℤ))
 
-abbrev validStasheffIndices (n r s : ℕ) : Prop :=
+abbrev ValidStasheffIndices (n r s : ℕ) : Prop :=
   1 ≤ s ∧ r + s ≤ n
 
 /-- The type of the `i`-th morphism in a composable string of objects and degrees. -/
-abbrev composableHomType
+abbrev ComposableHomType
     {R : Type u} [CommRing R]
     {Obj : Type w}
     (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
@@ -120,7 +120,7 @@ lemma validStasheffIndices_of_mem_ranges
     {r s : ℕ}
     (hr : r ∈ Finset.range (n + 1))
     (hs : s ∈ Finset.Ico 1 (n - r + 1)) :
-    validStasheffIndices n r s := by
+    ValidStasheffIndices n r s := by
   rcases Finset.mem_range.mp hr with hr
   rcases Finset.mem_Ico.mp hs with ⟨hs₁, hs₂⟩
   refine ⟨hs₁, ?_⟩
@@ -223,7 +223,8 @@ lemma stasheffDegOut_sum_core
           fun ⟨a, ha⟩ => by linarith [Fin.is_lt a]
         ⟩
   · exact Finset.disjoint_filter.mpr fun _ _ _ _ => by linarith
-  · simp +contextual [Finset.disjoint_left]
+  · simp +contextual only [gt_iff_lt, disjoint_left, mem_union, mem_filter, mem_univ, true_and,
+    not_lt]
     exact fun a ha => ha.elim (fun ha => le_of_lt ha) fun ha => ha.le
   · ext i
     cases lt_trichotomy i.val r <;> aesop
@@ -239,80 +240,608 @@ lemma stasheffDegOut_sum
   rw [stasheffDegOut_sum_core deg r s hr, add_assoc,
       shift_ofInt_combine (by omega : s ≤ n)]
 
+/-- Transporting zero across an equality of `ModuleCat` objects still gives zero. -/
+lemma cast_zero_of_module_eq
+    {R : Type u}
+    [CommRing R]
+    {M N : ModuleCat R}
+    (h : M = N) :
+    cast (congrArg (fun X : ModuleCat R => (X : Type u)) h) (0 : M) = (0 : N) := by
+  cases h
+  rfl
+
+/-- A transported element of a `ModuleCat` is zero iff the original element was zero. -/
+lemma cast_eq_zero_iff_of_module_eq
+    {R : Type u}
+    [CommRing R]
+    {M N : ModuleCat R}
+    (h : M = N)
+    (x : M) :
+    cast (congrArg (fun X : ModuleCat R => (X : Type u)) h) x = (0 : N) ↔ x = 0 := by
+  constructor
+  · intro hx
+    have hcast :
+        cast (congrArg (fun X : ModuleCat R => (X : Type u)) h) x =
+          cast (congrArg (fun X : ModuleCat R => (X : Type u)) h) (0 : M) := by
+      simpa [cast_zero_of_module_eq h] using hx
+    exact (cast_inj (congrArg (fun X : ModuleCat R => (X : Type u)) h)).1 hcast
+  · intro hx
+    simpa [hx] using cast_zero_of_module_eq h
+
+/-- Rewriting the degree function and transporting each input does not change the value of `m`. -/
+lemma multilinearFamily_eq_of_deg_eq
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    [NeZero n]
+    (obj : Fin (n + 1) → Obj)
+    {deg deg' : Fin n → β}
+    (hdeg : deg = deg')
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i) :
+    m obj deg'
+      (fun i =>
+        cast
+          (congrArg
+            (fun d => ((ComposableHomType Hom obj d i : ModuleCat R) : Type u))
+            hdeg)
+          (x i)) =
+      cast
+        (congrArg
+          (fun d => ((operationTargetType Hom obj d : ModuleCat R) : Type u))
+          hdeg)
+        (m obj deg x) := by
+  cases hdeg
+  rfl
+
+/-- Helper: the input tuple for the inner operation in a Stasheff term. -/
+def indexedStasheffXIn
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hr : r + s ≤ n) :
+    ∀ i : Fin s, ComposableHomType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) i :=
+  fun i => x ⟨r + i.val, by omega⟩
+
+omit [GradingIndex β] in
+/-- Evaluating the inner input tuple just picks out the corresponding original input. -/
+lemma indexedStasheffXIn_apply
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hr : r + s ≤ n)
+    (i : Fin s) :
+    indexedStasheffXIn Hom obj deg x r s hr i = x ⟨r + i.val, by omega⟩ := by
+  simp [indexedStasheffXIn, ComposableHomType, stasheffObjIn, stasheffDegIn]
+
+/-- Helper: the inner value appearing in a Stasheff term. -/
+def indexedStasheffInner
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n) :
+    operationTargetType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) :=
+  letI : NeZero s := ⟨by omega⟩
+  m (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr)
+    (indexedStasheffXIn Hom obj deg x r s hr)
+
+/-- Helper: the middle index in the outer tuple of a Stasheff term. -/
+def indexedStasheffMiddleIndex
+    {n : ℕ}
+    (r s : ℕ)
+    (hr : r + s ≤ n) : Fin (n + 1 - s) :=
+  ⟨r, by omega⟩
+
+/-- Helper: the `ModuleCat` equality identifying the middle outer input with the inner output. -/
+lemma indexedStasheffMiddleModuleEq
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n) :
+    operationTargetType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) =
+      ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr)
+        (indexedStasheffMiddleIndex r s hr) := by
+  simp [ComposableHomType, operationTargetType, indexedStasheffMiddleIndex,
+    stasheffObjIn, stasheffObjOut, stasheffDegOut, stasheffInnerDeg]
+
+/-- Helper: the type equality identifying the middle outer input with the inner output. -/
+lemma indexedStasheffMiddleTypeEq
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n) :
+    ((operationTargetType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) : ModuleCat R) : Type u) =
+      ((ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr)
+        (indexedStasheffMiddleIndex r s hr) : ModuleCat R) : Type u) := by
+  exact congrArg (fun M : ModuleCat R => (M : Type u))
+    (indexedStasheffMiddleModuleEq Hom obj deg r s hr)
+
+/-- Before the inserted block, the original input type matches the outer input type. -/
+lemma indexedStasheffXOutTypeEq_of_lt
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (hlt : i.val < r) :
+    ((ComposableHomType Hom obj deg ⟨i.val, by omega⟩ : ModuleCat R) : Type u) =
+      ((ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) i :
+        ModuleCat R) : Type u) := by
+  simp [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, Nat.le_of_lt hlt]
+
+/-- At the inserted block, the inner output type matches the outer middle input type. -/
+lemma indexedStasheffXOutTypeEq_of_eq
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (heq : i.val = r) :
+    ((operationTargetType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) :
+        ModuleCat R) : Type u) =
+      ((ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) i :
+        ModuleCat R) : Type u) := by
+  have hi : indexedStasheffMiddleIndex r s hr = i := by
+    apply Fin.ext
+    simp [indexedStasheffMiddleIndex, heq]
+  simpa [hi] using indexedStasheffMiddleTypeEq Hom obj deg r s hr
+
+/-- After the inserted block, the shifted original input type matches the outer input type. -/
+lemma indexedStasheffXOutTypeEq_of_gt
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (hlt : ¬ i.val < r)
+    (heq : i.val ≠ r) :
+    ((ComposableHomType Hom obj deg ⟨i.val + s - 1, by omega⟩ : ModuleCat R) : Type u) =
+      ((ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) i :
+        ModuleCat R) : Type u) := by
+  have hgt : ¬ i.val ≤ r := by omega
+  have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
+  simp [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, heq, hgt, hsucc]
+
+/-- Helper: the input tuple for the outer operation in a Stasheff term. -/
+def indexedStasheffXOut
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n) :
+    ∀ i : Fin (n + 1 - s),
+      ComposableHomType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) i :=
+  fun i =>
+    if hlt : i.val < r then
+      cast (indexedStasheffXOutTypeEq_of_lt Hom obj deg r s hr i hlt) (x ⟨i.val, by omega⟩)
+    else if heq : i.val = r then
+      cast (indexedStasheffXOutTypeEq_of_eq Hom obj deg r s hr i heq)
+        (indexedStasheffInner Hom m obj deg x r s hs hr)
+    else
+      cast (indexedStasheffXOutTypeEq_of_gt Hom obj deg r s hr i hlt heq)
+        (x ⟨i.val + s - 1, by omega⟩)
+
+/-- Before the inserted block, the outer input tuple agrees with the original inputs. -/
+lemma indexedStasheffXOut_apply_of_lt
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (hlt : i.val < r) :
+    indexedStasheffXOut Hom m obj deg x r s hs hr i =
+      (by
+        simpa [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, Nat.le_of_lt hlt]
+          using x ⟨i.val, by omega⟩) := by
+  unfold indexedStasheffXOut
+  simp [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, Nat.le_of_lt hlt]
+
+/-- After the inserted block, the outer input tuple agrees with the shifted original inputs. -/
+lemma indexedStasheffXOut_apply_of_gt
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n)
+    (i : Fin (n + 1 - s))
+    (hgt : r < i.val) :
+    indexedStasheffXOut Hom m obj deg x r s hs hr i =
+      (by
+        have hlt : ¬ i.val < r := by omega
+        have heq : i.val ≠ r := by omega
+        have hle : ¬ i.val ≤ r := by omega
+        have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
+        simpa [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, heq, hle, hsucc]
+          using x ⟨i.val + s - 1, by omega⟩) := by
+  unfold indexedStasheffXOut
+  have hlt : ¬ i.val < r := by omega
+  have heq : i.val ≠ r := by omega
+  have hle : ¬ i.val ≤ r := by omega
+  simp [ComposableHomType, stasheffObjOut, stasheffDegOut, hlt, heq, hle]
+
+/-- Helper: positivity of the outer arity in a Stasheff term. -/
+lemma indexedStasheffOuterArity_pos
+    {n : ℕ}
+    (r s : ℕ)
+    (hr : r + s ≤ n) :
+    0 < n + 1 - s := by
+  omega
+
+/-- Helper: the outer value before transporting to the final Stasheff target. -/
+def indexedStasheffOuter
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n) :
+    operationTargetType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) :=
+  letI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
+  m (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr)
+    (indexedStasheffXOut Hom m obj deg x r s hs hr)
+
+/-- Helper: the `ModuleCat` equality from the outer target to the final Stasheff target. -/
+lemma indexedStasheffTargetModuleEq
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n) :
+    operationTargetType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) =
+      Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) := by
+  have hsource : stasheffObjOut obj r s hr 0 = obj 0 := by
+    simp [stasheffObjOut]
+  have houterN_pos : 0 < n + 1 - s := by
+    omega
+  have hlast_gt : ¬ (n + 1 - s) ≤ r := by
+    omega
+  have htarget :
+      stasheffObjOut obj r s hr (Fin.last (n + 1 - s)) = obj (Fin.last n) := by
+    simp only [stasheffObjOut, Fin.last, hlast_gt, ↓reduceDIte]
+    congr
+    omega
+  calc
+    operationTargetType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr)
+        = Hom ((stasheffObjOut obj r s hr) 0)
+            ((stasheffObjOut obj r s hr) (Fin.last (n + 1 - s)))
+            (operationTargetDeg (stasheffDegOut deg r s hr)) := rfl
+    _ = Hom (obj 0) ((stasheffObjOut obj r s hr) (Fin.last (n + 1 - s)))
+          (operationTargetDeg (stasheffDegOut deg r s hr)) := by rw [hsource]
+    _ = Hom (obj 0) (obj (Fin.last n))
+          (operationTargetDeg (stasheffDegOut deg r s hr)) := by rw [htarget]
+    _ = Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) := by
+      exact congrArg (fun d => Hom (obj 0) (obj (Fin.last n)) d) (stasheffDegOut_sum deg r s hr)
+
+/-- Helper: transport from the outer target type to the final Stasheff target type. -/
+lemma indexedStasheffTargetEq
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (r s : ℕ)
+    (hr : r + s ≤ n) :
+    ((operationTargetType Hom (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) : ModuleCat R) : Type u) =
+      ((Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) : ModuleCat R) : Type u) := by
+  exact congrArg (fun M : ModuleCat R => (M : Type u))
+    (indexedStasheffTargetModuleEq Hom obj deg r s hr)
+
 /-- A generic Stasheff term builder for object-indexed A∞ operations. -/
 def indexedStasheffTerm
     {R : Type u}
     [CommRing R]
     {Obj : Type w}
     (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
-    (m : {n : ℕ+} → (obj : Fin ((n : ℕ) + 1) → Obj) → (deg : Fin (n : ℕ) → β) →
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
       MultilinearMap R
-        (fun i : Fin (n : ℕ) => composableHomType Hom obj deg i)
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
         (operationTargetType Hom obj deg))
-    {n : ℕ+}
-    (obj : Fin ((n : ℕ) + 1) → Obj)
-    (deg : Fin (n : ℕ) → β)
-    (x : ∀ i : Fin (n : ℕ), composableHomType Hom obj deg i)
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
     (r s : ℕ)
     (hs : 1 ≤ s)
-    (hr : r + s ≤ (n : ℕ)) :
-    Hom (obj 0) (obj (Fin.last (n : ℕ))) (stasheffTargetDeg deg) := by
-  let degIn := stasheffDegIn deg r s hr
-  let objIn := stasheffObjIn obj r s hr
-  let xIn : ∀ i : Fin s, composableHomType Hom objIn degIn i := fun i => by
-    simpa [composableHomType, objIn, stasheffObjIn, degIn, stasheffDegIn]
-      using x ⟨r + i.val, by omega⟩
-  let inner := m (n := ⟨s, hs⟩) objIn degIn xIn
-  let outerN : ℕ := (n : ℕ) + 1 - s
-  let degOut := stasheffDegOut deg r s hr
-  let objOut := stasheffObjOut obj r s hr
-  let xOut : ∀ i : Fin outerN, composableHomType Hom objOut degOut i := by
-    intro i
-    by_cases hlt : i.val < r
-    · simpa [composableHomType, objOut, stasheffObjOut, degOut, stasheffDegOut, hlt,
-        Nat.le_of_lt hlt]
-        using x ⟨i.val, by omega⟩
-    · by_cases heq : i.val = r
-      · simpa
-          [composableHomType, operationTargetType, objIn, stasheffObjIn,
-            degIn, stasheffDegIn, objOut, stasheffObjOut, degOut, stasheffDegOut,
-            stasheffInnerDeg, hlt, heq]
-          using inner
-      · have hgt : ¬ i.val ≤ r := by omega
-        have hsucc : i.val + s - 1 + 1 = i.val + s := by omega
-        simpa
-          [composableHomType, objOut, stasheffObjOut, degOut, stasheffDegOut,
-            hlt, heq, hgt, hsucc]
-          using x ⟨i.val + s - 1, by omega⟩
-  have houterN : 0 < outerN := by
-    dsimp [outerN]
-    omega
-  let outer := m (n := ⟨outerN, houterN⟩) objOut degOut xOut
-  have hsource : objOut 0 = obj 0 := by
-    simp [objOut, stasheffObjOut]
-  have hlast_gt : ¬ outerN ≤ r := by
-    dsimp [outerN]
-    omega
-  have htarget : objOut (Fin.last outerN) = obj (Fin.last (n : ℕ)) := by
-    simp [objOut, stasheffObjOut, Fin.last, hlast_gt]
-    congr
-    omega
-  have hdeg :
-      operationTargetType Hom objOut degOut =
-        Hom (obj 0) (obj (Fin.last (n : ℕ))) (stasheffTargetDeg deg) := by
-    dsimp [operationTargetType]
-    rw [hsource, htarget]
-    exact congrArg (fun d => Hom (obj 0) (obj (Fin.last n)) d) (stasheffDegOut_sum deg r s hr)
-  exact hdeg ▸ outer
+    (hr : r + s ≤ n) :
+    Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
+  cast (indexedStasheffTargetEq Hom obj deg r s hr)
+    (indexedStasheffOuter Hom m obj deg x r s hs hr)
+
+/-- The middle outer input is the transported inner output. -/
+lemma indexedStasheffXOut_middle_eq
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n) :
+    indexedStasheffXOut Hom m obj deg x r s hs hr (indexedStasheffMiddleIndex r s hr) =
+      cast
+        (congrArg
+          (fun M : ModuleCat R => (M : Type u))
+          (indexedStasheffMiddleModuleEq Hom obj deg r s hr))
+        (indexedStasheffInner Hom m obj deg x r s hs hr) := by
+  unfold indexedStasheffXOut
+  simp [indexedStasheffMiddleIndex]
+
+/-- The middle outer input vanishes whenever the inner output vanishes. -/
+lemma indexedStasheffXOut_middle_eq_zero_of_inner_eq_zero
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n)
+    (hinner : indexedStasheffInner Hom m obj deg x r s hs hr = 0) :
+    indexedStasheffXOut Hom m obj deg x r s hs hr (indexedStasheffMiddleIndex r s hr) = 0 := by
+  rw [indexedStasheffXOut_middle_eq]
+  exact
+    (cast_eq_zero_iff_of_module_eq
+      (indexedStasheffMiddleModuleEq Hom obj deg r s hr)
+      (indexedStasheffInner Hom m obj deg x r s hs hr)).2 hinner
+
+/-- The outer value vanishes if the outer multilinear map itself vanishes. -/
+lemma indexedStasheffOuter_eq_zero_of_map_eq_zero
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n)
+    (hm :
+      @m (n + 1 - s) ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
+        (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) = 0) :
+    indexedStasheffOuter Hom m obj deg x r s hs hr = 0 := by
+  simp [indexedStasheffOuter, hm]
+
+/-- The outer value vanishes whenever the inserted inner output vanishes. -/
+lemma indexedStasheffOuter_eq_zero_of_inner_eq_zero
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n)
+    (hinner : indexedStasheffInner Hom m obj deg x r s hs hr = 0) :
+    indexedStasheffOuter Hom m obj deg x r s hs hr = 0 := by
+  dsimp [indexedStasheffOuter]
+  letI : NeZero (n + 1 - s) := ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
+  exact MultilinearMap.map_coord_zero
+    (m (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr))
+    (indexedStasheffMiddleIndex r s hr)
+    (indexedStasheffXOut_middle_eq_zero_of_inner_eq_zero Hom m obj deg x r s hs hr hinner)
+
+/-- The final transported Stasheff term vanishes exactly when the outer value vanishes. -/
+lemma indexedStasheffTerm_eq_zero_iff_outer_eq_zero
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n) :
+    indexedStasheffTerm Hom m obj deg x r s hs hr = 0 ↔
+      indexedStasheffOuter Hom m obj deg x r s hs hr = 0 := by
+  unfold indexedStasheffTerm
+  exact cast_eq_zero_iff_of_module_eq
+    (indexedStasheffTargetModuleEq Hom obj deg r s hr)
+    (indexedStasheffOuter Hom m obj deg x r s hs hr)
+
+/-- The final Stasheff term vanishes if the outer multilinear map vanishes. -/
+lemma indexedStasheffTerm_eq_zero_of_outer_map_eq_zero
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n)
+    (hm :
+      @m (n + 1 - s) ⟨Nat.ne_of_gt (indexedStasheffOuterArity_pos r s hr)⟩
+        (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) = 0) :
+    indexedStasheffTerm Hom m obj deg x r s hs hr = 0 :=
+  (indexedStasheffTerm_eq_zero_iff_outer_eq_zero Hom m obj deg x r s hs hr).2
+    (indexedStasheffOuter_eq_zero_of_map_eq_zero Hom m obj deg x r s hs hr hm)
+
+/-- The final Stasheff term vanishes if the inner multilinear map vanishes. -/
+lemma indexedStasheffTerm_eq_zero_of_inner_map_eq_zero
+    {R : Type u}
+    [CommRing R]
+    {Obj : Type w}
+    (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
+      MultilinearMap R
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
+        (operationTargetType Hom obj deg))
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i)
+    (r s : ℕ)
+    (hs : 1 ≤ s)
+    (hr : r + s ≤ n)
+    (hm :
+      @m s ⟨by omega⟩ (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) = 0) :
+    indexedStasheffTerm Hom m obj deg x r s hs hr = 0 := by
+  have hinner : indexedStasheffInner Hom m obj deg x r s hs hr = 0 := by
+    simp [indexedStasheffInner, hm]
+  exact
+    (indexedStasheffTerm_eq_zero_iff_outer_eq_zero Hom m obj deg x r s hs hr).2
+      (indexedStasheffOuter_eq_zero_of_inner_eq_zero Hom m obj deg x r s hs hr hinner)
 
 /-- The sign parity for the `(r,s)` Stasheff term:
     `sign(deg(r+s)) + ⋯ + sign(deg(n-1)) - (n-r-s)` in `ZMod 2`. -/
 def stasheffSignParity
     (deg : Fin n → β)
     (r s : ℕ)
-    (hr : r + s ≤ n) : Parity :=
-  (∑ i : Fin (n - r - s), Grading.sign (deg ⟨r + s + i.val, by omega⟩)) -
-    ((n - r - s : ℕ) : Parity)
+    (hr : r + s ≤ n) : ZMod 2 :=
+  (∑ i : Fin (n - r - s), parity (deg ⟨r + s + i.val, by omega⟩)) -
+    ((n - r - s : ℕ) : ZMod 2)
 
 /-- The sign `(-1)^(|a_{r+s+1}| + ⋯ + |a_n| - t)` as an integer,
     for a valid Stasheff index pair. -/
@@ -328,34 +857,38 @@ def indexedStasheffSum
     [CommRing R]
     {Obj : Type w}
     (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
-    (m : {n : ℕ+} → (obj : Fin ((n : ℕ) + 1) → Obj) → (deg : Fin (n : ℕ) → β) →
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
       MultilinearMap R
-        (fun i : Fin (n : ℕ) => composableHomType Hom obj deg i)
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
         (operationTargetType Hom obj deg))
-    {n : ℕ+}
-    (obj : Fin ((n : ℕ) + 1) → Obj)
-    (deg : Fin (n : ℕ) → β)
-    (x : ∀ i : Fin (n : ℕ), composableHomType Hom obj deg i) :
-    Hom (obj 0) (obj (Fin.last (n : ℕ))) (stasheffTargetDeg deg) :=
-  Finset.sum ((Finset.range ((n : ℕ) + 1)).attach) fun r =>
-    Finset.sum ((Finset.Ico 1 ((n : ℕ) - r.1 + 1)).attach) fun s =>
-      let h : validStasheffIndices (n : ℕ) r.1 s.1 :=
-        validStasheffIndices_of_mem_ranges (n := (n : ℕ)) r.2 s.2
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i) :
+    Hom (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
+  ∑ r ∈ (Finset.range (n + 1)).attach,
+    ∑ s ∈ (Finset.Ico 1 (n - r.1 + 1)).attach,
+      let h : ValidStasheffIndices n r.1 s.1 :=
+        validStasheffIndices_of_mem_ranges (n := n) r.2 s.2
       (stasheffSign deg r.1 s.1 h.2) •
-        indexedStasheffTerm Hom m obj deg x r.1 s.1 h.1 h.2
+        (indexedStasheffTerm Hom m obj deg x r.1 s.1 h.1 h.2)
 
 /-- The Stasheff identities for object-indexed A∞ operations. -/
 def indexedSatisfiesStasheff
-    {R : Type u}
+    (β : Type v)
+    [GradingIndex β]
+    (R : Type u)
     [CommRing R]
     {Obj : Type w}
     (Hom : Obj → Obj → GradedRModule (β := β) (R := R))
-    (m : {n : ℕ+} → (obj : Fin ((n : ℕ) + 1) → Obj) → (deg : Fin (n : ℕ) → β) →
+    (m : {n : ℕ} → [NeZero n] →
+      (obj : Fin (n + 1) → Obj) → (deg : Fin n → β) →
       MultilinearMap R
-        (fun i : Fin (n : ℕ) => composableHomType Hom obj deg i)
+        (fun i : Fin n => ComposableHomType Hom obj deg i)
         (operationTargetType Hom obj deg)) : Prop :=
-  ∀ (n : ℕ+) (obj : Fin ((n : ℕ) + 1) → Obj) (deg : Fin (n : ℕ) → β)
-    (x : ∀ i : Fin (n : ℕ), composableHomType Hom obj deg i),
+  ∀ (n : ℕ) [NeZero n] (obj : Fin (n + 1) → Obj) (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType Hom obj deg i),
     indexedStasheffSum Hom m obj deg x = 0
 
 end AInfinityTheory
