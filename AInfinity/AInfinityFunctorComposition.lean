@@ -55,7 +55,8 @@ lemma comp_compatible_deg
           ∑ l : Fin c.length, shift_ofInt (1 - (c.blocksFun l : ℤ)) := by
     rw [Finset.sum_congr rfl fun l _ => h_deg_comp l]
     unfold functorTargetDeg
-    simp? +decide [Finset.sum_add_distrib]
+    simp +decide only [AddMonoidHom.coe_comp, Function.comp_apply, Finset.sum_add_distrib,
+      add_left_inj]
     have h_sum_deg_comp :
         ∑ x : Fin c.length, ∑ i : Fin (c.blocksFun x),
           (G_deg_trans.comp F_deg_trans) (deg (c.embedding x i)) =
@@ -65,7 +66,7 @@ lemma comp_compatible_deg
             (fun l => Finset.image (fun j => c.embedding l j) Finset.univ) =
           Finset.univ := by
         ext i
-        simp? [Finset.mem_biUnion, Finset.mem_image]
+        simp only [Finset.mem_biUnion, Finset.mem_univ, Finset.mem_image, true_and, iff_true]
         exact ⟨c.index i, c.invEmbedding i, c.embedding_comp_inv i⟩
       have h_sum_deg_comp :
           ∑ x : Fin c.length, ∑ i : Fin (c.blocksFun x),
@@ -87,10 +88,13 @@ lemma comp_compatible_deg
   have h_shift_sum :
       ∑ l : Fin c.length, (1 - (c.blocksFun l : ℤ)) + (1 - (c.length : ℤ)) =
         1 - (n : ℤ) := by
-    simp? +decide [Finset.sum_sub_distrib]
+    simp +decide only [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
+      Int.nsmul_eq_mul, mul_one, sub_add_sub_cancel', sub_right_inj]
     exact_mod_cast c.sum_blocksFun
   generalize_proofs at *
-  simp? +decide [← h_shift_sum, add_assoc, shift_ofInt]
+  simp +decide only [AddMonoidHom.coe_comp, Function.comp_apply, shift_ofInt, map_sub,
+    Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ, Fintype.card_fin, add_assoc,
+    ← h_shift_sum, Int.nsmul_eq_mul, mul_one, sub_add_sub_cancel', map_sum, add_right_inj]
   simp +decide [← map_nsmul]
 
 /-- Transport from the outer target of a composition term to the target of the

@@ -1,7 +1,7 @@
-import AInfinity.AInfinityAlgebra
+import AInfinity.Grading
+import AInfinity.Stasheff
 import AInfinity.AInfinityCategory
 import AInfinity.AInfinityFunctor
 import AInfinity.AInfinityFunctorComposition
-import AInfinity.Grading
-import AInfinity.KLRW
-import AInfinity.Stasheff
+import AInfinity.Example
+import AInfinity.FunctorExample
