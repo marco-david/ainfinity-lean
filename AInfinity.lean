@@ -6,6 +6,10 @@ import AInfinity.Braiding
 import AInfinity.ComputableCategories
 import AInfinity.Examples
 import AInfinity.Grading
-import AInfinity.KLRW
 import AInfinity.Stasheff
+import AInfinity.AInfinityCategory
+import AInfinity.AInfinityFunctor
+import AInfinity.AInfinityFunctorComposition
+import AInfinity.Example
+import AInfinity.FunctorExample
 import AInfinity.Texify

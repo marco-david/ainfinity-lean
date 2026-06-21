@@ -9,86 +9,55 @@ open CategoryTheory Finset AInfinityTheory
 
 noncomputable section
 
-namespace AInfinityCategoryTheory
+namespace AInfinityTheory
 
 universe u v w
-variable {β : Type v} [Grading β]
+variable (β : Type v) [GradingIndex β]
 
-structure AInfinityPreCategory
+class AInfinityCategoryStruct
     (R : Type u) [CommRing R] (Obj : Type w)
     extends RLinearGQuiver (β := β) R Obj where
   m :
-    {n : ℕ+} →
-    (obj : Fin ((n : ℕ) + 1) → Obj) →
-    (deg : Fin (n : ℕ) → β) →
+    {n : ℕ} → [NeZero n] →
+    (obj : Fin (n + 1) → Obj) →
+    (deg : Fin n → β) →
     MultilinearMap R
-      (fun i : Fin (n : ℕ) => composableHomType toRLinearGQuiver.Hom obj deg i)
-      (operationTargetType toRLinearGQuiver.Hom obj deg)
+      (fun i : Fin n => ComposableHomType (GHom β R) obj deg i)
+      (operationTargetType (GHom β R) obj deg)
 
-namespace AInfinityPreCategory
+namespace AInfinityCategoryStruct
 
-variable {R : Type u} [CommRing R]
-variable {Obj : Type w}
+variable (R : Type u) [CommRing R]
+variable (Obj : Type w)
 
-structure Chain (X : AInfinityPreCategory (β := β) R Obj) where
-  n : ℕ+
-  obj : Fin ((n : ℕ) + 1) → Obj
-  deg : Fin (n : ℕ) → β
-
-namespace Chain
-
-variable {X : AInfinityPreCategory (β := β) R Obj}
-
-def source (ch : X.Chain) : Obj := ch.obj 0
-
-def target (ch : X.Chain) : Obj := ch.obj (Fin.last ch.n)
-
-abbrev link (ch : X.Chain) (i : Fin ch.n) : ModuleCat R :=
-  composableHomType X.Hom ch.obj ch.deg i
-
-abbrev operationTarget (ch : X.Chain) : ModuleCat R :=
-  operationTargetType X.Hom ch.obj ch.deg
-
-end Chain
-
-/-- The full Stasheff sum in arity `n`, with Koszul signs. -/
+/-- The full Stasheff sum in arity n, with Koszul signs. -/
 def stasheffSum
-    (X : AInfinityPreCategory (β := β) R Obj)
-    {n : ℕ+}
-    (obj : Fin ((n : ℕ) + 1) → Obj)
-    (deg : Fin (n : ℕ) → β)
-    (x : ∀ i : Fin (n : ℕ), composableHomType X.Hom obj deg i) :
-    X.Hom (obj 0) (obj (Fin.last (n : ℕ))) (stasheffTargetDeg deg) :=
-  indexedStasheffSum X.Hom X.m obj deg x
+    [AInfinityCategoryStruct β R Obj]
+    {n : ℕ}
+    (obj : Fin (n + 1) → Obj)
+    (deg : Fin n → β)
+    (x : ∀ i : Fin n, ComposableHomType (GHom β R) obj deg i) :
+    (GHom β R) (obj 0) (obj (Fin.last n)) (stasheffTargetDeg deg) :=
+  indexedStasheffSum (GHom β R) m obj deg x
 
 /-- The Stasheff identities as a property of the raw A∞ category data. -/
-def satisfiesStasheff
-    (X : AInfinityPreCategory (β := β) R Obj) : Prop :=
-  indexedSatisfiesStasheff X.Hom X.m
+def SatisfiesStasheff
+    [AInfinityCategoryStruct (β := β) R Obj] : Prop :=
+  indexedSatisfiesStasheff β R (Obj := Obj) (GHom β R) m
 
-end AInfinityPreCategory
+end AInfinityCategoryStruct
 
-structure AInfinityCategory
+class AInfinityCategory
     (R : Type u) [CommRing R] (Obj : Type w)
-    extends AInfinityPreCategory (β := β) R Obj where
-  stasheff :
-    AInfinityPreCategory.satisfiesStasheff
-      (β := β) toAInfinityPreCategory
+    extends AInfinityCategoryStruct (β := β) R Obj where
+  satisfiesStasheff :
+    AInfinityCategoryStruct.SatisfiesStasheff (β := β) R Obj
 
 namespace AInfinityCategory
 
-variable {R : Type u} [CommRing R]
-variable {Obj : Type w}
-
-lemma stasheff_eq_zero
-    (X : AInfinityCategory (β := β) R Obj)
-    {n : ℕ+}
-    (obj : Fin ((n : ℕ) + 1) → Obj)
-    (deg : Fin (n : ℕ) → β)
-    (x : ∀ i : Fin (n : ℕ), composableHomType X.Hom obj deg i) :
-    X.toAInfinityPreCategory.stasheffSum obj deg x = 0 :=
-  X.stasheff n obj deg x
+variable (R : Type u) [CommRing R]
+variable (Obj : Type w)
 
 end AInfinityCategory
 
-end AInfinityCategoryTheory
+end AInfinityTheory
