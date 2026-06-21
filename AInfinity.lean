@@ -1,4 +1,3 @@
-import AInfinity.AInfinityAlgebra
 import AInfinity.AInfinityCategory
 import AInfinity.AdditiveCompletion
 import AInfinity.BoundedCochainComplex
