@@ -15,13 +15,13 @@ inductive StrandColor where
   deriving DecidableEq
 
 -- n represents the number of verticies in the simple directed graph
--- the verticies of DirGraph are labeled from 1 to n
+-- Γ represents the directed graph with labeled verticies
 -- dᵢ (a) tells you the number of black strands labeled a, given a is in Fin n
 -- red_Strands (a) tells you the number of red strands labeled a, given a is in Fin n
 
 structure KLRWStructure (V : Type*) where
-  DirGraph : SimpleDigraph (V)
-  dᵢ : V → Nat
+  Γ : SimpleDigraph (V)
+  black_strands : V → Nat
   red_strands : V → Nat
 
 def num_black [DecidableEq V] (v : Vector (V × StrandColor) m) (k : V) : Nat :=
@@ -30,8 +30,8 @@ def num_black [DecidableEq V] (v : Vector (V × StrandColor) m) (k : V) : Nat :=
 def num_red [DecidableEq V] (v : Vector (V × StrandColor) m) (k : V) : Nat :=
   (v.toList.filter (fun p => p.1 == k && p.2 == StrandColor.red)).length
 
-abbrev total_strands [DecidableEq V] [Fintype V] (Parameters : KLRWStructure V) :=
-  ∑ v : V, (Parameters.dᵢ v + Parameters.red_strands v)
+abbrev total_strands [DecidableEq V] [Fintype V] (parameters : KLRWStructure V) :=
+  ∑ v : V, (parameters.black_strands v + parameters.red_strands v)
 
 
 -- strand_seq is a vector where each slot contains the strand's label (vertex number associated with it) and color
@@ -39,10 +39,10 @@ abbrev total_strands [DecidableEq V] [Fintype V] (Parameters : KLRWStructure V) 
 -- num_red_right makes sure the number of red strands for each label in strand_seq matches that of red_strands in blueprint
 
 
-structure KLRWObject (V : Type*) [DecidableEq V] [Fintype V] (blueprint : KLRWStructure V) where
-  strand_seq : Vector (V × StrandColor) (total_strands blueprint)
-  corr_num_black : ∀ (i : V), blueprint.dᵢ i = num_black strand_seq i
-  corr_num_red : ∀ (i : V), blueprint.red_strands i = num_red strand_seq i
+structure KLRWObject {V : Type*} [DecidableEq V] [Fintype V] (parameters : KLRWStructure V) where
+  strand_seq : Vector (V × StrandColor) (total_strands parameters)
+  corr_num_black : ∀ (i : V), parameters.black_strands i = num_black strand_seq i
+  corr_num_red : ∀ (i : V), parameters.red_strands i = num_red strand_seq i
 
 
 
@@ -55,12 +55,12 @@ def exGraph : SimpleDigraph (Fin 3) where
     exact Nat.lt_irrefl i.val h
 
 def exReq : KLRWStructure (Fin 3) where
-  DirGraph := exGraph
-  dᵢ := ![2, 1, 0]
+  Γ := exGraph
+  black_strands := ![2, 1, 0]
   red_strands := ![1, 0, 1]
 
 
-def exObj : KLRWObject (Fin 3) exReq where
+def exObj : KLRWObject exReq where
   strand_seq := ⟨#[(0, .black), (0, .black), (0, .red),
                  (1, .black), (2, .red)], by decide⟩
   corr_num_black := by
@@ -72,165 +72,98 @@ def exObj : KLRWObject (Fin 3) exReq where
 
 
 
+-- basis for defining homomorphisms between KLRW objects
 
--- Basis for defining homomorphisms between KLRW objects
+-- StrandGenerators are basic elements like dot KLRWDomainObj 4, cross KLRWDomainObj 3, etc. that includes the 
+-- domain and what action happens to the ith strand
 
--- StrandGenerators are basic elements like dot 4, cross 3, etc. that describe what what happens to
--- the ith strand and is meant to describes crosses and dots in a diagram in order from bottom up
-
-inductive StrandGenerator (m : Nat) where
-  | dot   : Fin m → StrandGenerator m
-  | cross : Fin (m - 1) → StrandGenerator m
-
-
--- Function that gives you the final position of a strand given its initial position i and the list
--- of StrandGenerators applied to it
-
-def final_pos (mor : List (StrandGenerator m)) (i : Fin m) : Fin m :=
-  mor.foldl (fun pos e =>
-    match e with
-    | StrandGenerator.dot _ => pos
-    | StrandGenerator.cross k =>
-        if pos.val == k.val then
-          ⟨k.val + 1, by omega⟩
-        else if pos.val == k.val + 1 then
-          ⟨k.val, by omega⟩
-        else
-          pos
-  ) i
+inductive StrandGenerator [DecidableEq V] [Fintype V] (parameters : KLRWStructure V) where
+  | dot   : KLRWObject parameters → Fin (total_strands parameters) → StrandGenerator parameters
+  | cross : KLRWObject parameters → Fin (total_strands parameters - 1) → StrandGenerator parameters
+  | id : KLRWObject parameters → StrandGenerator parameters
 
 
--- Example of a list of StrandGenerators and using the function final_pos
+-- function that gives you the KLRWObject after before a strand generator (the domain of the morphism)
 
-def exStrandEventList : List (StrandGenerator 5) :=
-  [StrandGenerator.cross 3, StrandGenerator.cross 1, StrandGenerator.cross 2,
-  StrandGenerator.cross 0, StrandGenerator.cross 2]
+def gen_domain [DecidableEq V] [Fintype V] {parameters : KLRWStructure V}
+    (gen : StrandGenerator parameters) : KLRWObject parameters :=
+  match gen with
+  | .dot M _   => M
+  | .cross M _ => M
+  | .id M      => M
 
-#eval final_pos exStrandEventList 2
+
+-- function that gives you the KLRWObject after applying a strand generator (NOT FINISHED)
+
+def gen_codomain [DecidableEq V] [Fintype V] {parameters : KLRWStructure V} (gen : StrandGenerator parameters)
+    : KLRWObject parameters :=
+  match gen with
+  | .dot M _   => M
+  | .cross M i => M
+  | .id M      => M
 
 
 
--- Defining basic variables that will be commonly used
+-- lifts the StrandGenerator to a Free algebra over R[x, y]
 
-variable {V : Type*} [DecidableEq V] [Fintype V] {Parameters : KLRWStructure V} (M N K : KLRWObject V Parameters)
-
-
--- Describes a single strand diagram, contains 3 pieces of information: the list of all crosses and
--- dots in the strand diagram from bottom up, a proof that all the dots are on blck strands, and
--- a proof that all the strands have the same starting and ending label.
-
-structure HomGenerator (domain codomain : KLRWObject V Parameters) where
-  morph : List (StrandGenerator (total_strands Parameters))
-  dots_on_black : ∀ (idx : Fin morph.length),
-    match morph.get idx with
-    | StrandGenerator.dot i =>
-        let initialtPos := final_pos (morph.take idx.val) i
-        (domain.strand_seq.get initialtPos).2 = StrandColor.black
-    | StrandGenerator.cross _ => True
-  matching_start_end : ∀ (i : Fin (total_strands Parameters)),
-    domain.strand_seq.get i = codomain.strand_seq.get (final_pos morph i)
+abbrev KLRWFreeAlg [DecidableEq V] [Fintype V] (R : Type*) [CommRing R] (parameters : KLRWStructure V) :=
+  FreeAlgebra (MvPolynomial (Fin 2) R) (StrandGenerator parameters)
 
 
--- Work in progress, currently returns a list of the positions of a strand i after all crosings and
--- dots, even those that don't cause the position of the the strand to change. Considering changing
--- it to also describe dots
+-- returns an ideal that contains all of the values of KLRWFreeAlg that should equal 0
 
-def strand_all_pos (mor : List (StrandGenerator m)) (i : Fin m) : List (Fin m) :=
-  List.ofFn (fun j : Fin (mor.length + 1) => final_pos (mor.take j.val) i)
+noncomputable def KLRWRel [DecidableEq V] [Fintype V] (R : Type*) [CommRing R] (parameters : KLRWStructure V) :
+    TwoSidedIdeal (KLRWFreeAlg R parameters) :=
+  TwoSidedIdeal.span (
 
--- Work in progress, currently returns a list of the strand_trace of each strand
+    -- dot on red strand -> zero
+    {x | ∃ (M : KLRWObject parameters) (i : Fin (total_strands parameters)),
+    (M.strand_seq.get ⟨i, by omega⟩).2 = StrandColor.red ∧ x = FreeAlgebra.ι (MvPolynomial (Fin 2) R)
+    (StrandGenerator.dot M i)} ∪
 
-def all_strand_all_pos (mor : List (StrandGenerator m)) : List (List (Fin m)) :=
-  List.ofFn (fun i : Fin m => strand_all_pos mor i)
+    -- crossing with 2 red strands -> zero
+    {x | ∃ (M : KLRWObject parameters) (i : Fin (total_strands parameters - 1)),
+    (M.strand_seq.get ⟨i, by omega⟩).2 = StrandColor.red ∧ (M.strand_seq.get ⟨i + 1, by omega⟩).2 = StrandColor.red ∧
+    x = FreeAlgebra.ι (MvPolynomial (Fin 2) R) (StrandGenerator.cross M i)} ∪
 
+    -- identity composed with identity = identity
+    {x | ∃ (M : KLRWObject parameters), x = FreeAlgebra.ι (MvPolynomial (Fin 2) R) (StrandGenerator.id M) *
+      FreeAlgebra.ι (MvPolynomial (Fin 2) R) (StrandGenerator.id M) - FreeAlgebra.ι (MvPolynomial
+      (Fin 2) R) (StrandGenerator.id M)} ∪
 
--- HomFreeModule is the free R-module generated by the strand diagrams from M to N
+    -- need to mod out bad compositions of StrandGenerator elements (for f compose g, check if domain
+    -- of f = codomain of g)
+    {x | ∃ (f g : StrandGenerator parameters), gen_codomain f ≠ gen_domain g ∧
+    x = FreeAlgebra.ι (MvPolynomial (Fin 2) R) f * FreeAlgebra.ι (MvPolynomial (Fin 2) R) g} ∪
 
-abbrev HomFreeModule (R : Type*) [CommRing R] {V : Type*} [DecidableEq V]
-    [Fintype V] {Parameters : KLRWStructure V} (M N : KLRWObject V Parameters) :=
-  (HomGenerator M N) →₀ R
+    -- (a) bigon
+    {x | ∃ (M : KLRWObject parameters) (i : Fin (total_strands parameters - 1)),
+    (M.strand_seq.get ⟨i, by omega⟩).2 = StrandColor.black ∧ (M.strand_seq.get ⟨i + 1, by omega⟩).2 = StrandColor.black ∧
+    x = FreeAlgebra.ι (MvPolynomial (Fin 2) R) (StrandGenerator.cross M i) *
+        FreeAlgebra.ι (MvPolynomial (Fin 2) R) (StrandGenerator.cross M i)}
 
-
-
-
--- KLRWCoefficients acts like a polynomial, lets user choose 2 elemetns of R to be "special." Can
--- define a general case to make R the same as a a communitive ring ajoined with X and Y.
-
-structure KLRWCoefficients (R : Type*) [CommRing R] where
-  u : R
-  h : R
-
-
--- Just adds R to KLRWObject so that user can specify what ring they are working in, syntatically
--- needed by lean when defining the category
-
-structure KLRWObjectR (R : Type*) [CommRing R] (coeffs : KLRWCoefficients R)
-    {V : Type*} [DecidableEq V] [Fintype V]
-    (Parameters : KLRWStructure V) where
-  obj : KLRWObject V Parameters
+    -- Need to add rest of relations
+  )
 
 
-
--- KLRWRelation is a palceholder which will contain all the equivalence relations between
--- different strand diagrams in the future (give it an element of the free R-module generated
--- by the strand diagrams from M to N and it will return true if that element equals 0)
-
-inductive KLRWRelation (R : Type*) [CommRing R] (coeffs : KLRWCoefficients R) {Parameters : KLRWStructure V}
-    (M N : KLRWObject V Parameters) : HomFreeModule R M N → Prop where
-  | placeholder : KLRWRelation R coeffs M N 0
+-- quotients out KLRWRel from KLRWFreeAlg to get KLRW Algebra
+abbrev KLRWAlg [DecidableEq V] [Fintype V] (R : Type*) [CommRing R] (parameters : KLRWStructure V) :=
+  (KLRWRel R parameters).ringCon.Quotient
 
 
--- KLRWRelSubmodule is the submodule generated by all relation terms in KLRWRelation
-
-noncomputable def KLRWRelSubmodule (R : Type*) [CommRing R] (coeffs : KLRWCoefficients R) {Parameters : KLRWStructure V} (M N : KLRWObject V Parameters) :
-    Submodule R (HomFreeModule R M N) :=
-  Submodule.span R {x | KLRWRelation R coeffs M N x}
-
-
--- Hom is made by moding KLRWRelSubmodule out from HomFreeModule
-
-def Hom (R : Type*) [CommRing R] (coeffs : KLRWCoefficients R) {Parameters : KLRWStructure V} (M N : KLRWObject V Parameters) :=
-  (HomFreeModule R M N) ⧸ (KLRWRelSubmodule R coeffs M N)
+-- helper function to get the idempotent element e_X inside the quotient algebra (e R X = e_X)
+noncomputable def e [DecidableEq V] [Fintype V] (R : Type*) [CommRing R] {parameters : KLRWStructure V}
+    (X : KLRWObject parameters) : KLRWAlg R parameters :=
+  (KLRWRel R parameters).ringCon.mk' (FreeAlgebra.ι (MvPolynomial (Fin 2) R) (StrandGenerator.id X))
 
 
+-- uses helper function e to get the set of all equivalence classes of morphisms in KLRAlg that start
+-- from X and map to Y (KLRW Hom X Y = e_X KLRWAlg e_Y)
+noncomputable def KLRWHom [DecidableEq V] [Fintype V] (R : Type*) [CommRing R] (parameters : KLRWStructure V)
+    (X Y : KLRWObject parameters) : Submodule R (KLRWAlg R parameters) :=
+  LinearMap.range ((LinearMap.mulLeft R (e R X)).comp (LinearMap.mulRight R (e R Y)))
 
 
--- This is the identity function in HomGenerator (not in Hom yet, need to project it onto the
--- quotient space still)
-
-def HomGenerator.id : HomGenerator M M where
-  morph := []
-  dots_on_black := by
-    intro idx
-    exact Fin.elim0 idx
-  matching_start_end := by
-    intro i
-    simp [final_pos]
-
--- This is how to compose 2 functions in HomGenerator (doesn't use R at all yet)
-
-def HomGenerator.comp {M N K : KLRWObject V Parameters} (f : HomGenerator M N)
-    (g : HomGenerator N K) :
-  HomGenerator M K where
-  morph := f.morph ++ g.morph
-  dots_on_black := by sorry
-  matching_start_end := by sorry
-
-
--- HomFreeModule.comp is what we need to extend HomGenerator.comp linearly to the free module
-
-def HomFreeModule.comp {R : Type*} [CommRing R] {V : Type*} [DecidableEq V] [Fintype V]
-    {Parameters : KLRWStructure V} {M N K : KLRWObject V Parameters} :
-    HomFreeModule R M N →ₗ[R] HomFreeModule R N K →ₗ[R] HomFreeModule R M K :=
-  by sorry
-
--- This checks that compositions respects the KLRWRelations so that we can descend
--- HomFreeModule.comp to the quotient Hom.
-
-def Hom.comp {R : Type*} [CommRing R] (coeffs : KLRWCoefficients R) {V : Type*} [DecidableEq V]
-    [Fintype V] {Parameters : KLRWStructure V} {M N K : KLRWObject V Parameters}
-    (f : Hom R coeffs M N) (g : Hom R coeffs N K) :
-    Hom R coeffs M K := by sorry
 
 
 
@@ -238,20 +171,23 @@ def Hom.comp {R : Type*} [CommRing R] (coeffs : KLRWCoefficients R) {V : Type*} 
 open CategoryTheory
 
 
--- This is an outline of how we will define KLRW categories
+-- Just adds R to KLRWObject so that user can specify what ring they are working in, syntatically
+-- needed by lean when defining the category
 
-noncomputable instance (R : Type*) [CommRing R] (coeffs : KLRWCoefficients R) :
-    Category (KLRWObjectR R coeffs Parameters) where
-  Hom X Y := Hom R coeffs X.obj Y.obj
-  id X := Submodule.mkQ _ (Finsupp.single (HomGenerator.id X.obj) 1)
-  comp f g := Hom.comp coeffs f g
+structure KLRWObjectR (R : Type*) [CommRing R] {V : Type*} [DecidableEq V] [Fintype V]
+    (parameters : KLRWStructure V) where
+  obj : KLRWObject parameters
+
+
+
+noncomputable instance {R : Type*} [CommRing R] {V : Type*} [DecidableEq V] [Fintype V] {parameters : KLRWStructure V} :
+    Category (KLRWObjectR R parameters) where
+  Hom X Y :=  ↥(KLRWHom R parameters X.obj Y.obj)
+  id X := ⟨e R X.obj, by sorry⟩
+  comp f g := ⟨f.val * g.val, by sorry⟩
   id_comp  := by sorry
   comp_id  := by sorry
   assoc  := by sorry
-
-
-
-
 
 
 
