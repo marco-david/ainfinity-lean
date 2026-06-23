@@ -257,7 +257,7 @@ theorem rel_imply_quotient_eq [DecidableEq V] [Fintype V] {R : Type*} [CommRing 
 theorem identity_is_idempotent [DecidableEq V] [Fintype V]
     {R : Type*} [CommRing R] {parameters : KLRWStructure V}
     (X : KLRWObject parameters) :
-    identity_morph R X * identity_morph R X = identity_morph R X := by
+    id_morph R X * id_morph R X = id_morph R X := by
   have id_idem_in_rel :
     FreeAlgebra.ι (MvPolynomial (Fin 2) R) (StrandGenerator.id X) *
       FreeAlgebra.ι (MvPolynomial (Fin 2) R) (StrandGenerator.id X) -
@@ -265,7 +265,7 @@ theorem identity_is_idempotent [DecidableEq V] [Fintype V]
     KLRWRel R parameters :=
   TwoSidedIdeal.subset_span (KLRWRelGen.id_idem X)
   have quotient_eq := rel_imply_quotient_eq id_idem_in_rel
-  simpa [e, map_mul, map_sub] using quotient_eq
+  simpa [id_morph, map_mul, map_sub] using quotient_eq
 
 
 -- theorem that may be useful in the future, shows connection between f ∈ KLRWHom X Y and e_X * f * e_Y = f
