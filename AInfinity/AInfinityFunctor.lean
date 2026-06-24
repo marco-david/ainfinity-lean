@@ -22,7 +22,7 @@ variable (β_B : Type w) [GradingIndex β_B]
 abbrev functorTargetDeg
     (deg_trans : β_A →+ β_B)
     {n : ℕ} (deg : Fin n → β_A) : β_B :=
-  (∑ i, deg_trans (deg i)) + shift_ofInt (1 - (n : ℤ))
+  (∑ i, deg_trans (deg i)) + shiftOfInt (1 - (n : ℤ))
 
 /-- Target module of `φ_n` for a chain of objects and input degrees. -/
 abbrev functorTargetType
@@ -42,8 +42,8 @@ abbrev functorTargetType
 structure AInfinityFunctorData
     (R : Type u) [CommRing R]
     (ObjA : Type x) (ObjB : Type y)
-    [RLinearGQuiver β_A R ObjA]
-    [RLinearGQuiver β_B R ObjB] where
+    [RLinearGradedQuiver β_A R ObjA]
+    [RLinearGradedQuiver β_B R ObjB] where
   /-- The action on objects. -/
   objMap : ObjA → ObjB
   /-- Group homofunctor translating degrees from `β_A` to `β_B`. -/
@@ -58,8 +58,8 @@ structure AInfinityFunctorData
     (obj : Fin (n + 1) → ObjA) →
     (deg : Fin n → β_A) →
     MultilinearMap R
-      (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
-      (functorTargetType β_A β_B (GHom β_B R) objMap deg_trans obj deg)
+      (fun i : Fin n => ComposableHomType (gradedHom β_A R) obj deg i)
+      (functorTargetType β_A β_B (gradedHom β_B R) objMap deg_trans obj deg)
 
 
 
@@ -188,7 +188,7 @@ variable {ObjA : Type x} {ObjB : Type y}
 abbrev functorEqTargetDeg
     (deg_trans : β_A →+ β_B)
     {n : ℕ} (deg : Fin n → β_A) : β_B :=
-  (∑ i, deg_trans (deg i)) + shift_ofInt (2 - (n : ℤ))
+  (∑ i, deg_trans (deg i)) + shiftOfInt (2 - (n : ℤ))
 
 abbrev functorEqTargetType
     {R : Type u} [CommRing R]
@@ -224,9 +224,9 @@ lemma LHS_compatible_deg
     functorTargetDeg β_A β_B deg_trans (stasheffDegOut deg r s hr) =
     functorEqTargetDeg β_A β_B deg_trans deg := by
       unfold functorTargetDeg functorEqTargetDeg;
-      convert congr_arg ( fun x : β_A => deg_trans x + shift_ofInt ( 1 - ( n + 1 - s : ℤ ) ) ) ( stasheffDegOut_sum_core deg r s hr ) using 1;
+      convert congr_arg ( fun x : β_A => deg_trans x + shiftOfInt ( 1 - ( n + 1 - s : ℤ ) ) ) ( stasheffDegOut_sum_core deg r s hr ) using 1;
       · simp +decide [ Nat.cast_sub ( by linarith : s ≤ n + 1 ) ];
-      · simp +decide only [shift_ofInt, map_sub, map_add, map_sum, deg_trans_ofInt];
+      · simp +decide only [shiftOfInt, map_sub, map_add, map_sum, deg_trans_ofInt];
         abel1
 
 /-- Transport from the outer LHS term target to the functor-equation target. -/
@@ -466,20 +466,20 @@ lemma RHS_compatible_deg
     aesop
   have h_sum_target_deg :
       ∑ l : Fin c.length, functorTargetDeg β_A β_B deg_trans (compositionBlockDeg β_A deg c l) =
-        ∑ i : Fin n, deg_trans (deg i) + shift_ofInt (c.length - n : ℤ) := by
+        ∑ i : Fin n, deg_trans (deg i) + shiftOfInt (c.length - n : ℤ) := by
     have h_sum_target_deg :
         ∑ l : Fin c.length, functorTargetDeg β_A β_B deg_trans (compositionBlockDeg β_A deg c l) =
           (∑ l : Fin c.length, ∑ j : Fin (c.blocksFun l), deg_trans (deg (c.embedding l j))) +
-            (∑ l : Fin c.length, shift_ofInt (1 - (c.blocksFun l : ℤ))) := by
+            (∑ l : Fin c.length, shiftOfInt (1 - (c.blocksFun l : ℤ))) := by
       simp +decide [functorTargetDeg, compositionBlockDeg, Finset.sum_add_distrib]
     convert h_sum_target_deg using 2
     · aesop
     · rw [← h_sum_blocksFun]
       exact map_sum (GradingIndex.ofInt) _ _
-  convert congr_arg (fun x : β_B => x + shift_ofInt (2 - (c.length : ℤ))) h_sum_target_deg using 1
+  convert congr_arg (fun x : β_B => x + shiftOfInt (2 - (c.length : ℤ))) h_sum_target_deg using 1
   unfold functorEqTargetDeg
   simp +decide only [add_assoc, add_right_inj]
-  unfold shift_ofInt
+  unfold shiftOfInt
   simp +decide
 
 /-- Transport from the outer RHS target to the functor-equation target. -/
@@ -683,14 +683,14 @@ def SatisfiesFunctorEquations
     [AInfinityCategoryStruct β_B R ObjB]
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) : Prop :=
   ∀ (n : ℕ) [NeZero n] (obj : Fin (n + 1) → ObjA) (deg : Fin n → β_A)
-    (x : ∀ i : Fin n, ComposableHomType (GHom β_A R) obj deg i),
+    (x : ∀ i : Fin n, ComposableHomType (gradedHom β_A R) obj deg i),
     functorLHSSum β_A β_B
-      (GHom β_A R) (GHom β_B R)
+      (gradedHom β_A R) (gradedHom β_B R)
       F.objMap F.deg_trans F.deg_trans_ofInt F.phi
       (AInfinityCategoryStruct.m (β := β_A) (R := R) (Obj := ObjA))
       obj deg x =
     functorRHSSum β_A β_B
-      (GHom β_A R) (GHom β_B R)
+      (gradedHom β_A R) (gradedHom β_B R)
       F.objMap F.deg_trans F.phi
       (AInfinityCategoryStruct.m (β := β_B) (R := R) (Obj := ObjB))
       obj deg x

@@ -34,8 +34,8 @@ abbrev oneObjHom : OneObj S → OneObj S → GradedRModule (β := ℤ) R :=
 instance concentratedAt0Quiver
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S] :
-    RLinearGQuiver (β := ℤ) R (OneObj S) where
-  GHom' _ _ := concentratedAt0 (R := R) (S := S)
+    RLinearGradedQuiver (β := ℤ) R (OneObj S) where
+  gradedHom' _ _ := concentratedAt0 (R := R) (S := S)
 
 def degreeZeroMul :
     MultilinearMap R
@@ -73,7 +73,7 @@ def concentratedAt0Map
           ext i
           fin_cases i <;> simp [h0, h1]
         subst hdeg
-        simpa [concentratedAt0, operationTargetDeg, shift_ofInt] using
+        simpa [concentratedAt0, operationTargetDeg, shiftOfInt] using
           degreeZeroMul (R := R) (S := S)
       · exact 0
     · exact 0
@@ -112,7 +112,7 @@ instance concentratedAt0CategoryData
     (R : Type u) [CommRing R]
     (S : Type u) [CommRing S] [Algebra R S] :
     AInfinityCategoryStruct (β := ℤ) R (OneObj S) where
-  toRLinearGQuiver := concentratedAt0Quiver (R := R) (S := S)
+  toRLinearGradedQuiver := concentratedAt0Quiver (R := R) (S := S)
   m := by
     intro n _ obj deg
     simpa [ComposableHomType, operationTargetType, concentratedAt0] using
@@ -300,7 +300,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_zero_degrees
       fin_cases i <;> rfl
     have hinnerDeg : stasheffInnerDeg (fun _ : Fin 3 => 0) 0 2 (by omega) = (0 : ℤ) := by
       rw [stasheffInnerDeg, hdegIn]
-      simp [operationTargetDeg, shift_ofInt]
+      simp [operationTargetDeg, shiftOfInt]
     ext i
     fin_cases i <;> simp [stasheffDegOut, hinnerDeg]
   let z : ∀ i : Fin 2, ModuleCat.of R S :=
@@ -419,7 +419,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r1_s2_zero_degrees
       fin_cases i <;> rfl
     have hinnerDeg : stasheffInnerDeg (fun _ : Fin 3 => 0) 1 2 (by omega) = (0 : ℤ) := by
       rw [stasheffInnerDeg, hdegIn]
-      simp [operationTargetDeg, shift_ofInt]
+      simp [operationTargetDeg, shiftOfInt]
     ext i
     fin_cases i <;> simp [stasheffDegOut, hinnerDeg]
   let z : ∀ i : Fin 2, ModuleCat.of R S :=
@@ -527,7 +527,7 @@ lemma concentratedAt0CategoryData_stasheffTerm_r0_s2_eq_zero_of_not_all_zero
         fin_cases i <;> simp [stasheffDegIn, h0, h1]
       have hinnerDeg : stasheffInnerDeg deg 0 2 (by omega) = (0 : ℤ) := by
         rw [stasheffInnerDeg, hdegIn]
-        simp [operationTargetDeg, shift_ofInt]
+        simp [operationTargetDeg, shiftOfInt]
       exact
         indexedStasheffTerm_eq_zero_of_outer_map_eq_zero
           (Hom := fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -682,7 +682,7 @@ theorem concentratedAt0CategoryData_satisfiesStasheff
                   obj (fun _ : Fin 3 => (0 : ℤ)) x 1 1 (by omega) (by omega) = 0 := by
             rw [hterm]
             simp
-          simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
+          simpa [gradedHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
         · intro a ha₁ ha₂ ha₃
           interval_cases a <;> simp +decide only [Fin.isValue] at ha₃ ⊢
           · have hterm :
@@ -703,7 +703,7 @@ theorem concentratedAt0CategoryData_satisfiesStasheff
                     obj (fun _ : Fin 3 => (0 : ℤ)) x 0 1 (by omega) (by omega) = 0 := by
               rw [hterm]
               simp
-            simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
+            simpa [gradedHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
           · have hterm :
                 indexedStasheffTerm
                   (fun _ _ => concentratedAt0 (R := R) (S := S))
@@ -722,7 +722,7 @@ theorem concentratedAt0CategoryData_satisfiesStasheff
                     obj (fun _ : Fin 3 => (0 : ℤ)) x 0 3 (by omega) (by omega) = 0 := by
               rw [hterm]
               simp
-            simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
+            simpa [gradedHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
       · simp +decide;
       · intro c hc hne; fin_cases c <;> simp +decide only [Fin.isValue, Fin.reduceLast,
         Nat.reduceAdd, range_val, Nat.reduceSub] at hne hc ⊢;
@@ -745,7 +745,7 @@ theorem concentratedAt0CategoryData_satisfiesStasheff
                     obj (fun _ : Fin 3 => (0 : ℤ)) x 2 1 (by omega) (by omega) = 0 := by
               rw [hterm]
               simp
-            simpa [GHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
+            simpa [gradedHom, concentratedAt0CategoryData, concentratedAt0Quiver] using hsmul
           · intro a ha hne
             rcases a with ⟨a, ha'⟩
             have ha1 : a = 1 := by

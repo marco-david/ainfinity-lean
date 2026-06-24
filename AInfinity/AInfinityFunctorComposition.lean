@@ -45,14 +45,14 @@ lemma comp_compatible_deg
           functorTargetDeg β_A β_C (G_deg_trans.comp F_deg_trans)
             (compositionBlockDeg β_A deg c l) := by
     intro l
-    simp [functorTargetDeg, shift_ofInt, AddMonoidHom.comp_apply, G_deg_trans_ofInt]
+    simp [functorTargetDeg, shiftOfInt, AddMonoidHom.comp_apply, G_deg_trans_ofInt]
   have h_sum_deg_comp :
       ∑ l : Fin c.length,
         G_deg_trans
           (functorTargetDeg β_A β_B F_deg_trans
             (compositionBlockDeg β_A deg c l)) =
         ∑ i : Fin n, (G_deg_trans.comp F_deg_trans) (deg i) +
-          ∑ l : Fin c.length, shift_ofInt (1 - (c.blocksFun l : ℤ)) := by
+          ∑ l : Fin c.length, shiftOfInt (1 - (c.blocksFun l : ℤ)) := by
     rw [Finset.sum_congr rfl fun l _ => h_deg_comp l]
     unfold functorTargetDeg
     simp +decide only [AddMonoidHom.coe_comp, Function.comp_apply, Finset.sum_add_distrib,
@@ -92,7 +92,7 @@ lemma comp_compatible_deg
       Int.nsmul_eq_mul, mul_one, sub_add_sub_cancel', sub_right_inj]
     exact_mod_cast c.sum_blocksFun
   generalize_proofs at *
-  simp +decide only [AddMonoidHom.coe_comp, Function.comp_apply, shift_ofInt, map_sub,
+  simp +decide only [AddMonoidHom.coe_comp, Function.comp_apply, shiftOfInt, map_sub,
     Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ, Fintype.card_fin, add_assoc,
     ← h_shift_sum, Int.nsmul_eq_mul, mul_one, sub_add_sub_cancel', map_sum, add_right_inj]
   simp +decide [← map_nsmul]
@@ -272,9 +272,9 @@ def compPhi
 
 section StructureComposition
 
-variable [RLinearGQuiver β_A R ObjA]
-variable [RLinearGQuiver β_B R ObjB]
-variable [RLinearGQuiver β_C R ObjC]
+variable [RLinearGradedQuiver β_A R ObjA]
+variable [RLinearGradedQuiver β_B R ObjB]
+variable [RLinearGradedQuiver β_C R ObjC]
 
 end StructureComposition
 
@@ -288,9 +288,9 @@ protected abbrev AInfinityFunctorData.comp
     {β_C : Type x} [GradingIndex β_C]
     {R : Type u} [CommRing R]
     {ObjA : Type y} {ObjB : Type z} {ObjC : Type t}
-    [RLinearGQuiver β_A R ObjA]
-    [RLinearGQuiver β_B R ObjB]
-    [RLinearGQuiver β_C R ObjC]
+    [RLinearGradedQuiver β_A R ObjA]
+    [RLinearGradedQuiver β_B R ObjB]
+    [RLinearGradedQuiver β_C R ObjC]
     (G : AInfinityFunctorData (β_A := β_B) (β_B := β_C) R ObjB ObjC)
     (F : AInfinityFunctorData (β_A := β_A) (β_B := β_B) R ObjA ObjB) :
     AInfinityFunctorData (β_A := β_A) (β_B := β_C) R ObjA ObjC where
@@ -302,7 +302,7 @@ protected abbrev AInfinityFunctorData.comp
     simp [AddMonoidHom.comp_apply, F.deg_trans_sign, G.deg_trans_sign]
   phi := fun obj deg =>
     AInfinityFunctorData.compPhi β_A β_B β_C
-      (GHom β_A R) (GHom β_B R) (GHom β_C R)
+      (gradedHom β_A R) (gradedHom β_B R) (gradedHom β_C R)
       F.objMap F.deg_trans F.phi
       G.objMap G.deg_trans G.deg_trans_ofInt G.phi
       obj deg
@@ -319,10 +319,10 @@ variable {β_C : Type x} [GradingIndex β_C]
 variable {β_D : Type*} [GradingIndex β_D]
 variable {R : Type u} [CommRing R]
 variable {ObjA : Type y} {ObjB : Type z} {ObjC : Type t} {ObjD : Type*}
-variable [RLinearGQuiver β_A R ObjA]
-variable [RLinearGQuiver β_B R ObjB]
-variable [RLinearGQuiver β_C R ObjC]
-variable [RLinearGQuiver β_D R ObjD]
+variable [RLinearGradedQuiver β_A R ObjA]
+variable [RLinearGradedQuiver β_B R ObjB]
+variable [RLinearGradedQuiver β_C R ObjC]
+variable [RLinearGradedQuiver β_D R ObjD]
 
 /-- The left-bracketed `phi`-field after unfolding only the outermost composition.
 
@@ -337,8 +337,8 @@ private abbrev compAssocLeftPhiExpanded
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
-        (functorTargetType β_A β_D (GHom β_D R)
+        (fun i : Fin n => ComposableHomType (gradedHom β_A R) obj deg i)
+        (functorTargetType β_A β_D (gradedHom β_D R)
           (H.objMap ∘ (G.comp F).objMap)
           (H.deg_trans.comp (G.comp F).deg_trans)
           obj deg) :=
@@ -346,7 +346,7 @@ private abbrev compAssocLeftPhiExpanded
       (obj : Fin (n + 1) → ObjA)
       (deg : Fin n → β_A) =>
     compPhi β_A β_C β_D
-      (GHom β_A R) (GHom β_C R) (GHom β_D R)
+      (gradedHom β_A R) (gradedHom β_C R) (gradedHom β_D R)
       (G.comp F).objMap
       (G.comp F).deg_trans
       (G.comp F).phi
@@ -369,8 +369,8 @@ private abbrev compAssocRightPhiExpanded
       (obj : Fin (n + 1) → ObjA) →
       (deg : Fin n → β_A) →
       MultilinearMap R
-        (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
-        (functorTargetType β_A β_D (GHom β_D R)
+        (fun i : Fin n => ComposableHomType (gradedHom β_A R) obj deg i)
+        (functorTargetType β_A β_D (gradedHom β_D R)
           ((H.comp G).objMap ∘ F.objMap)
           ((H.comp G).deg_trans.comp F.deg_trans)
           obj deg) :=
@@ -378,7 +378,7 @@ private abbrev compAssocRightPhiExpanded
       (obj : Fin (n + 1) → ObjA)
       (deg : Fin n → β_A) =>
     compPhi β_A β_B β_D
-      (GHom β_A R) (GHom β_B R) (GHom β_D R)
+      (gradedHom β_A R) (gradedHom β_B R) (gradedHom β_D R)
       F.objMap
       F.deg_trans
       F.phi
@@ -514,8 +514,8 @@ private lemma phi_heq_of_arity_eq
     {O₁ : Fin (n₁ + 1) → ObjA} {O₂ : Fin (n₂ + 1) → ObjA}
     {D₁ : Fin n₁ → β_A} {D₂ : Fin n₂ → β_A}
     (hO : HEq O₁ O₂) (hD : HEq D₁ D₂)
-    (X₁ : ∀ i, ComposableHomType (GHom β_A R) O₁ D₁ i)
-    (X₂ : ∀ i, ComposableHomType (GHom β_A R) O₂ D₂ i)
+    (X₁ : ∀ i, ComposableHomType (gradedHom β_A R) O₁ D₁ i)
+    (X₂ : ∀ i, ComposableHomType (gradedHom β_A R) O₂ D₂ i)
     (hX : HEq X₁ X₂) :
     HEq (@AInfinityFunctorData.phi β_A _ β_B _ R _ ObjA ObjB _ _ F n₁ inst₁ O₁ D₁ X₁)
       (@AInfinityFunctorData.phi β_A _ β_B _ R _ ObjA ObjB _ _ F n₂ inst₂ O₂ D₂ X₂) := by
@@ -764,8 +764,8 @@ private def compAssocLeftIndexedBlock
     (l : Fin c.length)
     (d : Composition (c.blocksFun l)) :
     MultilinearMap R
-      (fun j => ComposableHomType (GHom β_A R) obj deg (c.embedding l j))
-      (ComposableHomType (GHom β_C R)
+      (fun j => ComposableHomType (gradedHom β_A R) obj deg (c.embedding l j))
+      (ComposableHomType (gradedHom β_C R)
         (functorCompositionOuterObj (G.comp F).objMap obj c)
         (functorCompositionOuterDeg β_A β_C (G.comp F).deg_trans deg c) l) := by
   letI : NeZero (c.blocksFun l) :=
@@ -775,12 +775,12 @@ private def compAssocLeftIndexedBlock
       (congrArg
         (fun M : ModuleCat R =>
           MultilinearMap R
-            (fun j => ComposableHomType (GHom β_A R) obj deg (c.embedding l j))
+            (fun j => ComposableHomType (gradedHom β_A R) obj deg (c.embedding l j))
             M)
         (comp_term_block_module_eq β_A β_C
-          (GHom β_C R) (G.comp F).objMap (G.comp F).deg_trans obj deg c l))
+          (gradedHom β_C R) (G.comp F).objMap (G.comp F).deg_trans obj deg c l))
       (compTermMultilinearMap β_A β_B β_C
-        (GHom β_A R) (GHom β_B R) (GHom β_C R)
+        (gradedHom β_A R) (gradedHom β_B R) (gradedHom β_C R)
         F.objMap F.deg_trans F.phi
         G.objMap G.deg_trans G.deg_trans_ofInt G.phi
         (compositionBlockObj obj c l) (compositionBlockDeg β_A deg c l) d)
@@ -798,8 +798,8 @@ private def compAssocLeftIndexedTerm
     (deg : Fin n → β_A)
     (I : compAssocLeftIndex n) :
     MultilinearMap R
-      (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
-      (functorTargetType β_A β_D (GHom β_D R)
+      (fun i : Fin n => ComposableHomType (gradedHom β_A R) obj deg i)
+      (functorTargetType β_A β_D (gradedHom β_D R)
         (H.objMap ∘ (G.comp F).objMap)
         (H.deg_trans.comp (G.comp F).deg_trans)
         obj deg) := by
@@ -812,10 +812,10 @@ private def compAssocLeftIndexedTerm
       (congrArg
         (fun M : ModuleCat R =>
           MultilinearMap R
-            (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
+            (fun i : Fin n => ComposableHomType (gradedHom β_A R) obj deg i)
             M)
         (comp_term_target_module_eq β_A β_C β_D
-          (GHom β_D R) (G.comp F).objMap (G.comp F).deg_trans
+          (gradedHom β_D R) (G.comp F).objMap (G.comp F).deg_trans
           H.objMap H.deg_trans H.deg_trans_ofInt obj deg c))
       (MultilinearMap.compComposition c
         (H.phi
@@ -836,8 +836,8 @@ private def compAssocRightIndexedTerm
     (deg : Fin n → β_A)
     (I : compAssocRightIndex n) :
     MultilinearMap R
-      (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
-      (functorTargetType β_A β_D (GHom β_D R)
+      (fun i : Fin n => ComposableHomType (gradedHom β_A R) obj deg i)
+      (functorTargetType β_A β_D (gradedHom β_D R)
         ((H.comp G).objMap ∘ F.objMap)
         ((H.comp G).deg_trans.comp F.deg_trans)
         obj deg) := by
@@ -850,22 +850,22 @@ private def compAssocRightIndexedTerm
       (congrArg
         (fun M : ModuleCat R =>
           MultilinearMap R
-            (fun i : Fin n => ComposableHomType (GHom β_A R) obj deg i)
+            (fun i : Fin n => ComposableHomType (gradedHom β_A R) obj deg i)
             M)
         (comp_term_target_module_eq β_A β_B β_D
-          (GHom β_D R) F.objMap F.deg_trans
+          (gradedHom β_D R) F.objMap F.deg_trans
           (H.comp G).objMap (H.comp G).deg_trans (H.comp G).deg_trans_ofInt
           obj deg c))
       (MultilinearMap.compComposition c
         (compTermMultilinearMap β_B β_C β_D
-          (GHom β_B R) (GHom β_C R) (GHom β_D R)
+          (gradedHom β_B R) (gradedHom β_C R) (gradedHom β_D R)
           G.objMap G.deg_trans G.phi
           H.objMap H.deg_trans H.deg_trans_ofInt H.phi
           (functorCompositionOuterObj F.objMap obj c)
           (functorCompositionOuterDeg β_A β_B F.deg_trans deg c)
           d)
         (compTermBlock β_A β_B
-          (GHom β_A R) (GHom β_B R)
+          (gradedHom β_A R) (gradedHom β_B R)
           F.objMap F.deg_trans F.phi obj deg c))
 
 /-- The combinatorial bijection between the two ways of recording a two-level
@@ -885,7 +885,7 @@ private lemma comp_assoc_left_block_indexed_sum
     (c : Composition n)
     (l : Fin c.length) :
     compTermBlock β_A β_C
-      (GHom β_A R) (GHom β_C R)
+      (gradedHom β_A R) (gradedHom β_C R)
       (G.comp F).objMap (G.comp F).deg_trans (G.comp F).phi
       obj deg c l =
       ∑ d : Composition (c.blocksFun l),
@@ -896,10 +896,10 @@ private lemma comp_assoc_left_block_indexed_sum
   simp only [AInfinityFunctorData.comp, compPhi]
   exact cast_multilinearMap_sum
     (h := comp_term_block_module_eq β_A β_C
-      (GHom β_C R) (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg c l)
+      (gradedHom β_C R) (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg c l)
     (f := fun d : Composition (c.blocksFun l) =>
       compTermMultilinearMap β_A β_B β_C
-        (GHom β_A R) (GHom β_B R) (GHom β_C R)
+        (gradedHom β_A R) (gradedHom β_B R) (gradedHom β_C R)
         F.objMap F.deg_trans F.phi
         G.objMap G.deg_trans G.deg_trans_ofInt G.phi
         (compositionBlockObj obj c l) (compositionBlockDeg β_A deg c l) d)
@@ -915,7 +915,7 @@ private lemma comp_assoc_left_outer_term_indexed_sum
     (deg : Fin n → β_A)
     (c : Composition n) :
     compTermMultilinearMap β_A β_C β_D
-      (GHom β_A R) (GHom β_C R) (GHom β_D R)
+      (gradedHom β_A R) (gradedHom β_C R) (gradedHom β_D R)
       (G.comp F).objMap (G.comp F).deg_trans (G.comp F).phi
       H.objMap H.deg_trans H.deg_trans_ofInt H.phi
       obj deg c =
@@ -925,7 +925,7 @@ private lemma comp_assoc_left_outer_term_indexed_sum
   unfold compAssocLeftIndexedTerm compTermMultilinearMap
   rw [show
       compTermBlock β_A β_C
-        (GHom β_A R) (GHom β_C R)
+        (gradedHom β_A R) (gradedHom β_C R)
         (G.comp F).objMap (G.comp F).deg_trans (G.comp F).phi
         obj deg c =
         (fun l => ∑ d : Composition (c.blocksFun l),
@@ -934,7 +934,7 @@ private lemma comp_assoc_left_outer_term_indexed_sum
   rw [compComposition_sum_inner]
   rw [cast_multilinearMap_sum]
   · exact comp_term_target_module_eq β_A β_C β_D
-      (GHom β_D R) (G.comp F).objMap (G.comp F).deg_trans
+      (gradedHom β_D R) (G.comp F).objMap (G.comp F).deg_trans
       H.objMap H.deg_trans H.deg_trans_ofInt obj deg c
 
 /-- For a fixed first `F`-composition, expanding `(H.comp G)` on the resulting
@@ -948,7 +948,7 @@ private lemma comp_assoc_right_outer_term_indexed_sum
     (deg : Fin n → β_A)
     (c : Composition n) :
     compTermMultilinearMap β_A β_B β_D
-      (GHom β_A R) (GHom β_B R) (GHom β_D R)
+      (gradedHom β_A R) (gradedHom β_B R) (gradedHom β_D R)
       F.objMap F.deg_trans F.phi
       (H.comp G).objMap (H.comp G).deg_trans (H.comp G).deg_trans_ofInt (H.comp G).phi
       obj deg c =
@@ -960,7 +960,7 @@ private lemma comp_assoc_right_outer_term_indexed_sum
   rw [cast_multilinearMap_sum]
   · simp only [compTermMultilinearMap]
   · exact comp_term_target_module_eq β_A β_B β_D
-      (GHom β_D R) F.objMap F.deg_trans
+      (gradedHom β_D R) F.objMap F.deg_trans
       (H.objMap ∘ G.objMap) (H.deg_trans.comp G.deg_trans)
       (by intro k; simp [AddMonoidHom.comp_apply, G.deg_trans_ofInt, H.deg_trans_ofInt])
       obj deg c
@@ -1014,7 +1014,7 @@ private lemma comp_assoc_phi_indexed_summand_apply
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
     (I : compAssocRightIndex n)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compAssocLeftIndexedTerm F G H obj deg ((Composition.sigmaEquivSigmaPi n) I) x =
       compAssocRightIndexedTerm F G H obj deg I x := by
   classical
@@ -1022,12 +1022,12 @@ private lemma comp_assoc_phi_indexed_summand_apply
   unfold compAssocLeftIndexedTerm compAssocRightIndexedTerm
   rw [multilinearMap_cast_apply
     (h := comp_term_target_module_eq β_A β_C β_D
-      (GHom β_D R) (G.comp F).objMap (G.comp F).deg_trans
+      (gradedHom β_D R) (G.comp F).objMap (G.comp F).deg_trans
       H.objMap H.deg_trans H.deg_trans_ofInt obj deg
       ((Composition.sigmaEquivSigmaPi n) ⟨a, b⟩).1)]
   rw [multilinearMap_cast_apply
     (h := comp_term_target_module_eq β_A β_B β_D
-      (GHom β_D R) F.objMap F.deg_trans
+      (gradedHom β_D R) F.objMap F.deg_trans
       (H.comp G).objMap (H.comp G).deg_trans (H.comp G).deg_trans_ofInt obj deg a)]
   apply eq_of_heq
   refine HEq.trans (cast_heq _ _) ?_
@@ -1036,7 +1036,7 @@ private lemma comp_assoc_phi_indexed_summand_apply
   dsimp [MultilinearMap.compComposition]
   rw [multilinearMap_cast_apply
     (h := comp_term_target_module_eq β_B β_C β_D
-      (GHom β_D R) G.objMap G.deg_trans
+      (gradedHom β_D R) G.objMap G.deg_trans
       H.objMap H.deg_trans H.deg_trans_ofInt
       (functorCompositionOuterObj F.objMap obj a)
       (functorCompositionOuterDeg β_A β_B F.deg_trans deg a) b)]
@@ -1130,13 +1130,13 @@ private lemma comp_assoc_phi_indexed_summand_apply
     refine HEq.trans
       (heq_of_eq <| multilinearMap_cast_apply
         (h := comp_term_block_module_eq β_A β_C
-          (GHom β_C R) (G.comp F).objMap (G.comp F).deg_trans
+          (gradedHom β_C R) (G.comp F).objMap (G.comp F).deg_trans
           obj deg (a.gather b) ⟨j.val, hlen.symm ▸ j.2⟩) _ _) ?_
     refine HEq.trans (cast_heq _ _) ?_
     refine HEq.trans ?_
       (heq_of_eq <| multilinearMap_cast_apply
         (h := comp_term_block_module_eq β_B β_C
-          (GHom β_C R) G.objMap G.deg_trans
+          (gradedHom β_C R) G.objMap G.deg_trans
           (functorCompositionOuterObj F.objMap obj a)
           (functorCompositionOuterDeg β_A β_B F.deg_trans deg a) b j) _ _).symm
     refine HEq.trans ?_ (cast_heq _ _).symm
@@ -1145,7 +1145,7 @@ private lemma comp_assoc_phi_indexed_summand_apply
     refine HEq.trans
       (heq_of_eq <| multilinearMap_cast_apply
         (h := comp_term_target_module_eq β_A β_B β_C
-          (GHom β_C R) F.objMap F.deg_trans
+          (gradedHom β_C R) F.objMap F.deg_trans
           G.objMap G.deg_trans G.deg_trans_ofInt
           (compositionBlockObj obj (a.gather b) ⟨j.val, hlen.symm ▸ j.2⟩)
           (compositionBlockDeg β_A deg (a.gather b) ⟨j.val, hlen.symm ▸ j.2⟩)
@@ -1160,7 +1160,7 @@ private lemma comp_assoc_phi_indexed_summand_apply
       refine HEq.trans
         (heq_of_eq <| multilinearMap_cast_apply
           (h := comp_term_block_module_eq β_A β_B
-            (GHom β_B R) F.objMap F.deg_trans
+            (gradedHom β_B R) F.objMap F.deg_trans
             (compositionBlockObj obj (a.gather b) ⟨j.val, hlen.symm ▸ j.2⟩)
             (compositionBlockDeg β_A deg (a.gather b) ⟨j.val, hlen.symm ▸ j.2⟩)
             (a.sigmaCompositionAux b ⟨j.val, hlen.symm ▸ j.2⟩) p) _ _) ?_
@@ -1168,7 +1168,7 @@ private lemma comp_assoc_phi_indexed_summand_apply
       refine HEq.trans ?_
         (heq_of_eq <| multilinearMap_cast_apply
           (h := comp_term_block_module_eq β_A β_B
-            (GHom β_B R) F.objMap F.deg_trans
+            (gradedHom β_B R) F.objMap F.deg_trans
             obj deg a (b.embedding j q)) _ _).symm
       refine HEq.trans ?_ (cast_heq _ _).symm
       have hdom :
@@ -1334,16 +1334,16 @@ private abbrev compFunctorEquationLHS
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
-    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (gradedHom β_C R)
       (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
   AInfinityFunctorData.functorLHSSum β_A β_C
-    (GHom β_A R) (GHom β_C R)
+    (gradedHom β_A R) (gradedHom β_C R)
     (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans)
     (by intro k; simp [AddMonoidHom.comp_apply, F.deg_trans_ofInt, G.deg_trans_ofInt])
     (fun obj deg =>
       AInfinityFunctorData.compPhi β_A β_B β_C
-        (GHom β_A R) (GHom β_B R) (GHom β_C R)
+        (gradedHom β_A R) (gradedHom β_B R) (gradedHom β_C R)
         F.objMap F.deg_trans F.phi
         G.objMap G.deg_trans G.deg_trans_ofInt G.phi
         obj deg)
@@ -1357,15 +1357,15 @@ private abbrev compFunctorEquationRHS
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
-    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (gradedHom β_C R)
       (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
   AInfinityFunctorData.functorRHSSum β_A β_C
-    (GHom β_A R) (GHom β_C R)
+    (gradedHom β_A R) (gradedHom β_C R)
     (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans)
     (fun obj deg =>
       AInfinityFunctorData.compPhi β_A β_B β_C
-        (GHom β_A R) (GHom β_B R) (GHom β_C R)
+        (gradedHom β_A R) (gradedHom β_B R) (gradedHom β_C R)
         F.objMap F.deg_trans F.phi
         G.objMap G.deg_trans G.deg_trans_ofInt G.phi
         obj deg)
@@ -1380,8 +1380,8 @@ private abbrev compFunctorExpandedLHS
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
-    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (gradedHom β_C R)
       (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
   ∑ r ∈ (Finset.range (n + 1)).attach,
     ∑ s ∈ (Finset.Ico 1 (n - r.1 + 1)).attach,
@@ -1392,20 +1392,20 @@ private abbrev compFunctorExpandedLHS
       (stasheffSign deg r.1 s.1 h.2) •
         cast
           (AInfinityFunctorData.functor_lhs_target_eq β_A β_C
-            (GHom β_C R)
+            (gradedHom β_C R)
             (G.objMap ∘ F.objMap)
             (G.deg_trans.comp F.deg_trans)
             (by intro k; simp [AddMonoidHom.comp_apply, F.deg_trans_ofInt, G.deg_trans_ofInt])
             obj deg r.1 s.1 h.2)
           ((∑ c : Composition (n + 1 - s.1),
               AInfinityFunctorData.compTermMultilinearMap β_A β_B β_C
-                (GHom β_A R) (GHom β_B R) (GHom β_C R)
+                (gradedHom β_A R) (gradedHom β_B R) (gradedHom β_C R)
                 F.objMap F.deg_trans F.phi
                 G.objMap G.deg_trans G.deg_trans_ofInt G.phi
                 (stasheffObjOut obj r.1 s.1 h.2)
                 (stasheffDegOut deg r.1 s.1 h.2)
                 c)
-            (indexedStasheffXOut (GHom β_A R)
+            (indexedStasheffXOut (gradedHom β_A R)
               (AInfinityCategoryStruct.m (β := β_A) (R := R) (Obj := ObjA))
               obj deg x r.1 s.1 h.1 h.2))
 
@@ -1423,8 +1423,8 @@ private abbrev compFunctorFBlockLHSSum
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
-    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (gradedHom β_C R)
       (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
   compFunctorExpandedLHS F G obj deg x
 
@@ -1439,8 +1439,8 @@ private abbrev compFunctorFBlockRHSSum
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
-    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (gradedHom β_C R)
       (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
   compFunctorFBlockLHSSum F G obj deg x
 
@@ -1451,14 +1451,14 @@ private abbrev compFunctorBlockOutput
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i)
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i)
     (c : Composition n)
     (l : Fin c.length) :
-    ComposableHomType (GHom β_B R)
+    ComposableHomType (gradedHom β_B R)
       (AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c)
       (AInfinityFunctorData.functorCompositionOuterDeg β_A β_B F.deg_trans deg c) l :=
   AInfinityFunctorData.functorRHSBlock β_A β_B
-    (GHom β_A R) (GHom β_B R)
+    (gradedHom β_A R) (gradedHom β_B R)
     F.objMap F.deg_trans F.phi obj deg c l
     (fun j => x (c.embedding l j))
 
@@ -1471,12 +1471,12 @@ private lemma comp_functor_G_equation_target_eq
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
     (c : Composition n) :
-    ((AInfinityFunctorData.functorEqTargetType β_B β_C (GHom β_C R)
+    ((AInfinityFunctorData.functorEqTargetType β_B β_C (gradedHom β_C R)
         G.objMap G.deg_trans
         (AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c)
         (AInfinityFunctorData.functorCompositionOuterDeg β_A β_B F.deg_trans deg c) :
         ModuleCat R) : Type u) =
-      ((AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+      ((AInfinityFunctorData.functorEqTargetType β_A β_C (gradedHom β_C R)
         (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :
         ModuleCat R) : Type u) := by
   have hsource :
@@ -1495,15 +1495,15 @@ private lemma comp_functor_G_equation_target_eq
     have hcomp :=
       AInfinityFunctorData.comp_compatible_deg β_A β_B β_C
         F.deg_trans G.deg_trans G.deg_trans_ofInt deg c
-    convert congrArg (fun d : β_C => d + shift_ofInt (β := β_C) 1) hcomp using 1 <;>
+    convert congrArg (fun d : β_C => d + shiftOfInt (β := β_C) 1) hcomp using 1 <;>
       simp only [functorTargetDeg, AInfinityFunctorData.functorEqTargetDeg,
-        add_assoc, shift_ofInt, ← map_add] <;>
+        add_assoc, shiftOfInt, ← map_add] <;>
       congr 2 <;>
       omega
   dsimp [AInfinityFunctorData.functorEqTargetType]
   rw [hsource, htarget]
   exact congrArg
-    (fun d => ((GHom β_C R (G.objMap (F.objMap (obj 0)))
+    (fun d => ((gradedHom β_C R (G.objMap (F.objMap (obj 0)))
       (G.objMap (F.objMap (obj (Fin.last n)))) d : ModuleCat R) : Type u))
     hdeg
 
@@ -1519,15 +1519,15 @@ private def compFunctorGLHSSum
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
-    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (gradedHom β_C R)
       (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
   ∑ c : Composition n,
     letI : NeZero c.length :=
       ⟨Nat.ne_of_gt (c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n)))⟩
     cast (comp_functor_G_equation_target_eq F G obj deg c)
       (AInfinityFunctorData.functorLHSSum β_B β_C
-        (GHom β_B R) (GHom β_C R)
+        (gradedHom β_B R) (gradedHom β_C R)
         G.objMap G.deg_trans G.deg_trans_ofInt G.phi
         (AInfinityCategoryStruct.m (β := β_B) (R := R) (Obj := ObjB))
         (AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c)
@@ -1544,15 +1544,15 @@ private def compFunctorGRHSSum
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
-    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (gradedHom β_C R)
       (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
   ∑ c : Composition n,
     letI : NeZero c.length :=
       ⟨Nat.ne_of_gt (c.length_pos_of_pos (Nat.pos_of_ne_zero (NeZero.ne n)))⟩
     cast (comp_functor_G_equation_target_eq F G obj deg c)
       (AInfinityFunctorData.functorRHSSum β_B β_C
-        (GHom β_B R) (GHom β_C R)
+        (gradedHom β_B R) (gradedHom β_C R)
         G.objMap G.deg_trans G.phi
         (AInfinityCategoryStruct.m (β := β_C) (R := R) (Obj := ObjC))
         (AInfinityFunctorData.functorCompositionOuterObj F.objMap obj c)
@@ -1570,8 +1570,8 @@ private abbrev compFunctorExpandedRHS
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
-    AInfinityFunctorData.functorEqTargetType β_A β_C (GHom β_C R)
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
+    AInfinityFunctorData.functorEqTargetType β_A β_C (gradedHom β_C R)
       (G.objMap ∘ F.objMap) (G.deg_trans.comp F.deg_trans) obj deg :=
   compFunctorEquationRHS F G obj deg x
 
@@ -1586,7 +1586,7 @@ private lemma comp_functor_lhs_expand
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorEquationLHS F G obj deg x =
       compFunctorExpandedLHS F G obj deg x := by
   rfl
@@ -1603,7 +1603,7 @@ private lemma comp_functor_apply_F_equation
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorExpandedLHS F G obj deg x =
       compFunctorEquationLHS F G obj deg x := by
   rfl
@@ -1615,14 +1615,14 @@ private lemma comp_functor_F_equation_raw
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     AInfinityFunctorData.functorLHSSum β_A β_B
-      (GHom β_A R) (GHom β_B R)
+      (gradedHom β_A R) (gradedHom β_B R)
       F.objMap F.deg_trans F.deg_trans_ofInt F.phi
       (AInfinityCategoryStruct.m (β := β_A) (R := R) (Obj := ObjA))
       obj deg x =
     AInfinityFunctorData.functorRHSSum β_A β_B
-      (GHom β_A R) (GHom β_B R)
+      (gradedHom β_A R) (gradedHom β_B R)
       F.objMap F.deg_trans F.phi
       (AInfinityCategoryStruct.m (β := β_B) (R := R) (Obj := ObjB))
       obj deg x := by
@@ -1635,14 +1635,14 @@ private lemma comp_functor_G_equation_raw
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjB)
     (deg : Fin n → β_B)
-    (x : (i : Fin n) → ComposableHomType (GHom β_B R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_B R) obj deg i) :
     AInfinityFunctorData.functorLHSSum β_B β_C
-      (GHom β_B R) (GHom β_C R)
+      (gradedHom β_B R) (gradedHom β_C R)
       G.objMap G.deg_trans G.deg_trans_ofInt G.phi
       (AInfinityCategoryStruct.m (β := β_B) (R := R) (Obj := ObjB))
       obj deg x =
     AInfinityFunctorData.functorRHSSum β_B β_C
-      (GHom β_B R) (GHom β_C R)
+      (gradedHom β_B R) (gradedHom β_C R)
       G.objMap G.deg_trans G.phi
       (AInfinityCategoryStruct.m (β := β_C) (R := R) (Obj := ObjC))
       obj deg x := by
@@ -1656,7 +1656,7 @@ private lemma comp_functor_expanded_lhs_to_F_block_lhs
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorExpandedLHS F G obj deg x =
       compFunctorFBlockLHSSum F G obj deg x := by
   rfl
@@ -1669,7 +1669,7 @@ private lemma comp_functor_apply_F_blocks
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorFBlockLHSSum F G obj deg x =
       compFunctorFBlockRHSSum F G obj deg x := by
   rfl
@@ -1682,7 +1682,7 @@ private lemma comp_functor_F_block_rhs_to_G_lhs
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorFBlockRHSSum F G obj deg x =
       compFunctorGLHSSum F G obj deg x := by
   -- Final proof: identify the block containing the collapsed Stasheff input
@@ -1697,7 +1697,7 @@ private lemma comp_functor_apply_G_blocks
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorGLHSSum F G obj deg x =
       compFunctorGRHSSum F G obj deg x := by
   classical
@@ -1721,7 +1721,7 @@ private lemma comp_functor_G_rhs_to_expanded_rhs
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorGRHSSum F G obj deg x =
       compFunctorExpandedRHS F G obj deg x := by
   -- Final proof: use the same two-level-composition bijection as
@@ -1736,7 +1736,7 @@ private lemma comp_functor_expanded_rhs_contract
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorExpandedRHS F G obj deg x =
       compFunctorEquationRHS F G obj deg x := by
   rfl
@@ -1752,7 +1752,7 @@ private lemma comp_functor_reindex_to_G_equation
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorEquationLHS F G obj deg x =
       compFunctorEquationRHS F G obj deg x := by
   classical
@@ -1781,7 +1781,7 @@ private lemma comp_functor_apply_G_equation
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorEquationRHS F G obj deg x =
       compFunctorEquationRHS F G obj deg x := by
   rfl
@@ -1794,7 +1794,7 @@ private lemma comp_functor_rhs_contract
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorEquationRHS F G obj deg x =
       compFunctorEquationRHS F G obj deg x := by
   rfl
@@ -1811,7 +1811,7 @@ private lemma comp_satisfies_functor_equations_apply
     {n : ℕ} [NeZero n]
     (obj : Fin (n + 1) → ObjA)
     (deg : Fin n → β_A)
-    (x : (i : Fin n) → ComposableHomType (GHom β_A R) obj deg i) :
+    (x : (i : Fin n) → ComposableHomType (gradedHom β_A R) obj deg i) :
     compFunctorEquationLHS F G obj deg x =
       compFunctorEquationRHS F G obj deg x := by
   exact comp_functor_reindex_to_G_equation F G obj deg x

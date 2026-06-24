@@ -18,12 +18,12 @@ variable {n : ℕ}
 /-- Target degree of the `n`-ary operation `m`. -/
 abbrev operationTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + shift_ofInt (2 - (n : ℤ))
+  (∑ i, deg i) + shiftOfInt (2 - (n : ℤ))
 
 /-- Target degree of the arity-`n` Stasheff relation. -/
 abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + shift_ofInt (3 - (n : ℤ))
+  (∑ i, deg i) + shiftOfInt (3 - (n : ℤ))
 
 /-- Valid index pairs for an arity-`n` Stasheff summand. -/
 abbrev ValidStasheffIndices (n r s : ℕ) : Prop :=
@@ -56,13 +56,13 @@ abbrev operationTargetType
 
 class AInfinityCategoryStruct
     (R : Type u) [CommRing R] (Obj : Type w)
-    extends RLinearGQuiver (β := β) R Obj where
+    extends RLinearGradedQuiver (β := β) R Obj where
   m :
     {n : ℕ} → [NeZero n] →
     (obj : Fin (n + 1) → Obj) →
     (deg : Fin n → β) →
     MultilinearMap R
-      (fun i : Fin n => ComposableHomType (GHom β R) obj deg i)
-      (operationTargetType (GHom β R) obj deg)
+      (fun i : Fin n => ComposableHomType (gradedHom β R) obj deg i)
+      (operationTargetType (gradedHom β R) obj deg)
 
 end AInfinityTheory

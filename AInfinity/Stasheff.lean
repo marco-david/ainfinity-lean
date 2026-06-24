@@ -18,12 +18,12 @@ variable {n : ℕ}
 /-- Target degree of the `n`-ary operation `m`. -/
 abbrev operationTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + shift_ofInt (2 - (n : ℤ))
+  (∑ i, deg i) + shiftOfInt (2 - (n : ℤ))
 
 /-- Target degree of the arity-`n` Stasheff relation. -/
 abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + shift_ofInt (3 - (n : ℤ))
+  (∑ i, deg i) + shiftOfInt (3 - (n : ℤ))
 
 /-- Valid index pairs for an arity-`n` Stasheff summand. -/
 abbrev ValidStasheffIndices (n r s : ℕ) : Prop :=
@@ -102,8 +102,8 @@ def stasheffObjOut
 
 /-- Combine the two operation-degree shifts in a nested Stasheff term. -/
 private lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
-    shift_ofInt (β := β) (2 - (s : ℤ)) + shift_ofInt (2 - ((n + 1 - s : ℕ) : ℤ)) =
-    shift_ofInt (3 - (n : ℤ)) := by
+    shiftOfInt (β := β) (2 - (s : ℤ)) + shiftOfInt (2 - ((n + 1 - s : ℕ) : ℤ)) =
+    shiftOfInt (3 - (n : ℤ)) := by
   have : 3 - (n : ℤ) = 2 - (s : ℤ) + 2 - ((n + 1 - s : ℕ) : ℤ) := by
     have hle : s ≤ n + 1 := Nat.le_succ_of_le hsn
     rw [Nat.cast_sub hle]
@@ -114,7 +114,7 @@ private lemma shift_ofInt_combine {n s : ℕ} (hsn : s ≤ n) :
     rhs
     arg 1
     rw [Int.add_sub_assoc (2 - (s : ℤ))]
-  unfold shift_ofInt
+  unfold shiftOfInt
   symm
   apply map_add
 
@@ -135,7 +135,7 @@ lemma stasheffDegOut_sum_core
     (r s : ℕ)
     (hr : r + s ≤ n) :
     (∑ i : Fin (n + 1 - s), stasheffDegOut deg r s hr i) =
-    (∑ i : Fin n, deg i) + shift_ofInt (2 - (s : ℤ)) := by
+    (∑ i : Fin n, deg i) + shiftOfInt (2 - (s : ℤ)) := by
   unfold stasheffDegOut
   rw [
     show (Finset.univ : Finset (Fin (n + 1 - s))) =
@@ -238,7 +238,7 @@ lemma stasheffDegOut_sum
     (r s : ℕ)
     (hr : r + s ≤ n) :
     (∑ i : Fin (n + 1 - s), stasheffDegOut deg r s hr i) +
-      shift_ofInt (2 - ((n + 1 - s : ℕ) : ℤ)) =
+      shiftOfInt (2 - ((n + 1 - s : ℕ) : ℤ)) =
     stasheffTargetDeg deg := by
   rw [stasheffDegOut_sum_core deg r s hr, add_assoc,
       shift_ofInt_combine (by omega : s ≤ n)]
@@ -318,7 +318,6 @@ def indexedStasheffXIn
     ∀ i : Fin s, ComposableHomType Hom (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) i :=
   fun i => x ⟨r + i.val, by omega⟩
 
-omit [GradingIndex β] in
 /-- Evaluating the inner input tuple just picks out the corresponding original input. -/
 lemma indexedStasheffXIn_apply
     {R : Type u}
