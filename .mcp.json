@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "lean-info": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/user/lean-info-mcp/dist/index.js",
+        "--workspace",
+        "/Users/user/Desktop/renders/projects/ainf"
+      ],
+      "env": {}
+    }
+  }
+}
