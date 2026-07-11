@@ -29,22 +29,7 @@ theorem finCochain_neg_eq_self {X Y : BoundedCochainComplex (CMat_ (KLRWCategory
   exact (DFinsupp.neg_apply _ _).trans (CharTwo.neg_eq _)
 
 /--
-The data of an `A∞`-morphism from `KLRW` (viewed as a degenerate `A∞`-category:
-Hom-spaces concentrated in degree `0`, `μ₁ = 0`, `μ₂ =` composition, `μₙ = 0` for
-`n ≥ 3`) to the dg-category `K^•(Add KLRW)` of bounded cochain complexes
-(`μ₁ = δ_fin`, `μ₂ =` composition, `μₙ = 0` for `n ≥ 3`), truncated at level 2:
-the components `βₙ` for `n ≥ 3` vanish, so the general `[SFₙ]` axioms reduce to
-the finite list `[SF₁]`–`[SF₄]` below.
-
-The axioms are stated directly in the language of the target's A∞-structure
-`bccAInfinityPreCategory`: `mOne`/`mTwo` are its operations `μ₁`/`μ₂` with the
-target degree normalized, so `mTwo` carries the Koszul sign `(-1)^{deg}` of the
-dg-category structure and the fields below are the honest signed `[SFₙ]`
-specializations. The equivalent statements in differential/`FinCochain`
-language (`δ_fin`, `comp`) are the derived theorems `sf₁_fin`–`sf₄_fin`;
-`sf₃_fin` is where `[CharP R 2]` genuinely enters, absorbing the sign. The
-target's `R`-linear structure is the componentwise one on matrices of
-`StrandSpace R`-valued morphisms (see the `Linear` instances in `KLRW`).
+β.gen as written in the blueprint.
 -/
 structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq R] (n : ℕ)
     [DecidablePred (Limits.IsZero (C := CMat_ (KLRWCategory n R)))] where
@@ -53,14 +38,11 @@ structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq
   gen₂ : {A B C : KLRWCategory n R} → (A ⟶ B) → (B ⟶ C) →
     FinCochain (gen₀ A) (gen₀ C) (-1)
 
-  -- [SF₁.gen]: 0 = μ₁^B(β₁(f)) — `gen₁ f` is a `μ₁`-cycle, an equation in
-  -- the degree-1 Hom-space. Automatic from the chain-map typing of `gen₁`:
-  -- discharge with `fun _f => BoundedCochainComplex.mOne_ofHom _ _`.
+  -- [SF₁.gen]: 0 = μ₁^B(β₁(f))
   sf₁ : ∀ {A B : KLRWCategory n R} (f : A ⟶ B),
     mOne (R := R) (show (0 : ℤ) + 1 = 1 from rfl) (FinCochain.ofHom (gen₁ f)) = 0
 
-  -- [SF₂.gen]: β₁(μ₂^A(f, g)) = μ₂^B(β₁(f), β₁(g)) + μ₁^B(β₂(f, g)),
-  -- an equation in the degree-0 Hom-space `FinCochain (gen₀ A) (gen₀ C) 0`.
+  -- [SF₂.gen]: β₁(μ₂^A(f, g)) = μ₂^B(β₁(f), β₁(g)) + μ₁^B(β₂(f, g))
   sf₂ : ∀ {A B C : KLRWCategory n R} (f : A ⟶ B) (g : B ⟶ C),
     FinCochain.ofHom (gen₁ (f ≫ g)) =
       mTwo (R := R) (show (0 : ℤ) + 0 = 0 from rfl)
@@ -68,8 +50,6 @@ structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq
         mOne (R := R) (show (-1 : ℤ) + 1 = 0 from rfl) (gen₂ f g)
 
   -- [SF₃.gen]: β₂(f, μ₂^A(g, h)) + β₂(μ₂^A(f, g), h)
-  --              = μ₂^B(β₁(f), β₂(g, h)) + μ₂^B(β₂(f, g), β₁(h)),
-  -- an equation in the degree-(-1) Hom-space `FinCochain (gen₀ A) (gen₀ D) (-1)`.
   sf₃ : ∀ {A B C D : KLRWCategory n R} (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D),
     gen₂ f (g ≫ h) + gen₂ (f ≫ g) h =
       mTwo (R := R) (show (0 : ℤ) + -1 = -1 from rfl)
@@ -77,8 +57,7 @@ structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq
         mTwo (R := R) (show (-1 : ℤ) + 0 = -1 from rfl)
           (gen₂ f g) (FinCochain.ofHom (gen₁ h))
 
-  -- [SF₄.gen]: 0 = μ₂^B(β₂(f, g), β₂(h, k)),
-  -- an equation in the degree-(-2) Hom-space.
+  -- [SF₄.gen]: 0 = μ₂^B(β₂(f, g), β₂(h, k))
   sf₄ : ∀ {A B C D E : KLRWCategory n R}
     (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D) (k : D ⟶ E),
     mTwo (R := R) (show (-1 : ℤ) + -1 = -2 from rfl) (gen₂ f g) (gen₂ h k) = 0
