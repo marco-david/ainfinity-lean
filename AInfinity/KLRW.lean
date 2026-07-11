@@ -199,6 +199,59 @@ instance : Preadditive (KLRWCategory n R) where
         (fun j s₁ s₂ => by simp [mul_add, add_smul])]
     simp only [DFinsupp.sum, Finset.sum_add_distrib]
 
+/-- `DFinsupp` analogue of `Finsupp.sum_smul_index`. -/
+theorem sum_smul_index' {γ : Type*} [AddCommMonoid γ] (r : R) (f : StrandSpace R)
+    (h : ℕ → R → γ) (h0 : ∀ i, h i 0 = 0) :
+    (r • f).sum h = f.sum fun i c => h i (r * c) := by
+  rw [show r • f = DFinsupp.mapRange (fun _ c => r * c) (fun _ => mul_zero r) f from by
+      ext k; simp,
+    DFinsupp.sum_mapRange_index h0]
+
+theorem convolution_smul_left (r : R) (f g : StrandSpace R) (t : ℕ) :
+    (r • f).sum (fun i c => g.sum fun j s => (c * s) • StrandSpace.dots R (i + j + t))
+      = r • f.sum (fun i c => g.sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) := by
+  rw [sum_smul_index' r f _ (fun i => by simp [zero_mul, zero_smul]), DFinsupp.smul_sum]
+  congr 1; funext i c
+  rw [DFinsupp.smul_sum]
+  congr 1; funext j s
+  rw [smul_smul, mul_assoc]
+
+theorem convolution_smul_right (r : R) (f g : StrandSpace R) (t : ℕ) :
+    f.sum (fun i c => (r • g).sum fun j s => (c * s) • StrandSpace.dots R (i + j + t))
+      = r • f.sum (fun i c => g.sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) := by
+  conv_lhs =>
+    arg 2; ext i c
+    rw [sum_smul_index' r g _ (fun j => by simp [mul_zero, zero_smul])]
+  rw [DFinsupp.smul_sum]
+  congr 1; funext i c
+  rw [DFinsupp.smul_sum]
+  congr 1; funext j s
+  rw [smul_smul, mul_left_comm]
+
+/-- The KLRW category is `R`-linear: Hom-spaces are `StrandSpace R` and the
+convolution composition is `R`-bilinear. -/
+instance : Linear R (KLRWCategory n R) where
+  homModule _ _ := inferInstanceAs (Module R (StrandSpace R))
+  smul_comp P Q S r f g := convolution_smul_left r f g (compShift P Q S)
+  comp_smul P Q S f r g := convolution_smul_right r f g (compShift P Q S)
+
+/-- The additive completion of an `R`-linear category is `R`-linear, with the
+componentwise module structure on matrices of morphisms. (Stated here rather
+than in `AdditiveCompletion` to avoid rebuilding its heavy dependents.) -/
+instance {R : Type u} [CommRing R] {D : Type*} [Category D] [Preadditive D] [Linear R D] :
+    Linear R (CMat_ D) where
+  homModule M N := inferInstanceAs (Module R (∀ i j, M.X i ⟶ N.X j))
+  smul_comp M N K r f g := by
+    funext i k
+    show ∑ j : N.ι, (r • f i j) ≫ g j k = r • ∑ j : N.ι, f i j ≫ g j k
+    rw [Finset.smul_sum]
+    exact Finset.sum_congr rfl fun j _ => Linear.smul_comp _ _ _ r (f i j) (g j k)
+  comp_smul M N K f r g := by
+    funext i k
+    show ∑ j : N.ι, f i j ≫ (r • g j k) = r • ∑ j : N.ι, f i j ≫ g j k
+    rw [Finset.smul_sum]
+    exact Finset.sum_congr rfl fun j _ => Linear.comp_smul _ _ _ (f i j) r (g j k)
+
 instance (R : Type*) [CommRing R] [DecidableEq R] [ToString R] (n : ℕ) (S T : KLRWCategory n R) :
   Texify (S ⟶ T) := inferInstanceAs (Texify (StrandSpace R))
 

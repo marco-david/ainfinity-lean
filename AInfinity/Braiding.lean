@@ -7,22 +7,26 @@ public import AInfinity.BoundedCochainComplex
 @[expose] public section
 
 open CategoryTheory AInfinityTheory CochainComplex.HomComplex
-open BoundedCochainComplex (FinCochain)
+open BoundedCochainComplex (FinCochain mOne mTwo mOne_eq mTwo_eq mOne_ofHom)
 
-/-- Addition whose operands' types need only be *definitionally* equal.
-
-`+` is elaborated by `binop%`, which reconciles the operands' types at reducible
-transparency only, so it rejects e.g. `FinCochain A B (0 + 0)` next to
-`FinCochain A B (-1 + 1)`. This notation expands to a plain `Add.add`
-application instead: the carrier is unified with the expected type and each
-operand is checked by full definitional unification, where the degree
-arithmetic reduces. -/
+/-- Tool for addition, allows
+operands' types to only be *definitionally* equal. -/
 infixl:65 " +≡ " => Add.add
 
 
 universe u v w
 variable {R : Type u} [CommRing R] [CharP R 2] [DecidableEq R] {n : ℕ}
 variable [DecidablePred (Limits.IsZero (C := CMat_ (KLRWCategory n R)))]
+
+/-- Over `[CharP R 2]` every Hom-group of the KLRW Hom-complexes is 2-torsion:
+componentwise, morphisms are matrices of `DFinsupp`s valued in `R`. This is what
+lets the sign-free `FinCochain`-language statements agree with the Koszul-signed
+A∞ ones (see `BraidingFunctorData.sf₃_fin`). -/
+theorem finCochain_neg_eq_self {X Y : BoundedCochainComplex (CMat_ (KLRWCategory n R))}
+    {m : ℤ} (w : FinCochain X Y m) : -w = w := by
+  funext p i j
+  refine DFinsupp.ext fun k => ?_
+  exact (DFinsupp.neg_apply _ _).trans (CharTwo.neg_eq _)
 
 /--
 The data of an `A∞`-morphism from `KLRW` (viewed as a degenerate `A∞`-category:
@@ -32,16 +36,15 @@ Hom-spaces concentrated in degree `0`, `μ₁ = 0`, `μ₂ =` composition, `μ�
 the components `βₙ` for `n ≥ 3` vanish, so the general `[SFₙ]` axioms reduce to
 the finite list `[SF₁]`–`[SF₄]` below.
 
-* `gen₁ f` is a genuine chain map, so `[SF₁]` (`μ₁(β₁ f) = 0`) is automatic from
-  its typing: the field `sf₁` is discharged by `FinCochain.δ_fin_ofHom` for any
-  choice of the data.
-* `gen₂ f g` is a *raw* degree `-1` element of the Hom-complex
-  (`FinCochain (gen₀ A) (gen₀ C) (-1)`), NOT a chain map out of the shift: its
-  `μ₁`-differential is exactly the failure of `gen₁` to be strictly functorial,
-  as recorded by `[SF₂]`.
-
-The axioms are stated without Koszul signs; over `[CharP R 2]` this agrees with
-the signed specialization of the general `[SFₙ]` equations.
+The axioms are stated directly in the language of the target's A∞-structure
+`bccAInfinityPreCategory`: `mOne`/`mTwo` are its operations `μ₁`/`μ₂` with the
+target degree normalized, so `mTwo` carries the Koszul sign `(-1)^{deg}` of the
+dg-category structure and the fields below are the honest signed `[SFₙ]`
+specializations. The equivalent statements in differential/`FinCochain`
+language (`δ_fin`, `comp`) are the derived theorems `sf₁_fin`–`sf₄_fin`;
+`sf₃_fin` is where `[CharP R 2]` genuinely enters, absorbing the sign. The
+target's `R`-linear structure is the componentwise one on matrices of
+`StrandSpace R`-valued morphisms (see the `Linear` instances in `KLRW`).
 -/
 structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq R] (n : ℕ)
     [DecidablePred (Limits.IsZero (C := CMat_ (KLRWCategory n R)))] where
@@ -50,39 +53,81 @@ structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq
   gen₂ : {A B C : KLRWCategory n R} → (A ⟶ B) → (B ⟶ C) →
     FinCochain (gen₀ A) (gen₀ C) (-1)
 
-  -- [SF₁.gen]: 0 = μ₁^B(β₁(f)) — `gen₁ f` is a `δ_fin`-cycle, an equation in
+  -- [SF₁.gen]: 0 = μ₁^B(β₁(f)) — `gen₁ f` is a `μ₁`-cycle, an equation in
   -- the degree-1 Hom-space. Automatic from the chain-map typing of `gen₁`:
-  -- discharge with `fun f => FinCochain.δ_fin_ofHom _`.
+  -- discharge with `fun _f => BoundedCochainComplex.mOne_ofHom _ _`.
   sf₁ : ∀ {A B : KLRWCategory n R} (f : A ⟶ B),
-    (FinCochain.ofHom (gen₁ f)).δ_fin =
-      (0 : FinCochain (gen₀ A) (gen₀ B) (0 + 1))
+    mOne (R := R) (show (0 : ℤ) + 1 = 1 from rfl) (FinCochain.ofHom (gen₁ f)) = 0
 
   -- [SF₂.gen]: β₁(μ₂^A(f, g)) = μ₂^B(β₁(f), β₁(g)) + μ₁^B(β₂(f, g)),
   -- an equation in the degree-0 Hom-space `FinCochain (gen₀ A) (gen₀ C) 0`.
-  -- (`+≡` rather than `+`: the summands' degrees `0 + 0` and `-1 + 1` are
-  -- definitionally but not syntactically `0`.)
   sf₂ : ∀ {A B C : KLRWCategory n R} (f : A ⟶ B) (g : B ⟶ C),
     FinCochain.ofHom (gen₁ (f ≫ g)) =
-      (FinCochain.ofHom (gen₁ f)).comp (FinCochain.ofHom (gen₁ g)) +≡
-        (gen₂ f g).δ_fin
+      mTwo (R := R) (show (0 : ℤ) + 0 = 0 from rfl)
+          (FinCochain.ofHom (gen₁ f)) (FinCochain.ofHom (gen₁ g)) +
+        mOne (R := R) (show (-1 : ℤ) + 1 = 0 from rfl) (gen₂ f g)
 
   -- [SF₃.gen]: β₂(f, μ₂^A(g, h)) + β₂(μ₂^A(f, g), h)
   --              = μ₂^B(β₁(f), β₂(g, h)) + μ₂^B(β₂(f, g), β₁(h)),
   -- an equation in the degree-(-1) Hom-space `FinCochain (gen₀ A) (gen₀ D) (-1)`.
   sf₃ : ∀ {A B C D : KLRWCategory n R} (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D),
     gen₂ f (g ≫ h) + gen₂ (f ≫ g) h =
-      FinCochain.zeroComp (FinCochain.ofHom (gen₁ f)) (gen₂ g h) +
-        FinCochain.compZero (gen₂ f g) (FinCochain.ofHom (gen₁ h))
+      mTwo (R := R) (show (0 : ℤ) + -1 = -1 from rfl)
+          (FinCochain.ofHom (gen₁ f)) (gen₂ g h) +
+        mTwo (R := R) (show (-1 : ℤ) + 0 = -1 from rfl)
+          (gen₂ f g) (FinCochain.ofHom (gen₁ h))
 
   -- [SF₄.gen]: 0 = μ₂^B(β₂(f, g), β₂(h, k)),
   -- an equation in the degree-(-2) Hom-space.
   sf₄ : ∀ {A B C D E : KLRWCategory n R}
     (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D) (k : D ⟶ E),
-    (gen₂ f g).comp (gen₂ h k) = 0
+    mTwo (R := R) (show (-1 : ℤ) + -1 = -2 from rfl) (gen₂ f g) (gen₂ h k) = 0
 
 namespace BraidingFunctorData
 
 variable (β : BraidingFunctorData R n)
+
+/-! ### The axioms in differential / `FinCochain` language
+
+The `[SFᵢ]` fields are stated via the A∞ operations "mOne"/"mTwo",
+so they are here translated into the language of Hom-complex differential
+"δ_fin" and composition ("comp"/"zeroComp"/"compZero").
+
+Notice that we are working still in ring of char 2
+
+-/
+
+theorem sf₁_fin {A B : KLRWCategory n R} (f : A ⟶ B) :
+    (FinCochain.ofHom (β.gen₁ f)).δ_fin =
+      (0 : FinCochain (β.gen₀ A) (β.gen₀ B) (0 + 1)) :=
+  BoundedCochainComplex.FinCochain.δ_fin_ofHom (β.gen₁ f)
+
+theorem sf₂_fin {A B C : KLRWCategory n R} (f : A ⟶ B) (g : B ⟶ C) :
+    FinCochain.ofHom (β.gen₁ (f ≫ g)) =
+      (FinCochain.ofHom (β.gen₁ f)).comp (FinCochain.ofHom (β.gen₁ g)) +≡
+        (β.gen₂ f g).δ_fin := by
+  have h := β.sf₂ f g
+  rw [mTwo_eq, mOne_eq] at h
+  simpa [Int.negOnePow_zero] using h
+
+theorem sf₃_fin {A B C D : KLRWCategory n R} (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D) :
+    β.gen₂ f (g ≫ h) + β.gen₂ (f ≫ g) h =
+      FinCochain.zeroComp (FinCochain.ofHom (β.gen₁ f)) (β.gen₂ g h) +
+        FinCochain.compZero (β.gen₂ f g) (FinCochain.ofHom (β.gen₁ h)) := by
+  have hsf := β.sf₃ f g h
+  rw [mTwo_eq, mTwo_eq] at hsf
+  simp only [Int.negOnePow_neg, Int.negOnePow_one, Int.negOnePow_zero, one_smul,
+    Units.neg_smul, finCochain_neg_eq_self] at hsf
+  exact hsf
+
+/-- `[SF₄]` in `FinCochain` language. (Sign-free over any ring: the sign is
+absorbed by the vanishing right-hand side.) -/
+theorem sf₄_fin {A B C D E : KLRWCategory n R}
+    (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D) (k : D ⟶ E) :
+    (β.gen₂ f g).comp (β.gen₂ h k) = 0 := by
+  have hsf := β.sf₄ f g h k
+  rw [mTwo_eq] at hsf
+  simpa using hsf
 
 structure BraidingFunctorAdd (R : Type u) [CommRing R] [CharP R 2]
 [DecidableEq R] (n : ℕ) [DecidablePred (Limits.IsZero (C := CMat_ (KLRWCategory n R)))] where
@@ -264,7 +309,7 @@ noncomputable def PositiveTransposition (k : Fin (n + 1)) : BraidingFunctorData 
       (supersetOfSupport := {0, 1}) (by sorry)
   gen₁ := fun {A B} f => BoundedCochainComplex.homMk (transpositionMor (R := R) k f)
   gen₂ := fun {A B C} _f _g => sorry
-  sf₁ := fun _f => BoundedCochainComplex.FinCochain.δ_fin_ofHom _
+  sf₁ := fun _f => BoundedCochainComplex.mOne_ofHom _ _
   sf₂ := sorry
   sf₃ := sorry
   sf₄ := sorry

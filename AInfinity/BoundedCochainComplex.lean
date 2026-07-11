@@ -723,6 +723,82 @@ private lemma bccM_two_apply {obj : Fin 3 → BoundedCochainComplex V} {deg : Fi
       = (deg 1).negOnePow • FinCochain.degCast (R := R) (bccOperationTargetDeg_two deg).symm
           (FinCochain.comp (v ⟨0, h⟩) (v ⟨1, by norm_num⟩)) := rfl
 
+/-! #### The A∞ operations in normalized-degree form
+
+The A∞-native language for stating functor axioms into this category: `mOne`
+and `mTwo` are `m₁` and `m₂` of `bccAInfinityPreCategory` — fed via the
+chain-argument packagings `single₁`/`pair₂` — with the target degree
+normalized along an equation `h` by a `degCast`. The translation theorems
+`mOne_eq`/`mTwo_eq` identify them with the Hom-complex differential `δ_fin`
+and the Koszul-signed composition `comp`. -/
+
+/-- A single cochain as the argument vector of the unary A∞ operation. -/
+def single₁ {X Y : BoundedCochainComplex V} {d : ℤ} (x : FinCochain X Y d) :
+    ∀ i : Fin 1, (composableHomType (β := ℤ) (R := R) bccHom ![X, Y] ![d] i) :=
+  Fin.cons x fun i => i.elim0
+
+/-- Two composable cochains as the argument vector of the binary A∞ operation. -/
+def pair₂ {X Y Z : BoundedCochainComplex V} {d₁ d₂ : ℤ}
+    (x : FinCochain X Y d₁) (y : FinCochain Y Z d₂) :
+    ∀ i : Fin 2, (composableHomType (β := ℤ) (R := R) bccHom ![X, Y, Z] ![d₁, d₂] i) :=
+  Fin.cons x (Fin.cons y fun i => i.elim0)
+
+/-- `m₁` of `bccAInfinityPreCategory` on a single cochain, with the target degree
+normalized along `h`. -/
+def mOne {X Y : BoundedCochainComplex V} {d e : ℤ} (h : d + 1 = e)
+    (x : FinCochain X Y d) : FinCochain X Y e :=
+  FinCochain.degCast (R := R) ((bccOperationTargetDeg_one ![d]).trans h)
+    (bccAInfinityPreCategory.m (R := R) (n := ⟨1, Nat.one_pos⟩) ![X, Y] ![d] (single₁ x))
+
+/-- `m₂` of `bccAInfinityPreCategory` on two composable cochains — including the
+Koszul sign `(-1)^{deg y}` — with the target degree normalized along `h`. -/
+def mTwo {X Y Z : BoundedCochainComplex V} {d₁ d₂ e : ℤ} (h : d₁ + d₂ = e)
+    (x : FinCochain X Y d₁) (y : FinCochain Y Z d₂) : FinCochain X Z e :=
+  FinCochain.degCast (R := R) ((bccOperationTargetDeg_two ![d₁, d₂]).trans h)
+    (bccAInfinityPreCategory.m (R := R) (n := ⟨2, Nat.zero_lt_two⟩) ![X, Y, Z] ![d₁, d₂]
+      (pair₂ x y))
+
+lemma FinCochain.degCast_degCast {A B : BoundedCochainComplex V} {a b c : ℤ}
+    (h₁ : a = b) (h₂ : b = c) (z : FinCochain A B a) :
+    FinCochain.degCast (R := R) h₂ (FinCochain.degCast (R := R) h₁ z) =
+      FinCochain.degCast (R := R) (h₁.trans h₂) z := by
+  subst h₁; subst h₂; rfl
+
+lemma FinCochain.degCast_units_smul {A B : BoundedCochainComplex V} {a b : ℤ}
+    (h : a = b) (u : ℤˣ) (z : FinCochain A B a) :
+    FinCochain.degCast (R := R) h (u • z) = u • FinCochain.degCast (R := R) h z := by
+  subst h; rfl
+
+/-- `mOne` is the Hom-complex differential `δ_fin`. -/
+theorem mOne_eq {X Y : BoundedCochainComplex V} {d e : ℤ} (h : d + 1 = e)
+    (x : FinCochain X Y d) :
+    mOne (R := R) h x = FinCochain.degCast (R := R) h (δ_fin x) :=
+  -- Term-mode: the inner `degCast` (from `bccM_one_apply`) carries
+  -- `![X, Y] ⟨0, _⟩`-shaped endpoint implicits, definitionally but not
+  -- syntactically `X`/`Y`, which blocks `rw`; elaboration unification copes.
+  (congrArg (fun z => FinCochain.degCast (R := R)
+        ((bccOperationTargetDeg_one ![d]).trans h) z)
+      (bccM_one_apply Nat.one_pos (single₁ x))).trans
+    (FinCochain.degCast_degCast (R := R) _ _ _)
+
+/-- `mTwo` is the Koszul-signed composition of `FinCochain`s. -/
+theorem mTwo_eq {X Y Z : BoundedCochainComplex V} {d₁ d₂ e : ℤ} (h : d₁ + d₂ = e)
+    (x : FinCochain X Y d₁) (y : FinCochain Y Z d₂) :
+    mTwo (R := R) h x y =
+      d₂.negOnePow • FinCochain.degCast (R := R) h (FinCochain.comp x y) :=
+  (congrArg (fun z => FinCochain.degCast (R := R)
+        ((bccOperationTargetDeg_two ![d₁, d₂]).trans h) z)
+      (bccM_two_apply Nat.zero_lt_two (pair₂ x y))).trans
+    ((FinCochain.degCast_units_smul (R := R) _ _ _).trans
+      (congrArg (fun z => (![d₁, d₂] 1).negOnePow • z)
+        (FinCochain.degCast_degCast (R := R) _ _ _)))
+
+/-- On a genuine chain map, `m₁` vanishes: this discharges `[SF₁]` for any
+A∞-functor data whose unary component is a chain map. -/
+theorem mOne_ofHom {A B : BoundedCochainComplex V} {e : ℤ} (h : (0 : ℤ) + 1 = e)
+    (φ : A ⟶ B) : mOne (R := R) h (FinCochain.ofHom φ) = 0 := by
+  rw [mOne_eq, δ_fin_ofHom, map_zero]
+
 /-
 Closed form of the `(r=0,s=1)` term in the n=2 Stasheff sum:
 `m₂(m₁ x₀, x₁) = (deg 1).negOnePow • (δ (x₀)) ∘ x₁`.
