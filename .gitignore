@@ -16,3 +16,4 @@ blueprint/src/*.fdb_latexmk
 blueprint/src/*.fls
 blueprint/src/*.log
 blueprint/src/*.out
+blueprint/src/ch07sfaxioms.tex
