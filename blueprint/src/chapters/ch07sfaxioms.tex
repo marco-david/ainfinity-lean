@@ -1,0 +1,494 @@
+\chapter{Proofs of the SF axioms for the braiding functor data}
+
+\section{Overview}
+
+In Chapter 6 the braiding functor data was described by generators
+$\beta_0, \beta_1, \beta_2$ subject to the truncated axioms
+$[\mathrm{SF}_1]$--$[\mathrm{SF}_4]$. In the formalization this description is
+now a \emph{theorem} rather than a definition: the data is defined to be an
+\Ainf-functor
+\[
+  F \colon \KLRW \longrightarrow K^\bullet\big(\Add(\KLRW)\big)
+\]
+whose components vanish above level two, and the four axioms are derived by
+evaluating the general \Ainf-functor equation $[\mathrm{SF}_n]$ on chains of
+degree-zero morphisms. The logical shape of each derivation is important: the
+equation $[\mathrm{SF}_n]$ --- ``insertion side $=$ partition side'' --- holds
+\emph{by definition} of the datum, and the proof consists of computing what
+its two sides are. The resulting identities are therefore not structural
+facts about the target category; they are the constraints that the functor
+equation imposes on the components $\beta_1, \beta_2$. This chapter records
+the mathematics of these computations, in the exact shape mirrored by the
+Lean proofs.
+
+\paragraph{Convention.} Composition is written diagrammatically by
+juxtaposition: for $f \in \Hom(A,B)$ and $g \in \Hom(B,C)$ we write
+$fg \in \Hom(A,C)$ (Lean's $f \gg g$). Chapter 6 writes the same composite as
+$g \circ f$; the axioms below agree with the ones stated there after this
+translation.
+
+\section{The two \texorpdfstring{\Ainf}{A-infinity}-categories}
+
+\begin{definition}[$\KLRW$ as a graded category]\label{def:klrw-graded}
+  For $A, B \in \KLRW$ put
+  \[
+    \Hom_{\KLRW}(A,B)_d \;=\;
+    \begin{cases}
+      \StrandSpace(R) & d = 0,\\
+      0 & d \neq 0.
+    \end{cases}
+  \]
+  The \Ainf-operations are: $\mu^{\KLRW}_2$ on a chain of degrees $(0,0)$ is
+  the convolution composition of Chapter 6, and every other operation is zero
+  ($\mu^{\KLRW}_1 = 0$, $\mu^{\KLRW}_n = 0$ for $n \geq 3$, and $\mu^{\KLRW}_2$
+  vanishes on chains whose degree vector is not $(0,0)$ --- where some argument
+  module is the zero module anyway).
+\end{definition}
+
+\begin{remark}[the grading forces the degeneracy]
+  The operation $\mu_n$ has target degree $\sum_i d_i + (2-n)$. On a chain of
+  degree-zero morphisms this equals $2-n$, which is nonzero unless $n = 2$; so
+  any multilinear $\mu_n$ with $n \neq 2$ takes values in the zero module and
+  the degenerate structure of Definition~\ref{def:klrw-graded} is the only
+  possible one. (Lean: \texttt{klrwHom}, \texttt{klrwHom\_eq\_zero},
+  \texttt{klrwAInfinityPreCategory}.)
+\end{remark}
+
+\begin{theorem}[$\KLRW$ is an \Ainf-category]\label{thm:klrw-ainf}
+  The operations of Definition~\ref{def:klrw-graded} satisfy the Stasheff
+  identities.
+\end{theorem}
+
+\begin{proof}
+  The $n$-th Stasheff identity is a signed sum of terms
+  $\mu_{n+1-s}(\dots, \mu_s(\dots), \dots)$. If $s \neq 2$ the inner operation
+  vanishes; if $n + 1 - s \neq 2$ the outer one does. Both equal $2$ only when
+  $n = 3$ and $s = 2$, so every identity except the third is a sum of zeros.
+  For $n = 3$, if some argument has nonzero degree it lies in the zero module
+  and all terms vanish; otherwise the two surviving insertion terms are
+  $\mu_2(\mu_2(x_0,x_1),x_2)$ and $\mu_2(x_0,\mu_2(x_1,x_2))$, which carry
+  opposite signs and cancel by associativity of convolution
+  (Chapter 6, via $\operatorname{compShift}$-associativity). (Lean:
+  \texttt{klrwAInfinityCategory} in \texttt{KLRW.lean}.)
+\end{proof}
+
+\begin{definition}[the dg target]\label{def:dg-target}
+  Throughout this chapter we abbreviate the target category by
+  \[
+    B \;:=\; K^\bullet\big(\Add(\KLRW)\big),
+  \]
+  and write $\mu^B_n$ for its operations (matching the notation of
+  Chapter 6). It carries the \Ainf-structure of a dg-category:
+  \[
+    \mu^B_1 = \delta \quad\text{(the Hom-complex differential)}, \qquad
+    \mu^B_2(x, y) = (-1)^{|y|}\, x y, \qquad
+    \mu^B_n = 0 \ (n \geq 3),
+  \]
+  where $|y|$ is the degree of $y$ and $xy$ is composition of Hom-complex
+  elements. The Stasheff identities are $\delta^2 = 0$, the Leibniz rule, and
+  strict associativity. (Lean: \texttt{bccAInfinityPreCategory} and the
+  \texttt{AInfinityCategory} instance in \texttt{BoundedCochainComplex.lean}.)
+\end{definition}
+
+\section{\texorpdfstring{\Ainf}{A-infinity}-functors and the truncation}
+
+\begin{definition}[\Ainf-functor]\label{def:ainf-functor}
+  An \Ainf-functor $F \colon \mathcal{A} \to \mathcal{B}$ consists of an
+  object map $F_0$ and, for each $n \geq 1$, multilinear components $f_n$ on
+  composable chains $(a_1, \dots, a_n)$, of target degree
+  $\sum_i |a_i| + (1 - n)$, satisfying for every $n$ and every chain the
+  equation $[\mathrm{SF}_n]$, in degree $\sum_i |a_i| + (2-n)$:
+  \begin{multline*}
+    \sum_{\substack{r + s + t = n\\ s \geq 1}}
+      \varepsilon_{r,s}\,
+      f_{r+1+t}\big(a_1, \dots, a_r,\ \mu^{\mathcal A}_s(a_{r+1}, \dots, a_{r+s}),\
+        a_{r+s+1}, \dots, a_n\big) \\
+    = \sum_{\substack{(c_1, \dots, c_k) \vDash n}}
+      \mu^{\mathcal B}_k\big(f_{c_1}(a_1, \dots, a_{c_1}),\ \dots,\
+        f_{c_k}(a_{n-c_k+1}, \dots, a_n)\big),
+  \end{multline*}
+  where the right sum runs over all compositions of $n$ (ordered tuples of
+  positive integers summing to $n$). Note the asymmetry: the insertion side
+  applies operations of the \emph{source} $\mathcal{A}$ inside the arguments
+  of a single component, while the partition side applies one operation of
+  the \emph{target} $\mathcal{B}$ to a tuple of component values. The
+  insertion sign is
+  \[
+    \varepsilon_{r,s} \;=\; (-1)^{\,|a_{r+s+1}| + \dots + |a_n| \, +\, t},
+    \qquad t = n - r - s .
+  \]
+  (Lean: \texttt{AInfinityFunctor}, with the two sides
+  \texttt{indexedSFLeftSum} and \texttt{indexedSFRightSum} in
+  \texttt{AInfinityFunctor.lean}.)
+\end{definition}
+
+\begin{remark}[sign convention]
+  The insertion sign follows the same convention as the formalized Stasheff
+  sum; the partition side carries no additional sign. Other references
+  distribute signs differently; over a base ring with $2 = 0$ --- the standing
+  assumption for the braiding data --- all conventions agree.
+\end{remark}
+
+\begin{definition}[braiding functor data]\label{def:bfd}
+  A \emph{braiding functor datum} is an \Ainf-functor
+  $F \colon \KLRW \to K^\bullet(\Add(\KLRW))$ together with the truncation
+  condition $f_k = 0$ for all $k \geq 3$. From it one recovers the generators
+  of Chapter 6:
+  \[
+    \beta_0 := F_0, \qquad
+    \beta_1(f) := f_1(f) \in \Hom^{0}\big(\beta_0 A, \beta_0 B\big), \qquad
+    \beta_2(f,g) := f_2(f,g) \in \Hom^{-1}\big(\beta_0 A, \beta_0 C\big),
+  \]
+  the degrees being $1 - 1 = 0$ and $1 - 2 = -1$ since all inputs sit in
+  degree $0$. (Lean: \texttt{BraidingFunctorData} with fields
+  \texttt{toFunctor}, \texttt{trunc}, and derived \texttt{gen₀},
+  \texttt{gen₁}, \texttt{gen₂}.)
+\end{definition}
+
+Throughout the rest of the chapter, $f, g, h, k$ denote composable morphisms
+of $\KLRW$; all have degree $0$, so every insertion sign reduces to
+\[
+  \varepsilon_{r,s} = (-1)^{t} = (-1)^{\,n-r-s}.
+\]
+
+\section{Vanishing criteria}
+
+\begin{lemma}[term vanishing]\label{lem:vanishing}
+  Fix a chain of length $n$.
+  \begin{enumerate}
+    \item If the outer component $f_{n+1-s}$ vanishes identically, the
+      $(r,s)$ insertion term is zero.
+    \item If the inner operation $\mu^{\mathcal A}_s$ vanishes identically,
+      the $(r,s)$ insertion term is zero.
+    \item If $\mu^{\mathcal B}_k$ vanishes identically, the partition term at
+      any composition of length $k$ is zero.
+    \item If $f_{c_j}$ vanishes identically for some block $c_j$ of the
+      composition $c$, the partition term at $c$ is zero.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+  (1) and (3) are immediate. For (2) and (4), the vanishing operation makes
+  one coordinate of the input vector of the outer map zero, and a multilinear
+  map vanishes on any vector with a zero coordinate. (Lean:
+  \texttt{indexedSFLeftTerm\_outer\_zero},
+  \texttt{indexedSFLeftTerm\_inner\_zero},
+  \texttt{indexedSFRightTerm\_outer\_zero},
+  \texttt{indexedSFRightTerm\_inner\_zero}.)
+\end{proof}
+
+\section{Normal forms and evaluation of the sums}\label{sec:normal-forms}
+
+On paper one discards the vanishing terms and reads off the identity. In the
+formalization two further kinds of manipulation are needed, because the terms
+produced by the general $[\mathrm{SF}_n]$ machinery are not
+\emph{syntactically} the expressions appearing in the axioms. We record them
+once here; the proofs of Theorems~\ref{thm:sf1}--\ref{thm:sf4} then read as
+ordinary calculations, and use these facts silently at every step.
+
+\begin{remark}[canonical identifications]\label{rem:canonical}
+  The framework assigns to each operation a target degree that is a
+  \emph{term}, e.g.\ $\sum_i d_i + (2-n)$, not the integer it denotes, and
+  moves values between the corresponding modules by transports. On a chain of
+  literal degree-zero morphisms every degree expression in sight is closed
+  and evaluates, so all these transports are along equations between
+  definitionally equal integers and collapse (proof irrelevance). Formally
+  one strips them by passing to heterogeneous equality and converts back at
+  the end, both sides then lying in the same degree. In the proofs below we
+  never mention them again.
+\end{remark}
+
+\begin{lemma}[normal form of a term]\label{lem:normal-form}
+  On a degree-zero chain, each insertion term equals the expression
+  \[
+    f_{n+1-s}\big(a_1, \dots, a_r,\
+      \mu^{\KLRW}_s(a_{r+1}, \dots, a_{r+s}),\ a_{r+s+1}, \dots, a_n\big)
+  \]
+  it denotes, evaluated on the collapsed chain in its literal degrees; and
+  each partition term equals $\mu^B_k$ applied to the block evaluations
+  $f_{c_j}(\dots)$. Moreover $\mu^{\KLRW}_2(f,g) = fg$ holds
+  \emph{definitionally}, so composites may be substituted freely.
+\end{lemma}
+
+\begin{proof}
+  This is where the formal work sits, and it is not purely definitional. The
+  machine-built term is a transport of the component applied to a
+  \emph{re-indexed} chain (the inner window collapsed, or a block cut out).
+  The re-indexed object, degree and morphism assignments agree with the
+  displayed ones at every individual index --- each instance a definitional
+  identity, since the index arithmetic evaluates there --- but not as
+  functions: at a variable index the bodies differ, e.g.\ $0 + i$ and $i$
+  are distinct normal forms in $\N$. So the two applications of the
+  (multilinear) component are equated by congruence: function extensionality
+  for the object and degree assignments, checked index by index; a
+  heterogeneous function extensionality for the chains of morphisms, whose
+  entries become definitional identities once their transports are stripped
+  (Remark~\ref{rem:canonical}). For the last claim, the case distinction in
+  the definition of $\mu^{\KLRW}_2$ is decided by evaluation on literal
+  degrees, its internal casts are along $0 = 0$, and the convolution
+  composite remains. (Lean: the congruence bridges built from
+  \texttt{mlm\_apply\_congr\_heq} and \texttt{Function.hfunext} inside
+  \texttt{sf}$_1$--\texttt{sf}$_4$.)
+\end{proof}
+
+\begin{lemma}[sum evaluation]\label{lem:sum-eval}
+  On a degree-zero chain, each side of $[\mathrm{SF}_n]$ equals the sum of
+  its non-vanishing terms, the insertion terms weighted by
+  $(-1)^{\,n-r-s}$. Formally: vanishing summands are rewritten to zero by
+  Lemma~\ref{lem:vanishing} and absorbed; the index sets are enumerated ---
+  compositions of a small $n$ are classified by destructing the block list;
+  and the signs, being closed expressions, are evaluated. (Lean:
+  \texttt{Finset.sum\_eq\_single\_of\_mem} and a two-survivor variant;
+  \texttt{composition\_two\_cases}, \texttt{composition\_three\_cases},
+  \texttt{composition\_four\_eq\_two\_two}.)
+\end{lemma}
+
+\section{Arity 1: \texorpdfstring{$[\mathrm{SF}_1]$}{[SF1]}}
+
+\begin{theorem}\label{thm:sf1}
+  For every $f \in \Hom_{\KLRW}(A, B)$,
+  \[
+    \mu^B_1\big(\beta_1(f)\big) = 0 ,
+  \]
+  an identity in degree $1$; that is, $\beta_1(f)$ is a cycle for the
+  Hom-complex differential --- a chain map.
+\end{theorem}
+
+\begin{proof}
+  Since $F$ is an \Ainf-functor (Definition~\ref{def:bfd}), the equation
+  $[\mathrm{SF}_1]$ of Definition~\ref{def:ainf-functor} holds on the chain
+  $(f)$:
+  \[
+    \text{(insertion side at $(f)$)} \;=\; \text{(partition side at $(f)$)} .
+  \]
+  We compute the two sides. The insertion side applies source operations: its
+  only term is $f_1\big(\mu^{\KLRW}_1 f\big)$, which vanishes since
+  $\mu^{\KLRW}_1 = 0$ (Lemma~\ref{lem:vanishing}); so the insertion side is
+  $0$. The partition side applies a target operation to component values: the
+  only composition of $1$ is $(1)$, with term
+  $\mu^{B}_1\big(f_1(f)\big) = \mu^{B}_1\big(\beta_1(f)\big)$ --- the
+  Hom-complex differential of $B = K^\bullet(\Add(\KLRW))$ applied to
+  $\beta_1(f)$; so the partition side is $\mu^{B}_1\big(\beta_1(f)\big)$.
+  Substituting both computations into the displayed equation gives
+  $0 = \mu^{B}_1\big(\beta_1(f)\big)$.
+  (Lean: \texttt{BraidingFunctorData.sf}$_1$.)
+\end{proof}
+
+\section{Arity 2: \texorpdfstring{$[\mathrm{SF}_2]$}{[SF2]}}
+
+\begin{theorem}\label{thm:sf2}
+  For composable $f, g$,
+  \[
+    \beta_1(fg) \;=\; \mu^B_2\big(\beta_1(f), \beta_1(g)\big)
+      \;+\; \mu^B_1\big(\beta_2(f,g)\big),
+  \]
+  an identity in degree $0$.
+\end{theorem}
+
+\begin{proof}
+  As $F$ is an \Ainf-functor, $[\mathrm{SF}_2]$ holds on the chain $(f,g)$:
+  the insertion side and the partition side at $(f,g)$ are equal. We compute
+  the two sides.
+
+  \emph{Insertion side.} Inserting $\mu^{\KLRW}_1$ into either argument gives
+  $f_2(\mu^{\KLRW}_1 f,\, g)$ or $f_2(f,\, \mu^{\KLRW}_1 g)$, both zero since
+  $\mu^{\KLRW}_1 = 0$. The remaining insertion is that of $\mu^{\KLRW}_2$,
+  with sign $(-1)^{\,2-0-2} = +1$; since $\mu^{\KLRW}_2(f,g) = fg$, the
+  insertion side equals
+  \[
+    f_1\big(\mu^{\KLRW}_2(f,g)\big) \;=\; f_1(fg) \;=\; \beta_1(fg).
+  \]
+
+  \emph{Partition side.} The compositions of $2$ are $(1,1)$ and $(2)$, and
+  neither term vanishes; the side equals
+  \[
+    \mu^B_2\big(f_1(f),\, f_1(g)\big) + \mu^B_1\big(f_2(f,g)\big)
+    \;=\; \mu^B_2\big(\beta_1(f), \beta_1(g)\big)
+      + \mu^B_1\big(\beta_2(f,g)\big).
+  \]
+
+  Substituting the two computations into the defining equation gives the
+  statement. (Lean: \texttt{BraidingFunctorData.sf}$_2$.)
+\end{proof}
+
+\section{Arity 3: \texorpdfstring{$[\mathrm{SF}_3]$}{[SF3]}}
+
+\begin{theorem}\label{thm:sf3}
+  For composable $f, g, h$,
+  \[
+    -\,\beta_2(fg,\, h) \;+\; \beta_2(f,\, gh)
+    \;=\; \mu^B_2\big(\beta_1(f), \beta_2(g,h)\big)
+      \;+\; \mu^B_2\big(\beta_2(f,g), \beta_1(h)\big),
+  \]
+  an identity in degree $-1$. Over a base with $2 = 0$ the sign disappears:
+  \[
+    \beta_2(f,\, gh) + \beta_2(fg,\, h)
+    = \mu^B_2\big(\beta_1(f), \beta_2(g,h)\big)
+      + \mu^B_2\big(\beta_2(f,g), \beta_1(h)\big).
+  \]
+\end{theorem}
+
+\begin{proof}
+  As $F$ is an \Ainf-functor, $[\mathrm{SF}_3]$ holds on the chain
+  $(f,g,h)$: the two sides below are equal. We compute them.
+
+  \emph{Insertion side.} Inserting $\mu^{\KLRW}_1$ (three ways) or
+  $\mu^{\KLRW}_3$ (one way) gives zero. The two insertions of
+  $\mu^{\KLRW}_2$ survive, with signs $(-1)^{\,3-r-2}$ for $r = 0, 1$:
+  \[
+    (-1)\cdot f_2\big(\mu^{\KLRW}_2(f,g),\, h\big)
+      \;+\; f_2\big(f,\, \mu^{\KLRW}_2(g,h)\big)
+    \;=\; -\,\beta_2(fg,\, h) + \beta_2(f,\, gh).
+  \]
+
+  \emph{Partition side.} Of the four compositions of $3$, the term at
+  $(1,1,1)$ vanishes since $\mu^B_3 = 0$, and the term at $(3)$ vanishes
+  since $f_3 = 0$ by truncation. The two survivors give
+  \[
+    \mu^B_2\big(f_1(f),\, f_2(g,h)\big)
+      + \mu^B_2\big(f_2(f,g),\, f_1(h)\big)
+    \;=\; \mu^B_2\big(\beta_1(f), \beta_2(g,h)\big)
+      + \mu^B_2\big(\beta_2(f,g), \beta_1(h)\big).
+  \]
+
+  Substituting the two computations into the defining equation gives the
+  signed identity. When $2 = 0$ the sign
+  disappears, since $-\beta_2(fg, h) = \beta_2(fg, h)$ by the $2$-torsion of
+  the Hom-groups (Lemma~\ref{lem:two-torsion}); this is the only point in the
+  four proofs where the characteristic is used. (Lean:
+  \texttt{BraidingFunctorData.sf}$_3$; the char-$2$ step is
+  \texttt{sf₃\_key2}.)
+\end{proof}
+
+\section{Arity 4: \texorpdfstring{$[\mathrm{SF}_4]$}{[SF4]}}
+
+\begin{theorem}\label{thm:sf4}
+  For composable $f, g, h, k$,
+  \[
+    0 \;=\; \mu^B_2\big(\beta_2(f,g),\, \beta_2(h,k)\big),
+  \]
+  an identity in degree $-2$.
+\end{theorem}
+
+\begin{proof}
+  As $F$ is an \Ainf-functor, $[\mathrm{SF}_4]$ holds on the chain
+  $(f,g,h,k)$:
+  \[
+    \text{(insertion side at $(f,g,h,k)$)}
+      \;=\; \text{(partition side at $(f,g,h,k)$)} .
+  \]
+  We compute the two sides.
+
+  \emph{Insertion side.} Every term vanishes: inserting $\mu^{\KLRW}_1$,
+  $\mu^{\KLRW}_3$ or $\mu^{\KLRW}_4$ gives zero because those operations
+  vanish, and inserting $\mu^{\KLRW}_2$ leaves an outer component
+  $f_{4+1-2} = f_3 = 0$ by truncation.
+
+  \emph{Partition side.} Let $c$ be a composition of $4$. If $c$ has three or
+  more blocks, its term vanishes since $\mu^B_k = 0$ for $k \geq 3$; if some
+  block has size $\geq 3$, it vanishes by truncation. The only composition
+  with at most two blocks, each of size at most $2$, summing to $4$, is
+  $(2,2)$, whose term is
+  \[
+    \mu^B_2\big(f_2(f,g),\, f_2(h,k)\big)
+    \;=\; \mu^B_2\big(\beta_2(f,g),\, \beta_2(h,k)\big).
+  \]
+
+  So the insertion side is $0$ and the partition side is
+  $\mu^B_2\big(\beta_2(f,g), \beta_2(h,k)\big)$; substituting both into the
+  defining equation gives
+  \[
+    0 \;=\; \mu^B_2\big(\beta_2(f,g),\, \beta_2(h,k)\big) .
+  \]
+  Note that this vanishing is not an identity of the target category ---
+  $\mu^B_2$ certainly does not kill arbitrary pairs of degree-$(-1)$
+  elements. It is a constraint that the functor equation places on the
+  component $\beta_2$ of the datum. (Lean:
+  \texttt{BraidingFunctorData.sf}$_4$; the classification of compositions is
+  \texttt{composition\_four\_eq\_two\_two}.)
+\end{proof}
+
+\section{Arities \texorpdfstring{$\geq 5$}{>= 5}}
+
+\begin{proposition}\label{prop:sf-high}
+  For $n \geq 5$, both sides of $[\mathrm{SF}_n]$ vanish identically on
+  degree-zero chains, for any truncated datum.
+\end{proposition}
+
+\begin{proof}
+  Insertion side: if $s \leq 2$ the outer component has arity
+  $n + 1 - s \geq n - 1 \geq 4$, hence vanishes by truncation; if $s \geq 3$
+  the inner $\mu^{\KLRW}_s$ vanishes. Partition side: if some block is
+  $\geq 3$ its component vanishes by truncation; if all blocks are $\leq 2$
+  the length is at least $\lceil n/2 \rceil \geq 3$ and $\mu^B_k = 0$.
+\end{proof}
+
+\begin{remark}
+  Proposition~\ref{prop:sf-high} is the reason the axiom list of Chapter 6 is
+  finite. In the formalization it is the obligation discharged (at high
+  arities) when \emph{constructing} a \texttt{BraidingFunctorData}; the
+  four theorems above are the converse direction, extracting the axioms from
+  the structure.
+\end{remark}
+
+\section{Translation to differential and composition}
+
+\begin{lemma}[2-torsion]\label{lem:two-torsion}
+  Assume $2 = 0$ in $R$. Then every element $w$ of every Hom-group of
+  $K^\bullet(\Add(\KLRW))$ satisfies $-w = w$.
+\end{lemma}
+
+\begin{proof}
+  Componentwise, such an element is a matrix of elements of
+  $\StrandSpace(R) = \bigoplus_{\N} R$, and $-r = r$ in $R$ since $2 = 0$.
+  (Lean: \texttt{finCochain\_neg\_eq\_self}.)
+\end{proof}
+
+Unfolding $\mu^B_1 = \delta$ and $\mu^B_2(x,y) = (-1)^{|y|} xy$ in
+Theorems~\ref{thm:sf1}--\ref{thm:sf4} gives the axioms in the language of
+Chapter 6 (writing $\cdot$ for composition of Hom-complex elements):
+\begin{itemize}
+  \item $[\mathrm{SF}_1]$: $\delta\big(\beta_1(f)\big) = 0$. No sign appears.
+  \item $[\mathrm{SF}_2]$: $\beta_1(fg) = \beta_1(f)\cdot\beta_1(g)
+    + \delta\big(\beta_2(f,g)\big)$, since the Koszul sign of $\mu^B_2$ at
+    degrees $(0,0)$ is $(-1)^0 = +1$. Valid over any base ring.
+  \item $[\mathrm{SF}_3]$: here $\mu^B_2\big(\beta_1(f), \beta_2(g,h)\big)
+    = (-1)^{-1}\, \beta_1(f)\cdot\beta_2(g,h)$ carries a genuine sign
+    ($|\beta_2| = -1$), while the second term does not
+    ($|\beta_1| = 0$). Over $2 = 0$ all signs are absorbed by
+    Lemma~\ref{lem:two-torsion}:
+    \[
+      \beta_2(f, gh) + \beta_2(fg, h)
+      = \beta_1(f)\cdot\beta_2(g,h) + \beta_2(f,g)\cdot\beta_1(h).
+    \]
+    This is the only one of the four axioms whose composition-language form
+    genuinely uses the characteristic.
+  \item $[\mathrm{SF}_4]$: $\beta_2(f,g)\cdot\beta_2(h,k) = 0$; the Koszul
+    sign $(-1)^{-1}$ is absorbed by the vanishing right-hand side, so this
+    too is valid over any base ring.
+\end{itemize}
+(Lean: \texttt{sf}$_1$\texttt{\_fin}--\texttt{sf}$_4$\texttt{\_fin} in
+\texttt{Braiding.lean}.)
+
+\section{Correspondence with the formalization}
+
+\begin{center}
+\begin{tabular}{ll}
+  \textbf{Mathematics} & \textbf{Lean} \\[2pt]
+  $\KLRW$ as \Ainf-category (Thm.~\ref{thm:klrw-ainf}) &
+    \texttt{klrwAInfinityPreCategory}, \texttt{klrwAInfinityCategory} \\
+  dg structure on $K^\bullet(\Add(\KLRW))$ (Def.~\ref{def:dg-target}) &
+    \texttt{bccAInfinityPreCategory} + instance \\
+  \Ainf-functor, $[\mathrm{SF}_n]$ (Def.~\ref{def:ainf-functor}) &
+    \texttt{AInfinityFunctor}, \texttt{indexedSFLeftSum},
+    \texttt{indexedSFRightSum} \\
+  truncated datum (Def.~\ref{def:bfd}) & \texttt{BraidingFunctorData} \\
+  vanishing criteria (Lem.~\ref{lem:vanishing}) &
+    \texttt{indexedSF*Term\_outer/inner\_zero} \\
+  Theorems~\ref{thm:sf1}--\ref{thm:sf4} &
+    \texttt{BraidingFunctorData.sf}$_1$--\texttt{sf}$_4$ \\
+  composition-language forms &
+    \texttt{sf}$_1$\texttt{\_fin}--\texttt{sf}$_4$\texttt{\_fin} \\
+  2-torsion (Lem.~\ref{lem:two-torsion}) & \texttt{finCochain\_neg\_eq\_self} \\
+\end{tabular}
+\end{center}

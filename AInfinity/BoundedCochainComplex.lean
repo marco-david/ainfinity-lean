@@ -1366,4 +1366,26 @@ instance : AInfinityCategory (β := ℤ) R (BoundedCochainComplex V) where
 end AInfinityInstance
 
 
+/-- Render a bounded cochain complex as its chain of nonzero terms with
+degree superscripts and labelled differentials, e.g.
+`{T_0 ⊕ T_2}^{(0)} → {T_1}^{(1)}`. -/
+instance [Texify V] [∀ (X Y : V), Texify (X ⟶ Y)] :
+    Texify (BoundedCochainComplex V) where
+  texify c :=
+    match c.support.sort (· ≤ ·) with
+    | [] => "0"
+    | i₀ :: rest =>
+      let entry (i : ℤ) : String :=
+        s!"{texifyWithBracketsAndParenthesesIfNecessary (c.X i)}^\{({i})}"
+      (rest.foldl
+        (fun (acc : String × ℤ) (j : ℤ) =>
+          (acc.1 ++
+            (if j = acc.2 + 1 then
+              s!" \\xrightarrow{texifyWithBrackets (c.d acc.2 j)} "
+            else
+              " \\longrightarrow \\cdots \\longrightarrow ") ++
+            entry j, j))
+        (entry i₀, i₀)).1
+  requiresParentheses := true
+
 end BoundedCochainComplex

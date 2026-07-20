@@ -273,10 +273,442 @@ instance (R : Type*) [CommRing R] [DecidableEq R] [Nontrivial R] (n : ℕ) :
     DecidablePred (Limits.IsZero : KLRWCategory n R → Prop) :=
   fun A ↦ Decidable.isFalse (A.not_isZero)
 
+section KLRWAInfinity
+
+open AInfinityCategoryTheory
+
+/-- The graded Hom of the KLRW category: concentrated in degree `0`, where it
+is `StrandSpace R`. -/
+def klrwHom {R : Type u} [CommRing R] [DecidableEq R] {n : ℕ}
+    (A B : KLRWCategory n R) : GradedRModule (β := ℤ) (R := R) :=
+  fun d => if d = 0 then ModuleCat.of R (StrandSpace R) else ModuleCat.of R PUnit.{u + 1}
+
+variable {R : Type u} [CommRing R] [DecidableEq R] {n : ℕ}
+
+lemma klrwHom_subsingleton {A B : KLRWCategory n R} {d : ℤ} (hd : d ≠ 0) :
+    Subsingleton (klrwHom (R := R) A B d) := by
+  unfold klrwHom
+  rw [if_neg hd]
+  exact inferInstanceAs (Subsingleton PUnit)
+
+/-- Away from degree `0`, all Hom-elements vanish. This is what forces the
+degeneracy of the A∞-structure: `μₙ` lands in degree `2 − n`, so it must be
+zero unless `n = 2`. -/
+lemma klrwHom_eq_zero {A B : KLRWCategory n R} {d : ℤ} (hd : d ≠ 0)
+    (x : klrwHom (R := R) A B d) : x = 0 :=
+  @Subsingleton.elim _ (klrwHom_subsingleton hd) x 0
+
+/-- Degree-level cast for `klrwHom`, as an `R`-linear map. -/
+def klrwDegCast {A B : KLRWCategory n R} {d e : ℤ} (h : d = e) :
+    klrwHom (R := R) A B d →ₗ[R] klrwHom (R := R) A B e := h ▸ LinearMap.id
+
+/-- Composition of degree-`0` KLRW morphisms as an `R`-bilinear map (casting
+away the degrees along `h₁`, `h₂`). Note `klrwHom A B 0` is definitionally
+`A ⟶ B`, so this is convolution. -/
+def klrwCompBilin {A B C : KLRWCategory n R} {d₁ d₂ : ℤ} (h₁ : d₁ = 0) (h₂ : d₂ = 0) :
+    klrwHom (R := R) A B d₁ →ₗ[R] klrwHom (R := R) B C d₂ →ₗ[R] klrwHom (R := R) A C 0 :=
+  LinearMap.mk₂ R
+    (fun x y => show (A ⟶ C) from
+      (show (A ⟶ B) from klrwDegCast (R := R) h₁ x) ≫
+      (show (B ⟶ C) from klrwDegCast (R := R) h₂ y))
+    (fun x x' y => by
+      show (klrwDegCast (R := R) h₁ (x + x') ≫ _ : A ⟶ C) = _
+      rw [map_add]
+      exact Preadditive.add_comp _ _ _ _ _ _)
+    (fun r x y => by
+      show (klrwDegCast (R := R) h₁ (r • x) ≫ _ : A ⟶ C) = _
+      rw [map_smul]
+      exact Linear.smul_comp _ _ _ r _ _)
+    (fun x y y' => by
+      show (_ ≫ klrwDegCast (R := R) h₂ (y + y') : A ⟶ C) = _
+      rw [map_add]
+      exact Preadditive.comp_add _ _ _ _ _ _)
+    (fun r x y => by
+      show (_ ≫ klrwDegCast (R := R) h₂ (r • y) : A ⟶ C) = _
+      rw [map_smul]
+      exact Linear.comp_smul _ _ _ _ r _)
+
+/-- KLRW as a (degenerate) A∞-pre-category over `R`: Hom concentrated in degree
+`0`, `μ₁ = 0`, `μ₂` = the convolution composition, `μₙ = 0` for `n ≥ 3`. The
+grading itself forces the degeneracy — `μₙ` has target degree `2 − n`, which is
+the zero module unless `n = 2` (`klrwHom_eq_zero`). -/
+def klrwAInfinityPreCategory :
+    AInfinityPreCategory (β := ℤ) R (KLRWCategory n R) where
+  Hom := klrwHom (R := R)
+  m {k} obj deg := by
+    obtain ⟨k, hk⟩ := k
+    match k with
+    | 0 => exact absurd hk (Nat.lt_irrefl 0)
+    | 1 =>
+      -- μ₁ = 0 (it lands in degree `deg 0 + 1 ≠ deg 0`, but we simply take 0)
+      exact 0
+    | 2 =>
+      -- μ₂ = convolution on the degree-(0, 0) chains, 0 elsewhere (where some
+      -- slot is the zero module anyway).
+      exact
+        if h : deg ⟨0, hk⟩ = 0 ∧ deg ⟨1, Nat.lt_succ_self 1⟩ = 0 then
+          (klrwDegCast (R := R) (show (0 : ℤ) = operationTargetDeg deg from by
+              have h0 : ∀ i, deg i = 0 := fun i => by fin_cases i; exacts [h.1, h.2]
+              simp [operationTargetDeg, shift_ofInt_int, Fin.sum_univ_two,
+                h0])).compMultilinearMap
+            { toFun := fun v =>
+                klrwCompBilin (R := R) h.1 h.2 (v ⟨0, hk⟩) (v ⟨1, Nat.lt_succ_self 1⟩)
+              map_update_add' := fun v i x y => by
+                fin_cases i
+                · simpa using
+                    LinearMap.map_add₂ (klrwCompBilin (R := R) h.1 h.2) x y
+                      (v ⟨1, Nat.lt_succ_self 1⟩)
+                · simpa using
+                    map_add (klrwCompBilin (R := R) h.1 h.2 (v ⟨0, hk⟩)) x y
+              map_update_smul' := fun v i r x => by
+                fin_cases i
+                · simpa using
+                    LinearMap.map_smul₂ (klrwCompBilin (R := R) h.1 h.2) r x
+                      (v ⟨1, Nat.lt_succ_self 1⟩)
+                · simpa using
+                    map_smul (klrwCompBilin (R := R) h.1 h.2 (v ⟨0, hk⟩)) r x }
+        else 0
+    | _ + 3 =>
+      -- μₙ = 0 for n ≥ 3
+      exact 0
+
+/-- `μ₁` of the KLRW A∞-structure is the zero map (application form). -/
+lemma klrwM_one_eq_zero (h : 0 < 1) (obj : Fin 2 → KLRWCategory n R) (deg : Fin 1 → ℤ) :
+    klrwAInfinityPreCategory.m (R := R) (n := ⟨1, h⟩) obj deg = 0 := rfl
+
+/-- `μₖ = 0` for `k ≥ 3` (application form). -/
+lemma klrwM_ge_three_eq_zero (k : ℕ) (h : 0 < k + 3)
+    (obj : Fin (k + 3 + 1) → KLRWCategory n R) (deg : Fin (k + 3) → ℤ) :
+    klrwAInfinityPreCategory.m (R := R) (n := ⟨k + 3, h⟩) obj deg = 0 := rfl
+
+end KLRWAInfinity
+
+/-! ### KLRW is a (degenerate) A∞-category
+
+The Stasheff identities for `klrwAInfinityPreCategory`. Since `μ₁ = 0` and
+`μₖ = 0` for `k ≥ 3`, every Stasheff term vanishes — through a zero inner or
+outer operation, or a `μ₂` whose degree vector is not `(0, 0)` — except the two
+`μ₂(μ₂ ⊗ 1)` / `μ₂(1 ⊗ μ₂)` insertion terms in arity 3 at all-zero degrees,
+which cancel by associativity of convolution. -/
+
+section KLRWStasheff
+
+open AInfinityCategoryTheory
+
+variable {R : Type*} [CommRing R] [DecidableEq R] {n : ℕ}
+
+private lemma cast_zero_eq {S : Type*} [CommRing S] {A B : ModuleCat S} (h : A = B) :
+    h ▸ (0 : A) = (0 : B) := by cases h; rfl
+
+private lemma cast_zero_iff {S : Type*} [CommRing S] {A B : ModuleCat S} (h : A = B) {a : A} :
+    h ▸ a = (0 : B) ↔ a = (0 : A) := by cases h; simp
+
+private lemma cast_zero_of_modcat_eq {S : Type*} [CommRing S] {A B : ModuleCat S}
+    (h : A = B) {T_mid : Type*} (h₁ : ↑A = T_mid) (h₂ : ↑B = T_mid) :
+    Eq.mpr h₂ (Eq.mp h₁ (0 : ↑A)) = (0 : ↑B) := by
+  subst h; subst h₁; cases h₂; rfl
+
+/-- For `j ≥ 3`, the KLRW A∞ operation is the zero multilinear map
+(`3 ≤ j` form of `klrwM_ge_three_eq_zero`). -/
+lemma klrwM_zero_of_ge_three {j : ℕ} (hj : 3 ≤ j)
+    {obj : Fin (j + 1) → KLRWCategory n R} {deg : Fin j → ℤ} :
+    klrwAInfinityPreCategory.m (R := R) (n := ⟨j, by omega⟩) obj deg = 0 := by
+  obtain ⟨k, rfl⟩ : ∃ k, j = k + 3 := ⟨j - 3, by omega⟩
+  rfl
+
+-- μ₂ is the zero map unless both slot degrees are 0 (the dite in its definition).
+private lemma klrwM_two_eq_zero {obj : Fin 3 → KLRWCategory n R} {deg : Fin 2 → ℤ}
+    (hk : 0 < 2) (h : ¬(deg ⟨0, hk⟩ = 0 ∧ deg ⟨1, Nat.lt_succ_self 1⟩ = 0)) :
+    klrwAInfinityPreCategory.m (R := R) (n := ⟨2, hk⟩) obj deg = 0 := dif_neg h
+
+-- If the outer multilinear map is zero, the entire Stasheff term is zero.
+private lemma klrwTerm_outer_zero
+    {k : ℕ+}
+    {obj : Fin (k.val + 1) → KLRWCategory n R} {deg : Fin k.val → ℤ}
+    {x : ∀ i : Fin k.val,
+      composableHomType (β := ℤ) (R := R) (klrwHom (R := R) (n := n)) obj deg i}
+    {r s : ℕ} {hs : 1 ≤ s} {hr : r + s ≤ k.val}
+    (hm : klrwAInfinityPreCategory.m (R := R) (n := ⟨k.val + 1 - s, by omega⟩)
+        (stasheffObjOut obj r s hr) (stasheffDegOut deg r s hr) = 0) :
+    indexedStasheffTerm (β := ℤ) (R := R) (n := k) (klrwHom (R := R) (n := n))
+        (fun {m} => klrwAInfinityPreCategory.m) obj deg x r s hs hr = 0 := by
+  simp only [indexedStasheffTerm, hm, MultilinearMap.zero_apply]
+  exact cast_zero_eq _
+
+-- If the inner multilinear map is zero, the Stasheff term is zero
+-- (slot r of the outer input vector becomes cast(0) = 0).
+set_option maxHeartbeats 800000 in
+private lemma klrwTerm_inner_zero
+    {k : ℕ+}
+    {obj : Fin (k.val + 1) → KLRWCategory n R} {deg : Fin k.val → ℤ}
+    {x : ∀ i : Fin k.val,
+      composableHomType (β := ℤ) (R := R) (klrwHom (R := R) (n := n)) obj deg i}
+    {r s : ℕ} {hs : 1 ≤ s} {hr : r + s ≤ k.val}
+    (hm : klrwAInfinityPreCategory.m (R := R) (n := ⟨s, by omega⟩)
+        (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr) = 0) :
+    indexedStasheffTerm (β := ℤ) (R := R) (n := k) (klrwHom (R := R) (n := n))
+        (fun {m} => klrwAInfinityPreCategory.m) obj deg x r s hs hr = 0 := by
+  apply cast_zero_iff _ |>.mpr
+  convert MultilinearMap.map_coord_zero _ _ _
+  exact ⟨r, Nat.lt_sub_of_add_lt (by omega)⟩
+  convert cast_zero_of_modcat_eq _ _ _
+  rotate_left
+  exact operationTargetType (klrwHom (R := R) (n := n))
+    (stasheffObjIn obj r s hr) (stasheffDegIn deg r s hr)
+  all_goals norm_num [operationTargetType, composableHomType]
+  rotate_left
+  exact ↑(klrwHom (R := R) (n := n) (stasheffObjIn obj r s hr 0)
+    (stasheffObjIn obj r s hr (Fin.last s)) (operationTargetDeg (stasheffDegIn deg r s hr)))
+  · rfl
+  · unfold stasheffObjOut stasheffObjIn stasheffDegOut operationTargetDeg
+    simp +decide [Nat.mod_eq_of_lt]
+    rfl
+  · exact hm.symm ▸ rfl
+  · simp +decide [stasheffObjIn, stasheffObjOut, stasheffDegIn, stasheffDegOut,
+      operationTargetDeg]
+    congr! 2
+
+private lemma klrw_stasheff_one
+    (obj : Fin ((1 : ℕ+).val + 1) → KLRWCategory n R)
+    (deg : Fin (1 : ℕ+).val → ℤ)
+    (x : ∀ i : Fin (1 : ℕ+).val,
+      composableHomType (β := ℤ) (R := R) (klrwHom (R := R) (n := n)) obj deg i) :
+    indexedStasheffSum (β := ℤ) (R := R) (n := (1 : ℕ+)) (klrwHom (R := R) (n := n))
+        (fun {m} => klrwAInfinityPreCategory.m) obj deg x = 0 := by
+  simp only [indexedStasheffSum]
+  apply Finset.sum_eq_zero
+  intro ⟨r, hr_mem⟩ _
+  apply Finset.sum_eq_zero
+  intro ⟨s, hs_mem⟩ _
+  have hv := validStasheffIndices_of_mem_ranges (n := 1) hr_mem hs_mem
+  suffices h : indexedStasheffTerm (β := ℤ) (n := (1 : ℕ+)) (klrwHom (R := R) (n := n))
+      (fun {m} => klrwAInfinityPreCategory.m) obj deg x r s hv.1 hv.2 = 0 by
+    rw [h, smul_zero]
+  have hs1 : s = 1 := by have := hv.1; have := hv.2; omega
+  subst hs1
+  -- outer arity 1 + 1 - 1 = 1: the outer map is μ₁ = 0
+  exact klrwTerm_outer_zero (klrwM_one_eq_zero _ _ _)
+
+private lemma klrw_stasheff_two
+    (obj : Fin ((2 : ℕ+).val + 1) → KLRWCategory n R)
+    (deg : Fin (2 : ℕ+).val → ℤ)
+    (x : ∀ i : Fin (2 : ℕ+).val,
+      composableHomType (β := ℤ) (R := R) (klrwHom (R := R) (n := n)) obj deg i) :
+    indexedStasheffSum (β := ℤ) (R := R) (n := (2 : ℕ+)) (klrwHom (R := R) (n := n))
+        (fun {m} => klrwAInfinityPreCategory.m) obj deg x = 0 := by
+  simp only [indexedStasheffSum]
+  apply Finset.sum_eq_zero
+  intro ⟨r, hr_mem⟩ _
+  apply Finset.sum_eq_zero
+  intro ⟨s, hs_mem⟩ _
+  have hv := validStasheffIndices_of_mem_ranges (n := 2) hr_mem hs_mem
+  suffices h : indexedStasheffTerm (β := ℤ) (n := (2 : ℕ+)) (klrwHom (R := R) (n := n))
+      (fun {m} => klrwAInfinityPreCategory.m) obj deg x r s hv.1 hv.2 = 0 by
+    rw [h, smul_zero]
+  by_cases hs1 : s = 1
+  · subst hs1
+    -- inner arity 1: the inner map is μ₁ = 0
+    exact klrwTerm_inner_zero (klrwM_one_eq_zero _ _ _)
+  · have hs2 : s = 2 := by have := hv.1; have := hv.2; omega
+    subst hs2
+    -- outer arity 2 + 1 - 2 = 1: the outer map is μ₁ = 0
+    exact klrwTerm_outer_zero (klrwM_one_eq_zero _ _ _)
+
+private lemma klrw_stasheff_ge_four (j : ℕ)
+    (obj : Fin (j + 5) → KLRWCategory n R)
+    (deg : Fin (j + 4) → ℤ)
+    (x : ∀ i : Fin (j + 4),
+      composableHomType (β := ℤ) (R := R) (klrwHom (R := R) (n := n)) obj deg i) :
+    indexedStasheffSum (β := ℤ) (R := R) (n := ⟨j + 4, by omega⟩) (klrwHom (R := R) (n := n))
+        (fun {m} => klrwAInfinityPreCategory.m) obj deg x = 0 := by
+  simp only [indexedStasheffSum]
+  apply Finset.sum_eq_zero
+  intro ⟨r, hr_mem⟩ _
+  apply Finset.sum_eq_zero
+  intro ⟨s, hs_mem⟩ _
+  have hv := validStasheffIndices_of_mem_ranges (n := j + 4) hr_mem hs_mem
+  suffices h : indexedStasheffTerm (β := ℤ) (n := ⟨j + 4, by omega⟩) (klrwHom (R := R) (n := n))
+      (fun {m} => klrwAInfinityPreCategory.m) obj deg x r s hv.1 hv.2 = 0 by
+    rw [h, smul_zero]
+  by_cases hs3 : s ≤ 2
+  · -- outer arity = (j+4)+1-s ≥ 3, so the outer map is zero
+    apply klrwTerm_outer_zero
+    apply klrwM_zero_of_ge_three
+    change 3 ≤ j + 4 + 1 - s
+    omega
+  · -- inner arity = s ≥ 3, so the inner map is zero
+    push Not at hs3
+    exact klrwTerm_inner_zero (klrwM_zero_of_ge_three (by omega))
+
+-- The associativity cancellation: at all-zero degrees the two surviving arity-3
+-- terms agree, `μ₂(μ₂(x₀, x₁), x₂) = μ₂(x₀, μ₂(x₁, x₂))`. With the degree
+-- function literally `fun _ => 0`, every cast in both terms has closed,
+-- kernel-evaluable degree endpoints, so the entire cast tower collapses
+-- definitionally and the terms reduce to `(x₀ ≫ x₁) ≫ x₂` and `x₀ ≫ (x₁ ≫ x₂)`:
+-- the identity IS `Category.assoc` (whose content is `compShift_assoc`).
+set_option maxHeartbeats 4000000 in
+private lemma klrw_stasheff_three_assoc
+    (obj : Fin ((3 : ℕ+).val + 1) → KLRWCategory n R)
+    (x : ∀ i : Fin (3 : ℕ+).val,
+      composableHomType (β := ℤ) (R := R) (klrwHom (R := R) (n := n)) obj
+        (fun _ => (0 : ℤ)) i) :
+    ∀ (hs : 1 ≤ 2) (hr02 : 0 + 2 ≤ 3),
+    indexedStasheffTerm (β := ℤ) (R := R) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+        (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 0 2 hs hr02 =
+    indexedStasheffTerm (β := ℤ) (R := R) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+        (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 1 2
+        (by norm_num) (by norm_num) :=
+  fun _ _ =>
+    Category.assoc
+      (show obj ⟨0, by norm_num⟩ ⟶ obj ⟨1, by norm_num⟩ from x ⟨0, by norm_num⟩)
+      (show obj ⟨1, by norm_num⟩ ⟶ obj ⟨2, by norm_num⟩ from x ⟨1, by norm_num⟩)
+      (show obj ⟨2, by norm_num⟩ ⟶ obj ⟨3, by norm_num⟩ from x ⟨2, by norm_num⟩)
+
+set_option maxHeartbeats 4000000 in
+private lemma klrw_stasheff_three
+    (obj : Fin ((3 : ℕ+).val + 1) → KLRWCategory n R)
+    (deg : Fin (3 : ℕ+).val → ℤ)
+    (x : ∀ i : Fin (3 : ℕ+).val,
+      composableHomType (β := ℤ) (R := R) (klrwHom (R := R) (n := n)) obj deg i) :
+    indexedStasheffSum (β := ℤ) (R := R) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+        (fun {m} => klrwAInfinityPreCategory.m) obj deg x = 0 := by
+  by_cases hd : deg ⟨0, by norm_num⟩ = 0 ∧ deg ⟨1, by norm_num⟩ = 0 ∧
+      deg ⟨2, by norm_num⟩ = 0
+  · -- all degrees 0: only the two s = 2 insertion terms survive, with opposite
+    -- signs; they cancel by associativity of convolution.
+    obtain ⟨h0, h1, h2⟩ := hd
+    have hdeg : deg = fun _ => (0 : ℤ) := funext fun i => by
+      fin_cases i
+      exacts [h0, h1, h2]
+    subst hdeg
+    simp only [indexedStasheffSum, PNat.val_ofNat]
+    rw [show (Finset.range (3 + 1) : Finset ℕ).attach =
+        ({⟨0, by decide⟩, ⟨1, by decide⟩, ⟨2, by decide⟩, ⟨3, by decide⟩} :
+          Finset { a // a ∈ Finset.range (3 + 1) }) from by decide]
+    rw [Finset.sum_insert (by decide), Finset.sum_insert (by decide),
+      Finset.sum_insert (by decide), Finset.sum_singleton]
+    rw [show (Finset.Ico 1 (3 - (0 : ℕ) + 1) : Finset ℕ).attach =
+        ({⟨1, by decide⟩, ⟨2, by decide⟩, ⟨3, by decide⟩} :
+          Finset { a // a ∈ (Finset.Ico 1 (3 - (0 : ℕ) + 1) : Finset ℕ) }) from by decide]
+    rw [show (Finset.Ico 1 (3 - (1 : ℕ) + 1) : Finset ℕ).attach =
+        ({⟨1, by decide⟩, ⟨2, by decide⟩} :
+          Finset { a // a ∈ (Finset.Ico 1 (3 - (1 : ℕ) + 1) : Finset ℕ) }) from by decide]
+    rw [show (Finset.Ico 1 (3 - (2 : ℕ) + 1) : Finset ℕ).attach =
+        ({⟨1, by decide⟩} :
+          Finset { a // a ∈ (Finset.Ico 1 (3 - (2 : ℕ) + 1) : Finset ℕ) }) from by decide]
+    rw [show (Finset.Ico 1 (3 - (3 : ℕ) + 1) : Finset ℕ).attach =
+        (∅ : Finset { a // a ∈ (Finset.Ico 1 (3 - (3 : ℕ) + 1) : Finset ℕ) }) from by decide]
+    rw [Finset.sum_insert (by decide), Finset.sum_insert (by decide),
+      Finset.sum_singleton, Finset.sum_insert (by decide), Finset.sum_singleton,
+      Finset.sum_singleton, Finset.sum_empty]
+    -- kill the four zero terms: s = 1 (inner μ₁ = 0) and s = 3 (outer arity 1)
+    have e01 : ∀ (hs : 1 ≤ 1) (hr : 0 + 1 ≤ 3),
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 0 1 hs hr = 0 :=
+      fun _ _ => klrwTerm_inner_zero (klrwM_one_eq_zero _ _ _)
+    have e11 : ∀ (hs : 1 ≤ 1) (hr : 1 + 1 ≤ 3),
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 1 1 hs hr = 0 :=
+      fun _ _ => klrwTerm_inner_zero (klrwM_one_eq_zero _ _ _)
+    have e21 : ∀ (hs : 1 ≤ 1) (hr : 2 + 1 ≤ 3),
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 2 1 hs hr = 0 :=
+      fun _ _ => klrwTerm_inner_zero (klrwM_one_eq_zero _ _ _)
+    have e03 : ∀ (hs : 1 ≤ 3) (hr : 0 + 3 ≤ 3),
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 0 3 hs hr = 0 :=
+      fun _ _ => klrwTerm_outer_zero (klrwM_one_eq_zero _ _ _)
+    show stasheffSign (fun _ => (0 : ℤ)) 0 1 (by decide) •
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 0 1 (by decide) (by decide) +
+      ((-1 : ℤ) •
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 0 2 (by decide) (by decide) +
+        stasheffSign (fun _ => (0 : ℤ)) 0 3 (by decide) •
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 0 3 (by decide) (by decide)) +
+      (stasheffSign (fun _ => (0 : ℤ)) 1 1 (by decide) •
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 1 1 (by decide) (by decide) +
+        (1 : ℤ) •
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 1 2 (by decide) (by decide) +
+        (stasheffSign (fun _ => (0 : ℤ)) 2 1 (by decide) •
+        indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+          (fun {m} => klrwAInfinityPreCategory.m) obj (fun _ => (0 : ℤ)) x 2 1 (by decide) (by decide) +
+          0)) = 0
+    rw [e01, e11, e21, e03,
+      klrw_stasheff_three_assoc obj x]
+    -- a canonical-instance key lemma closes the arithmetic
+    have key : ∀ {S : Type u_1} [CommRing S] {M : ModuleCat S} (T : M) (a b c d : ℤ),
+        a • (0 : M) + ((-1 : ℤ) • T + b • (0 : M)) +
+          (c • (0 : M) + (1 : ℤ) • T + (d • (0 : M) + (0 : M))) = 0 := by
+      intro S _ M T a b c d
+      simp
+    apply key
+  · -- some degree ≠ 0: every term vanishes
+    simp only [indexedStasheffSum]
+    apply Finset.sum_eq_zero
+    intro ⟨r, hr_mem⟩ _
+    apply Finset.sum_eq_zero
+    intro ⟨s, hs_mem⟩ _
+    have hv := validStasheffIndices_of_mem_ranges (n := 3) hr_mem hs_mem
+    suffices h : indexedStasheffTerm (β := ℤ) (n := (3 : ℕ+)) (klrwHom (R := R) (n := n))
+        (fun {m} => klrwAInfinityPreCategory.m) obj deg x r s hv.1 hv.2 = 0 by
+      rw [h, smul_zero]
+    by_cases hs1 : s = 1
+    · subst hs1
+      exact klrwTerm_inner_zero (klrwM_one_eq_zero _ _ _)
+    by_cases hs3 : s = 3
+    · subst hs3
+      -- outer arity 3 + 1 - 3 = 1
+      exact klrwTerm_outer_zero (klrwM_one_eq_zero _ _ _)
+    have hs2 : s = 2 := by have := hv.1; have := hv.2; omega
+    subst hs2
+    have hr1 : r = 0 ∨ r = 1 := by have := hv.2; omega
+    rcases hr1 with rfl | rfl
+    · -- term (0,2): inner slots (deg 0, deg 1), outer slots (—, deg 2)
+      by_cases h01 : deg ⟨0, by norm_num⟩ = 0 ∧ deg ⟨1, by norm_num⟩ = 0
+      · have h2 : ¬ deg ⟨2, by norm_num⟩ = 0 := fun h2 => hd ⟨h01.1, h01.2, h2⟩
+        exact klrwTerm_outer_zero (klrwM_two_eq_zero _ fun hcon => h2 hcon.2)
+      · exact klrwTerm_inner_zero (klrwM_two_eq_zero _ fun hcon => h01 ⟨hcon.1, hcon.2⟩)
+    · -- term (1,2): inner slots (deg 1, deg 2), outer slots (deg 0, —)
+      by_cases h12 : deg ⟨1, by norm_num⟩ = 0 ∧ deg ⟨2, by norm_num⟩ = 0
+      · have h0 : ¬ deg ⟨0, by norm_num⟩ = 0 := fun h0 => hd ⟨h0, h12.1, h12.2⟩
+        exact klrwTerm_outer_zero (klrwM_two_eq_zero _ fun hcon => h0 hcon.1)
+      · exact klrwTerm_inner_zero (klrwM_two_eq_zero _ fun hcon => h12 ⟨hcon.1, hcon.2⟩)
+
+/-- KLRW as an A∞-category: the Stasheff identities hold for the degenerate
+structure `klrwAInfinityPreCategory`. -/
+def klrwAInfinityCategory : AInfinityCategory (β := ℤ) R (KLRWCategory n R) where
+  toAInfinityPreCategory := klrwAInfinityPreCategory
+  stasheff := by
+    intro k obj deg x
+    obtain ⟨k, hk⟩ := k
+    match k with
+    | 0 => exact absurd hk (Nat.lt_irrefl 0)
+    | 1 => exact klrw_stasheff_one obj deg x
+    | 2 => exact klrw_stasheff_two obj deg x
+    | k + 3 =>
+      match k with
+      | 0 => exact klrw_stasheff_three obj deg x
+      | j + 1 => exact klrw_stasheff_ge_four j obj deg x
+
+end KLRWStasheff
+
 abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   CMat_ (KLRWCategory n R)
 
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   BoundedCochainComplex (AddKLRWCategory n R)
+
+/-- `K^•(Add KLRW)` is an A∞-category. The proof is the generic dg-category
+instance in `BoundedCochainComplex.lean` (`bccAInfinityPreCategory` and the
+fully-proven Stasheff identities), specialized to `V := CMat_ (KLRWCategory n R)`
+via the `Linear R` instances above. -/
+def klrwComplexAInfinityCategory {R : Type u} [CommRing R] [DecidableEq R] {n : ℕ}
+    [DecidablePred (Limits.IsZero (C := CMat_ (KLRWCategory n R)))] :
+    AInfinityCategoryTheory.AInfinityCategory (β := ℤ) R (KLRWComplexCategory n R) :=
+  BoundedCochainComplex.instAInfinityCategoryInt
 
 end AInfinityTheory
