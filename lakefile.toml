@@ -23,3 +23,6 @@ scope = "leanprover-community"
 
 [[lean_lib]]
 name = "AInfinity"
+
+[[lean_lib]]
+name = "KLRW"
