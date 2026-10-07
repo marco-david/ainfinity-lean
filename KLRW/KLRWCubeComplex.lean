@@ -2,7 +2,7 @@ module
 public import Mathlib
 public import KLRW.KLRWAlgebra
 public import KLRW.KLRWCategory
-public import KLRW.U-Branes
+public import KLRW.UBranes
 @[expose] public section
 
 namespace KLRW
