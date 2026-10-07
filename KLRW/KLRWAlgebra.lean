@@ -11,6 +11,7 @@ variable (V : Type*)
 
 structure SimpleDigraph extends Digraph V where
   loopless : ∀ x : V, ¬ Adj x x
+  no_two_way : ∀ x y : V, Adj x y → ¬ Adj y x
 
 noncomputable def reprSimpleDigraph {V : Type*} [Fintype V] [DecidableEq V] [Repr V]
     (Γ : SimpleDigraph V) [DecidableRel Γ.Adj] : Std.Format :=
@@ -371,6 +372,17 @@ section
 
 variable {R : Type*} [CommRing R]
 
+/- Helper lemma for one rule later on. -/
+def BraidHasCorrection (M : KLRWObject parameters) (i : Fin (totalStrands parameters - 2)) : Prop :=
+  (M.get ⟨i, by omega⟩).color = .black ∧ (M.get ⟨i+2, by omega⟩).color = .black ∧
+  (M.get ⟨i, by omega⟩).label = (M.get ⟨i+2, by omega⟩).label ∧
+  (((M.get ⟨i+1, by omega⟩).color = .black ∧
+      (parameters.Γ.Adj (M.get ⟨i+1, by omega⟩).label (M.get ⟨i, by omega⟩).label ∨
+       parameters.Γ.Adj (M.get ⟨i, by omega⟩).label (M.get ⟨i+1, by omega⟩).label)) ∨
+   ((M.get ⟨i+1, by omega⟩).color = .red ∧
+      (M.get ⟨i+1, by omega⟩).label = (M.get ⟨i, by omega⟩).label))
+
+
 /- Structural/implicit KLRW algebra equality relations. -/
 
 inductive KLRWImplicitConRel : KLRWFreeAlg R parameters → KLRWFreeAlg R parameters → Prop where
@@ -440,20 +452,54 @@ inductive KLRWImplicitConRel : KLRWFreeAlg R parameters → KLRWFreeAlg R parame
         (strandGenSeq M [dot j, cross i])
         (strandGenSeq M [cross i, dot j])
 
-  /- If neighboring crosses and dots are on strands with different labels, then the order the cross and dot occurs doesn't matter -/
-  | cross_dot_diff_index_comm : ∀ M i j,
-      (M.get ⟨i, by omega⟩).label ≠
-      (M.get ⟨i+1, by omega⟩).label →
-      KLRWImplicitConRel
-        (strandGenSeq M [dot j, cross i])
-        (strandGenSeq M [cross i, dot j])
+  /- If two strands being crossed aren't both black or don't have the same label, then the dot and cross commute 
+     (dot moves in the left direction). -/
+  | dot_follows_strand_left : ∀ M (i : Fin (totalStrands parameters - 1)),
+    ¬ ((M.get ⟨i, by omega⟩).color = .black ∧ (M.get ⟨i+1, by omega⟩).color = .black ∧
+       (M.get ⟨i, by omega⟩).label = (M.get ⟨i+1, by omega⟩).label) →
+    KLRWImplicitConRel
+      (strandGenSeq M [dot ⟨i, by omega⟩, cross i])
+      (strandGenSeq M [cross i, dot ⟨i+1, by omega⟩])
 
-  /- Given neighboring crosses and dots, if the cross involves a red strand, then the order the cross and dot occurs doesn't matter -/
-  | cross_dot_red_comm : ∀ M i j,
-      (M.get ⟨i, by omega⟩).color = .red →
+  /- If two strands being crossed aren't both black or don't have the same label, then the dot and cross commute 
+     (dot moves in the right direction). -/
+  | dot_follows_strand_right : ∀ M (i : Fin (totalStrands parameters - 1)),
+      ¬ ((M.get ⟨i, by omega⟩).color = .black ∧ (M.get ⟨i+1, by omega⟩).color = .black ∧
+         (M.get ⟨i, by omega⟩).label = (M.get ⟨i+1, by omega⟩).label) →
       KLRWImplicitConRel
-        (strandGenSeq M [dot j, cross i])
-        (strandGenSeq M [cross i, dot j])
+        (strandGenSeq M [dot ⟨i+1, by omega⟩, cross i])
+        (strandGenSeq M [cross i, dot ⟨i, by omega⟩])
+ 
+  /- If black strands with different, non-adjacent labels cross twice, its the same as if they didn't cross at all. -/
+  | bigon_not_adjacent : ∀ M i,
+      (M.get ⟨i, by omega⟩).color = .black →
+      (M.get ⟨i+1, by omega⟩).color = .black →
+      (M.get ⟨i, by omega⟩).label ≠ (M.get ⟨i+1, by omega⟩).label →
+      ¬ parameters.Γ.Adj
+          (M.get ⟨i, by omega⟩).label
+          (M.get ⟨i+1, by omega⟩).label →
+      ¬ parameters.Γ.Adj
+          (M.get ⟨i+1, by omega⟩).label
+          (M.get ⟨i, by omega⟩).label →
+      KLRWImplicitConRel
+        (strandGenSeq M [cross i, cross i])
+        (ι _ (.idem M))
+
+  /- If a black and red strand with different labels cross twice, its the same as if they didn't cross at all. -/
+  | bigon_black_red_diff : ∀ M i,
+    (M.get ⟨i, by omega⟩).color ≠ (M.get ⟨i+1, by omega⟩).color →
+    (M.get ⟨i, by omega⟩).label ≠ (M.get ⟨i+1, by omega⟩).label →
+    KLRWImplicitConRel
+      (strandGenSeq M [cross i, cross i])
+      (ι _ (.idem M))
+
+  /- If a braid doesn't have a "correction term," then you can "flip" the braid. -/
+  | braid : ∀ M i,
+    ¬ BraidHasCorrection M i →
+    KLRWImplicitConRel
+      (strandGenSeq M [cross ⟨i, by omega⟩, cross ⟨i+1, by omega⟩, cross ⟨i, by omega⟩])
+      (strandGenSeq M [cross ⟨i+1, by omega⟩, cross ⟨i, by omega⟩, cross ⟨i+1, by omega⟩])
+
 
 
 /- uVar and ℏ are the names of the two polynomial variables. -/
@@ -492,6 +538,18 @@ inductive KLRWExplicitConRel :
         ((poly uVar) *
          (strandGenSeq M [dot ⟨i + 1, by omega⟩] - strandGenSeq M [dot ⟨i, by omega⟩]))
 
+  /- (b) bigon for (i) → (j) -/
+  | bigon_for_i_to_j : ∀ M i,
+      parameters.Γ.Adj
+        (M.get ⟨i+1, by omega⟩).label
+        (M.get ⟨i, by omega⟩).label →
+      (M.get ⟨i, by omega⟩).color = .black →
+      (M.get ⟨i+1, by omega⟩).color = .black →
+      KLRWExplicitConRel
+        (strandGenSeq M [cross i, cross i])
+        ((poly uVar) *
+         (strandGenSeq M [dot ⟨i, by omega⟩] - strandGenSeq M [dot ⟨i + 1, by omega⟩]))
+
   /- (c) bigon with red (red on the left) -/
   | bigon_with_red_left : ∀ M i,
       (M.get ⟨i, by omega⟩).label =
@@ -519,6 +577,22 @@ inductive KLRWExplicitConRel :
       parameters.Γ.Adj
         (M.get ⟨i+1, by omega⟩).label
         (M.get ⟨i, by omega⟩).label →
+      (M.get ⟨i, by omega⟩).label =
+        (M.get ⟨i+2, by omega⟩).label →
+      (M.get ⟨i, by omega⟩).color = .black →
+      (M.get ⟨i+1, by omega⟩).color = .black →
+      (M.get ⟨i+2, by omega⟩).color = .black →
+      KLRWExplicitConRel
+        (strandGenSeq M [cross ⟨i, by omega⟩, cross ⟨i+1, by omega⟩, cross ⟨i, by omega⟩] -
+         strandGenSeq M [cross ⟨i+1, by omega⟩, cross ⟨i, by omega⟩, cross ⟨i+1, by omega⟩])
+        ((poly uVar) * (poly ℏ) *
+         (ι _ (.idem M)))
+
+  /- (d) braid with neighbour (i) → (j) -/
+  | braid_with_neighbor_i_to_j : ∀ M (i : Fin ((totalStrands parameters - 2))),
+      parameters.Γ.Adj
+        (M.get ⟨i, by omega⟩).label
+        (M.get ⟨i+1, by omega⟩).label →
       (M.get ⟨i, by omega⟩).label =
         (M.get ⟨i+2, by omega⟩).label →
       (M.get ⟨i, by omega⟩).color = .black →
@@ -575,7 +649,6 @@ end
    The following acts as a foundation for turning KLRW into a well-defined category.
    --------------------------------------------------------------------------------- -/
 
-
 section
 
 variable (R : Type*) [CommRing R]
@@ -609,5 +682,4 @@ noncomputable def KLRWHom (X Y : KLRWObject parameters) :
   LinearMap.range ((LinearMap.mulLeft R (idem_morph R Y)).comp (LinearMap.mulRight R (idem_morph R X)))
 
 end
-
- end KLRW
+end KLRW
