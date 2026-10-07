@@ -1,6 +1,8 @@
 module
 public import Mathlib
 public import KLRW.KLRWAlgebra
+public import KLRW.KLRWCategory
+public import KLRW.U-Branes
 @[expose] public section
 
 namespace KLRW
