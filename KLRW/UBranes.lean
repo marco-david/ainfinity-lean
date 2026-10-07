@@ -4,6 +4,7 @@ public import KLRW.KLRWAlgebra
 public import KLRW.KLRWCategory
 @[expose] public section
 
+namespace KLRW
 section UBranes
 
 variable {V : Type} [DecidableEq V] [Fintype V]
@@ -227,3 +228,4 @@ noncomputable def edgeHom {disk : @MarkedDisk V n} {k : Nat} (R : Type) [CommRin
 
 end GeneratedKLRW
 end UBranes
+end KLRW
