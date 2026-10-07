@@ -1,6 +1,7 @@
 module
 public import Mathlib
 public import KLRW.KLRWAlgebra
+public import KLRW.KLRWCategory
 @[expose] public section
 
 section UBranes
