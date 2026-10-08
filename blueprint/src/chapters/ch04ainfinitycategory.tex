@@ -5,14 +5,19 @@
 \begin{definition}[\Ainf{}-precategory]
 \lean{AInfinityTheory.AInfinityCategoryStruct}
 \label{AInfinityTheory.AInfinityCategoryStruct}
-%\leanok
-\uses{AInfinityTheory.RLinearGradedQuiver, AInfinityTheory.ComposableHomType, AInfinityTheory.operationTargetType}
+\leanok
+\uses{AInfinityTheory.GradedLinearQuiver, AInfinityTheory.AInfinityComposition}
 An \Ainf{}-precategory over $R$ with object type $\mathrm{Obj}$ consists of a
-graded $R$-linear quiver together with operations
+graded $R$-linear quiver
 \[
-  m_n
+  \Hom : \mathrm{Obj} \to \mathrm{Obj} \to \grMod_R^\beta
 \]
-of the prescribed multilinear type for every positive arity $n$.
+together with an \Ainf{}-composition, that is, operations
+\[
+  m_n : \Hom(X_0, X_1) \otimes \dots \otimes \Hom(X_{n-1}, X_n) \to \Hom(X_0, X_n)
+\]
+of degree $\operatorname{shift}(2-n)$ for every positive arity $n$. No relations
+are imposed on these composition maps.
 \end{definition}
 
 \section{Chains}
@@ -54,49 +59,33 @@ the $i$-th composable morphism in that chain.
 \end{definition}
 
 \begin{definition}[Chain operation target]
-%\lean{AInfinityTheory.operationTargetType}
 \label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.operationTarget}
 %\leanok
-\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain, AInfinityTheory.operationTargetType}
+\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain, AInfinityTheory.AInfinityComposition}
 For a chain, this is the graded hom-module that receives the corresponding
 multilinear operation.
 \end{definition}
 
 \section{Stasheff Identities}
 
-\begin{definition}[Precategory Stasheff sum]
-%\lean{AInfinityTheory.AInfinityCategoryStruct.stasheffSum}
-\label{AInfinityTheory.AInfinityCategoryStruct.stasheffSum}
-%\leanok
-\uses{AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.indexedStasheffSum}
-The Stasheff sum of an \Ainf{}-precategory is the indexed Stasheff sum formed
-from its structure maps.
-\end{definition}
-
-\begin{definition}[Precategory Stasheff property]
-%\lean{AInfinityTheory.AInfinityCategoryStruct.SatisfiesStasheff}
-\label{AInfinityTheory.AInfinityCategoryStruct.SatisfiesStasheff}
-%\leanok
-\uses{AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.indexedSatisfiesStasheff}
-An \Ainf{}-precategory satisfies the Stasheff identities when its structure maps
-define an object-indexed system satisfying
-\lean{AInfinityTheory.indexedSatisfiesStasheff}.
-\end{definition}
-
 \begin{definition}[\Ainf{}-category]
-%\lean{AInfinityTheory.AInfinityCategory}
+\lean{AInfinityTheory.AInfinityCategory}
 \label{AInfinityTheory.AInfinityCategory}
-%\leanok
-\uses{AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.AInfinityCategoryStruct.SatisfiesStasheff}
+\leanok
+\uses{AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.indexedSatisfiesStasheff}
 An \Ainf{}-category is an \Ainf{}-precategory together with a proof that its
 operations satisfy the Stasheff identities.
 \end{definition}
 
 \begin{lemma}[Stasheff sum vanishes in an \Ainf{}-category]
-%\lean{AInfinityCategoryTheory.AInfinityCategory.stasheff_eq_zero}
-\label{AInfinityCategoryTheory.AInfinityCategory.stasheff_eq_zero}
-%\leanok
-\uses{AInfinityTheory.AInfinityCategory, AInfinityTheory.AInfinityCategoryStruct.stasheffSum}
+\lean{AInfinityTheory.AInfinityCategory.indexedStasheffSum_eq_zero}
+\label{AInfinityTheory.AInfinityCategory.indexedStasheffSum_eq_zero}
+\leanok
+\uses{AInfinityTheory.AInfinityCategory, AInfinityTheory.indexedStasheffSum}
 For an \Ainf{}-category, every Stasheff sum computed from the structure maps is
 equal to zero.
 \end{lemma}
+\begin{proof}
+\leanok
+This is the Stasheff identity that is part of the data of an \Ainf{}-category.
+\end{proof}

@@ -43,7 +43,7 @@ $(-1)^{\operatorname{shift}(n)} = \operatorname{sign}(\operatorname{shift}(1))^n
 \end{proof}
 
 \begin{definition}[Standard gradings]
-\lean{AInfinityTheory.GradingType.int, AInfinityTheory.GradingType.zmodTwo}
+\lean{AInfinityTheory.GradingType.instInt, AInfinityTheory.GradingType.instZModOfNatNat}
 \label{AInfinityTheory.GradingType.standard}
 \leanok
 \uses{AInfinityTheory.GradingType}
@@ -67,26 +67,63 @@ $\operatorname{sign}(b,c) = (-1)^b\,(-1)^c$. Neither choice is canonical, so
 both are constructions to be activated locally rather than instances.
 \end{definition}
 
-\section{Graded modules and quivers}
+\section{Graded linear maps and quivers}
 
-The graded-module and graded-quiver definitions below do not need a grading
-type; the type of degrees is arbitrary there. The structure of a
-grading type is only imposed by the degree arithmetic and Koszul signs of the
-\Ainf{}-axioms.
+The graded-linear-map and graded-quiver definitions below do not need a grading
+type; the type of degrees is arbitrary there, carrying at most an addition. The
+structure of a grading type is only imposed by the degree arithmetic and Koszul
+signs of the \Ainf{}-axioms.
 
-\begin{definition}[Graded $R$-module]
-\lean{AInfinityTheory.GradedRModule}
-\label{AInfinityTheory.GradedRModule}
+\begin{definition}[Graded linear map]
+\lean{AInfinityTheory.GradedLinearMap}
+\label{AInfinityTheory.GradedLinearMap}
 \leanok
-For a commutative ring $R$, a graded $R$-module is a $\beta$-indexed family of
-$R$-modules, implemented as a graded object in \texttt{ModuleCat R}.
+Let $R$ be a semiring and let $M, N$ be $\beta$-indexed families of $R$-modules.
+A graded $R$-linear map $f : M \to N$ of degree $d \in \beta$ consists of an
+$R$-linear map $f_{i,j} : M(i) \to N(j)$ for every pair of degrees with
+$i + d = j$. Graded linear maps of degree $d$ form an $R$-module under
+componentwise operations.
 \end{definition}
 
-\begin{definition}[$R$-linear graded quiver]
-\lean{AInfinityTheory.RLinearGradedQuiver}
-\label{AInfinityTheory.RLinearGradedQuiver}
+\begin{lemma}[Composition of graded linear maps]
+\lean{AInfinityTheory.GradedLinearMap.comp, AInfinityTheory.GradedLinearMap.id,
+  AInfinityTheory.GradedLinearMap.comp_assoc, AInfinityTheory.GradedLinearMap.id_comp,
+  AInfinityTheory.GradedLinearMap.comp_id}
+\label{AInfinityTheory.GradedLinearMap.comp}
 \leanok
-\uses{AInfinityTheory.GradedRModule}
-An $R$-linear graded quiver on an object type $\mathrm{Obj}$ assigns to each pair
-of objects $(X,Y)$ a graded $R$-module of morphisms from $X$ to $Y$.
+\uses{AInfinityTheory.GradedLinearMap}
+The composite of graded linear maps of degrees $d$ and $e$ is a graded linear map
+of degree $d + e$, whose component from degree $i$ factors through degree $i + d$.
+The identity is a graded linear map of degree $0$. Composition is associative and
+unital.
+\end{lemma}
+\begin{proof}
+\leanok
+Componentwise, this is associativity and unitality of composition of linear maps,
+once every component of a composite is seen to factor through any middle degree.
+\end{proof}
+
+\begin{definition}[Graded multilinear map]
+\lean{AInfinityTheory.GradedMultilinearMap}
+\label{AInfinityTheory.GradedMultilinearMap}
+\leanok
+Let $R$ be a semiring, let $(M_j)_{j \in \iota}$ be a finite family of
+$\beta$-indexed families of $R$-modules, and let $N$ be a $\beta$-indexed family of
+$R$-modules. A graded $R$-multilinear map of degree $d \in \beta$ consists, for every
+choice of input degrees $(d_j)_{j \in \iota}$ and every output degree $i$ with
+$\sum_j d_j + d = i$, of an $R$-multilinear map
+\[
+  \prod_j M_j(d_j) \to N(i).
+\]
+Graded multilinear maps of degree $d$ form an $R$-module under componentwise
+operations.
+\end{definition}
+
+\begin{definition}[Graded linear quiver]
+\lean{AInfinityTheory.GradedLinearQuiver}
+\label{AInfinityTheory.GradedLinearQuiver}
+\leanok
+For a commutative ring $R$, a graded $R$-linear quiver on an object type
+$\mathrm{Obj}$ assigns to each pair of objects $(X,Y)$ and each degree $i \in \beta$
+an $R$-module $\Hom(X,Y)_i$ of morphisms of degree $i$ from $X$ to $Y$.
 \end{definition}

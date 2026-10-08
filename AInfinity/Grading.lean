@@ -38,21 +38,6 @@ universe u v w
 
 variable (β : Type v)
 
-/-- A graded `R`-module indexed by `β`. -/
-public abbrev GradedRModule (R : Type u) [CommRing R] :=
-  CategoryTheory.GradedObject β (ModuleCat.{u} R)
-
-/-- An `R`-linear graded quiver. -/
-public class RLinearGradedQuiver (R : Type u) [CommRing R] (Obj : Type w) where
-  /-- The graded `R`-module of morphisms from `X` to `Y`. -/
-  protected gradedHom' : Obj → Obj → GradedRModule β R
-
-/-- The graded `R`-module of morphisms between two objects. -/
-@[expose]
-public def gradedHom (R : Type u) [CommRing R]
-    {Obj : Type w} [RLinearGradedQuiver β R Obj] (X Y : Obj) : GradedRModule β R :=
-  RLinearGradedQuiver.gradedHom' X Y
-
 /-- A grading type is an abelian group of degrees `β` together with a homomorphism
 `shift : ℤ →+ β` realising integer degree shifts (the `n`-ary operation `mₙ` has degree
 `shift (2 - n)`) and a Koszul sign character `sign : β →+ Additive ℤˣ`, such that the
@@ -93,7 +78,7 @@ activated locally, since both are reasonable choices on the same product type. -
 
 /-- The integers, graded by themselves: the shift is the identity and the sign of `n` is
 `(-1) ^ n`. -/
-public instance int : GradingType ℤ where
+public instance : GradingType ℤ where
   shift := AddMonoidHom.id ℤ
   sign := zmultiplesHom (Additive ℤˣ) (Additive.ofMul (-1))
   sign_shift_one := by
@@ -104,7 +89,7 @@ public lemma shift_int (n : ℤ) : shift n = n := rfl
 
 /-- The parity grading `ZMod 2`: the shift is reduction modulo `2` and the sign of a parity
 `p` is `(-1) ^ p`, using Mathlib's power operation on `ℤˣ` by `ZMod 2`. -/
-public instance zmodTwo : GradingType (ZMod 2) where
+public instance : GradingType (ZMod 2) where
   shift := Int.castAddHom (ZMod 2)
   sign := (smulAddHom (ZMod 2) (Additive ℤˣ)).flip (Additive.ofMul (-1))
   sign_shift_one := by

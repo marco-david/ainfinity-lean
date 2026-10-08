@@ -29,56 +29,56 @@ in the grading type.
 \end{definition}
 
 \begin{definition}[Composable morphism type]
-%\lean{AInfinityTheory.composableHomType}
+\lean{AInfinityTheory.ComposableHomType}
 \label{AInfinityTheory.ComposableHomType}
-%\leanok
-\uses{AInfinityTheory.GradedRModule}
-For a string of objects and prescribed degrees,
-\lean{AInfinityTheory.ComposableHomType} is the $i$-th graded hom-module in
-that composable string.
+\leanok
+\uses{AInfinityTheory.GradedLinearQuiver}
+For a string of objects $X_0,\dots,X_n$, an index $i < n$ and a degree $b$,
+this is the hom-module $\Hom(X_i, X_{i+1})_b$ of the $i$-th morphism in that
+composable string, in degree $b$.
 \end{definition}
 
-\begin{definition}[Operation target type]
-\lean{AInfinityTheory.operationTargetType}
-\label{AInfinityTheory.operationTargetType}
+\begin{definition}[\Ainf{}-composition]
+\lean{AInfinityTheory.AInfinityComposition}
+\label{AInfinityTheory.AInfinityComposition}
 \leanok
-\uses{AInfinityTheory.operationTargetDeg, AInfinityTheory.ComposableHomType}
-For a composable string of objects and degrees, this is the graded hom-module in
-which the corresponding multilinear operation takes values.
+\uses{AInfinityTheory.operationTargetDeg, AInfinityTheory.ComposableHomType, AInfinityTheory.GradedMultilinearMap}
+An \Ainf{}-composition on a graded quiver $\Hom$ assigns to every positive arity
+$n$ and every string of objects $X_0,\dots,X_n$ a graded multilinear map
+\[
+  m_n : \Hom(X_0,X_1) \times \cdots \times \Hom(X_{n-1},X_n) \to \Hom(X_0,X_n)
+\]
+of degree $\operatorname{shift}(2-n)$. Thus for input degrees
+$(d_0,\dots,d_{n-1})$ its component lands in any degree equal to the operation
+target degree.
 \end{definition}
 
 \begin{definition}[Indexed Stasheff term]
 \lean{AInfinityTheory.indexedStasheffTerm}
 \label{AInfinityTheory.indexedStasheffTerm}
 \leanok
-\uses{AInfinityTheory.ComposableHomType, AInfinityTheory.operationTargetType, AInfinityTheory.stasheffTargetDeg}
-Fix object-indexed operations $m_n$. For valid indices $(r,s)$,
+\uses{AInfinityTheory.ComposableHomType, AInfinityTheory.AInfinityComposition, AInfinityTheory.stasheffTargetDeg}
+Fix an \Ainf{}-composition $m$. For $r + s + t = n$ with $s \geq 1$,
 \lean{AInfinityTheory.indexedStasheffTerm} is the term obtained by first applying the inner
 $s$-ary operation in positions $r,\dots,r+s-1$ and then applying the outer
-operation to the collapsed string.
-\end{definition}
-
-\begin{definition}[Stasheff sign exponent]
-\lean{AInfinityTheory.stasheffSignExponent}
-\label{AInfinityTheory.stasheffSignExponent}
-\leanok
-\uses{AInfinityTheory.GradingType}
-For a valid pair $(r,s)$, this is the degree
-\[
-  |a_{r+s}| + \cdots + |a_{n-1}| - \operatorname{shift}(n-r-s)
-\]
-in the grading type, the integer $n-r-s$ being embedded by the shift
-homomorphism.
+$(r+1+t)$-ary operation to the collapsed string. It lies in
+$\Hom(X_0,X_n)$ in any degree equal to the Stasheff target degree.
 \end{definition}
 
 \begin{definition}[Stasheff sign]
 \lean{AInfinityTheory.stasheffSign}
 \label{AInfinityTheory.stasheffSign}
 \leanok
-\uses{AInfinityTheory.stasheffSignExponent, AInfinityTheory.GradingType}
-The sign $\pm 1$ attached to $(r,s)$ is the Koszul sign $(-1)^e$ of the
-Stasheff sign exponent $e$, that is, the sign character of the grading type
-applied to $e$.
+\uses{AInfinityTheory.GradingType}
+The sign $\pm 1$ attached to $(r,s,t)$ is
+\[
+  \prod_{k=r+s}^{n-1} (-1)^{\|a_k\|},
+  \qquad
+  \|a_k\| := |a_k| - \operatorname{shift}(1),
+\]
+the product of the Koszul signs of the reduced degrees of the $t$ trailing
+inputs. Since the sign character is a homomorphism, this equals
+$(-1)^{|a_{r+s}| + \cdots + |a_{n-1}| - \operatorname{shift}(t)}$.
 \end{definition}
 
 \begin{definition}[Indexed Stasheff sum]
@@ -87,7 +87,9 @@ applied to $e$.
 \leanok
 \uses{AInfinityTheory.indexedStasheffTerm, AInfinityTheory.stasheffSign, AInfinityTheory.stasheffTargetDeg}
 The arity-$n$ Stasheff sum is the signed sum of all valid composites of an inner
-operation followed by an outer operation.
+operation followed by an outer operation, that is, of the Stasheff terms indexed
+by $0 \leq r \leq n$ and $1 \leq s \leq n - r$, with $t = n - r - s$. It lies in
+$\Hom(X_0,X_n)$ in any degree equal to the Stasheff target degree.
 \end{definition}
 
 \begin{definition}[Indexed Stasheff identities]
@@ -95,6 +97,7 @@ operation followed by an outer operation.
 \label{AInfinityTheory.indexedSatisfiesStasheff}
 \leanok
 \uses{AInfinityTheory.indexedStasheffSum}
-An object-indexed family of multilinear operations satisfies the Stasheff
-identities if every indexed Stasheff sum vanishes.
+An \Ainf{}-composition satisfies the Stasheff identities if every indexed
+Stasheff sum vanishes, for every positive arity, string of objects, choice of
+input degrees and composable inputs.
 \end{definition}

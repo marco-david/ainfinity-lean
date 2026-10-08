@@ -6,12 +6,12 @@
 %\lean{AInfinityAlgebraTheory.AInfinityAlgStruct}
 \label{AInfinityAlgebraTheory.AInfinityAlgStruct}
 %\leanok
-\uses{AInfinityTheory.GradedRModule, AInfinityTheory.operationTargetDeg}
+\uses{AInfinityTheory.GradedMultilinearMap, AInfinityTheory.operationTargetDeg}
 Let $A$ be a graded $R$-module. An \Ainf{}-algebra structure on $A$ consists of
 multilinear operations
 \[
   m_n : A(d_0) \otimes \cdots \otimes A(d_{n-1})
-    \to A\!\left(\sum_i d_i + 2 - n\right)
+    \to A\!\left(\sum_i d_i + \operatorname{shift}(2 - n)\right)
 \]
 for every positive arity $n$ and every choice of input degrees.
 \end{definition}
