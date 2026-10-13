@@ -107,7 +107,7 @@ open ComputableBinaryBiproduct
 variable {C : Type*} [Category C] [HasZeroMorphisms C] [ComputableBinaryBiproduct C] (X Y : C)
 
 /--
-If C has computable biproducuts, it also has noncomputable biproducts.
+If C has computable biproducts, it also has noncomputable biproducts.
 -/
 instance : HasBinaryBiproducts C where
   has_binary_biproduct P Q := ⟨⟨computableBinaryBiproductData P Q⟩⟩
@@ -131,7 +131,29 @@ abbrev cbiprod.snd {X Y : C} : X ⊞ᶜ Y ⟶ Y := (computableBinaryBiproductDat
 abbrev cbiprod.inl {X Y : C} : X ⟶ X ⊞ᶜ Y := (computableBinaryBiproductData X Y).bicone.inl
 abbrev cbiprod.inr {X Y : C} : Y ⟶ X ⊞ᶜ Y := (computableBinaryBiproductData X Y).bicone.inr
 
-noncomputable def cbiprod_iso_biprod : X ⊞ᶜ Y ≅ X ⊞ Y := sorry
+/-- The left injection followed by the left projection is the identity. -/
+@[reassoc (attr := simp)]
+theorem cbiprod.inl_fst {X Y : C} :
+    (cbiprod.inl : X ⟶ X ⊞ᶜ Y) ≫ cbiprod.fst = 𝟙 X := (cbicone X Y).inl_fst
+
+/-- The left injection followed by the right projection is zero. -/
+@[reassoc (attr := simp)]
+theorem cbiprod.inl_snd {X Y : C} :
+    (cbiprod.inl : X ⟶ X ⊞ᶜ Y) ≫ cbiprod.snd = 0 := (cbicone X Y).inl_snd
+
+/-- The right injection followed by the left projection is zero. -/
+@[reassoc (attr := simp)]
+theorem cbiprod.inr_fst {X Y : C} :
+    (cbiprod.inr : Y ⟶ X ⊞ᶜ Y) ≫ cbiprod.fst = 0 := (cbicone X Y).inr_fst
+
+/-- The right injection followed by the right projection is the identity. -/
+@[reassoc (attr := simp)]
+theorem cbiprod.inr_snd {X Y : C} :
+    (cbiprod.inr : Y ⟶ X ⊞ᶜ Y) ≫ cbiprod.snd = 𝟙 Y := (cbicone X Y).inr_snd
+
+/-- The computable binary biproduct is isomorphic to the chosen mathlib biproduct. -/
+noncomputable def cbiprod_iso_biprod : X ⊞ᶜ Y ≅ X ⊞ Y :=
+  biprod.uniqueUpToIso X Y (isBilimit_cbicone X Y)
 
 end computable_biproduct
 
@@ -177,3 +199,68 @@ end explicit_zero
 
 def List.cbiprod {C : Type*} [Category C] [HasZeroMorphisms C] [ComputableBinaryBiproduct C]
   [HasExplicitZeroObject C] : List C → C := foldl (· ⊞ᶜ ·) 𝟎
+
+namespace CategoryTheory.Limits
+
+variable {C : Type*} [Category C] [Preadditive C]
+  [ComputableBinaryBiproduct C] [HasExplicitZeroObject C]
+
+/-- A computable bicone formed by adjoining the summands from left to right. -/
+def finCBicone : {n : ℕ} → (f : Fin n → C) → Bicone f
+  | 0, f => {
+      pt := 𝟎
+      π i := Fin.elim0 i
+      ι i := Fin.elim0 i
+      ι_π i := Fin.elim0 i }
+  | n + 1, f =>
+      let b := finCBicone (fun i => f i.castSucc)
+      {
+        pt := b.pt ⊞ᶜ f (Fin.last n)
+        π := Fin.lastCases cbiprod.snd (fun i => cbiprod.fst ≫ b.π i)
+        ι := Fin.lastCases cbiprod.inr (fun i => b.ι i ≫ cbiprod.inl)
+        ι_π := by
+          classical
+          intro i j
+          induction i using Fin.lastCases <;> induction j using Fin.lastCases
+          · simp only [Fin.lastCases_last, cbiprod.inr_snd, ↓reduceDIte, eqToHom_refl]
+          · simp only [Fin.lastCases_last, Fin.lastCases_castSucc,
+              cbiprod.inr_fst_assoc, zero_comp, (Ne.symm (Fin.castSucc_ne_last _)), ↓reduceDIte]
+          · simp only [Fin.lastCases_last, Fin.lastCases_castSucc, Category.assoc,
+              cbiprod.inl_snd, comp_zero, Fin.castSucc_ne_last, ↓reduceDIte]
+          · simp only [Fin.lastCases_castSucc, Category.assoc, cbiprod.inl_fst_assoc,
+              Fin.castSucc_inj]
+            simp only [b.ι_π]
+            split_ifs <;> rfl }
+
+/-- The computable finite bicone resolves the identity as the sum of its projections. -/
+theorem finCBicone_total {n : ℕ} (f : Fin n → C) :
+    ∑ i, (finCBicone f).π i ≫ (finCBicone f).ι i = 𝟙 (finCBicone f).pt := by
+  induction n with
+  | zero =>
+    simp only [finCBicone, Fin.sum_univ_zero]
+    exact ((IsZero.iff_id_eq_zero _).mp isZero_explicitZero).symm
+  | succ n ih =>
+    simp only [finCBicone, Fin.sum_univ_castSucc, Fin.lastCases_castSucc, Fin.lastCases_last]
+    simp_rw [← Category.assoc]
+    erw [← Preadditive.sum_comp (C := C) Finset.univ]
+    simp_rw [Category.assoc]
+    erw [← Preadditive.comp_sum (C := C) Finset.univ]
+    rw [ih, Category.comp_id]
+    exact IsBilimit.binary_total (isBilimit_cbicone _ _)
+
+/-- The finite bicone is a biproduct, using its explicit identity decomposition. -/
+def finCBiconeIsBilimit {n : ℕ} (f : Fin n → C) : (finCBicone f).IsBilimit :=
+  isBilimitOfTotal _ (finCBicone_total f)
+
+/-- The finite bicone has the same underlying object as the left fold of its summands. -/
+theorem finCBicone_pt {n : ℕ} (f : Fin n → C) :
+    (finCBicone f).pt = (List.ofFn f).cbiprod := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simp only [finCBicone, List.ofFn_succ_last, List.cbiprod, List.foldl_append,
+      List.foldl_cons, List.foldl_nil]
+    rw [ih]
+    rfl
+
+end CategoryTheory.Limits

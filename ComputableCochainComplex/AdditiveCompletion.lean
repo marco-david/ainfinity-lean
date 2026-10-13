@@ -160,22 +160,81 @@ def cbiprod_ι_equiv' {M N : CMat_ C} : (M.cbiprod N).ι ≃ M.ι ⊕ N.ι :=
   ι.finEquiv |>.trans (finCongr this) |>.trans finSumFinEquiv.symm
     |>.trans (ι.finEquiv.symm.sumCongr ι.finEquiv.symm)
 
+omit [Category C] [Preadditive C] in
+/-- Looking up a left summand in the concatenation recovers the original object. -/
 theorem X_symm_cbiprod_ι_equiv'_inl (i : M.ι) :
     (M.cbiprod N).X (cbiprod_ι_equiv'.symm (.inl i)) = M.X i := by
   unfold X
-  sorry
+  exact List.getElem_append_left i.toFin.isLt
 
+omit [Category C] [Preadditive C] in
+/-- Looking up a right summand in the concatenation recovers the original object. -/
 theorem X_symm_cbiprod_ι_equiv'_inr (i : N.ι) :
     (M.cbiprod N).X (cbiprod_ι_equiv'.symm (.inr i)) = N.X i := by
   unfold X
-  sorry
+  simpa only [Nat.add_comm] using (List.getElem_append_right' M.toList i.toFin.isLt).symm
 
+/-- The projection from the concatenation onto its left summands. -/
+def cbiprod.fst : M.cbiprod N ⟶ M :=
+  (Equiv.piCongrLeft' (fun i => ∀ j, (M.cbiprod N).X i ⟶ M.X j) cbiprod_ι_equiv').symm
+    (fun k => match k with
+      | .inl i => fun j => eqToHom (X_symm_cbiprod_ι_equiv'_inl M N i) ≫ (𝟙 M) i j
+      | .inr _ => fun _ => 0)
+
+/-- The projection from the concatenation onto its right summands. -/
+def cbiprod.snd : M.cbiprod N ⟶ N :=
+  (Equiv.piCongrLeft' (fun i => ∀ j, (M.cbiprod N).X i ⟶ N.X j) cbiprod_ι_equiv').symm
+    (fun k => match k with
+      | .inl _ => fun _ => 0
+      | .inr i => fun j => eqToHom (X_symm_cbiprod_ι_equiv'_inr M N i) ≫ (𝟙 N) i j)
+
+/-- Pair two matrices by concatenating their columns. -/
+def cbiprod.pair {M N K : CMat_ C} (f : K ⟶ M) (g : K ⟶ N) : K ⟶ M.cbiprod N :=
+  fun i => (Equiv.piCongrLeft' (fun j => K.X i ⟶ (M.cbiprod N).X j) cbiprod_ι_equiv').symm
+    (fun k => match k with
+      | .inl j => f i j ≫ eqToHom (X_symm_cbiprod_ι_equiv'_inl M N j).symm
+      | .inr j => g i j ≫ eqToHom (X_symm_cbiprod_ι_equiv'_inr M N j).symm)
+
+/-- Composing with the left projection extracts a column from the left block. -/
+theorem cbiprod.comp_fst_apply {M N K : CMat_ C} (h : K ⟶ M.cbiprod N) (i j) :
+    (h ≫ cbiprod.fst M N) i j =
+      h i (cbiprod_ι_equiv'.symm (.inl j)) ≫ eqToHom (X_symm_cbiprod_ι_equiv'_inl M N j) := by
+  rw [comp_apply, ← cbiprod_ι_equiv'.symm.sum_comp, Fintype.sum_sum_type]
+  simp only [cbiprod.fst, Equiv.piCongrLeft'_symm_apply_apply, Limits.comp_zero,
+    Finset.sum_const_zero, add_zero, id_apply, comp_dite, Finset.sum_dite_eq',
+    Finset.mem_univ, ite_true, eqToHom_refl, Category.comp_id]
+
+/-- Composing with the right projection extracts a column from the right block. -/
+theorem cbiprod.comp_snd_apply {M N K : CMat_ C} (h : K ⟶ M.cbiprod N) (i j) :
+    (h ≫ cbiprod.snd M N) i j =
+      h i (cbiprod_ι_equiv'.symm (.inr j)) ≫ eqToHom (X_symm_cbiprod_ι_equiv'_inr M N j) := by
+  rw [comp_apply, ← cbiprod_ι_equiv'.symm.sum_comp, Fintype.sum_sum_type]
+  simp only [cbiprod.snd, Equiv.piCongrLeft'_symm_apply_apply, Limits.comp_zero,
+    Finset.sum_const_zero, zero_add, id_apply, comp_dite, Finset.sum_dite_eq',
+    Finset.mem_univ, ite_true, eqToHom_refl, Category.comp_id]
+
+/-- Concatenation of lists gives computable binary biproducts of matrices. -/
 instance : ComputableBinaryBiproduct (CMat_ C) where
-  computableBinaryBiproductData P Q := .mkOfProduct P Q (pt := .ofList (P.toList ++ Q.toList))
-    (fst := sorry) (snd := sorry) (pair := sorry)
-    (pair_fst := sorry)
-    (pair_snd := sorry)
-    (pair_eta := sorry)
+  computableBinaryBiproductData P Q := .mkOfProduct P Q (pt := P.cbiprod Q)
+    (fst := cbiprod.fst P Q) (snd := cbiprod.snd P Q) (pair := fun _ => cbiprod.pair)
+    (pair_fst := by
+      intro R f g
+      ext i j
+      simp only [cbiprod.comp_fst_apply, cbiprod.pair, Equiv.piCongrLeft'_symm_apply_apply,
+        Category.assoc, eqToHom_trans, eqToHom_refl, Category.comp_id])
+    (pair_snd := by
+      intro R f g
+      ext i j
+      simp only [cbiprod.comp_snd_apply, cbiprod.pair, Equiv.piCongrLeft'_symm_apply_apply,
+        Category.assoc, eqToHom_trans, eqToHom_refl, Category.comp_id])
+    (pair_eta := by
+      intro R h
+      ext i j
+      obtain ⟨j, rfl⟩ := cbiprod_ι_equiv'.symm.surjective j
+      cases j <;>
+        simp only [cbiprod.pair, Equiv.piCongrLeft'_symm_apply_apply,
+          cbiprod.comp_fst_apply, cbiprod.comp_snd_apply,
+          Category.assoc, eqToHom_trans, eqToHom_refl, Category.comp_id])
 
 /--
 Same as `cbiprod_ι_equiv` but expressed with proper notation and thus with types
@@ -196,15 +255,39 @@ theorem hom_to_empty_eq_zero (h : M ⟶ []ₘ) : h = 0 := by
 instance : HasExplicitZeroObject (CMat_ C) := .mkOfPreadditive (CMat_ C) []ₘ
   hom_from_empty_eq_zero hom_to_empty_eq_zero
 
+/-- A matrix object is zero exactly when each of its summands is zero. -/
+theorem isZero_iff (M : CMat_ C) : Limits.IsZero M ↔ ∀ i, Limits.IsZero (M.X i) := by
+  constructor
+  · intro h i
+    rw [Limits.IsZero.iff_id_eq_zero] at h ⊢
+    simpa only [id_apply_self] using congrFun (congrFun h i) i
+  · intro h
+    rw [Limits.IsZero.iff_id_eq_zero]
+    ext i j
+    by_cases hij : i = j
+    · subst j
+      simpa only [id_apply_self] using (Limits.IsZero.iff_id_eq_zero _).mp (h i)
+    · exact id_apply_of_ne M i j hij
+
+/-- A matrix object is zero exactly when all objects in its list are zero. -/
+theorem isZero_iff_forall_mem (M : CMat_ C) :
+    Limits.IsZero M ↔ ∀ X ∈ M.toList, Limits.IsZero X := by
+  rw [isZero_iff]
+  constructor
+  · intro h X hX
+    obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.mp hX
+    simpa only [X, ι.toFin_ofFin] using h (ι.ofFin ⟨i, hi⟩)
+  · intro h i
+    simpa only [CMat_.X] using h _ (List.getElem_mem i.toFin.isLt)
+
+/-- Decide whether a matrix object is zero by checking its finitely many summands. -/
 instance {V : Type*} [Category V] [Preadditive V] [DecidablePred (Limits.IsZero : V → Prop)] :
     DecidablePred (Limits.IsZero : CMat_ V → Prop) := fun M ↦
-  if h : M.toList.all (Limits.IsZero ·) then
-    Decidable.isTrue sorry
-  else
-    Decidable.isFalse sorry
+  decidable_of_iff (∀ X ∈ M.toList, Limits.IsZero X) (isZero_iff_forall_mem M).symm
 
 -- Idea: Maybe we can translate the `HasFiniteBiproducts` instance from `CategoryTheory.Mat_` using
 -- an equivalence. I don't know if this would make it computable though, which we might need.
+-- This would show existence of finite biproducts but it would make them noncomputable. --Annie
 
 -- We split the equivalence into two parts rather than just having a singular
 -- `CategoryTheory.Equivalence` structure because one direction is computable.
@@ -255,35 +338,31 @@ private theorem ofMat_X_equiv' (M' : Mat_ C) (i : (ofMat_ M').ι) (j : M'.ι)
     (h : ofMat_equiv M' i = j) :
     (ofMat_ M').X i = M'.X j := by subst h; exact ofMat_X_equiv M' i
 
--- Artitotle generated definition
 open Classical in
+/-- Reindexing by `ofMat_equiv` identifies the reconstructed list with the original matrix
+object. -/
 private noncomputable def toMat_ofMat_iso (M' : Mat_ C) :
     (toMat_ C).obj (ofMat_ M') ≅ M' where
   hom := fun i j ↦ if h : ofMat_equiv M' i = j then eqToHom (ofMat_X_equiv' M' i j h) else 0
   inv := fun j i ↦ if h : ofMat_equiv M' i = j then eqToHom (ofMat_X_equiv' M' i j h).symm else 0
   hom_inv_id := by
-    -- Artistotle had proved this but the proof was causing performance issues so it needs to be
-    -- replaced with a better proof
-    ext i j
-    simp_all
-    sorry
+    ext i k
+    simp only [Mat_.comp_apply, dite_comp, comp_dite, Limits.zero_comp, Limits.comp_zero,
+      Finset.sum_dite_eq, Finset.mem_univ, ite_true]
+    by_cases hik : i = k
+    · subst k
+      simp only [↓reduceDIte, eqToHom_trans, eqToHom_refl, Mat_.id_apply_self]
+    · rw [dif_neg ((ofMat_equiv M').injective.ne hik), Mat_.id_apply_of_ne _ _ _ hik]
   inv_hom_id := by
-    -- Cleaned up Aristotle proof
     ext j k
-    rw [CategoryStruct.comp]
-    convert Finset.sum_eq_single ((ofMat_equiv M').symm j) _ _ <;>
-      simp only [Equiv.apply_symm_apply, ↓reduceDIte]
-    · split_ifs with h
-      · rw [eq_comm] at h; induction h; simp [eqToHom_refl]
-      · simp [h]
-    · intro b hb
-      split_ifs with h1 h2
-      · intro hab
-        exact absurd ((ofMat_equiv M').injective (by rwa [Equiv.apply_symm_apply])) hab
-      · simp
-      · simp
-      · simp
-    · exact absurd (Finset.mem_univ _)
+    rw [Mat_.comp_apply]
+    erw [← (ofMat_equiv M').symm.sum_comp]
+    simp only [Equiv.apply_symm_apply, dite_comp, comp_dite, Limits.zero_comp, Limits.comp_zero,
+      Finset.sum_dite_eq', Finset.mem_univ, ite_true]
+    by_cases hjk : j = k
+    · subst k
+      simp only [↓reduceDIte, eqToHom_trans, eqToHom_refl, Mat_.id_apply_self]
+    · rw [dif_neg (Ne.symm hjk), Mat_.id_apply_of_ne _ _ _ hjk]
 
 noncomputable instance : (toMat_ C).EssSurj where
   -- Aristotle generated proof
@@ -402,19 +481,145 @@ section lift
 variable {C : Type*} [Category C] [Preadditive C]
 variable {D : Type*} [Category D] [Preadditive D]
 
-def extend [ComputableBinaryBiproduct D] [HasExplicitZeroObject D]
-    (F : C ⥤ D) [F.Additive] : CMat_ C ⥤ D where
+section extension
+
+open CategoryTheory.Limits
+
+variable [ComputableBinaryBiproduct D] [HasExplicitZeroObject D]
+
+omit [Preadditive C] in
+/-- The computed bicone for the image summands has the expected list-fold object. -/
+theorem extendBicone_pt_eq (F : C ⥤ D) (M : CMat_ C) :
+    (finCBicone (fun i : Fin M.toList.length => F.obj (M.X (ι.ofFin i)))).pt =
+      (M.toList.map F.obj).cbiprod := by
+  rw [finCBicone_pt]
+  congr 1
+  simp only [X, ι.toFin_ofFin, Fin.getElem_fin]
+  exact List.ofFn_getElem_eq_map M.toList F.obj
+
+/-- The explicit finite bicone of the images of the summands of a matrix object. -/
+def extendBicone (F : C ⥤ D) (M : CMat_ C) :
+    Limits.Bicone (fun i : M.ι => F.obj (M.X i)) where
+  pt := (M.toList.map F.obj).cbiprod
+  π i := eqToHom (extendBicone_pt_eq F M).symm ≫
+    (finCBicone (fun i : Fin M.toList.length => F.obj (M.X (ι.ofFin i)))).π i.toFin
+  ι i := (finCBicone (fun i : Fin M.toList.length => F.obj (M.X (ι.ofFin i)))).ι i.toFin ≫
+    eqToHom (extendBicone_pt_eq F M)
+  ι_π i j := by
+    classical
+    simp only [Category.assoc, eqToHom_trans_assoc, eqToHom_refl, Category.id_comp]
+    split_ifs with hij
+    · subst j
+      exact bicone_ι_π_self _ i.toFin
+    · exact bicone_ι_π_ne _ (ι.finEquiv.injective.ne hij)
+
+omit [Preadditive C] in
+/-- The explicit image bicone resolves the identity as a sum of its projections. -/
+theorem extendBicone_total (F : C ⥤ D) (M : CMat_ C) :
+    ∑ i, (extendBicone F M).π i ≫ (extendBicone F M).ι i = 𝟙 (extendBicone F M).pt := by
+  let b := finCBicone (fun i : Fin M.toList.length => F.obj (M.X (ι.ofFin i)))
+  have hsum : ∑ i : M.ι, b.π i.toFin ≫ b.ι i.toFin = 𝟙 b.pt :=
+    (ι.finEquiv.sum_comp _).trans (finCBicone_total _)
+  simpa only [extendBicone, b, Preadditive.comp_sum, Preadditive.sum_comp, Category.assoc,
+    Category.id_comp, eqToHom_trans, eqToHom_refl] using
+    congrArg (fun h => eqToHom (extendBicone_pt_eq F M).symm ≫ h ≫
+      eqToHom (extendBicone_pt_eq F M)) hsum
+
+/-- The explicit image bicone is a biproduct. -/
+def extendBiconeIsBilimit (F : C ⥤ D) (M : CMat_ C) : (extendBicone F M).IsBilimit :=
+  isBilimitOfTotal _ (extendBicone_total F M)
+
+/-- Send a matrix to the morphism between the explicit sums of its image summands. -/
+def extendMap (F : C ⥤ D) {M N : CMat_ C} (f : M ⟶ N) :
+    (extendBicone F M).pt ⟶ (extendBicone F N).pt :=
+  (extendBiconeIsBilimit F M).isColimit.desc
+    (Cofan.mk _ fun i => ∑ j, F.map (f i j) ≫ (extendBicone F N).ι j)
+
+/-- Restricting the extended map to one summand gives its row of image morphisms. -/
+theorem ι_extendMap (F : C ⥤ D) {M N : CMat_ C} (f : M ⟶ N) (i : M.ι) :
+    (extendBicone F M).ι i ≫ extendMap F f =
+      ∑ j, F.map (f i j) ≫ (extendBicone F N).ι j :=
+  (extendBiconeIsBilimit F M).isColimit.fac
+    (Cofan.mk _ fun i => ∑ j, F.map (f i j) ≫ (extendBicone F N).ι j) ⟨i⟩
+
+/-- The entries of the extended map are the images of the original matrix entries. -/
+theorem ι_extendMap_π (F : C ⥤ D) {M N : CMat_ C} (f : M ⟶ N) (i : M.ι) (j : N.ι) :
+    (extendBicone F M).ι i ≫ extendMap F f ≫ (extendBicone F N).π j = F.map (f i j) := by
+  rw [← Category.assoc, ι_extendMap]
+  erw [Preadditive.sum_comp Finset.univ]
+  simp only [Category.assoc, (extendBicone F N).ι_π, comp_dite, comp_zero,
+    Finset.sum_dite_eq', Finset.mem_univ, ite_true, eqToHom_refl, Category.comp_id]
+
+omit [Preadditive C] in
+/-- Maps between explicit image sums are determined by their matrix entries. -/
+theorem extendBicone_hom_ext (F : C ⥤ D) {M N : CMat_ C}
+    {f g : (extendBicone F M).pt ⟶ (extendBicone F N).pt}
+    (h : ∀ i j, (extendBicone F M).ι i ≫ f ≫ (extendBicone F N).π j =
+      (extendBicone F M).ι i ≫ g ≫ (extendBicone F N).π j) : f = g := by
+  apply (extendBiconeIsBilimit F M).isColimit.hom_ext
+  intro i
+  apply (extendBiconeIsBilimit F N).isLimit.hom_ext
+  intro j
+  simpa only [Limits.Bicone.toCocone_ι_app, Limits.Bicone.toCone_π_app, ← Category.assoc]
+    using h i.as j.as
+
+variable (F : C ⥤ D) [F.Additive]
+
+/-- The extension sends identity matrices to identity morphisms. -/
+theorem extendMap_id (M : CMat_ C) : extendMap F (𝟙 M) = 𝟙 (extendBicone F M).pt := by
+  apply extendBicone_hom_ext F
+  intro i j
+  rw [ι_extendMap_π]
+  by_cases hij : i = j
+  · subst j
+    simpa only [id_apply_self, F.map_id, Category.id_comp] using
+      (bicone_ι_π_self (extendBicone F M) i).symm
+  · simpa only [id_apply_of_ne M i j hij, F.map_zero, Category.id_comp] using
+      (bicone_ι_π_ne (extendBicone F M) hij).symm
+
+/-- The extension sends matrix multiplication to composition. -/
+theorem extendMap_comp {M N K : CMat_ C} (f : M ⟶ N) (g : N ⟶ K) :
+    extendMap F (f ≫ g) = extendMap F f ≫ extendMap F g := by
+  apply extendBicone_hom_ext F
+  intro i k
+  simp only [Category.assoc, ι_extendMap_π, comp_apply, F.map_sum, F.map_comp]
+  rw [← Category.assoc ((extendBicone F M).ι i) (extendMap F f), ι_extendMap]
+  erw [Preadditive.sum_comp Finset.univ]
+  simp only [Category.assoc, ι_extendMap_π]
+
+/-- The extension respects addition of matrices. -/
+theorem extendMap_add {M N : CMat_ C} (f g : M ⟶ N) :
+    extendMap F (f + g) = extendMap F f + extendMap F g := by
+  apply extendBicone_hom_ext F
+  intro i j
+  simp only [Preadditive.comp_add, Preadditive.add_comp, ι_extendMap_π, add_apply, F.map_add]
+
+/-- Extend an additive functor to finite formal sums using the chosen computable biproducts. -/
+def extend : CMat_ C ⥤ D where
   obj M := (M.toList.map F.obj).cbiprod
-  map {M N} f := sorry
+  map f := extendMap F f
+  map_id := extendMap_id F
+  map_comp := extendMap_comp F
 
--- Also need that extend is additive
+instance : (extend F).Additive where
+  map_add {_ _ f g} := extendMap_add F f g
 
--- Unfortunately, we need to lift to some arbitrary computable category, not just CMat_
--- These are candidate definitions until we get lifting to some arbitrary category
--- These also look suspiciously similar to a monad
+/-- The extension evaluates objects using the chosen list biproduct. -/
+@[simp]
+theorem extend_obj (M : CMat_ C) : (extend F).obj M = (M.toList.map F.obj).cbiprod := rfl
 
+/-- Matrix entries of the functor can be computed without unfolding its construction. -/
+@[reassoc (attr := simp)]
+theorem ι_extend_map_π {M N : CMat_ C} (f : M ⟶ N) (i : M.ι) (j : N.ι) :
+    (extendBicone F M).ι i ≫ (extend F).map f ≫ (extendBicone F N).π j = F.map (f i j) :=
+  ι_extendMap_π F f i j
+
+end extension
+
+/-- Flatten a formal sum of formal sums using the computable biproducts in `CMat_ C`. -/
 def bind : CMat_ (CMat_ C) ⥤ CMat_ C := extend (𝟭 (CMat_ C))
 
+/-- Apply an additive functor to formal sums and their matrices of morphisms. -/
 def mapCMat_ (F : C ⥤ D) [F.Additive] : CMat_ C ⥤ CMat_ D := extend (F ⋙ embedding D)
 
 end lift
