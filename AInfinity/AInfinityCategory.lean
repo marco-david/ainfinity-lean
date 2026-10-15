@@ -22,11 +22,9 @@ satisfying the Stasheff identities.
 
 ## Implementation notes
 
-Neither the hom spaces `GradedLinearQuiver.Hom X Y i` nor the values of the operations
-`AInfinityCategoryStruct.m` mention the ring `R` in their types. To let instance search find
-these structures without `R` being supplied by hand, `R` is an `outParam` of these classes and of
-`GradedLinearQuiver`.
-As a consequence, an object type carries a single ring of scalars.
+The ring of scalars `R` is an ordinary class parameter, so an object type may carry several
+rings of scalars. It is passed explicitly wherever it cannot be inferred from later arguments:
+to the hom spaces `(X →ᵍ[R] Y) i`, `ComposableHomType`, `AInfinityComposition` and `homCongr`.
 -/
 
 @[expose] public section
@@ -38,7 +36,7 @@ universe u v w w'
 section
 
 variable (β : Type v)
-variable (R : outParam (Type u)) [CommRing R]
+variable (R : Type u) [CommRing R]
 variable (Obj : Type w)
 variable [AddCommGroup β] [GradingType β]
 
@@ -46,7 +44,7 @@ variable [AddCommGroup β] [GradingType β]
 a higher composition `mₙ` of degree `2 - n`. No relations are imposed. -/
 class AInfinityCategoryStruct extends GradedLinearQuiver β R Obj where
   /-- The higher compositions `mₙ`. -/
-  m : AInfinityComposition β Obj
+  m : AInfinityComposition β R Obj
 
 /-- An `A∞`-category: an `A∞`-category structure whose higher compositions satisfy the
 Stasheff identities in every arity. -/
@@ -65,7 +63,7 @@ variable {β : Type v} [AddCommGroup β] [GradingType β] {R : Type u} [CommRing
 
 /-- In an `A∞`-category, the Stasheff sum of any composable string of morphisms vanishes. -/
 theorem indexedStasheffSum_eq_zero {n : ℕ} [NeZero n] {obj : Fin (n + 1) → Obj}
-    {deg : Fin n → β} (x : ∀ i, ComposableHomType obj i (deg i)) {d : β}
+    {deg : Fin n → β} (x : ∀ i, ComposableHomType R obj i (deg i)) {d : β}
     (hd : stasheffTargetDeg deg = d) :
     indexedStasheffSum AInfinityCategoryStruct.m x d hd = 0 :=
   stasheff n obj deg x d hd
