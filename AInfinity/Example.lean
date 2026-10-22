@@ -35,11 +35,11 @@ example (β : Type v) [AddCommGroup β] [GradingType β] (R : Type u) [CommRing 
     stasheff := indexedSatisfiesStasheff_of_arity_two _ (fun _ _ hk _ => dif_neg hk)
       fun obj deg x d hd => by
         apply Subtype.ext
-        change stasheffSign deg 0 2 1 rfl • (((x 0).1 ≫ (x 1).1) ≫ (x 2).1) +
+        change stasheffSign deg ⟨0, 2, 1, rfl, by norm_num⟩ • (((x 0).1 ≫ (x 1).1) ≫ (x 2).1) +
           (x 0).1 ≫ (x 1).1 ≫ (x 2).1 = 0
         rw [Category.assoc]
         rcases eq_or_ne (deg 2) 0 with h | h
-        · have hs : stasheffSign deg 0 2 1 rfl = -1 := by
+        · have hs : stasheffSign deg ⟨0, 2, 1, rfl, by norm_num⟩ = -1 := by
             rw [stasheffSign, Fin.prod_univ_one]
             change Additive.toMul (sign (deg 2 - shift 1)) = -1
             rw [h, zero_sub, ← map_neg, sign_shift, Int.negOnePow_neg, Int.negOnePow_one]
