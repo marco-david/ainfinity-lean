@@ -2,9 +2,7 @@
 # non-deploying push run, comparing runner images and swap (to be removed before merge).
 name: tmp docs build test
 on:
-  push:
-    branches:
-      - claude/dazzling-edison-unmesq
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:

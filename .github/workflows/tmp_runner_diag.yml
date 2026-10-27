@@ -1,9 +1,7 @@
 # TEMPORARY: runner resource diagnostics (to be removed before merge).
 name: tmp runner diag
 on:
-  push:
-    branches:
-      - claude/dazzling-edison-unmesq
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
