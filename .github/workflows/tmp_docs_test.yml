@@ -1,0 +1,60 @@
+# TEMPORARY: reproduce the master-only "Build Lean Docs and Blueprint" failure on a
+# non-deploying push run, comparing runner images and swap (to be removed before merge).
+name: tmp docs build test
+on:
+  push:
+    branches:
+      - claude/dazzling-edison-unmesq
+permissions:
+  contents: read
+concurrency:
+  group: tmp-docs-test-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  docs:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            swap: "no"
+          - os: ubuntu-26.04
+            swap: "no"
+          - os: ubuntu-26.04
+            swap: "yes"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Add swap
+        if: matrix.swap == 'yes'
+        run: |
+          set -x
+          df -h / /mnt || true
+          target=/mnt/swapfile-ci
+          mountpoint -q /mnt || target=/swapfile-ci
+          sudo fallocate -l 8G "$target"
+          sudo chmod 600 "$target"
+          sudo mkswap "$target"
+          sudo swapon "$target"
+      - name: Resources before build
+        run: |
+          nproc; free -h; swapon --show || true; df -h / /tmp || true
+      - name: Build project
+        uses: leanprover/lean-action@434f25c2f80ded67bba02502ad3a86f25db50709 # 2025-07-02
+        with:
+          use-github-cache: false
+          build: true
+          lint: false
+          mk_all-check: true
+      - name: Generate documentation assets (no deploy)
+        uses: dwrensha/docgen-action@a3f8189646977363717917b605e6de25f9704656
+        with:
+          blueprint: true
+          homepage: "site"
+          deploy: false
+          use-github-cache: false
+      - name: Resources after build
+        if: always()
+        run: |
+          free -h; swapon --show || true; df -h / /tmp || true
