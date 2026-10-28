@@ -72,6 +72,21 @@ def numColor {m : ℕ} (v : Vector (StrandData V) m) (k : V) (c : StrandColor) :
 abbrev numBlack {m : ℕ} (v : Vector (StrandData V) m) (k : V) : Nat := numColor v k .black
 abbrev numRed {m : ℕ} (v : Vector (StrandData V) m) (k : V) : Nat := numColor v k .red
 
+/- Translates numColor (which counts using lists) into a Finset count of the positions whose strand is ⟨a, c⟩. -/
+lemma numColor_ofFn {m : ℕ} (g : Fin m → StrandData V) (a : V) (c : StrandColor) :
+    numColor (Vector.ofFn g) a c = (Finset.univ.filter (fun p => g p = ⟨a, c⟩)).card := by
+  unfold numColor
+  rw [Vector.toList_ofFn, List.ofFn_eq_map, List.filter_map, List.length_map,
+    ← List.toFinset_card_of_nodup ((List.nodup_finRange m).filter _), List.toFinset_filter,
+    List.toFinset_finRange]
+  congr 1
+  ext p
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and, Function.comp, Bool.and_eq_true,
+    beq_iff_eq]
+  generalize g p = s
+  cases s
+  simp
+
 
 /- totalStrands calculates the total number of strands in a KLRWStructure. -/
 
@@ -98,6 +113,14 @@ lemma KLRWObject.ext (X Y : KLRWObject parameters) (h : X.strandSeq = Y.strandSe
   dsimp at h
   subst h
   rfl
+
+/- Two KLRW objects are equal if they have the same strand at every position. -/
+lemma KLRWObject.ext_get {P : KLRWStructure W} {X Y : KLRWObject P}
+    (h : ∀ p, X.get p = Y.get p) : X = Y := by
+  apply KLRWObject.ext
+  apply Vector.ext
+  intro i hi
+  exact h ⟨i, hi⟩
 
 
 /- This function simplifies the process to access elements in strandSeq of a KLRWObject. -/
