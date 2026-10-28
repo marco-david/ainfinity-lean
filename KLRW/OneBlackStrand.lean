@@ -199,18 +199,63 @@ instance : Preadditive (KLRWCategory n R) where
         (fun j s₁ s₂ => by simp [mul_add, add_smul])]
     simp only [DFinsupp.sum, Finset.sum_add_distrib]
 
+/-- `DFinsupp` analogue of `Finsupp.sum_smul_index`: summing over a scaled strand multiplies the
+coefficients fed to the summand by the scalar. -/
+theorem StrandSpace.sum_smul_index {γ : Type*} [AddCommMonoid γ] (r : R) (f : StrandSpace R)
+    (h : ℕ → R → γ) (h0 : ∀ i, h i 0 = 0) :
+    (r • f).sum h = f.sum fun i c => h i (r * c) := by
+  rw [show r • f = DFinsupp.mapRange (fun _ c => r * c) (fun _ => mul_zero r) f from by
+      ext k; simp,
+    DFinsupp.sum_mapRange_index h0]
+
+/-- Scalars pull out of the first factor of the convolution composition. -/
+theorem StrandSpace.convolution_smul_left (r : R) (f g : StrandSpace R) (t : ℕ) :
+    (r • f).sum (fun i c => g.sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) =
+      r • f.sum (fun i c => g.sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) := by
+  rw [StrandSpace.sum_smul_index r f _ (fun i => by simp [zero_mul, zero_smul]),
+    DFinsupp.smul_sum]
+  congr 1; funext i c
+  rw [DFinsupp.smul_sum]
+  congr 1; funext j s
+  rw [smul_smul, mul_assoc]
+
+/-- Scalars pull out of the second factor of the convolution composition. -/
+theorem StrandSpace.convolution_smul_right (r : R) (f g : StrandSpace R) (t : ℕ) :
+    f.sum (fun i c => (r • g).sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) =
+      r • f.sum (fun i c => g.sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) := by
+  conv_lhs =>
+    arg 2; ext i c
+    rw [StrandSpace.sum_smul_index r g _ (fun j => by simp [mul_zero, zero_smul])]
+  rw [DFinsupp.smul_sum]
+  congr 1; funext i c
+  rw [DFinsupp.smul_sum]
+  congr 1; funext j s
+  rw [smul_smul, mul_left_comm]
+
+/-- The KLRW category is `R`-linear: its Hom-spaces are `StrandSpace R`, and the convolution
+composition is `R`-bilinear. -/
+instance : Linear R (KLRWCategory n R) where
+  homModule _ _ := inferInstanceAs (Module R (StrandSpace R))
+  smul_comp P Q S r f g := StrandSpace.convolution_smul_left r f g (compShift P Q S)
+  comp_smul P Q S f r g := StrandSpace.convolution_smul_right r f g (compShift P Q S)
+
 instance (R : Type*) [CommRing R] [DecidableEq R] [ToString R] (n : ℕ) (S T : KLRWCategory n R) :
   Texify (S ⟶ T) := inferInstanceAs (Texify (StrandSpace R))
 
-/--
-The KLRW Category lacks zero objects
--/
-theorem KLRWCategory.not_isZero (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ)
-  (A : KLRWCategory n R) : ¬ Limits.IsZero A := sorry
+/-- A positioning is a zero object of the KLRW category exactly when the ring of coefficients is
+trivial: its identity is the dotless strand `StrandSpace.dots R 0 = DFinsupp.single 0 1`, which
+vanishes iff `(1 : R) = 0`. -/
+theorem KLRWCategory.isZero_iff (A : KLRWCategory n R) : Limits.IsZero A ↔ (1 : R) = 0 := by
+  rw [Limits.IsZero.iff_id_eq_zero]
+  exact DFinsupp.single_eq_zero
 
-instance (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ) :
-    DecidablePred (Limits.IsZero : KLRWCategory n R → Prop) :=
-  fun A ↦ Decidable.isFalse (A.not_isZero)
+/-- Over a nontrivial ring, the KLRW category has no zero objects. -/
+theorem KLRWCategory.not_isZero [Nontrivial R] (A : KLRWCategory n R) : ¬ Limits.IsZero A :=
+  fun h => one_ne_zero (A.isZero_iff.mp h)
+
+/-- Whether a positioning is a zero object is decidable: it amounts to `(1 : R) = 0`. -/
+instance : DecidablePred (Limits.IsZero : KLRWCategory n R → Prop) :=
+  fun A => decidable_of_iff _ A.isZero_iff.symm
 
 abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   CMat_ (KLRWCategory n R)
