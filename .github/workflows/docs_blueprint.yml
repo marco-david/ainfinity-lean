@@ -37,6 +37,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Install Lean toolchain (retrying the download)
+        uses: ./.github/actions/lean-toolchain
       - name: Build project
         uses: leanprover/lean-action@434f25c2f80ded67bba02502ad3a86f25db50709 # 2025-07-02
         with:

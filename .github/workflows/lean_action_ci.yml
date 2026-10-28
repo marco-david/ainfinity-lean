@@ -19,6 +19,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+      - uses: ./.github/actions/lean-toolchain
       - uses: leanprover/lean-action@v1
         with:
           # Do not save `.lake` to the GitHub Actions cache. Mathlib's oleans come from
@@ -34,6 +35,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/lean-toolchain
       - uses: leanprover/lean-action@v1
         with:
           auto-config: false

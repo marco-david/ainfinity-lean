@@ -1,0 +1,26 @@
+name: Install Lean toolchain
+description: >
+  Installs elan and the toolchain named in `lean-toolchain`, retrying the download.
+  lean-action downloads the toolchain with no retry, so a short outage of
+  releases.lean-lang.org fails the job in its first seconds; with the toolchain
+  pre-installed, lean-action only has to find it.
+runs:
+  using: composite
+  steps:
+    - name: Install elan and the pinned toolchain (with retries)
+      shell: bash
+      run: |
+        set -euo pipefail
+        toolchain="$(cat lean-toolchain)"
+        for attempt in 1 2 3 4 5; do
+          if curl -sSfL --retry 5 --retry-all-errors \
+               https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+               | sh -s -- -y --default-toolchain none --no-modify-path \
+             && "$HOME/.elan/bin/elan" toolchain install "$toolchain"; then
+            exit 0
+          fi
+          echo "::warning::Toolchain install attempt $attempt failed; retrying in $((attempt * 20)) s"
+          sleep $((attempt * 20))
+        done
+        echo "::error::Could not install $toolchain after 5 attempts"
+        exit 1
