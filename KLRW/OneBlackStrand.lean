@@ -263,4 +263,84 @@ abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Typ
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   BoundedCochainComplex (AddKLRWCategory n R)
 
+/-! ### The braiding action on objects
+
+The braiding of the `i`-th and `(i + 1)`-th red strands sends the T-brane at the braided position
+`k = i + 1` (the black strand sitting between the two red strands) to the two-term complex
+`T_{k-1} ⊕ T_{k+1} ⟶ T_k` in degrees `0` and `1`, with dotless differential; every other
+positioning is unchanged, viewed as a complex concentrated in degree `0`. -/
+
+namespace KLRWCategory
+
+/-- A positioning as a one-term cochain complex in degree `0`. -/
+def braneComplex (A : KLRWCategory n R) : CochainComplex (AddKLRWCategory n R) ℤ where
+  X i := if i = 0 then [A]ₘ else 𝟎
+  d _ _ := 0
+  shape _ _ _ := rfl
+  d_comp_d' _ _ _ _ _ := Limits.zero_comp
+
+/-- The two-term complex `[Tneg, Tpos]ₘ ⟶ [A]ₘ` in degrees `0` and `1`, with dotless differential:
+every matrix entry of the differential is the unit strand `StrandSpace.dots R 0`. -/
+def braidedBraneComplex (Tneg Tpos A : KLRWCategory n R) :
+    CochainComplex (AddKLRWCategory n R) ℤ where
+  X i := if i = 0 then [Tneg, Tpos]ₘ else if i = 1 then [A]ₘ else 𝟎
+  d i j :=
+    if hij : i = 0 ∧ j = 1 then by
+      rcases hij with ⟨rfl, rfl⟩
+      exact fun _ _ => StrandSpace.dots R 0
+    else 0
+  shape i j hij := by
+    by_cases h01 : i = 0 ∧ j = 1
+    · exfalso
+      rcases h01 with ⟨rfl, rfl⟩
+      exact hij (by simp [ComplexShape.up, ComplexShape.up'])
+    · simp [h01]
+  d_comp_d' i j l hij hjl := by
+    by_cases h01 : i = 0 ∧ j = 1
+    · rcases h01 with ⟨rfl, rfl⟩
+      rw [dif_pos ⟨rfl, rfl⟩, dif_neg (show ¬((1 : ℤ) = 0 ∧ l = 1) by norm_num), Limits.comp_zero]
+    · rw [dif_neg h01]
+      exact Limits.zero_comp
+
+/-- `braneComplex A` vanishes outside degree `0`. -/
+lemma isZero_braneComplex_X (A : KLRWCategory n R) {i : ℤ} (hi : i ≠ 0) :
+    Limits.IsZero ((braneComplex A).X i) := by
+  show Limits.IsZero (if i = 0 then _ else _)
+  rw [if_neg hi]
+  exact isZero_explicitZero
+
+/-- `braidedBraneComplex Tneg Tpos A` vanishes outside degrees `0` and `1`. -/
+lemma isZero_braidedBraneComplex_X (Tneg Tpos A : KLRWCategory n R) {i : ℤ} (h0 : i ≠ 0)
+    (h1 : i ≠ 1) : Limits.IsZero ((braidedBraneComplex Tneg Tpos A).X i) := by
+  show Limits.IsZero (if i = 0 then _ else if i = 1 then _ else _)
+  rw [if_neg h0, if_neg h1]
+  exact isZero_explicitZero
+
+/-- A positioning as a bounded one-term complex in degree `0`. -/
+def brane (A : KLRWCategory n R) : KLRWComplexCategory n R :=
+  BoundedCochainComplex.mkOfBounded (braneComplex A) (supersetOfSupport := {0}) fun _ hi =>
+    Finset.mem_singleton.mpr (not_not.mp (mt (isZero_braneComplex_X A) hi))
+
+/-- The braided T-brane: the bounded two-term complex `[Tneg, Tpos]ₘ ⟶ [A]ₘ` in degrees `0`
+and `1`. -/
+def braidedBrane (Tneg Tpos A : KLRWCategory n R) : KLRWComplexCategory n R :=
+  BoundedCochainComplex.mkOfBounded (braidedBraneComplex Tneg Tpos A)
+    (supersetOfSupport := {0, 1}) fun i hi => by
+      rw [Finset.mem_insert, Finset.mem_singleton]
+      by_contra hmem
+      push Not at hmem
+      exact hi (isZero_braidedBraneComplex_X Tneg Tpos A hmem.1 hmem.2)
+
+/-- The braiding action on objects for the transposition of the `i`-th and `(i + 1)`-th red
+strands (`i : Fin (n - 1)`, so that only genuine transpositions are expressible): the braided
+position is `k = i + 1`, whose T-brane becomes the two-term complex `T_{k-1} ⊕ T_{k+1} ⟶ T_k`;
+every other positioning is unchanged. -/
+def braidingObj (i : Fin (n - 1)) (A : KLRWCategory n R) : KLRWComplexCategory n R :=
+  if A.positioning = (⟨i.val + 1, by have := i.isLt; omega⟩ : Fin (n + 1)) then
+    braidedBrane ⟨⟨i.val, by have := i.isLt; omega⟩⟩ ⟨⟨i.val + 2, by have := i.isLt; omega⟩⟩ A
+  else
+    brane A
+
+end KLRWCategory
+
 end AInfinityTheory
