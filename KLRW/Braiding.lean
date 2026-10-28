@@ -68,7 +68,7 @@ lemma isZero_braidedBraneComplex_X (Tneg Tpos A : KLRWCategory n R) {i : ℤ} (h
 
 /-- A positioning as a bounded one-term complex in degree `0`. -/
 def brane (A : KLRWCategory n R) : KLRWComplexCategory n R :=
-  BoundedCochainComplex.mkOfBounded (braneComplex A) (supersetOfSupport := {0}) fun i hi =>
+  BoundedCochainComplex.mkOfBounded (braneComplex A) (supersetOfSupport := {0}) fun _ hi =>
     Finset.mem_singleton.mpr (not_not.mp (mt (isZero_braneComplex_X A) hi))
 
 /-- The braided T-brane: the bounded two-term complex `[Tneg, Tpos]ₘ ⟶ [A]ₘ` in degrees `0`

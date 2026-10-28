@@ -244,7 +244,7 @@ open CochainComplex
 active degrees. -/
 noncomputable def toCochain (z : FinCochain A B n) :
     HomComplex.Cochain A.toHomologicalComplex B.toHomologicalComplex n :=
-  HomComplex.Cochain.mk fun p q hpq => z.getV p ≫ eqToHom (congr_arg B.X hpq)
+  HomComplex.Cochain.mk fun p _ hpq => z.getV p ≫ eqToHom (congr_arg B.X hpq)
 
 @[simp] lemma toCochain_v (z : FinCochain A B n) (p q : ℤ) (hpq : p + n = q) :
     z.toCochain.v p q hpq = z.getV p ≫ eqToHom (congr_arg B.X hpq) := rfl
@@ -317,8 +317,7 @@ lemma toCochain_δ (z : FinCochain A B n) :
   ext p q hpq
   subst hpq
   rw [HomComplex.δ_v n (n + 1) rfl z.toCochain p (p + (n + 1)) rfl (p + n) (p + 1) (by ring) rfl]
-  simp only [toCochain_v, getV_δ, Preadditive.add_comp, Category.assoc,
-    eqToHom_refl, Category.comp_id]
+  simp only [toCochain_v, getV_δ, eqToHom_refl, Category.comp_id]
 
 /-- `toCochain` sends `ofHom h` to Mathlib's degree-`0` cochain of the underlying chain map. -/
 lemma toCochain_ofHom (h : A ⟶ B) : (ofHom h).toCochain = HomComplex.Cochain.ofHom h.hom := by
