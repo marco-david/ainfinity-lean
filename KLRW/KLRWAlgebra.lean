@@ -114,14 +114,6 @@ lemma KLRWObject.ext (X Y : KLRWObject parameters) (h : X.strandSeq = Y.strandSe
   subst h
   rfl
 
-/- Two KLRW objects are equal if they have the same strand at every position. -/
-lemma KLRWObject.ext_get {parameters : KLRWStructure V} {X Y : KLRWObject parameters}
-    (h : ∀ p, X.get p = Y.get p) : X = Y := by
-  apply KLRWObject.ext
-  apply Vector.ext
-  intro i hi
-  exact h ⟨i, hi⟩
-
 
 /- This function simplifies the process to access elements in strandSeq of a KLRWObject. -/
 
@@ -129,7 +121,13 @@ abbrev KLRWObject.get (M : KLRWObject parameters) (i : Fin (totalStrands paramet
     StrandData V :=
   M.strandSeq.get i
 
-
+/- Two KLRW objects are equal if they have the same strand at every position. -/
+lemma KLRWObject.ext_get {parameters : KLRWStructure V} {X Y : KLRWObject parameters}
+    (h : ∀ p, X.get p = Y.get p) : X = Y := by
+  apply KLRWObject.ext
+  apply Vector.ext
+  intro i hi
+  exact h ⟨i, hi⟩
 
 
 /- ------------------------------------------------------------------------------------
