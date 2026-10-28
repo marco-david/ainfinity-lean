@@ -10,7 +10,7 @@ public import ComputableCochainComplex.BoundedCochainComplex
 
 open CategoryTheory
 
-namespace AInfinityTheory
+namespace KLRW
 
 universe v u
 variable {R : Type u} [CommRing R] [DecidableEq R] (C : Type u) [Category C]
@@ -20,7 +20,7 @@ variable {n : ℕ}
 among `n` red strands, over `R`. An object is a *positioning* of the black strand, i.e. the number
 of red strands to its left; the morphisms between any two positionings form `StrandSpace R`, the
 free `R`-module on the number of dots on the black strand, and composition is convolution shifted
-by `compShift`. This is a computable special case of the general `KLRW.KLRWObject.WithRing`. -/
+by `compShift`. This is a computable special case of the general `KLRWObject.WithRing`. -/
 structure KLRWSl2OneBlackStrand (n : ℕ) (R : Type u) where
   /-- The number of red strands to the left of the black strand. -/
   positioning : Fin (n + 1)
@@ -354,4 +354,4 @@ def braidingObj (i : Fin (n - 1)) (A : KLRWSl2OneBlackStrand n R) :
 
 end KLRWSl2OneBlackStrand
 
-end AInfinityTheory
+end KLRW

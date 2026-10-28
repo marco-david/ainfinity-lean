@@ -6,7 +6,7 @@ public import ComputableCochainComplex.AdditiveCompletion
 
 @[expose] public section
 
-open CategoryTheory AInfinityTheory
+open CategoryTheory KLRW
 
 def T₀ : KLRWSl2OneBlackStrand 3 ℤ := ⟨0⟩
 def T₁ : KLRWSl2OneBlackStrand 3 ℤ := ⟨1⟩

@@ -6,7 +6,7 @@ public import ComputableCochainComplex.AdditiveCompletion
 
 @[expose] public section
 
-open CategoryTheory AInfinityTheory
+open CategoryTheory KLRW
 
 
 universe u v w
