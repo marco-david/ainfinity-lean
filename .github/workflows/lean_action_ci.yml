@@ -10,9 +10,12 @@ on:
 permissions:
   contents: read # Read access to repository contents
 
+# Both jobs are pinned to ubuntu-24.04 rather than ubuntu-latest: Lake forks helper processes
+# and the ubuntu-26.04 image (kernel 7.0) makes those forks fail with ENOMEM under load.
+# See the comment in docs_blueprint.yml.
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v5
@@ -27,7 +30,7 @@ jobs:
       # - uses: leanprover-community/docgen-action@v1
 
   mk-all: # checks that the top-level library files import every module (`lake exe mk_all --check`)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
