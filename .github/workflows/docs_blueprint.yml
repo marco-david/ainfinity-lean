@@ -45,8 +45,10 @@ jobs:
           lint: false
           mk_all-check: true
       - name: Generate documentation assets
-        # workaround for https://github.com/leanprover-community/docgen-action/issues/28
-        uses: dwrensha/docgen-action@a3f8189646977363717917b605e6de25f9704656
+        # Pinned to upstream `main` (2026-10-05); it includes the fixes for
+        # https://github.com/leanprover-community/docgen-action/issues/28 that the
+        # dwrensha fork used to carry, and also validates the Jekyll homepage on pull requests.
+        uses: leanprover-community/docgen-action@dacc1acc2a3f532cc577266979ba9c36c7593f7c # main, 2026-10-05
         with:
           blueprint: true
           homepage: "site"
