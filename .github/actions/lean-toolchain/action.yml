@@ -12,14 +12,18 @@ runs:
       run: |
         set -euo pipefail
         toolchain="$(cat lean-toolchain)"
+        # Each attempt is bounded: a normal toolchain download takes seconds, but the
+        # server is sometimes slow enough that an unbounded attempt would hang the job,
+        # so a stalled transfer is abandoned and retried instead.
         for attempt in 1 2 3 4 5; do
-          if curl -sSfL --retry 5 --retry-all-errors \
-               https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
-               | sh -s -- -y --default-toolchain none --no-modify-path \
-             && "$HOME/.elan/bin/elan" toolchain install "$toolchain"; then
+          if timeout 120 bash -o pipefail -c '
+               curl -sSfL --retry 5 --retry-all-errors --max-time 60 \
+                 https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+                 | sh -s -- -y --default-toolchain none --no-modify-path' \
+             && timeout 300 "$HOME/.elan/bin/elan" toolchain install "$toolchain"; then
             exit 0
           fi
-          echo "::warning::Toolchain install attempt $attempt failed; retrying in $((attempt * 20)) s"
+          echo "::warning::Toolchain install attempt $attempt failed or timed out; retrying in $((attempt * 20)) s"
           sleep $((attempt * 20))
         done
         echo "::error::Could not install $toolchain after 5 attempts"
