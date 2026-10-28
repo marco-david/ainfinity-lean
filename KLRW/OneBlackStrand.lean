@@ -421,4 +421,34 @@ end BraidingFunctorData
 
 end TBrane
 
+/-! ### Examples
+
+Three red strands over `ℤ`, so the black strand can sit in the four positions `T₀, …, T₃`.
+Braiding the first two red strands (`i = 0`) replaces `T₁` by the two-term complex
+`[T₀, T₂]ₘ ⟶ [T₁]ₘ` and leaves every other T-brane as a one-term complex in degree `0`. -/
+
+section Examples
+
+-- Over a nontrivial ring, no T-brane is a zero object.
+example : ¬ Limits.IsZero (⟨1⟩ : TBrane 3 ℤ) := TBrane.not_isZero _
+
+-- The T-brane at the braided position becomes the two-term complex `[T₀, T₂]ₘ ⟶ [T₁]ₘ`.
+example : TBrane.braidingObj (n := 3) (R := ℤ) ⟨0, by decide⟩ ⟨1⟩ = TBrane.braided ⟨0⟩ ⟨2⟩ ⟨1⟩ :=
+  rfl
+
+-- Every other T-brane is unchanged.
+example : TBrane.braidingObj (n := 3) (R := ℤ) ⟨0, by decide⟩ ⟨0⟩ = TBrane.single ⟨0⟩ := rfl
+example : TBrane.braidingObj (n := 3) (R := ℤ) ⟨0, by decide⟩ ⟨3⟩ = TBrane.single ⟨3⟩ := rfl
+
+-- The braided complex has `[T₀, T₂]ₘ` in degree `0`, `[T₁]ₘ` in degree `1`, and nothing else.
+example : (TBrane.braided (n := 3) (R := ℤ) ⟨0⟩ ⟨2⟩ ⟨1⟩).X 0 = [⟨0⟩, ⟨2⟩]ₘ := rfl
+example : (TBrane.braided (n := 3) (R := ℤ) ⟨0⟩ ⟨2⟩ ⟨1⟩).X 1 = [⟨1⟩]ₘ := rfl
+example : (TBrane.braided (n := 3) (R := ℤ) ⟨0⟩ ⟨2⟩ ⟨1⟩).X 2 = 𝟎 := rfl
+
+-- Its differential is the dotless strand in every matrix entry.
+example : (TBrane.braided (n := 3) (R := ℤ) ⟨0⟩ ⟨2⟩ ⟨1⟩).d 0 1 = fun _ _ => StrandSpace.dots ℤ 0 :=
+  rfl
+
+end Examples
+
 end KLRW.Sl2

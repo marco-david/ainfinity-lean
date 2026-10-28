@@ -34,6 +34,7 @@ name = "ComputableCochainComplex"
 [[lean_lib]]
 name = "AInfinity"
 
-# The KLRW category, the braiding functor, and examples.
+# The KLRW algebra and category, and the computable one-black-strand special case with the
+# braiding action on its objects.
 [[lean_lib]]
 name = "KLRW"
