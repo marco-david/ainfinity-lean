@@ -230,7 +230,7 @@ alignment:
       module: "AInfinity.Stasheff"
       status: "defined"
     - source: "Blueprint, Definition (Indexed Stasheff identities)"
-      lean: "AInfinityTheory.indexedSatisfiesStasheff"
+      lean: "AInfinityTheory.IndexedSatisfiesStasheff"
       module: "AInfinity.Stasheff"
       status: "defined"
     - source: "Blueprint, Definition (A∞-precategory)"

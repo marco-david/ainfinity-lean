@@ -1,6 +1,6 @@
 ## A<sub>∞</sub> Categories in Lean
 
-*Marco David, Jason Dong, Hallvard Hareide, Jasper van de Kreeke, Lillian Liu, Justin Mu, Niels Voss, Annie Yao*
+*Marco David, Jason Dong, Hallvard Hareide, Jasper van de Kreeke, Lillian Liu, Justin Mu, Zhan Shi, Niels Voss, Annie Yao*
 
 Repository for the formalization of $$A_\infty$$ category theory in Lean, a research project run at UC Berkeley.
 

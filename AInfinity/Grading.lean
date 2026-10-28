@@ -30,6 +30,9 @@ They are compatible in that the differential, of degree `shift 1`, is odd.
 No degree is ever multiplied, so `β` is *not* required to be a ring. This is what allows
 bigradings such as `ℤ × ℤ` or `ℤ × ZMod 2`, where `mₙ` has degree `(2 - n, 0)` and the
 sign is the total parity.
+
+A homomorphism of grading types `GradingHom β β'`, written `β →+ᵍ β'`, is an additive
+homomorphism preserving the shifts and the signs. It translates degrees when an A-infinity functor changes the grading.
 -/
 
 namespace AInfinityTheory
@@ -154,5 +157,86 @@ public lemma sign_prodTotal [GradingType β] [GradingType γ] (d : β × γ) :
     @sign (β × γ) _ (GradingType.prodTotal β γ) d = sign d.1 + sign d.2 := rfl
 
 end Prod
+
+/-! ### Homomorphisms of grading types -/
+
+/-- A homomorphism of grading types is an additive homomorphism `β →+ β'` that preserves the
+integer degree shifts and the Koszul signs. It translates degrees in `β` into degrees in `β'`
+so that `mₙ` keeps degree `shift (2 - n)` and every Koszul sign is unchanged; for example,
+reduction `ℤ → ZMod 2`, or the inclusion of `β` into the product grading `prodFst β γ`. -/
+public structure GradingHom (β β' : Type*) [AddCommGroup β] [GradingType β]
+    [AddCommGroup β'] [GradingType β'] extends β →+ β' where
+  /-- The homomorphism preserves the integer degree shifts. -/
+  map_shift' (k : ℤ) : toFun (shift k) = shift k
+  /-- The homomorphism preserves the Koszul signs. -/
+  map_sign' (b : β) : sign (toFun b) = sign b
+
+/-- `β →+ᵍ β'` denotes the type of homomorphisms of grading types from `β` to `β'`. -/
+infixr:25 " →+ᵍ " => GradingHom
+
+namespace GradingHom
+
+variable {β β' β'' : Type*} [AddCommGroup β] [GradingType β] [AddCommGroup β']
+  [GradingType β'] [AddCommGroup β''] [GradingType β'']
+
+/-- A homomorphism of grading types is applied to degrees through its underlying function. -/
+@[expose]
+public instance : FunLike (β →+ᵍ β') β β' where
+  coe f := f.toFun
+  coe_injective' f g h := by
+    cases f
+    cases g
+    congr
+    exact DFunLike.coe_injective' h
+
+/-- A homomorphism of grading types is in particular an additive homomorphism. -/
+public instance : AddMonoidHomClass (β →+ᵍ β') β β' where
+  map_add f := f.map_add'
+  map_zero f := f.map_zero'
+
+@[simp]
+public lemma coe_toAddMonoidHom (f : β →+ᵍ β') : ⇑f.toAddMonoidHom = ⇑f := rfl
+
+@[simp]
+public lemma coe_mk (f : β →+ β') (h₁ h₂) : ⇑(⟨f, h₁, h₂⟩ : β →+ᵍ β') = ⇑f := rfl
+
+/-- Two homomorphisms of grading types are equal if they agree on every degree. -/
+@[ext]
+public lemma ext {f g : β →+ᵍ β'} (h : ∀ b, f b = g b) : f = g :=
+  DFunLike.ext f g h
+
+/-- A homomorphism of grading types preserves the integer degree shifts. -/
+@[simp]
+public lemma map_shift (f : β →+ᵍ β') (k : ℤ) : f (shift k) = shift k :=
+  f.map_shift' k
+
+/-- A homomorphism of grading types preserves the Koszul signs. -/
+@[simp]
+public lemma map_sign (f : β →+ᵍ β') (b : β) : sign (f b) = sign b :=
+  f.map_sign' b
+
+variable (β) in
+/-- The identity homomorphism of a grading type. -/
+@[expose]
+public def id : β →+ᵍ β where
+  toAddMonoidHom := AddMonoidHom.id β
+  map_shift' _ := rfl
+  map_sign' _ := rfl
+
+@[simp]
+public lemma id_apply (b : β) : GradingHom.id β b = b := rfl
+
+/-- The composite of two homomorphisms of grading types. -/
+@[expose]
+public def comp (g : β' →+ᵍ β'') (f : β →+ᵍ β') : β →+ᵍ β'' where
+  toAddMonoidHom := g.toAddMonoidHom.comp f.toAddMonoidHom
+  map_shift' k := (congrArg g (f.map_shift k)).trans (g.map_shift k)
+  map_sign' b := (g.map_sign (f b)).trans (f.map_sign b)
+
+@[simp]
+public lemma comp_apply (g : β' →+ᵍ β'') (f : β →+ᵍ β') (b : β) :
+    g.comp f b = g (f b) := rfl
+
+end GradingHom
 
 end AInfinityTheory
