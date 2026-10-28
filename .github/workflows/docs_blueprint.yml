@@ -26,7 +26,14 @@ concurrency:
 jobs:
   # Build job
   build:
-    runs-on: ubuntu-latest
+    # Pinned to ubuntu-24.04 rather than ubuntu-latest. Since 2026-10-19 `ubuntu-latest` is
+    # being migrated to the ubuntu-26.04 image (kernel 7.0), on which regenerating the Mathlib
+    # API docs from scratch (every push to master whose docs cache has expired) fails
+    # deterministically with `resource exhausted (error code: 12, cannot allocate memory)`
+    # while Lake forks helper processes, even though the runner still has ~14 GB free and
+    # extra swap does not help. The same build passes on ubuntu-24.04.
+    # See https://github.com/actions/runner-images/issues/14748.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
