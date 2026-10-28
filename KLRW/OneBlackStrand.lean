@@ -13,7 +13,7 @@ open CategoryTheory
 namespace KLRW
 
 universe v u
-variable {R : Type u} [CommRing R] [DecidableEq R] (C : Type u) [Category C]
+variable {R : Type u} [CommRing R] [DecidableEq R]
 variable {n : ℕ}
 
 /-- The KLRW category for the quiver with a single node (the `sl₂` case) and a single black strand
@@ -351,6 +351,74 @@ def braidingObj (i : Fin (n - 1)) (A : KLRWSl2OneBlackStrand n R) :
     braidedBrane ⟨⟨i.val, by have := i.isLt; omega⟩⟩ ⟨⟨i.val + 2, by have := i.isLt; omega⟩⟩ A
   else
     brane A
+
+/-! ### Braiding functor data (placeholder)
+
+A first, generator-level description of the data of a braiding functor on the one-black-strand
+category: an action `gen₀` on objects together with components `gen₁` and `gen₂` on morphisms,
+to be extended first to the additive completion (`add₀`, `add₁`, `add₂`) and then to bounded
+complexes (`full₀`, `full₁`, `full₂`). The extensions are not implemented yet, and the `[SFₙ]`
+axioms are only recorded in a comment. This placeholder is to be replaced by an A∞-functor out of
+the general KLRW category. -/
+
+/-- The generator-level data of a braiding functor: an action on objects, a unary component on
+morphisms, and a binary component of degree `-1`. -/
+structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq R] (n : ℕ) where
+  gen₀ : KLRWSl2OneBlackStrand n R → KLRWSl2OneBlackStrandComplex n R
+  gen₁ : {A B : KLRWSl2OneBlackStrand n R} → (A ⟶ B) → (gen₀ A ⟶ gen₀ B)
+  gen₂ : {A B C : KLRWSl2OneBlackStrand n R} → (A ⟶ B) → (B ⟶ C) →
+    (gen₀ A ⟶ ((BoundedCochainComplex.shiftFunctor (-1 : ℤ)).obj (gen₀ C)))
+  -- invoke shift functor from boundedcochaincomplexes
+
+  --SFₙ axioms. Note:
+  --KLRW is a preadditive category, so its Hom-space is
+  --all degree 0. Then only μ₂ is nonzero (it is composition).
+  --Tw(Add(KLRW)) is a dg-category, so it has μ₁ = d, μ₂ = composition,
+  --and no higher terms.
+  /-
+  SF₂ : ∀ {A B C : KLRWSl2OneBlackStrand n R} (f : A ⟶ B) (g : B ⟶ C) (i : ℤ),
+    (gen₁ (f ≫ g)).f i + (gen₁ f ≫ gen₁ g).f i
+      = gen₂ f g i ≫ (gen₀ C).d (i - 1) i
+        + (gen₀ A).d i (i + 1) ≫ gen₂ f g (i + 1)
+  SF₃ : ∀ {A B C D : KLRWSl2OneBlackStrand n R}
+    (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D) (i : ℤ),
+    gen₂ (f ≫ g) h i + gen₂ f (g ≫ h) i
+      = (gen₁ f).f i ≫ gen₂ g h i
+        + gen₂ f g i ≫ (gen₁ h).f (i - 1)
+  SF₄ : ∀ {A B C D E : KLRWSl2OneBlackStrand n R}
+    (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D) (k : D ⟶ E) (i : ℤ),
+    gen₂ f g i ≫ gen₂ h k (i - 1) = 0
+    -/
+
+namespace BraidingFunctorData
+
+variable [CharP R 2] (β : BraidingFunctorData R n)
+
+def add₀ (A : AddKLRWSl2OneBlackStrand n R) : KLRWSl2OneBlackStrandComplex n R :=
+  -- Idea: Use CochainComplex.singleFunctor
+  let _ := β -- To get β to become a parameter of this until we actually implement it
+  sorry
+
+def add₁ {A B : AddKLRWSl2OneBlackStrand n R} (f : A ⟶ B) : β.add₀ A ⟶ β.add₀ B :=
+  -- Idea: Use the action of CochainComplex.singleFunctor on maps
+  sorry
+
+def add₂ {A B C : AddKLRWSl2OneBlackStrand n R} (f : A ⟶ B) (g : B ⟶ C) :
+    β.add₀ A ⟶ β.add₀ C :=
+  sorry
+
+def full₀ (A : KLRWSl2OneBlackStrandComplex n R) : KLRWSl2OneBlackStrandComplex n R :=
+  let _ := β -- To get β to become a parameter of this until we actually implement it
+  sorry
+
+def full₁ {A B : KLRWSl2OneBlackStrandComplex n R} (f : A ⟶ B) : β.full₀ A ⟶ β.full₀ B :=
+  sorry
+
+def full₂ {A B C : KLRWSl2OneBlackStrandComplex n R} (f : A ⟶ B) (g : B ⟶ C) :
+    β.full₀ A ⟶ β.full₀ C :=
+  sorry
+
+end BraidingFunctorData
 
 end KLRWSl2OneBlackStrand
 
