@@ -11,6 +11,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+# Mathlib's old Azure cache storage is being retired; projects on Mathlib v4.27.0 to v4.33.x must
+# fetch the olean cache from cache.mathlib.org instead (lean-action v1.7.0+ does this by itself,
+# this makes it explicit for every step that may run `lake exe cache get`).
+env:
+  MATHLIB_CACHE_GET_URL: https://cache.mathlib.org/mathlib4
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -40,7 +46,7 @@ jobs:
       - name: Install Lean toolchain (retrying the download)
         uses: ./.github/actions/lean-toolchain
       - name: Build project
-        uses: leanprover/lean-action@434f25c2f80ded67bba02502ad3a86f25db50709 # 2025-07-02
+        uses: leanprover/lean-action@fe408643ea7367d8c0404a8be3975bb145f5fb64 # v1.7.0
         with:
           use-github-cache: false
           build: true

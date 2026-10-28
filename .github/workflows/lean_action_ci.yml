@@ -7,6 +7,12 @@ on:
       - master
   workflow_dispatch:
 
+# Mathlib's old Azure cache storage is being retired; projects on Mathlib v4.27.0 to v4.33.x must
+# fetch the olean cache from cache.mathlib.org instead (lean-action v1.7.0+ does this by itself,
+# this makes it explicit for every step that may run `lake exe cache get`).
+env:
+  MATHLIB_CACHE_GET_URL: https://cache.mathlib.org/mathlib4
+
 permissions:
   contents: read # Read access to repository contents
 
