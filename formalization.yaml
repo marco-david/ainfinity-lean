@@ -150,7 +150,7 @@ automation:
 
 fidelity:
   divergences: >-
-    (1) Grading is over an arbitrary `GradingType`: an additive commutative group β
+    (1) Grading is over an arbitrary `Grading`: an additive commutative group β
     with integer degree shifts `shift : ℤ →+ β` and a Koszul sign character
     `sign : β →+ Additive ℤˣ` such that `shift 1` is odd. β need not be a ring, so
     bigradings such as ℤ × ℤ or ℤ × ZMod 2 are allowed, not just ℤ or ℤ/2. (2) A
@@ -185,7 +185,7 @@ alignment:
   # Seidel's book, and "LePage–Shende" to arXiv:2505.00327.
   statements:
     - source: "Blueprint, Definition (Grading type)"
-      lean: "AInfinityTheory.GradingType"
+      lean: "AInfinityTheory.Grading"
       module: "AInfinity.Grading"
       status: "defined"
     - source: "Blueprint, Lemma (Sign of an integer shift)"
@@ -193,15 +193,19 @@ alignment:
       module: "AInfinity.Grading"
       status: "proved"
     - source: "Blueprint, Definition (Standard gradings)"
-      lean: "AInfinityTheory.GradingType.instInt"
+      lean: "AInfinityTheory.Grading.instInt"
       module: "AInfinity.Grading"
       status: "defined"
-      note: "Together with `AInfinityTheory.GradingType.instZModOfNatNat` for ZMod 2."
+      note: "Together with `AInfinityTheory.Grading.instZModOfNatNat` for ZMod 2."
     - source: "Blueprint, Definition (Product gradings)"
-      lean: "AInfinityTheory.GradingType.prodFst"
+      lean: "AInfinityTheory.instGradingTProd"
       module: "AInfinity.Grading"
       status: "defined"
-      note: "Together with `AInfinityTheory.GradingType.prodTotal` for the total sign."
+      note: >-
+        The total sign, on the type synonym `AInfinityTheory.TProd` (`β ×ᵗ γ`). Together
+        with `AInfinityTheory.instGradingLProd` on `AInfinityTheory.LProd` (`β ×ˡ γ`) for
+        the sign of the first factor alone, and `AInfinityTheory.instGradingRProd` on
+        `AInfinityTheory.RProd` (`β ×ʳ γ`) for shifts and sign in the second factor alone.
     - source: "Blueprint, Definition (Homomorphism of grading types)"
       lean: "AInfinityTheory.GradingHom"
       module: "AInfinity.Grading"

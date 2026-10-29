@@ -78,7 +78,7 @@ lemma _root_.Composition.prod_prod_embedding {M : Type*} [CommMonoid M] (c : Com
 
 section Degrees
 
-variable {β : Type*} [AddCommGroup β] [GradingType β]
+variable {β : Type*} [AddCommGroup β] [Grading β]
 variable (deg : Fin n → β)
 
 /-- The degree of `φₙ(a₁, …, aₙ)` for inputs `aᵢ` of degrees `deg i`, where `φₙ` itself has
@@ -164,8 +164,8 @@ end CompositionBlock
 /-- The data of an `A∞`-functor between graded `R`-linear quivers: a map on objects, a
 homomorphism of grading types and, for each `n ≥ 1`, a functor component `φₙ` of degree `1 - n`.
 No relations are imposed. -/
-structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [GradingType β]
-    [AddCommGroup β'] [GradingType β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
+structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
+    [AddCommGroup β'] [Grading β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
     [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj'] where
   /-- The action of the functor on objects. -/
   obj : Obj → Obj'
@@ -180,8 +180,8 @@ structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [GradingType �
 
 namespace AInfinityFunctorData
 
-variable {β β' : Type*} [AddCommGroup β] [GradingType β] [AddCommGroup β']
-  [GradingType β'] {R : Type*} [CommRing R] {Obj Obj' : Type*}
+variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β']
+  [Grading β'] {R : Type*} [CommRing R] {Obj Obj' : Type*}
   [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
 variable (m : AInfinityComposition β R Obj) (m' : AInfinityComposition β' R Obj')
 variable (F : AInfinityFunctorData β β' R Obj Obj')
@@ -263,8 +263,8 @@ end AInfinityFunctorData
 
 /-- An `A∞`-functor between `A∞`-categories: `A∞`-functor data satisfying the functor
 equations. -/
-structure AInfinityFunctor (β β' : Type*) [AddCommGroup β] [GradingType β]
-    [AddCommGroup β'] [GradingType β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
+structure AInfinityFunctor (β β' : Type*) [AddCommGroup β] [Grading β]
+    [AddCommGroup β'] [Grading β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
     [AInfinityCategory β R Obj] [AInfinityCategory β' R Obj']
     extends AInfinityFunctorData β β' R Obj Obj' where
   /-- The functor components satisfy the functor equations in every arity. -/

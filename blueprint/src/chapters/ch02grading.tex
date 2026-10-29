@@ -10,12 +10,12 @@ $\beta$: integer degree shifts, so that the $n$-ary operation $m_n$ can have
 degree $2-n$, and a Koszul sign attached to every degree. No degree is ever
 multiplied, so $\beta$ need not be a ring. Besides the standard gradings
 $\mathbb{Z}$ and $\mathbb{Z}/2$, this allows bigradings such as
-$\mathbb{Z}\times\mathbb{Z}$ or $\mathbb{Z}\times\mathbb{Z}/2$, in which $m_n$
+$\mathbb{Z}\times_t\mathbb{Z}$ or $\mathbb{Z}\times_t\mathbb{Z}/2$, in which $m_n$
 has degree $(2-n,0)$.
 
 \begin{definition}[Grading type]
-\lean{AInfinityTheory.GradingType}
-\label{AInfinityTheory.GradingType}
+\lean{AInfinityTheory.Grading}
+\label{AInfinityTheory.Grading}
 \leanok
 A grading type is an abelian group $\beta$ together with group homomorphisms
 \[
@@ -32,7 +32,7 @@ $d \in \beta$ we write $(-1)^d := \operatorname{sign}(d)$ for its Koszul sign.
 \lean{AInfinityTheory.sign_shift}
 \label{AInfinityTheory.sign_shift}
 \leanok
-\uses{AInfinityTheory.GradingType}
+\uses{AInfinityTheory.Grading}
 For every integer $n$ one has $(-1)^{\operatorname{shift}(n)} = (-1)^n$.
 \end{lemma}
 \begin{proof}
@@ -43,10 +43,10 @@ $(-1)^{\operatorname{shift}(n)} = \operatorname{sign}(\operatorname{shift}(1))^n
 \end{proof}
 
 \begin{definition}[Standard gradings]
-\lean{AInfinityTheory.GradingType.instInt, AInfinityTheory.GradingType.instZModOfNatNat}
-\label{AInfinityTheory.GradingType.standard}
+\lean{AInfinityTheory.Grading.instInt, AInfinityTheory.Grading.instZModOfNatNat}
+\label{AInfinityTheory.Grading.standard}
 \leanok
-\uses{AInfinityTheory.GradingType}
+\uses{AInfinityTheory.Grading}
 The integers $\mathbb{Z}$ form a grading type with $\operatorname{shift}$ the
 identity and $\operatorname{sign}(n) = (-1)^n$. The parities $\mathbb{Z}/2$
 form a grading type with $\operatorname{shift}$ the reduction modulo $2$ and
@@ -54,31 +54,42 @@ $\operatorname{sign}(p) = (-1)^p$.
 \end{definition}
 
 \begin{definition}[Product gradings]
-\lean{AInfinityTheory.GradingType.prodFst, AInfinityTheory.GradingType.prodTotal}
-\label{AInfinityTheory.GradingType.prod}
+\lean{AInfinityTheory.TProd, AInfinityTheory.instGradingTProd,
+  AInfinityTheory.LProd, AInfinityTheory.instGradingLProd,
+  AInfinityTheory.RProd, AInfinityTheory.instGradingRProd}
+\label{AInfinityTheory.Grading.prod}
 \leanok
-\uses{AInfinityTheory.GradingType}
+\uses{AInfinityTheory.Grading}
 Let $\beta$ be a grading type and $\gamma$ an abelian group. The product
 $\beta \times \gamma$ is a grading type with
-$\operatorname{shift}(n) = (\operatorname{shift}(n), 0)$ in two ways: either
-the sign is read off the first factor alone, $\operatorname{sign}(b,c) = (-1)^b$,
-or, when $\gamma$ is a grading type as well, the sign is the total sign
-$\operatorname{sign}(b,c) = (-1)^b\,(-1)^c$. Neither choice is canonical, so
-both are constructions to be activated locally rather than instances.
+$\operatorname{shift}(n) = (\operatorname{shift}(n), 0)$ in two ways. In the
+left grading $\beta \times^l \gamma$ the sign is read off the first
+factor alone, $\operatorname{sign}(b,c) = (-1)^b$. When $\gamma$ is a grading
+type as well, the total grading $\beta \times^t \gamma$ carries the total sign
+$\operatorname{sign}(b,c) = (-1)^b\,(-1)^c$. Symmetrically, when $\beta$ is an
+abelian group and $\gamma$ a grading type, the right grading
+$\beta \times^r \gamma$ has $\operatorname{shift}(n) = (0, \operatorname{shift}(n))$
+and $\operatorname{sign}(b,c) = (-1)^c$. None of these choices is canonical, so
+$\beta \times^l \gamma$, $\beta \times^t \gamma$ and $\beta \times^r \gamma$ are
+separate copies of $\beta \times \gamma$, each carrying its grading as an instance,
+while the plain product $\beta \times \gamma$ carries none.
 \end{definition}
 
 \begin{definition}[Homomorphism of grading types]
 \lean{AInfinityTheory.GradingHom, AInfinityTheory.GradingHom.id, AInfinityTheory.GradingHom.comp}
 \label{AInfinityTheory.GradingHom}
 \leanok
-\uses{AInfinityTheory.GradingType}
+\uses{AInfinityTheory.Grading}
 A homomorphism of grading types $f : \beta \to \beta'$ is a group homomorphism that
 preserves the integer shifts, $f(\operatorname{shift}(k)) = \operatorname{shift}(k)$,
 and the Koszul signs, $(-1)^{f(b)} = (-1)^b$. It translates degrees in $\beta$ into
 degrees in $\beta'$ so that $m_n$ keeps degree $\operatorname{shift}(2-n)$ and no
 Koszul sign changes; this is what allows an \Ainf{}-functor to change the grading.
-Examples are the reduction $\mathbb{Z} \to \mathbb{Z}/2$ and the inclusion of
-$\beta$ into either product grading on $\beta \times \gamma$. Homomorphisms of
+Examples are the reduction $\mathbb{Z} \to \mathbb{Z}/2$, the inclusion of
+$\beta$ into either product grading $\beta \times_t \gamma$ or
+$\beta \times_1 \gamma$, and the projection $\beta \times_1 \gamma \to \beta$.
+The projection $\beta \times_t \gamma \to \beta$ is not one, since it forgets the
+sign of the second factor. Homomorphisms of
 grading types compose associatively, with the identity as unit.
 \end{definition}
 

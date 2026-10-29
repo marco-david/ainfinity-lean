@@ -38,7 +38,7 @@ section
 variable (β : Type v)
 variable (R : Type u) [CommRing R]
 variable (Obj : Type w)
-variable [AddCommGroup β] [GradingType β]
+variable [AddCommGroup β] [Grading β]
 
 /-- The data of an `A∞`-category: a graded `R`-linear quiver together with, for each `n ≥ 1`,
 a higher composition `mₙ` of degree `2 - n`. No relations are imposed. -/
@@ -58,7 +58,7 @@ namespace AInfinityCategory
 
 open GradedLinearQuiver
 
-variable {β : Type v} [AddCommGroup β] [GradingType β] {R : Type u} [CommRing R] {Obj : Type w}
+variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommRing R] {Obj : Type w}
   [AInfinityCategory β R Obj]
 
 /-- In an `A∞`-category, the Stasheff sum of any composable string of morphisms vanishes. -/

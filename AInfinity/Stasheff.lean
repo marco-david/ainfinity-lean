@@ -42,7 +42,7 @@ namespace AInfinityTheory
 
 universe u v w
 
-variable {β : Type v} [AddCommGroup β] [GradingType β]
+variable {β : Type v} [AddCommGroup β] [Grading β]
 variable {n : ℕ}
 
 /-- The degree of `mₙ(a₁, …, aₙ)` for inputs `aᵢ` of degrees `deg i`, where `mₙ` itself has
@@ -231,7 +231,7 @@ def indexedStasheffXIn :
     ∀ j : Fin p.s, ComposableHomType R (stasheffObjIn obj p) j (stasheffDegIn deg p j) :=
   fun j => x (((j.natAdd p.r).castAdd p.t).cast p.sum_eq)
 
-omit [AddCommGroup β] [GradingType β] in
+omit [AddCommGroup β] [Grading β] in
 /-- Evaluating the inner input tuple just picks out the corresponding original input. -/
 @[simp]
 lemma indexedStasheffXIn_apply

@@ -11,7 +11,7 @@ universe u v w w'
 /-- A (strict) `R`-linear category is an `A∞`-category, for any grading `β`: all morphisms sit in
 degree `0`, `m₂` is composition and `m₁ = m₃ = m₄ = ⋯ = 0`. The only nontrivial Stasheff
 identity is the one in arity `3`, which says that composition is associative. -/
-example (β : Type v) [AddCommGroup β] [GradingType β] (R : Type u) [CommRing R] (C : Type w)
+example (β : Type v) [AddCommGroup β] [Grading β] (R : Type u) [CommRing R] (C : Type w)
     [Category.{w'} C] [Preadditive C] [Linear R C] : AInfinityCategory β R C :=
   letI : GradedLinearQuiver β R C := { Hom X Y i := ↥(⨅ _ : i ≠ 0, (⊥ : Submodule R (X ⟶ Y))) }
   { m {n} _ obj := if h : n = 2 then by
