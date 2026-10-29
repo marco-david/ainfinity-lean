@@ -291,10 +291,13 @@ alignment:
       status: "defined"
       note: "Carries `Category`, `Preadditive` and `CategoryTheory.Linear R` instances."
     - source: "Blueprint, Chapter 6 (braiding functor)"
-      lean: "BraidingFunctorData"
-      module: "KLRW.Braiding"
+      lean: "KLRW.Sl2.TBrane.BraidingFunctorData"
+      module: "KLRW.OneBlackStrand"
       status: "in-progress"
-      note: "Currently built on the one-black-strand model in `KLRW/OneBlackStrand.lean`."
+      note: >-
+        Placeholder generator-level data on the one-black-strand model; the braiding action on
+        objects is `KLRW.Sl2.TBrane.braidingObj`. The general braiding functor is not
+        yet stated.
 
 acknowledgements: >-
   Built on Mathlib and the Lean 4 ecosystem. The blueprint uses leanblueprint and

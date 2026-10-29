@@ -10,40 +10,47 @@ public import ComputableCochainComplex.BoundedCochainComplex
 
 open CategoryTheory
 
-namespace AInfinityTheory
+namespace KLRW.Sl2
 
 universe v u
-variable {R : Type u} [CommRing R] [DecidableEq R] (C : Type u) [Category C]
+variable {R : Type u} [CommRing R] [DecidableEq R]
 variable {n : ℕ}
 
-structure KLRWCategory (n : ℕ) (R : Type u) where
+/-- A *T-brane*: an object of the KLRW category for the quiver with a single node (the `sl₂`
+case) and a single black strand among `n` red strands, over `R`. It is determined by the
+*positioning* of the black strand, i.e. the number of red strands to its left. `TBrane n R`
+carries the category structure: the morphisms between any two T-branes form `StrandSpace R`, the
+free `R`-module on the number of dots on the black strand, and composition is convolution shifted
+by `compShift`. This is a computable special case of the general `KLRW.KLRWObject.WithRing`. -/
+structure TBrane (n : ℕ) (R : Type u) where
+  /-- The number of red strands to the left of the black strand. -/
   positioning : Fin (n + 1)
 
-instance : Texify (KLRWCategory n R) where
+instance : Texify (TBrane n R) where
   texify x := s!"T_\{{x.positioning}}"
   requiresParentheses := false
 
 def compShift {n : ℕ} {R : Type u}
-    (X Y Z : KLRWCategory n R) : ℕ :=
+    (X Y Z : TBrane n R) : ℕ :=
   max X.positioning.val Y.positioning.val +
       max Y.positioning.val Z.positioning.val -
       max X.positioning.val Z.positioning.val -
       Y.positioning.val
 
 lemma compShift_self_left {n : ℕ} {R : Type u}
-    (X Y : KLRWCategory n R) :
+    (X Y : TBrane n R) :
     compShift X X Y = 0 := by
   dsimp [compShift]
   omega
 
 lemma compShift_self_right {n : ℕ} {R : Type u}
-    (X Y : KLRWCategory n R) :
+    (X Y : TBrane n R) :
     compShift X Y Y = 0 := by
   dsimp [compShift]
   omega
 
 lemma compShift_assoc {n : ℕ} {R : Type u}
-    (W X Y Z : KLRWCategory n R) :
+    (W X Y Z : TBrane n R) :
     compShift W X Y + compShift W Y Z =
       compShift X Y Z + compShift W X Z := by
   dsimp [compShift]
@@ -119,7 +126,7 @@ private theorem smul_dots_sum_rhs {R : Type u} [CommRing R] [DecidableEq R]
 
 end ConvolutionLemmas
 
-instance : Category (KLRWCategory n R) where
+instance : Category (TBrane n R) where
   Hom X Y := StrandSpace R
   id X := StrandSpace.dots R 0
   comp {X Y Z} g h :=
@@ -173,7 +180,7 @@ instance : Category (KLRWCategory n R) where
     simpa [add_assoc, add_left_comm, add_comm] using
       congrArg (fun t => StrandSpace.dots R (i + j + l + t)) (compShift_assoc W X Y Z)
 
-instance : Preadditive (KLRWCategory n R) where
+instance : Preadditive (TBrane n R) where
   homGroup P Q := inferInstanceAs (AddCommGroup (StrandSpace R))
   add_comp := by
     intro P Q S f f' g
@@ -199,23 +206,249 @@ instance : Preadditive (KLRWCategory n R) where
         (fun j s₁ s₂ => by simp [mul_add, add_smul])]
     simp only [DFinsupp.sum, Finset.sum_add_distrib]
 
-instance (R : Type*) [CommRing R] [DecidableEq R] [ToString R] (n : ℕ) (S T : KLRWCategory n R) :
-  Texify (S ⟶ T) := inferInstanceAs (Texify (StrandSpace R))
+/-- `DFinsupp` analogue of `Finsupp.sum_smul_index`: summing over a scaled strand multiplies the
+coefficients fed to the summand by the scalar. -/
+theorem StrandSpace.sum_smul_index {γ : Type*} [AddCommMonoid γ] (r : R) (f : StrandSpace R)
+    (h : ℕ → R → γ) (h0 : ∀ i, h i 0 = 0) :
+    (r • f).sum h = f.sum fun i c => h i (r * c) := by
+  rw [show r • f = DFinsupp.mapRange (fun _ c => r * c) (fun _ => mul_zero r) f from by
+      ext k; simp,
+    DFinsupp.sum_mapRange_index h0]
 
-/--
-The KLRW Category lacks zero objects
--/
-theorem KLRWCategory.not_isZero (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ)
-  (A : KLRWCategory n R) : ¬ Limits.IsZero A := sorry
+/-- Scalars pull out of the first factor of the convolution composition. -/
+theorem StrandSpace.convolution_smul_left (r : R) (f g : StrandSpace R) (t : ℕ) :
+    (r • f).sum (fun i c => g.sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) =
+      r • f.sum (fun i c => g.sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) := by
+  rw [StrandSpace.sum_smul_index r f _ (fun i => by simp [zero_mul, zero_smul]),
+    DFinsupp.smul_sum]
+  congr 1; funext i c
+  rw [DFinsupp.smul_sum]
+  congr 1; funext j s
+  rw [smul_smul, mul_assoc]
 
-instance (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ) :
-    DecidablePred (Limits.IsZero : KLRWCategory n R → Prop) :=
-  fun A ↦ Decidable.isFalse (A.not_isZero)
+/-- Scalars pull out of the second factor of the convolution composition. -/
+theorem StrandSpace.convolution_smul_right (r : R) (f g : StrandSpace R) (t : ℕ) :
+    f.sum (fun i c => (r • g).sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) =
+      r • f.sum (fun i c => g.sum fun j s => (c * s) • StrandSpace.dots R (i + j + t)) := by
+  conv_lhs =>
+    arg 2; ext i c
+    rw [StrandSpace.sum_smul_index r g _ (fun j => by simp [mul_zero, zero_smul])]
+  rw [DFinsupp.smul_sum]
+  congr 1; funext i c
+  rw [DFinsupp.smul_sum]
+  congr 1; funext j s
+  rw [smul_smul, mul_left_comm]
 
-abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
-  CMat_ (KLRWCategory n R)
+/-- The KLRW category is `R`-linear: its Hom-spaces are `StrandSpace R`, and the convolution
+composition is `R`-bilinear. -/
+instance : Linear R (TBrane n R) where
+  homModule _ _ := inferInstanceAs (Module R (StrandSpace R))
+  smul_comp P Q S r f g := StrandSpace.convolution_smul_left r f g (compShift P Q S)
+  comp_smul P Q S f r g := StrandSpace.convolution_smul_right r f g (compShift P Q S)
 
-abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
-  BoundedCochainComplex (AddKLRWCategory n R)
+instance (R : Type*) [CommRing R] [DecidableEq R] [ToString R] (n : ℕ)
+    (S T : TBrane n R) : Texify (S ⟶ T) :=
+  inferInstanceAs (Texify (StrandSpace R))
 
-end AInfinityTheory
+/-- A positioning is a zero object of the KLRW category exactly when the ring of coefficients is
+trivial: its identity is the dotless strand `StrandSpace.dots R 0 = DFinsupp.single 0 1`, which
+vanishes iff `(1 : R) = 0`. -/
+theorem TBrane.isZero_iff (A : TBrane n R) :
+    Limits.IsZero A ↔ (1 : R) = 0 := by
+  rw [Limits.IsZero.iff_id_eq_zero]
+  exact DFinsupp.single_eq_zero
+
+/-- Over a nontrivial ring, the KLRW category has no zero objects. -/
+theorem TBrane.not_isZero [Nontrivial R] (A : TBrane n R) :
+    ¬ Limits.IsZero A :=
+  fun h => one_ne_zero (A.isZero_iff.mp h)
+
+/-- Whether a positioning is a zero object is decidable: it amounts to `(1 : R) = 0`. -/
+instance : DecidablePred (Limits.IsZero : TBrane n R → Prop) :=
+  fun A => decidable_of_iff _ A.isZero_iff.symm
+
+/-- Bounded cochain complexes of formal sums of T-branes, the target of the braiding functor. -/
+abbrev TBraneComplex (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
+  BoundedCochainComplex (CMat_ (TBrane n R))
+
+/-! ### The braiding action on objects
+
+The braiding of the `i`-th and `(i + 1)`-th red strands sends the T-brane at the braided position
+`k = i + 1` (the black strand sitting between the two red strands) to the two-term complex
+`T_{k-1} ⊕ T_{k+1} ⟶ T_k` in degrees `0` and `1`, with dotless differential; every other
+positioning is unchanged, viewed as a complex concentrated in degree `0`. -/
+
+namespace TBrane
+
+/-- A positioning as a one-term cochain complex in degree `0`. -/
+def singleComplex (A : TBrane n R) :
+    CochainComplex (CMat_ (TBrane n R)) ℤ where
+  X i := if i = 0 then [A]ₘ else 𝟎
+  d _ _ := 0
+  shape _ _ _ := rfl
+  d_comp_d' _ _ _ _ _ := Limits.zero_comp
+
+/-- The two-term complex `[Tneg, Tpos]ₘ ⟶ [A]ₘ` in degrees `0` and `1`, with dotless differential:
+every matrix entry of the differential is the unit strand `StrandSpace.dots R 0`. -/
+def braidedComplex (Tneg Tpos A : TBrane n R) :
+    CochainComplex (CMat_ (TBrane n R)) ℤ where
+  X i := if i = 0 then [Tneg, Tpos]ₘ else if i = 1 then [A]ₘ else 𝟎
+  d i j :=
+    if hij : i = 0 ∧ j = 1 then by
+      rcases hij with ⟨rfl, rfl⟩
+      exact fun _ _ => StrandSpace.dots R 0
+    else 0
+  shape i j hij := by
+    by_cases h01 : i = 0 ∧ j = 1
+    · exfalso
+      rcases h01 with ⟨rfl, rfl⟩
+      exact hij (by simp [ComplexShape.up, ComplexShape.up'])
+    · simp [h01]
+  d_comp_d' i j l hij hjl := by
+    by_cases h01 : i = 0 ∧ j = 1
+    · rcases h01 with ⟨rfl, rfl⟩
+      rw [dif_pos ⟨rfl, rfl⟩, dif_neg (show ¬((1 : ℤ) = 0 ∧ l = 1) by norm_num), Limits.comp_zero]
+    · rw [dif_neg h01]
+      exact Limits.zero_comp
+
+/-- `singleComplex A` vanishes outside degree `0`. -/
+lemma isZero_singleComplex_X (A : TBrane n R) {i : ℤ} (hi : i ≠ 0) :
+    Limits.IsZero ((singleComplex A).X i) := by
+  show Limits.IsZero (if i = 0 then _ else _)
+  rw [if_neg hi]
+  exact isZero_explicitZero
+
+/-- `braidedComplex Tneg Tpos A` vanishes outside degrees `0` and `1`. -/
+lemma isZero_braidedComplex_X (Tneg Tpos A : TBrane n R) {i : ℤ} (h0 : i ≠ 0)
+    (h1 : i ≠ 1) : Limits.IsZero ((braidedComplex Tneg Tpos A).X i) := by
+  show Limits.IsZero (if i = 0 then _ else if i = 1 then _ else _)
+  rw [if_neg h0, if_neg h1]
+  exact isZero_explicitZero
+
+/-- A positioning as a bounded one-term complex in degree `0`. -/
+def single (A : TBrane n R) : TBraneComplex n R :=
+  BoundedCochainComplex.mkOfBounded (singleComplex A) (supersetOfSupport := {0}) fun _ hi =>
+    Finset.mem_singleton.mpr (not_not.mp (mt (isZero_singleComplex_X A) hi))
+
+/-- The braided T-brane: the bounded two-term complex `[Tneg, Tpos]ₘ ⟶ [A]ₘ` in degrees `0`
+and `1`. -/
+def braided (Tneg Tpos A : TBrane n R) : TBraneComplex n R :=
+  BoundedCochainComplex.mkOfBounded (braidedComplex Tneg Tpos A)
+    (supersetOfSupport := {0, 1}) fun i hi => by
+      rw [Finset.mem_insert, Finset.mem_singleton]
+      by_contra hmem
+      push Not at hmem
+      exact hi (isZero_braidedComplex_X Tneg Tpos A hmem.1 hmem.2)
+
+/-- The braiding action on objects for the transposition of the `i`-th and `(i + 1)`-th red
+strands (`i : Fin (n - 1)`, so that only genuine transpositions are expressible): the braided
+position is `k = i + 1`, whose T-brane becomes the two-term complex `T_{k-1} ⊕ T_{k+1} ⟶ T_k`;
+every other positioning is unchanged. -/
+def braidingObj (i : Fin (n - 1)) (A : TBrane n R) :
+    TBraneComplex n R :=
+  if A.positioning = (⟨i.val + 1, by have := i.isLt; omega⟩ : Fin (n + 1)) then
+    braided ⟨⟨i.val, by have := i.isLt; omega⟩⟩ ⟨⟨i.val + 2, by have := i.isLt; omega⟩⟩ A
+  else
+    single A
+
+/-! ### Braiding functor data (placeholder)
+
+A first, generator-level description of the data of a braiding functor on the one-black-strand
+category: an action `gen₀` on objects together with components `gen₁` and `gen₂` on morphisms,
+to be extended first to the additive completion (`add₀`, `add₁`, `add₂`) and then to bounded
+complexes (`full₀`, `full₁`, `full₂`). The extensions are not implemented yet, and the `[SFₙ]`
+axioms are only recorded in a comment. This placeholder is to be replaced by an A∞-functor out of
+the general KLRW category. -/
+
+/-- The generator-level data of a braiding functor: an action on objects, a unary component on
+morphisms, and a binary component of degree `-1`. -/
+structure BraidingFunctorData (R : Type u) [CommRing R] [CharP R 2] [DecidableEq R] (n : ℕ) where
+  gen₀ : TBrane n R → TBraneComplex n R
+  gen₁ : {A B : TBrane n R} → (A ⟶ B) → (gen₀ A ⟶ gen₀ B)
+  gen₂ : {A B C : TBrane n R} → (A ⟶ B) → (B ⟶ C) →
+    (gen₀ A ⟶ ((BoundedCochainComplex.shiftFunctor (-1 : ℤ)).obj (gen₀ C)))
+  -- invoke shift functor from boundedcochaincomplexes
+
+  --SFₙ axioms. Note:
+  --KLRW is a preadditive category, so its Hom-space is
+  --all degree 0. Then only μ₂ is nonzero (it is composition).
+  --Tw(Add(KLRW)) is a dg-category, so it has μ₁ = d, μ₂ = composition,
+  --and no higher terms.
+  /-
+  SF₂ : ∀ {A B C : TBrane n R} (f : A ⟶ B) (g : B ⟶ C) (i : ℤ),
+    (gen₁ (f ≫ g)).f i + (gen₁ f ≫ gen₁ g).f i
+      = gen₂ f g i ≫ (gen₀ C).d (i - 1) i
+        + (gen₀ A).d i (i + 1) ≫ gen₂ f g (i + 1)
+  SF₃ : ∀ {A B C D : TBrane n R}
+    (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D) (i : ℤ),
+    gen₂ (f ≫ g) h i + gen₂ f (g ≫ h) i
+      = (gen₁ f).f i ≫ gen₂ g h i
+        + gen₂ f g i ≫ (gen₁ h).f (i - 1)
+  SF₄ : ∀ {A B C D E : TBrane n R}
+    (f : A ⟶ B) (g : B ⟶ C) (h : C ⟶ D) (k : D ⟶ E) (i : ℤ),
+    gen₂ f g i ≫ gen₂ h k (i - 1) = 0
+    -/
+
+namespace BraidingFunctorData
+
+variable [CharP R 2] (β : BraidingFunctorData R n)
+
+def add₀ (A : CMat_ (TBrane n R)) : TBraneComplex n R :=
+  -- Idea: Use CochainComplex.singleFunctor
+  let _ := β -- To get β to become a parameter of this until we actually implement it
+  sorry
+
+def add₁ {A B : CMat_ (TBrane n R)} (f : A ⟶ B) : β.add₀ A ⟶ β.add₀ B :=
+  -- Idea: Use the action of CochainComplex.singleFunctor on maps
+  sorry
+
+def add₂ {A B C : CMat_ (TBrane n R)} (f : A ⟶ B) (g : B ⟶ C) :
+    β.add₀ A ⟶ β.add₀ C :=
+  sorry
+
+def full₀ (A : TBraneComplex n R) : TBraneComplex n R :=
+  let _ := β -- To get β to become a parameter of this until we actually implement it
+  sorry
+
+def full₁ {A B : TBraneComplex n R} (f : A ⟶ B) : β.full₀ A ⟶ β.full₀ B :=
+  sorry
+
+def full₂ {A B C : TBraneComplex n R} (f : A ⟶ B) (g : B ⟶ C) :
+    β.full₀ A ⟶ β.full₀ C :=
+  sorry
+
+end BraidingFunctorData
+
+end TBrane
+
+/-! ### Examples
+
+Three red strands over `ℤ`, so the black strand can sit in the four positions `T₀, …, T₃`.
+Braiding the first two red strands (`i = 0`) replaces `T₁` by the two-term complex
+`[T₀, T₂]ₘ ⟶ [T₁]ₘ` and leaves every other T-brane as a one-term complex in degree `0`. -/
+
+section Examples
+
+-- Over a nontrivial ring, no T-brane is a zero object.
+example : ¬ Limits.IsZero (⟨1⟩ : TBrane 3 ℤ) := TBrane.not_isZero _
+
+-- The T-brane at the braided position becomes the two-term complex `[T₀, T₂]ₘ ⟶ [T₁]ₘ`.
+example : TBrane.braidingObj (n := 3) (R := ℤ) ⟨0, by decide⟩ ⟨1⟩ = TBrane.braided ⟨0⟩ ⟨2⟩ ⟨1⟩ :=
+  rfl
+
+-- Every other T-brane is unchanged.
+example : TBrane.braidingObj (n := 3) (R := ℤ) ⟨0, by decide⟩ ⟨0⟩ = TBrane.single ⟨0⟩ := rfl
+example : TBrane.braidingObj (n := 3) (R := ℤ) ⟨0, by decide⟩ ⟨3⟩ = TBrane.single ⟨3⟩ := rfl
+
+-- The braided complex has `[T₀, T₂]ₘ` in degree `0`, `[T₁]ₘ` in degree `1`, and nothing else.
+example : (TBrane.braided (n := 3) (R := ℤ) ⟨0⟩ ⟨2⟩ ⟨1⟩).X 0 = [⟨0⟩, ⟨2⟩]ₘ := rfl
+example : (TBrane.braided (n := 3) (R := ℤ) ⟨0⟩ ⟨2⟩ ⟨1⟩).X 1 = [⟨1⟩]ₘ := rfl
+example : (TBrane.braided (n := 3) (R := ℤ) ⟨0⟩ ⟨2⟩ ⟨1⟩).X 2 = 𝟎 := rfl
+
+-- Its differential is the dotless strand in every matrix entry.
+example : (TBrane.braided (n := 3) (R := ℤ) ⟨0⟩ ⟨2⟩ ⟨1⟩).d 0 1 = fun _ _ => StrandSpace.dots ℤ 0 :=
+  rfl
+
+end Examples
+
+end KLRW.Sl2
