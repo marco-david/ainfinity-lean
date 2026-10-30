@@ -1,18 +1,19 @@
 # AGENTS.md
 
 Instructions for AI coding agents working in this repository. The reasoning behind these rules
-is explained in [`CONTRIBUTING.md`](CONTRIBUTING.md); read it when a rule is unclear or two
-rules seem to conflict.
+is explained in [`CONTRIBUTING.md`](CONTRIBUTING.md) which is written for (human) contributors.
 
 ## Project overview
 
-This is a Lean 4 / Mathlib formalization of A∞-category theory, developed at UC Berkeley.
-The long-term goal is to upstream the code to Mathlib, so all code must meet Mathlib's
-standards. The project is organized into four Lake libraries:
+This is a Lean 4 / Mathlib formalization of A∞-category theory and KLRW categories and computations
+at the intersection of these theories, developed at UC Berkeley.
+The long-term goal is to upstream some of the code (notably the A∞-category theory) to Mathlib.
+Nonetheless, we aim for all code to meet Mathlib's standards where possible.
+The project is currently organized into four Lake libraries:
 
 | Library | Contents |
 | --- | --- |
-| `Util/` | The `Texify` class and the `#texify` command for rendering terms as LaTeX. |
+| `Util/` | The `Texify` class and the `#texify` command for rendering terms and chain complexes as LaTeX. |
 | `ComputableCochainComplex/` | Computable biproducts and zero objects, the additive completion `CMat_`, bounded cochain complexes. |
 | `AInfinity/` | Grading types, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-functors. |
 | `KLRW/` | KLRW algebras and categories, the braiding functor, examples. |
@@ -60,12 +61,14 @@ Module docstring: what the file defines, the main results, and any notation or d
 
 @[expose] public section
 
-namespace AInfinityTheory
+namespace ...
 
 ...
 
-end AInfinityTheory
+end ...
 ```
+
+Each file should open an appropriate namespace, introducing meaningful layers of abstraction.
 
 * **Module system.** Every file begins with `module`. Use `public import` for anything that
   appears in a public statement. Declarations are private by default, so wrap the file's
