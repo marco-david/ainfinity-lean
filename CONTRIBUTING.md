@@ -1,10 +1,9 @@
 # Contributing
 
-Thank you for contributing to the A∞-categories formalization. This project aims to upstream its
-code to Mathlib, so we follow Mathlib's conventions from the start. Some of the guidelines below
-may seem strict, but they will save us a lot of time later. Ordinary software projects become
-unmaintainable quickly without conventions, and the problem is worse in Lean. The guidelines are
-based on experience with the Mathlib review process, but most of them are simply good practice.
+Thank you for contributing to the A∞-categories formalization. This project aims to upstream a
+notable portion of its code to Mathlib, so we follow Mathlib's conventions from the start.
+Some of the guidelines below may seem strict, but they will save us a lot of time later.
+(Based on the advice of Niels Voss at the start of the project.)
 
 The same rules, in a condensed form for AI coding agents, are in [`AGENTS.md`](AGENTS.md). If
 you change a convention here, update that file as well.
@@ -31,8 +30,7 @@ relevant chapter to see what is planned and what already exists.
 ### The module system
 
 Every file uses Lean's module system: it begins with the `module` keyword. The module system
-speeds up compilation and gives us basic encapsulation. Mathlib uses it too, so using it now
-makes upstreaming easier. Keep in mind:
+speeds up compilation and gives us basic encapsulation. Mathlib uses it too. Keep in mind:
 
 * Lean distinguishes public imports from private ones. Anything that appears in a theorem
   statement must be imported with `public import`, e.g. `public import Mathlib.Order.Basic`
@@ -127,14 +125,13 @@ then prove a major theorem that only holds for commutative rings.
 
 ### Definitions should be as incremental as possible
 
-Break complex definitions into small, gradual steps, and split an algorithm into many small
+Break complex definitions into small, gradual steps, and split an algorithm into small
 functions. If a definition takes more than a few lines of Lean, it should probably be split up.
-This heuristic is subtle, so reviewers will point out violations as they come up.
 
 ### Be economical with definitions
 
-Automation like `simp` cannot see through definitions (abbreviations are the exception), so
-every new definition makes our code harder for automation to work with. Do not add a definition
+Automation like `simp` cannot see through definitions (but it can see through abbreviations as an exception),
+so every new definition makes our code harder for automation to work with. Do not add a definition
 that will only appear in a few theorems. Use an abbreviation instead if you want one. Also avoid
 definitions that are just special cases of other definitions. For example, Mathlib has no
 separate definition of the Riemann integral, because it is a special case of the Bochner
@@ -149,26 +146,13 @@ expressions toward a canonical form, and having two ways to write the same thing
 As a rough guide, each new type should come with about 20 lemmas and each new non-type
 definition with about 5. These numbers are not precise, but they convey the idea.
 
-In particular, do not add definitions just to save typing. For example, it might be tempting to
-define
-
-```lean
-abbrev Vec (n : ℕ) := Fin n → ℝ
-```
-
-or
-
-```lean
-abbrev Vec (n : ℕ) := EuclideanSpace ℝ (Fin n)
-```
-
-but please don't.
+In particular, do not add definitions just to save typing.
 
 ### Don't repeat yourself in theorems
 
 In software engineering, the "don't repeat yourself" (DRY) principle says that when two
 functions share similar code, the shared part should be factored into its own function. For the
-reasons above, this applies to Lean definitions only sometimes: factor out a common part of two
+reasons above, this applies to Lean definitions sometimes: factor out a common part of two
 definitions only if we can prove lemmas about it.
 
 For theorems, DRY always applies. If two proofs contain similar arguments, factor the shared part
@@ -196,8 +180,8 @@ single line of a natural-language proof should usually become one or more lemmas
 
 This may sound strange, but proofs should be the least valuable part of a Lean file. The most
 valuable parts are the definitions and the theorem statements. Avoid files that consist of a
-single long proof. A single proof can take many hours to write, but some of that time should go
-into finding lemmas to factor out.
+single long proof. A single proof can take many (human) hours to write, but some of that time
+should go into finding lemmas to factor out.
 
 Keep proofs short enough that they could easily be rewritten from scratch. As a rule of thumb,
 at least half of all proofs should be at most 5 lines, and very few should go past 30. (This is
@@ -216,7 +200,8 @@ lines.) About a fifth of all proofs in Mathlib are a single line. There are thre
 ### Fix downstream files when refactoring
 
 When you rename or move declarations, fix everything downstream. At the very least, replace
-broken proofs with `sorry` so the build does not fail.
+broken proofs with `sorry` so the build does not fail. (Of course, final PRs into the master
+branch should no longer contain `sorry`.)
 
 ## Keeping metadata in sync
 
