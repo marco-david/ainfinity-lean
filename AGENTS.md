@@ -1,12 +1,12 @@
 # AGENTS.md
 
 Instructions for AI coding agents working in this repository. The reasoning behind these rules
-is explained in [`CONTRIBUTING.md`](CONTRIBUTING.md) which is written for (human) contributors.
+is explained in [`CONTRIBUTING.md`](CONTRIBUTING.md), which is written for (human) contributors.
 
 ## Project overview
 
-This is a Lean 4 / Mathlib formalization of A∞-category theory and KLRW categories and computations
-at the intersection of these theories, developed at UC Berkeley.
+This is a Lean 4 / Mathlib formalization of A∞-category theory and KLRW categories and
+computations at the intersection of these theories, developed at UC Berkeley.
 The long-term goal is to upstream some of the code (notably the A∞-category theory) to Mathlib.
 Nonetheless, we aim for all code to meet Mathlib's standards where possible.
 The project is currently organized into four Lake libraries:
@@ -93,10 +93,13 @@ Each file should open an appropriate namespace, introducing meaningful layers of
   are tolerated, and when a refactor breaks a downstream proof you cannot fix, replace that
   proof with `sorry` rather than leaving the build broken. Mention every new `sorry` in your
   summary.
+* These exceptions apply only to work-in-progress branches. A PR into `master` must not
+  contain any `sorry`.
 
 ### Naming
 
-Follow Mathlib's [naming conventions](https://leanprover-community.github.io/contribute/naming.html):
+Follow Mathlib's
+[naming conventions](https://leanprover-community.github.io/contribute/naming.html):
 
 | Kind of declaration | Case | Examples |
 | --- | --- | --- |

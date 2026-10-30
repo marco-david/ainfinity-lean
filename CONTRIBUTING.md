@@ -130,13 +130,13 @@ functions. If a definition takes more than a few lines of Lean, it should probab
 
 ### Be economical with definitions
 
-Automation like `simp` cannot see through definitions (but it can see through abbreviations as an exception),
-so every new definition makes our code harder for automation to work with. Do not add a definition
-that will only appear in a few theorems. Use an abbreviation instead if you want one. Also avoid
-definitions that are just special cases of other definitions. For example, Mathlib has no
-separate definition of the Riemann integral, because it is a special case of the Bochner
-integral. (Mathlib might define what it means for a function to be Riemann integrable, but it
-will not add a second integral.)
+Automation like `simp` cannot see through definitions (but it can see through abbreviations as
+an exception), so every new definition makes our code harder for automation to work with. Do not
+add a definition that will only appear in a few theorems. Use an abbreviation instead if you want
+one. Also avoid definitions that are just special cases of other definitions. For example,
+Mathlib has no separate definition of the Riemann integral, because it is a special case of the
+Bochner integral. (Mathlib might define what it means for a function to be Riemann integrable,
+but it will not add a second integral.)
 
 The main reason new definitions cause trouble for automation is simp normal forms. Suppose
 Mathlib defined `Real.tau := 2 * Real.pi`. Every lemma about `Real.pi` would then need a copy
