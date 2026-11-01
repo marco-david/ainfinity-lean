@@ -1,0 +1,113 @@
+/-
+Copyright (c) 2026 Zhan Shi. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Zhan Shi
+-/
+module
+
+public import AInfinity.AInfinityCategory
+public import Mathlib.Algebra.Category.ModuleCat.Colimits
+public import Mathlib.Algebra.Category.ModuleCat.Monoidal.Closed
+public import Mathlib.Algebra.Homology.Monoidal
+public import Mathlib.CategoryTheory.Enriched.Basic
+public import Mathlib.CategoryTheory.Monoidal.Limits.Preserves
+
+/-! # DG categories as `A∞`-category structures
+
+A DG category over a commutative ring `R` is a category enriched over cochain complexes of
+`R`-modules. The monoidal structure on `CochainComplex (ModuleCat R) ℤ` used for the enrichment
+is Mathlib's `HomologicalComplex.monoidalCategory`: the tensor product is the total complex with
+the Koszul sign `d(a ⊗ b) = da ⊗ b + (-1)^|a| a ⊗ db`.
+
+The goal of this file is to regard a DG category as an `A∞`-category: the graded hom spaces
+are the components of the hom complexes, `m₁` is the differential, `m₂` is the composition, and
+all higher compositions vanish.
+
+## Main definitions
+
+* `AInfinityTheory.DGCategory R C`: a DG category structure on `C` over `R`.
+* `AInfinityTheory.DGCategory.gradedLinearQuiver`: the graded hom spaces of a DG category.
+* `AInfinityTheory.DGCategory.compBilin`: a homogeneous component of the enriched composition,
+  as a bilinear map.
+* `AInfinityTheory.DGCategory.differential`: the signed differential, which will be `m₁`.
+
+## Implementation notes
+
+We use Seidel's sign convention, written in the path order of this repository: for
+`a : X₀ → X₁` of degree `p` and `b : X₁ → X₂` of degree `q`,
+`m₁(a) = (-1)^p da` and `m₂(a, b) = (-1)^q a ≫ b`. With these signs the Stasheff identities of
+`AInfinity.Stasheff` follow from `d² = 0`, the Leibniz rule and associativity of composition.
+-/
+
+@[expose] public section
+
+open CategoryTheory MonoidalCategory
+
+namespace AInfinityTheory
+
+universe u w
+
+variable (R : Type u) [CommRing R] (C : Type w)
+
+/-- A DG category over `R`: a category enriched over cochain complexes of `R`-modules, with the
+monoidal structure given by the tensor product of complexes. -/
+abbrev DGCategory := EnrichedCategory (CochainComplex (ModuleCat R) ℤ) C
+
+namespace DGCategory
+
+open GradedLinearQuiver
+
+variable {R C} [DGCategory R C]
+
+local notation "V" => CochainComplex (ModuleCat R) ℤ
+
+/-- The graded hom spaces of a DG category: the morphisms of degree `i` from `X` to `Y` are the
+degree-`i` component of the hom complex `X ⟶[V] Y`. -/
+instance gradedLinearQuiver : GradedLinearQuiver ℤ R C where
+  Hom X Y i := (X ⟶[V] Y).X i
+
+/-- The component of the enriched composition on morphisms of degrees `p` and `q`, as a bilinear
+map into the degree-`i` component of the hom complex, where `p + q = i`. -/
+noncomputable def compBilin (X Y Z : C) (p q i : ℤ) (h : p + q = i) :
+    (X ⟶[V] Y).X p →ₗ[R] (Y ⟶[V] Z).X q →ₗ[R] (X ⟶[V] Z).X i :=
+  (TensorProduct.mk R _ _).compr₂
+    (((eComp V X Y Z).f i).hom ∘ₗ
+      (HomologicalComplex.ιTensorObj (X ⟶[V] Y) (Y ⟶[V] Z) p q i h).hom)
+
+/-- The bilinear composition evaluates the enriched composition on the corresponding summand of
+the tensor product of hom complexes. -/
+@[simp]
+lemma compBilin_apply (X Y Z : C) (p q i : ℤ) (h : p + q = i) (a : (X ⟶[V] Y).X p)
+    (b : (Y ⟶[V] Z).X q) :
+    compBilin X Y Z p q i h a b =
+      (eComp V X Y Z).f i
+        (HomologicalComplex.ιTensorObj (X ⟶[V] Y) (Y ⟶[V] Z) p q i h (a ⊗ₜ b)) :=
+  rfl
+
+/-- The differential of a DG category, with Seidel's sign: a morphism `a : X → Y` of degree `p`
+is sent to `(-1)^p da`, where `d` is the differential of the hom complex `X ⟶[V] Y`. As for
+`HomologicalComplex.d`, it is defined for all degrees `p` and `q`, and vanishes unless
+`q = p + 1`. -/
+noncomputable def differential (X Y : C) (p q : ℤ) : (X →ᵍ[R] Y) p →ₗ[R] (X →ᵍ[R] Y) q :=
+  p.negOnePow • ((X ⟶[V] Y).d p q).hom
+
+/-- The differential is the differential of the hom complex, twisted by the sign `(-1)^p`. -/
+@[simp]
+lemma differential_apply (X Y : C) (p q : ℤ) (a : (X →ᵍ[R] Y) p) :
+    differential X Y p q a = p.negOnePow • (X ⟶[V] Y).d p q a :=
+  rfl
+
+/-- The differential vanishes between degrees that are not consecutive. -/
+lemma differential_eq_zero (X Y : C) {p q : ℤ} (h : p + 1 ≠ q) :
+    differential (R := R) X Y p q = 0 := by
+  rw [differential, HomologicalComplex.shape _ _ _ h, ModuleCat.hom_zero, smul_zero]
+
+/-- The differential squares to zero. This is the arity-one Stasheff identity. -/
+lemma differential_differential (X Y : C) (p q r : ℤ) (a : (X →ᵍ[R] Y) p) :
+    differential X Y q r (differential X Y p q a) = 0 := by
+  simp only [differential_apply, Units.smul_def, map_zsmul, ← ModuleCat.comp_apply,
+    HomologicalComplex.d_comp_d, ModuleCat.hom_zero, LinearMap.zero_apply, smul_zero]
+
+end DGCategory
+
+end AInfinityTheory
