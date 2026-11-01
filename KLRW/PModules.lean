@@ -63,5 +63,33 @@ theorem isIdempotentElem_violatedIdem (parameters : KLRWStructure V) :
     IsIdempotentElem (violatedIdem R parameters) :=
   (completeOrthogonalIdempotents_idem_morph R parameters).isIdempotentElem_sum
 
+/-- Multiplying `e_X` on the left by `violatedIdem` keeps `e_X` if `X` is violated and kills it
+otherwise. -/
+lemma violatedIdem_mul_idem_morph (X : KLRWObject parameters) :
+    violatedIdem R parameters * idem_morph R X =
+      if IsViolated X then idem_morph R X else 0 := by
+  classical
+  simp [violatedIdem, Finset.sum_mul,
+    (completeOrthogonalIdempotents_idem_morph R parameters).mul_eq]
+
+/-- `violatedIdem * e_X = e_X` when `X` is violated. -/
+lemma violatedIdem_mul_idem_morph_of_isViolated {X : KLRWObject parameters}
+    (hX : IsViolated X) : violatedIdem R parameters * idem_morph R X = idem_morph R X := by
+  rw [violatedIdem_mul_idem_morph, if_pos hX]
+
+/-- `violatedIdem * e_X = 0` when `X` is not violated. -/
+lemma violatedIdem_mul_idem_morph_of_not_isViolated {X : KLRWObject parameters}
+    (hX : ¬IsViolated X) : violatedIdem R parameters * idem_morph R X = 0 := by
+  rw [violatedIdem_mul_idem_morph, if_neg hX]
+
+/-- `e_X * violatedIdem = e_X` when `X` is violated. -/
+lemma idem_morph_mul_violatedIdem_of_isViolated {X : KLRWObject parameters}
+    (hX : IsViolated X) : idem_morph R X * violatedIdem R parameters = idem_morph R X :=
+  (completeOrthogonalIdempotents_idem_morph R parameters).mul_sum_of_mem (by simpa using hX)
+
+/-- `e_X * violatedIdem = 0` when `X` is not violated. -/
+lemma idem_morph_mul_violatedIdem_of_not_isViolated {X : KLRWObject parameters}
+    (hX : ¬IsViolated X) : idem_morph R X * violatedIdem R parameters = 0 :=
+  (completeOrthogonalIdempotents_idem_morph R parameters).mul_sum_of_notMem (by simpa using hX)
 
 end KLRW
