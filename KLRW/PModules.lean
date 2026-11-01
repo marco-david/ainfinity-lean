@@ -21,7 +21,7 @@ variable (R : Type*) [CommRing R]
 
 -- *NOTE*: The following theorem should probably be placed in KLRWCategory.lean.
 /-- The straight-line idempotents `e_X` are pairwise orthogonal and sum to `1`. -/
-theorem completeOrthogonalIdempotents_idem_morph (parameters : KLRWStructure V) :
+lemma completeOrthogonalIdempotents_idem_morph (parameters : KLRWStructure V) :
     CompleteOrthogonalIdempotents (idem_morph (parameters := parameters) R) where
   idem := idem_is_idem
   ortho X Y hXY := by
@@ -54,12 +54,13 @@ instance : DecidablePred (IsLeftViolated (parameters := parameters)) := fun _ =>
 instance : DecidablePred (IsViolated (parameters := parameters)) := fun X =>
   inferInstanceAs (Decidable (IsRightViolated X ∨ IsLeftViolated X))
 
-/-- The sum of the straight-line idempotents `e_X` over all violated objects `X`. -/
+/-- `f = violatedIdem` is the sum of the straight-line idempotents
+    `e_X` over all violated objects `X`. -/
 noncomputable def violatedIdem (parameters : KLRWStructure V) : KLRWAlg R parameters :=
   ∑ X ∈ Finset.univ.filter (IsViolated (parameters := parameters)), idem_morph R X
 
-/-- `violatedIdem` is idempotent, being a partial sum of orthogonal idempotents. -/
-theorem isIdempotentElem_violatedIdem (parameters : KLRWStructure V) :
+/--`violatedIdem` is idempotent, being a partial sum of orthogonal idempotents. -/
+lemma isIdempotentElem_violatedIdem (parameters : KLRWStructure V) :
     IsIdempotentElem (violatedIdem R parameters) :=
   (completeOrthogonalIdempotents_idem_morph R parameters).isIdempotentElem_sum
 
