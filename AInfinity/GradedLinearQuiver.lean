@@ -60,8 +60,8 @@ scoped notation:25 X " →ᵍ[" R:25 "] " Y:0 => GradedLinearQuiver.Hom R X Y
 
 /-- `X →ᵍ[R, β] Y` is `X →ᵍ[R] Y` with the grading type `β` given explicitly, for use when `β`
 cannot be inferred from a degree or the expected type. -/
-scoped notation:25 X " →ᵍ[" R:25 ", " β "] " Y:0 =>
-  GradedLinearQuiver.Hom (β := β) R X Y
+scoped notation:25 X " →ᵍ[" R:25 ", " B "] " Y:0 =>
+  GradedLinearQuiver.Hom (β := B) R X Y
 
 variable (R) in
 /-- The hom space containing the `i`-th morphism of a composable string of objects, in
