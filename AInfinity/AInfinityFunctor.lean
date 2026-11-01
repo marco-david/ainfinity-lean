@@ -212,7 +212,7 @@ def mapCompTerm (p : StasheffIndex n) (d : β) (hd : operationTargetDeg deg = d)
     (F.obj (obj 0) →ᵍ[R] F.obj (obj (Fin.last n))) (F.degMap d) :=
   homCongr R (congrArg F.obj (stasheffObjOut_zero obj p))
     (congrArg F.obj (stasheffObjOut_last obj p)) rfl
-    (F.map (stasheffObjOut obj p) (stasheffDegOut deg p) d
+    ((F.map (stasheffObjOut obj p)).v (stasheffDegOut deg p) d
       ((functorTargetDeg_stasheffDegOut deg p).trans hd) (indexedStasheffXOut m x p))
 
 /-- The left-hand side of the arity-`n` functor equation, with the Koszul signs of the Stasheff
@@ -230,7 +230,7 @@ def compositionBlockMap (c : Composition n) (l : Fin c.length) :
       (F.degMap (functorTargetDeg fun j ↦ deg (c.embedding l j))) :=
   homCongr R (congrArg F.obj (compositionBlockObj_zero obj c l))
     (congrArg F.obj (compositionBlockObj_last obj c l)) rfl
-    (F.map (compositionBlockObj obj c l) (fun j ↦ deg (c.embedding l j)) _ rfl
+    ((F.map (compositionBlockObj obj c l)).v (fun j ↦ deg (c.embedding l j)) _ rfl
       fun j ↦ x (c.embedding l j))
 
 /-- The term `m'ₖ(φ_{i₁}(a₁, …, a_{i₁}), …, φ_{iₖ}(a_{n-iₖ+1}, …, aₙ))` of the right-hand
@@ -240,7 +240,7 @@ def compMapTerm [NeZero n] (c : Composition n) (d : β) (hd : operationTargetDeg
     (F.obj (obj 0) →ᵍ[R] F.obj (obj (Fin.last n))) (F.degMap d) :=
   homCongr R (congrArg (fun k ↦ F.obj (obj k)) c.boundary_zero)
     (congrArg (fun k ↦ F.obj (obj k)) c.boundary_last) rfl
-    (m' (fun k ↦ F.obj (obj (c.boundary k)))
+    ((m' (fun k ↦ F.obj (obj (c.boundary k)))).v
       (fun l ↦ F.degMap (functorTargetDeg fun j ↦ deg (c.embedding l j))) (F.degMap d)
       (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd)
       (F.compositionBlockMap x c))

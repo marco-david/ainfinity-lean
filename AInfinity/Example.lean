@@ -16,10 +16,10 @@ example (β : Type v) [AddCommGroup β] [GradingType β] (R : Type u) [CommRing 
   letI : GradedLinearQuiver β R C := { Hom X Y i := ↥(⨅ _ : i ≠ 0, (⊥ : Submodule R (X ⟶ Y))) }
   { m {n} _ obj := if h : n = 2 then by
         subst h
-        refine ⟨fun deg i hi => MultilinearMap.codRestrict
+        refine .mk fun deg i hi => MultilinearMap.codRestrict
           { toFun x := (x 0).1 ≫ (x 1).1
             map_update_add' x j a b := ?_
-            map_update_smul' x j c a := ?_ } _ fun x => ?_⟩
+            map_update_smul' x j c a := ?_ } _ fun x => ?_
         · match j with
           | 0 => simpa using Preadditive.add_comp _ _ _ a.1 b.1 (x 1).1
           | 1 => simpa using Preadditive.comp_add _ _ _ (x 0).1 a.1 b.1

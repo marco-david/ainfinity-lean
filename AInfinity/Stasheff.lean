@@ -221,8 +221,8 @@ lemma aInfinityComposition_homCongr_deg
     {d : β}
     (hd : operationTargetDeg deg = d)
     (hd' : operationTargetDeg deg' = d) :
-    m obj deg' d hd' (fun i => homCongr R rfl rfl (congrFun hdeg i) (x i)) =
-      m obj deg d hd x := by
+    (m obj).v deg' d hd' (fun i => homCongr R rfl rfl (congrFun hdeg i) (x i)) =
+      (m obj).v deg d hd x := by
   subst hdeg
   rfl
 
@@ -245,7 +245,7 @@ def indexedStasheffInner
     (d : β)
     (hd : stasheffInnerDeg deg p = d) :
     (stasheffObjIn obj p 0 →ᵍ[R] stasheffObjIn obj p (Fin.last p.s)) d :=
-  m (stasheffObjIn obj p) (stasheffDegIn deg p) d hd (indexedStasheffXIn x p)
+  (m (stasheffObjIn obj p)).v (stasheffDegIn deg p) d hd (indexedStasheffXIn x p)
 
 /-- Helper: the middle index in the outer tuple of a Stasheff term. -/
 abbrev indexedStasheffMiddleIndex : Fin (p.r + 1 + p.t) :=
@@ -336,7 +336,7 @@ def indexedStasheffOuter
     (d : β)
     (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
     (stasheffObjOut obj p 0 →ᵍ[R] stasheffObjOut obj p (Fin.last (p.r + 1 + p.t))) d :=
-  m (stasheffObjOut obj p) (stasheffDegOut deg p) d hd (indexedStasheffXOut m x p)
+  (m (stasheffObjOut obj p)).v (stasheffDegOut deg p) d hd (indexedStasheffXOut m x p)
 
 variable (R obj) in
 /-- Helper: the identification of the outer target space with the final Stasheff target space,
@@ -358,7 +358,7 @@ def indexedStasheffTerm
 
 /-- The inner value vanishes if the inner multilinear map itself vanishes. -/
 lemma indexedStasheffInner_eq_zero_of_map_eq_zero
-    (hm : ∀ d hd, m (stasheffObjIn obj p) (stasheffDegIn deg p) d hd = 0)
+    (hm : ∀ d hd, (m (stasheffObjIn obj p)).v (stasheffDegIn deg p) d hd = 0)
     (d : β)
     (hd : stasheffInnerDeg deg p = d) :
     indexedStasheffInner m x p d hd = 0 := by
@@ -366,11 +366,11 @@ lemma indexedStasheffInner_eq_zero_of_map_eq_zero
 
 /-- The outer value vanishes if the outer multilinear map itself vanishes. -/
 lemma indexedStasheffOuter_eq_zero_of_map_eq_zero
-    (hm : ∀ d hd, m (stasheffObjOut obj p) (stasheffDegOut deg p) d hd = 0)
+    (hm : ∀ d hd, (m (stasheffObjOut obj p)).v (stasheffDegOut deg p) d hd = 0)
     (d : β)
     (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
     indexedStasheffOuter m x p d hd = 0 := by
-  simp [indexedStasheffOuter, hm]
+  rw [indexedStasheffOuter, hm, MultilinearMap.zero_apply]
 
 /-- The outer value vanishes whenever the inserted inner output vanishes. -/
 lemma indexedStasheffOuter_eq_zero_of_inner_eq_zero
@@ -378,7 +378,7 @@ lemma indexedStasheffOuter_eq_zero_of_inner_eq_zero
     (d : β)
     (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
     indexedStasheffOuter m x p d hd = 0 :=
-  MultilinearMap.map_coord_zero (m (stasheffObjOut obj p) (stasheffDegOut deg p) d hd)
+  MultilinearMap.map_coord_zero ((m (stasheffObjOut obj p)).v (stasheffDegOut deg p) d hd)
     (indexedStasheffMiddleIndex p)
     (indexedStasheffXOut_middle_eq_zero_of_inner_eq_zero m x p hinner)
 
@@ -392,7 +392,7 @@ lemma indexedStasheffTerm_eq_zero_iff_outer_eq_zero
 
 /-- The final Stasheff term vanishes if the outer multilinear map vanishes. -/
 lemma indexedStasheffTerm_eq_zero_of_outer_map_eq_zero
-    (hm : ∀ d hd, m (stasheffObjOut obj p) (stasheffDegOut deg p) d hd = 0)
+    (hm : ∀ d hd, (m (stasheffObjOut obj p)).v (stasheffDegOut deg p) d hd = 0)
     (d : β)
     (hd : stasheffTargetDeg deg = d) :
     indexedStasheffTerm m x p d hd = 0 :=
@@ -401,7 +401,7 @@ lemma indexedStasheffTerm_eq_zero_of_outer_map_eq_zero
 
 /-- The final Stasheff term vanishes if the inner multilinear map vanishes. -/
 lemma indexedStasheffTerm_eq_zero_of_inner_map_eq_zero
-    (hm : ∀ d hd, m (stasheffObjIn obj p) (stasheffDegIn deg p) d hd = 0)
+    (hm : ∀ d hd, (m (stasheffObjIn obj p)).v (stasheffDegIn deg p) d hd = 0)
     (d : β)
     (hd : stasheffTargetDeg deg = d) :
     indexedStasheffTerm m x p d hd = 0 :=

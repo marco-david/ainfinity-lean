@@ -88,7 +88,7 @@ lemma compBilin_apply (X Y Z : C) (p q i : ℤ) (h : p + q = i) (a : (X ⟶[V] Y
 is sent to `(-1)^p da`, where `d` is the differential of the hom complex `X ⟶[V] Y`. As for
 `HomologicalComplex.d`, it is defined for all degrees `p` and `q`, and vanishes unless
 `q = p + 1`. -/
-noncomputable def differential (X Y : C) (p q : ℤ) : (X →ᵍ[R] Y) p →ₗ[R] (X →ᵍ[R] Y) q :=
+def differential (X Y : C) (p q : ℤ) : (X →ᵍ[R] Y) p →ₗ[R] (X →ᵍ[R] Y) q :=
   p.negOnePow • ((X ⟶[V] Y).d p q).hom
 
 /-- The differential is the differential of the hom complex, twisted by the sign `(-1)^p`. -/
@@ -107,6 +107,20 @@ lemma differential_differential (X Y : C) (p q r : ℤ) (a : (X →ᵍ[R] Y) p) 
     differential X Y q r (differential X Y p q a) = 0 := by
   simp only [differential_apply, Units.smul_def, map_zsmul, ← ModuleCat.comp_apply,
     HomologicalComplex.d_comp_d, ModuleCat.hom_zero, LinearMap.zero_apply, smul_zero]
+
+def m₁ (obj : Fin (1 + 1) → C) :
+    GradedMultilinearMap R (ComposableHomType R (β := ℤ) obj) (obj 0 →ᵍ[R] obj (Fin.last 1))
+      (shift (2 - ((1 : ℕ) : ℤ))) :=
+  .mk fun deg i _ ↦
+    { toFun x := differential (obj 0) (obj 1) (deg 0) i (x 0)
+      map_update_add' x j a b := by
+        obtain rfl := Subsingleton.elim j 0
+        simp only [Function.update_self]
+        exact map_add _ a b
+      map_update_smul' x j c a := by
+        obtain rfl := Subsingleton.elim j 0
+        simp only [Function.update_self]
+        exact map_smul _ c a }
 
 end DGCategory
 
