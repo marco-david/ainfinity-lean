@@ -1,8 +1,10 @@
 import AInfinity.AInfinityCategory
+import AInfinity.AInfinityCategoryStruct
 import AInfinity.AInfinityFunctor
 import AInfinity.DG
-import AInfinity.Example
 import AInfinity.GradedLinearAlgebra
 import AInfinity.GradedLinearQuiver
 import AInfinity.Grading
+import AInfinity.MultilinearMap
 import AInfinity.Stasheff
+import AInfinity.StasheffIndex

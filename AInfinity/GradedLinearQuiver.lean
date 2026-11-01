@@ -66,8 +66,8 @@ scoped notation:25 X " →ᵍ[" R:25 ", " B "] " Y:0 =>
 variable (R) in
 /-- The hom space containing the `i`-th morphism of a composable string of objects, in
 degree `b`. -/
-abbrev ComposableHomType (obj : Fin (n + 1) → Obj) (i : Fin n) (b : β) : Type w' :=
-  (obj i.castSucc →ᵍ[R] obj i.succ) b
+abbrev ComposableHomType (X : Fin (n + 1) → Obj) (i : Fin n) (b : β) : Type w' :=
+  (X i.castSucc →ᵍ[R] X i.succ) b
 
 variable (R) in
 /-- Transport between graded hom spaces along equalities of the source, target and degree.

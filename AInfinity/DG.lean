@@ -6,6 +6,7 @@ Authors: Zhan Shi
 module
 
 public import AInfinity.AInfinityCategory
+public import AInfinity.MultilinearMap
 public import Mathlib.Algebra.Category.ModuleCat.Colimits
 public import Mathlib.Algebra.Category.ModuleCat.Monoidal.Closed
 public import Mathlib.Algebra.Homology.Monoidal
@@ -29,7 +30,9 @@ all higher compositions vanish.
 * `AInfinityTheory.DGCategory.gradedLinearQuiver`: the graded hom spaces of a DG category.
 * `AInfinityTheory.DGCategory.compBilin`: a homogeneous component of the enriched composition,
   as a bilinear map.
-* `AInfinityTheory.DGCategory.differential`: the signed differential, which will be `m₁`.
+* `AInfinityTheory.DGCategory.differential`: the signed differential.
+* `AInfinityTheory.DGCategory.m₁`: the signed differential as a graded multilinear map in one
+  variable, the arity-one `A∞` operation.
 
 ## Implementation notes
 
@@ -108,19 +111,17 @@ lemma differential_differential (X Y : C) (p q r : ℤ) (a : (X →ᵍ[R] Y) p) 
   simp only [differential_apply, Units.smul_def, map_zsmul, ← ModuleCat.comp_apply,
     HomologicalComplex.d_comp_d, ModuleCat.hom_zero, LinearMap.zero_apply, smul_zero]
 
-def m₁ (obj : Fin (1 + 1) → C) :
-    GradedMultilinearMap R (ComposableHomType R (β := ℤ) obj) (obj 0 →ᵍ[R] obj (Fin.last 1))
-      (shift (2 - ((1 : ℕ) : ℤ))) :=
-  .mk fun deg i _ ↦
-    { toFun x := differential (obj 0) (obj 1) (deg 0) i (x 0)
-      map_update_add' x j a b := by
-        obtain rfl := Subsingleton.elim j 0
-        simp only [Function.update_self]
-        exact map_add _ a b
-      map_update_smul' x j c a := by
-        obtain rfl := Subsingleton.elim j 0
-        simp only [Function.update_self]
-        exact map_smul _ c a }
+/-- The arity-one `A∞` operation of a DG category: the signed differential `differential`,
+regarded as a graded multilinear map in one variable. -/
+def m₁ (X : Fin (1 + 1) → C) : AInfinityOperation ℤ R X :=
+  .ofGradedLinearMap (.mk fun p q _ ↦ differential (X 0) (X 1) p q)
+
+@[simp]
+lemma m₁_v_apply (X : Fin (1 + 1) → C) (deg : Fin 1 → ℤ) (i : ℤ)
+    (h : (∑ k, deg k) + shift (2 - ((1 : ℕ) : ℤ)) = i)
+    (x : ∀ k, ComposableHomType R X k (deg k)) :
+    (m₁ X).v deg i h x = differential (X 0) (X 1) (deg 0) i (x 0) :=
+  rfl
 
 end DGCategory
 

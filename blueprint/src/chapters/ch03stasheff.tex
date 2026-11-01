@@ -38,13 +38,13 @@ this is the hom-module $\Hom(X_i, X_{i+1})_b$ of the $i$-th morphism in that
 composable string, in degree $b$.
 \end{definition}
 
-\begin{definition}[\Ainf{}-composition]
-\lean{AInfinityTheory.AInfinityComposition}
-\label{AInfinityTheory.AInfinityComposition}
+\begin{definition}[\Ainf{}-operation]
+\lean{AInfinityTheory.AInfinityOperation}
+\label{AInfinityTheory.AInfinityOperation}
 \leanok
 \uses{AInfinityTheory.operationTargetDeg, AInfinityTheory.GradedLinearQuiver.ComposableHomType, AInfinityTheory.GradedMultilinearMap}
-An \Ainf{}-composition on a graded quiver $\Hom$ assigns to every positive arity
-$n$ and every string of objects $X_0,\dots,X_n$ a graded multilinear map
+An $n$-ary \Ainf{}-operation on a string of objects $X_0,\dots,X_n$ of a graded
+quiver $\Hom$ is a graded multilinear map
 \[
   m_n : \Hom(X_0,X_1) \times \cdots \times \Hom(X_{n-1},X_n) \to \Hom(X_0,X_n)
 \]
@@ -69,7 +69,7 @@ nonempty interval of inputs fed to the inner operation.
 \lean{AInfinityTheory.indexedStasheffTerm}
 \label{AInfinityTheory.indexedStasheffTerm}
 \leanok
-\uses{AInfinityTheory.GradedLinearQuiver.ComposableHomType, AInfinityTheory.AInfinityComposition, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
+\uses{AInfinityTheory.GradedLinearQuiver.ComposableHomType, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
 Fix an \Ainf{}-composition $m$. For a Stasheff index $(r,s,t)$ of arity $n$, the
 indexed Stasheff term is obtained by first applying the inner $s$-ary operation in
 positions $r,\dots,r+s-1$ and then applying the outer $(r+1+t)$-ary operation to
@@ -120,11 +120,11 @@ equal to the Stasheff target degree.
 \end{definition}
 
 \begin{definition}[Indexed Stasheff identities]
-\lean{AInfinityTheory.IndexedSatisfiesStasheff}
-\label{AInfinityTheory.IndexedSatisfiesStasheff}
+\lean{AInfinityTheory.AInfinityCategory.indexedStasheffSum_eq_zero}
+\label{AInfinityTheory.AInfinityCategory.indexedStasheffSum_eq_zero}
 \leanok
 \uses{AInfinityTheory.indexedStasheffSum}
 An \Ainf{}-composition satisfies the Stasheff identities if every indexed
-Stasheff sum vanishes, for every positive arity, string of objects, choice of
+Stasheff sum vanishes, for every arity, string of objects, choice of
 input degrees and composable inputs.
 \end{definition}
