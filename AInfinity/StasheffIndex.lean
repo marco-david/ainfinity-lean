@@ -36,7 +36,7 @@ namespace AInfinityTheory
 
 universe v w
 
-variable {β : Type v} [AddCommGroup β] [GradingType β]
+variable {β : Type v} [AddCommGroup β] [Grading β]
 variable {n : ℕ}
 
 /-- The degree of `mₙ(a₁, …, aₙ)` for inputs `aᵢ` of degrees `deg i`, where `mₙ` itself has

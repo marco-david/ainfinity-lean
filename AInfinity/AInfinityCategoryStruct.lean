@@ -40,7 +40,7 @@ categories and of linear categories, that vanish above arity two.
 The ring of scalars `R` is an ordinary class parameter, so an object type may carry several
 rings of scalars. It is passed explicitly wherever it cannot be inferred from later arguments:
 to the hom spaces `(X →ᵍ[R] Y) i`, `ComposableHom`, `AInfinityOperation` and `homCongr`. The
-grading type `β` is passed explicitly to `ComposableHom` and `AInfinityOperation` as well.
+type of degrees `β` is passed explicitly to `ComposableHom` and `AInfinityOperation` as well.
 -/
 @[expose] public section
 
@@ -50,7 +50,7 @@ universe u v w
 
 open GradedLinearQuiver
 
-variable {β : Type v} [AddCommGroup β] [GradingType β]
+variable {β : Type v} [AddCommGroup β] [Grading β]
 variable {R : Type u} [CommRing R] {Obj : Type w}
 
 section

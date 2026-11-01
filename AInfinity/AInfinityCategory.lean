@@ -30,7 +30,7 @@ section
 variable (β : Type v)
 variable (R : Type u) [CommRing R]
 variable (Obj : Type w)
-variable [AddCommGroup β] [GradingType β]
+variable [AddCommGroup β] [Grading β]
 
 /-- An `A∞`-category: an `A∞`-category structure whose higher compositions satisfy the
 Stasheff identities in every arity. -/

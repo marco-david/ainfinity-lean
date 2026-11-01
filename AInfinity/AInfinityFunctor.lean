@@ -178,8 +178,8 @@ structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
 
 namespace AInfinityFunctorData
 
-variable {β β' : Type*} [AddCommGroup β] [GradingType β] [AddCommGroup β']
-  [GradingType β'] {R : Type*} [CommRing R] {Obj Obj' : Type*}
+variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β']
+  [Grading β'] {R : Type*} [CommRing R] {Obj Obj' : Type*}
 
 section GradedLinearQuiver
 
