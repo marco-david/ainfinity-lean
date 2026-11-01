@@ -23,8 +23,8 @@ sign on the right: in reduced degrees `‖a‖ = |a| - 1` every `φᵢ` has degr
 sign arises from moving it past the inputs (compare [Seidel, *Fukaya categories and
 Picard–Lefschetz theory*, (1.6)]).
 
-The source and target may be graded by different grading types `β` and `β'`; the functor then
-carries a homomorphism of grading types `β →+ᵍ β'`, which preserves the integer shifts
+The source and target may be graded by different gradings `β` and `β'`; the functor then
+carries a homomorphism of gradings `β →+ᵍ β'`, which preserves the integer shifts
 and the Koszul signs.
 
 ## Main definitions
@@ -42,7 +42,7 @@ and the Koszul signs.
 
 ## Implementation notes
 
-A `GradedMultilinearMap` has a single grading type for its inputs, its output and its degree.
+A `GradedMultilinearMap` has a single type of degrees for its inputs, its output and its degree.
 The inputs of `φₙ` are graded by `β` and its output by `β'`, so the output family is read
 through `degMap`: for input degrees `deg`, the component of `φₙ` lands in `Hom(F X₀, F Xₙ)` in
 degree `degMap (∑ deg + shift (1 - n))`. All degree arithmetic happens in `β`, and `φₙ` is only
@@ -162,14 +162,14 @@ lemma compositionBlockObj_last :
 end CompositionBlock
 
 /-- The data of an `A∞`-functor between graded `R`-linear quivers: a map on objects, a
-homomorphism of grading types and, for each `n ≥ 1`, a functor component `φₙ` of degree `1 - n`.
+homomorphism of gradings and, for each `n ≥ 1`, a functor component `φₙ` of degree `1 - n`.
 No relations are imposed. -/
 structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
     [AddCommGroup β'] [Grading β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
     [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj'] where
   /-- The action of the functor on objects. -/
   obj : Obj → Obj'
-  /-- The homomorphism of grading types translating source degrees into target degrees. -/
+  /-- The homomorphism of gradings translating source degrees into target degrees. -/
   degMap : β →+ᵍ β'
   /-- The action of the functor on hom spaces, i.e. the functor components `φₙ`, of degree
   `1 - n`, landing in the hom spaces of the target in the translated degrees. -/
@@ -188,7 +188,7 @@ variable (F : AInfinityFunctorData β β' R Obj Obj')
 variable {obj : Fin (n + 1) → Obj} {deg : Fin n → β}
 variable (x : ∀ i : Fin n, ComposableHomType R obj i (deg i))
 
-/-- A homomorphism of grading types commutes with `operationTargetDeg`. -/
+/-- A homomorphism of gradings commutes with `operationTargetDeg`. -/
 lemma operationTargetDeg_degMap {k : ℕ} (b : Fin k → β) :
     operationTargetDeg (fun i ↦ F.degMap (b i)) = F.degMap (operationTargetDeg b) := by
   simp only [operationTargetDeg, map_add, map_sum, GradingHom.map_shift]
