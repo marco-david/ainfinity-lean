@@ -80,9 +80,9 @@ the Stasheff identities, whose inner operations have positive arity.
 
 \section{A-infinity Functors}
 
-The source and target of an \Ainf{}-functor may be graded by different grading
-types $\beta$ and $\beta'$; the functor then carries a homomorphism of grading
-types $\beta \to \beta'$ along which degrees are translated.
+The source and target of an \Ainf{}-functor may be graded by different
+gradings $\beta$ and $\beta'$; the functor then carries a homomorphism of
+gradings $\beta \to \beta'$ along which degrees are translated.
 
 \begin{definition}[\Ainf{}-functor data]
 \lean{AInfinityTheory.AInfinityFunctorData}
@@ -91,7 +91,7 @@ types $\beta \to \beta'$ along which degrees are translated.
 \uses{AInfinityTheory.GradedLinearQuiver, AInfinityTheory.GradingHom, AInfinityTheory.GradedMultilinearMap}
 The data of an \Ainf{}-functor $F$ from a graded $R$-linear quiver graded by
 $\beta$ to one graded by $\beta'$ consists of a map $F$ on objects, a homomorphism
-of grading types $\beta \to \beta'$, and, for every arity $n \geq 0$ and every
+of gradings $\beta \to \beta'$, and, for every positive arity $n$ and every
 string of objects $X_0,\dots,X_n$, a graded multilinear map
 \[
   \varphi_n : \Hom(X_0,X_1) \otimes \cdots \otimes \Hom(X_{n-1},X_n) \to \Hom(FX_0, FX_n)

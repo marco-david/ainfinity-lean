@@ -25,7 +25,7 @@ underlying data of an `A∞`-category, before any compositions are chosen.
 
 * `X →ᵍ[R] Y`: the graded family `GradedLinearQuiver.Hom R X Y : β → Type*` of morphisms from
   `X` to `Y`, so that `(X →ᵍ[R] Y) i` is the `R`-module of morphisms of degree `i`. The variant
-  `X →ᵍ[R, β] Y` names the grading type explicitly. Both are scoped to
+  `X →ᵍ[R, β] Y` names the type of degrees explicitly. Both are scoped to
   `AInfinityTheory.GradedLinearQuiver`.
 -/
 
@@ -58,7 +58,7 @@ variable {n : ℕ}
 `R`-linear quiver, so `(X →ᵍ[R] Y) i` is the module `Hom^i(X, Y)` of degree-`i` morphisms. -/
 scoped notation:25 X " →ᵍ[" R:25 "] " Y:0 => GradedLinearQuiver.Hom R X Y
 
-/-- `X →ᵍ[R, β] Y` is `X →ᵍ[R] Y` with the grading type `β` given explicitly, for use when `β`
+/-- `X →ᵍ[R, β] Y` is `X →ᵍ[R] Y` with the type of degrees `β` given explicitly, for use when `β`
 cannot be inferred from a degree or the expected type. -/
 scoped notation:25 X " →ᵍ[" R:25 ", " B "] " Y:0 =>
   GradedLinearQuiver.Hom (β := B) R X Y

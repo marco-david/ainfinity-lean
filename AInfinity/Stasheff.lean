@@ -37,7 +37,7 @@ namespace AInfinityTheory
 
 universe u v w
 
-variable {β : Type v} [AddCommGroup β] [GradingType β]
+variable {β : Type v} [AddCommGroup β] [Grading β]
 variable {n : ℕ}
 
 open GradedLinearQuiver
@@ -61,7 +61,7 @@ def indexedStasheffXIn :
     ∀ j : Fin p.s, ComposableHom β R (stasheffObjIn X p) j (stasheffDegIn deg p j) :=
   fun j => x (((j.natAdd p.r).castAdd p.t).cast p.sum_eq)
 
-omit [AddCommGroup β] [GradingType β] in
+omit [AddCommGroup β] [Grading β] in
 /-- Evaluating the inner input tuple just picks out the corresponding original input. -/
 @[simp]
 lemma indexedStasheffXIn_apply
