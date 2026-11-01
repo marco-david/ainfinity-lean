@@ -28,21 +28,21 @@ The common degree of the arity-$n$ Stasheff identity is
 in the grading type.
 \end{definition}
 
-\begin{definition}[Composable morphism type]
-\lean{AInfinityTheory.GradedLinearQuiver.ComposableHomType}
-\label{AInfinityTheory.GradedLinearQuiver.ComposableHomType}
+\begin{definition}[Composable hom space]
+\lean{AInfinityTheory.GradedLinearQuiver.ComposableHom}
+\label{AInfinityTheory.GradedLinearQuiver.ComposableHom}
 \leanok
 \uses{AInfinityTheory.GradedLinearQuiver}
-For a string of objects $X_0,\dots,X_n$, an index $i < n$ and a degree $b$,
-this is the hom-module $\Hom(X_i, X_{i+1})_b$ of the $i$-th morphism in that
-composable string, in degree $b$.
+For a string of objects $X_0,\dots,X_n$ and an index $i < n$, this is the graded
+hom-module $\Hom(X_i, X_{i+1})$ of the $i$-th morphism in that composable string,
+whose degree-$b$ piece is $\Hom(X_i, X_{i+1})_b$.
 \end{definition}
 
 \begin{definition}[\Ainf{}-operation]
 \lean{AInfinityTheory.AInfinityOperation}
 \label{AInfinityTheory.AInfinityOperation}
 \leanok
-\uses{AInfinityTheory.operationTargetDeg, AInfinityTheory.GradedLinearQuiver.ComposableHomType, AInfinityTheory.GradedMultilinearMap}
+\uses{AInfinityTheory.operationTargetDeg, AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.GradedMultilinearMap}
 An $n$-ary \Ainf{}-operation on a string of objects $X_0,\dots,X_n$ of a graded
 quiver $\Hom$ is a graded multilinear map
 \[
@@ -69,7 +69,7 @@ nonempty interval of inputs fed to the inner operation.
 \lean{AInfinityTheory.indexedStasheffTerm}
 \label{AInfinityTheory.indexedStasheffTerm}
 \leanok
-\uses{AInfinityTheory.GradedLinearQuiver.ComposableHomType, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
+\uses{AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
 Fix an \Ainf{}-composition $m$. For a Stasheff index $(r,s,t)$ of arity $n$, the
 indexed Stasheff term is obtained by first applying the inner $s$-ary operation in
 positions $r,\dots,r+s-1$ and then applying the outer $(r+1+t)$-ary operation to

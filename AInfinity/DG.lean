@@ -119,7 +119,7 @@ def m₁ (X : Fin (1 + 1) → C) : AInfinityOperation ℤ R X :=
 @[simp]
 lemma m₁_v_apply (X : Fin (1 + 1) → C) (deg : Fin 1 → ℤ) (i : ℤ)
     (h : (∑ k, deg k) + shift (2 - ((1 : ℕ) : ℤ)) = i)
-    (x : ∀ k, ComposableHomType R X k (deg k)) :
+    (x : ∀ k, ComposableHom ℤ R X k (deg k)) :
     (m₁ X).v deg i h x = differential (X 0) (X 1) (deg 0) i (x 0) :=
   rfl
 

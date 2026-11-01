@@ -16,8 +16,8 @@ underlying data of an `A∞`-category, before any compositions are chosen.
 ## Main definitions
 
 * `AInfinityTheory.GradedLinearQuiver β R Obj`: a graded `R`-linear quiver.
-* `AInfinityTheory.GradedLinearQuiver.ComposableHomType`: the hom space containing the `i`-th
-  morphism of a composable string of objects.
+* `AInfinityTheory.GradedLinearQuiver.ComposableHom`: the graded hom space containing the
+  `i`-th morphism of a composable string of objects.
 * `AInfinityTheory.GradedLinearQuiver.homCongr`: transport between graded hom spaces along
   equalities of the source, target and degree.
 
@@ -63,11 +63,11 @@ cannot be inferred from a degree or the expected type. -/
 scoped notation:25 X " →ᵍ[" R:25 ", " B "] " Y:0 =>
   GradedLinearQuiver.Hom (β := B) R X Y
 
-variable (R) in
-/-- The hom space containing the `i`-th morphism of a composable string of objects, in
-degree `b`. -/
-abbrev ComposableHomType (X : Fin (n + 1) → Obj) (i : Fin n) (b : β) : Type w' :=
-  (X i.castSucc →ᵍ[R] X i.succ) b
+variable (β R) in
+/-- The graded hom space containing the `i`-th morphism of a composable string of objects
+`X 0, …, X n`: the graded family `X i.castSucc →ᵍ[R] X i.succ`. -/
+abbrev ComposableHom (X : Fin (n + 1) → Obj) (i : Fin n) : β → Type w' :=
+  X i.castSucc →ᵍ[R] X i.succ
 
 variable (R) in
 /-- Transport between graded hom spaces along equalities of the source, target and degree.

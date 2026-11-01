@@ -172,7 +172,7 @@ structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [GradingType �
   /-- The action of the functor on hom spaces, i.e. the functor components `φₙ`, of degree
   `1 - n`, landing in the hom spaces of the target in the translated degrees. -/
   map : {n : ℕ} → [NeZero n] → (X : Fin (n + 1) → Obj) →
-    GradedMultilinearMap R (ComposableHomType R X)
+    GradedMultilinearMap R (ComposableHom β R X)
       (fun b : β ↦ (obj (X 0) →ᵍ[R] obj (X (Fin.last n))) (degMap b))
       (shift (1 - (n : ℤ)))
 
@@ -186,7 +186,7 @@ section GradedLinearQuiver
 variable [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
 variable (F : AInfinityFunctorData β β' R Obj Obj')
 variable {X : Fin (n + 1) → Obj} {deg : Fin n → β}
-variable (x : ∀ i : Fin n, ComposableHomType R X i (deg i))
+variable (x : ∀ i : Fin n, ComposableHom β R X i (deg i))
 
 /-- A homomorphism of grading types commutes with `operationTargetDeg`. -/
 lemma operationTargetDeg_degMap {k : ℕ} (b : Fin k → β) :
@@ -206,7 +206,7 @@ lemma operationTargetDeg_degMap_functorTargetDeg_embedding (c : Composition n) (
 /-- The value of the functor component `φ_{iₗ}` on the `l`-th block of a composition
 `c = (i₁, …, iₖ)` of `n`, as the `l`-th input of the outer operation `m'ₖ`. -/
 def compositionBlockMap (c : Composition n) (l : Fin c.length) :
-    ComposableHomType R (fun k ↦ F.obj (X (c.boundary k))) l
+    ComposableHom β' R (fun k ↦ F.obj (X (c.boundary k))) l
       (F.degMap (functorTargetDeg fun j ↦ deg (c.embedding l j))) :=
   homCongr R (congrArg F.obj (compositionBlockObj_zero X c l))
     (congrArg F.obj (compositionBlockObj_last X c l)) rfl
@@ -220,7 +220,7 @@ section AInfinityCategoryStruct
 variable [AInfinityCategoryStruct β R Obj] [AInfinityCategoryStruct β' R Obj']
 variable (F : AInfinityFunctorData β β' R Obj Obj')
 variable {X : Fin (n + 1) → Obj} {deg : Fin n → β}
-variable (x : ∀ i : Fin n, ComposableHomType R X i (deg i))
+variable (x : ∀ i : Fin n, ComposableHom β R X i (deg i))
 
 /-! ### The left-hand side of the functor equation -/
 
@@ -274,7 +274,7 @@ structure AInfinityFunctor (β β' : Type*) [AddCommGroup β] [GradingType β]
   left-hand side and the right-hand side of the functor equation agree on every composable
   string of inputs. -/
   mapCompSum_eq_compMapSum {n : ℕ} [NeZero n] {X : Fin (n + 1) → Obj} {deg : Fin n → β}
-    (x : ∀ i : Fin n, ComposableHomType R X i (deg i)) {d : β}
+    (x : ∀ i : Fin n, ComposableHom β R X i (deg i)) {d : β}
     (hd : operationTargetDeg deg = d) :
     toAInfinityFunctorData.mapCompSum x d hd =
       toAInfinityFunctorData.compMapSum x d hd
