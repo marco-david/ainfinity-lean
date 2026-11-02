@@ -113,7 +113,11 @@ def ofHom [DecidablePred (IsZero : V → Prop)]
     (f : ∀ i : ℤ, X i ⟶ Y i)
     (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1))
     : of X support_X h_X d_X sq_X ⟶ of Y support_Y h_Y d_Y sq_Y :=
-  ⟨CochainComplex.ofHom f fun i => by simp only [CochainComplex.of_d]; exact comm i⟩
+  ⟨CochainComplex.ofHom f fun i => by
+    change f i ≫ (CochainComplex.of Y d_Y sq_Y).d i (i + 1) =
+      (CochainComplex.of X d_X sq_X).d i (i + 1) ≫ f (i + 1)
+    simp only [CochainComplex.of_d]
+    exact comm i⟩
 
 theorem ofHom_f [DecidablePred (IsZero : V → Prop)]
     (X : ℤ → V) (support_X : Finset ℤ) (d_X : ∀ i : ℤ, X i ⟶ X (i + 1))
