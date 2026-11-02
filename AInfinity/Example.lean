@@ -20,8 +20,8 @@ example (β : Type v) [AddCommGroup β] [Grading β] (R : Type u) [CommRing R] (
           { toFun x := (x 0).1 ≫ (x 1).1
             map_update_add' x j a b := ?_
             map_update_smul' x j c a := ?_ } _ fun x => ?_⟩
-        · have h10 : (1 : Fin 2) ≠ 0 := by decide
-          have h01 : (0 : Fin 2) ≠ 1 := by decide
+        · have h10 : (1 : Fin 2) ≠ 0 := Fin.zero_ne_one.symm
+          have h01 : (0 : Fin 2) ≠ 1 := Fin.zero_ne_one
           match j with
           | 0 =>
             simp only [Function.update_self, Function.update_of_ne h10]
@@ -29,8 +29,8 @@ example (β : Type v) [AddCommGroup β] [Grading β] (R : Type u) [CommRing R] (
           | 1 =>
             simp only [Function.update_self, Function.update_of_ne h01]
             exact Preadditive.comp_add _ _ _ (x 0).1 a.1 b.1
-        · have h10 : (1 : Fin 2) ≠ 0 := by decide
-          have h01 : (0 : Fin 2) ≠ 1 := by decide
+        · have h10 : (1 : Fin 2) ≠ 0 := Fin.zero_ne_one.symm
+          have h01 : (0 : Fin 2) ≠ 1 := Fin.zero_ne_one
           match j with
           | 0 =>
             simp only [Function.update_self, Function.update_of_ne h10]
