@@ -66,8 +66,8 @@ nonempty interval of inputs fed to the inner operation.
 \end{definition}
 
 \begin{definition}[Indexed Stasheff term]
-\lean{AInfinityTheory.indexedStasheffTerm}
-\label{AInfinityTheory.indexedStasheffTerm}
+\lean{AInfinityTheory.stasheffTerm}
+\label{AInfinityTheory.stasheffTerm}
 \leanok
 \uses{AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
 Fix an \Ainf{}-composition $m$. For a Stasheff index $(r,s,t)$ of arity $n$, the
@@ -109,10 +109,10 @@ with the Stasheff sign of each index. Both the Stasheff identities and the
 \end{definition}
 
 \begin{definition}[Indexed Stasheff sum]
-\lean{AInfinityTheory.indexedStasheffSum}
-\label{AInfinityTheory.indexedStasheffSum}
+\lean{AInfinityTheory.stasheffSum}
+\label{AInfinityTheory.stasheffSum}
 \leanok
-\uses{AInfinityTheory.indexedStasheffTerm, AInfinityTheory.signedStasheffSum, AInfinityTheory.stasheffTargetDeg}
+\uses{AInfinityTheory.stasheffTerm, AInfinityTheory.signedStasheffSum, AInfinityTheory.stasheffTargetDeg}
 The arity-$n$ Stasheff sum is the signed Stasheff sum of the indexed Stasheff terms
 over all Stasheff indices of arity $n$, that is, of all valid composites of an inner
 operation followed by an outer operation. It lies in $\Hom(X_0,X_n)$ in any degree
@@ -120,10 +120,10 @@ equal to the Stasheff target degree.
 \end{definition}
 
 \begin{definition}[Indexed Stasheff identities]
-\lean{AInfinityTheory.AInfinityCategory.indexedStasheffSum_eq_zero}
-\label{AInfinityTheory.AInfinityCategory.indexedStasheffSum_eq_zero}
+\lean{AInfinityTheory.AInfinityCategory.stasheffSum_eq_zero}
+\label{AInfinityTheory.AInfinityCategory.stasheffSum_eq_zero}
 \leanok
-\uses{AInfinityTheory.indexedStasheffSum}
+\uses{AInfinityTheory.stasheffSum}
 An \Ainf{}-composition satisfies the Stasheff identities if every indexed
 Stasheff sum vanishes, for every arity, string of objects, choice of
 input degrees and composable inputs.

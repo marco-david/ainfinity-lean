@@ -48,7 +48,7 @@ ever evaluated in target degrees of the form `degMap b`.
 
 Both sides of the functor equation are stated pointwise on composable inputs `a₁, …, aₙ` of
 degrees `deg`, in degree `degMap d` for any `d` equal to the degree `operationTargetDeg deg` of
-`mₙ(a₁, …, aₙ)`, as for `indexedStasheffSum`. The left-hand side is a `signedStasheffSum`, like
+`mₙ(a₁, …, aₙ)`, as for `stasheffSum`. The left-hand side is a `signedStasheffSum`, like
 the Stasheff sum. The decompositions `i₁ + ⋯ + iₖ = n` on the right-hand side are Mathlib's
 `Composition n`. Changes of objects are transported with `homCongr`.
 
@@ -232,7 +232,7 @@ def mapCompTerm (p : StasheffIndex n) (d : β) (hd : operationTargetDeg deg = d)
   homCongr R (congrArg F.obj (stasheffObjOut_zero X p))
     (congrArg F.obj (stasheffObjOut_last X p)) rfl
     ((F.map (stasheffObjOut X p)).v (stasheffDegOut deg p) d
-      ((functorTargetDeg_stasheffDegOut deg p).trans hd) (indexedStasheffXOut x p))
+      ((functorTargetDeg_stasheffDegOut deg p).trans hd) (stasheffInputsOut x p))
 
 /-- The left-hand side of the arity-`n` functor equation, with the Koszul signs of the Stasheff
 identities, in degree `F.degMap d` for any `d` equal to the degree of `mₙ(a₁, …, aₙ)`. -/

@@ -21,14 +21,13 @@ signs are in `AInfinity.StasheffIndex`.
 
 ## Main definitions
 
-* `AInfinityTheory.indexedStasheffTerm`: the `(r, s, t)` summand of the Stasheff sum.
-* `AInfinityTheory.indexedStasheffSum`: the signed Stasheff sum in arity `n`.
+* `AInfinityTheory.stasheffTerm`: the `(r, s, t)` summand of the Stasheff sum.
+* `AInfinityTheory.stasheffSum`: the signed Stasheff sum in arity `n`.
 
 ## Main results
 
-* `AInfinityTheory.indexedStasheffSum_eq_zero_of_arity_two`: if `m` vanishes outside arity `2`,
-  the Stasheff sums vanish as soon as the arity-`3` one does, i.e. as soon as `m₂` is
-  associative up to sign.
+* `AInfinityTheory.stasheffTerm_eq_zero_of_arity_ne_two`: if `m` vanishes outside arity `2`,
+  a Stasheff term vanishes unless both its inner and its outer operation are binary.
 -/
 
 @[expose] public section
@@ -57,26 +56,26 @@ variable (p : StasheffIndex n)
 variable {X deg}
 
 /-- Helper: the input tuple for the inner operation in a Stasheff term. -/
-def indexedStasheffXIn :
+def stasheffInputsIn :
     ∀ j : Fin p.s, ComposableHom β R (stasheffObjIn X p) j (stasheffDegIn deg p j) :=
   fun j => x (((j.natAdd p.r).castAdd p.t).cast p.sum_eq)
 
 omit [AddCommGroup β] [Grading β] in
 /-- Evaluating the inner input tuple just picks out the corresponding original input. -/
 @[simp]
-lemma indexedStasheffXIn_apply
+lemma stasheffInputsIn_apply
     (j : Fin p.s) :
-    indexedStasheffXIn x p j = x (((j.natAdd p.r).castAdd p.t).cast p.sum_eq) :=
+    stasheffInputsIn x p j = x (((j.natAdd p.r).castAdd p.t).cast p.sum_eq) :=
   rfl
 
 /-- Helper: the middle index in the outer tuple of a Stasheff term. -/
-abbrev indexedStasheffMiddleIndex : Fin (p.r + 1 + p.t) :=
+abbrev stasheffMiddleIndex : Fin (p.r + 1 + p.t) :=
   (Fin.last p.r).castAdd p.t
 
 variable (R X deg) in
 /-- Before the inserted block, the space of an original input is identified with the
 corresponding outer input space. -/
-def indexedStasheffXOutEquivLeft
+def stasheffInputsOutEquivLeft
     (j : Fin p.r) :
     ComposableHom β R X (((j.castAdd p.s).castAdd p.t).cast p.sum_eq)
         (deg (((j.castAdd p.s).castAdd p.t).cast p.sum_eq)) ≃ₗ[R]
@@ -88,17 +87,17 @@ def indexedStasheffXOutEquivLeft
 variable (R X) in
 /-- At the inserted block, the space of the inner output is identified with the outer middle
 input space, in any degree `d`. -/
-def indexedStasheffXOutEquivMid
+def stasheffInputsOutEquivMiddle
     (d : β) :
     (stasheffObjIn X p 0 →ᵍ[R] stasheffObjIn X p (Fin.last p.s)) d ≃ₗ[R]
-      ComposableHom β R (stasheffObjOut X p) (indexedStasheffMiddleIndex p) d :=
+      ComposableHom β R (stasheffObjOut X p) (stasheffMiddleIndex p) d :=
   homCongr R (stasheffObjOut_left X p (Fin.last p.r)).symm
     (stasheffObjOut_right X p 0).symm rfl
 
 variable (R X deg) in
 /-- After the inserted block, the space of an original input is identified with the
 corresponding outer input space. -/
-def indexedStasheffXOutEquivRight
+def stasheffInputsOutEquivRight
     (k : Fin p.t) :
     ComposableHom β R X ((k.natAdd (p.r + p.s)).cast p.sum_eq)
         (deg ((k.natAdd (p.r + p.s)).cast p.sum_eq)) ≃ₗ[R]
@@ -110,7 +109,7 @@ def indexedStasheffXOutEquivRight
 variable (R X) in
 /-- Helper: the identification of the outer target space with the final Stasheff target space,
 in any degree `d`. -/
-def indexedStasheffTargetEquiv
+def stasheffTargetEquiv
     (d : β) :
     (stasheffObjOut X p 0 →ᵍ[R] stasheffObjOut X p (Fin.last (p.r + 1 + p.t))) d
       ≃ₗ[R] (X 0 →ᵍ[R] X (Fin.last n)) d :=
@@ -143,147 +142,147 @@ lemma m_homCongr_deg
 
 /-- Helper: the inner value appearing in a Stasheff term, in any degree `d` equal to the
 inner degree. -/
-def indexedStasheffInner
+def stasheffInner
     (d : β)
     (hd : stasheffInnerDeg deg p = d) :
     (stasheffObjIn X p 0 →ᵍ[R] stasheffObjIn X p (Fin.last p.s)) d :=
-  (m (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd (indexedStasheffXIn x p)
+  (m (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd (stasheffInputsIn x p)
 
 /-- Helper: the input tuple for the outer operation in a Stasheff term: the first `r` inputs,
 then the inner output, then the last `t` inputs. -/
-def indexedStasheffXOut :
+def stasheffInputsOut :
     ∀ a : Fin (p.r + 1 + p.t),
       ComposableHom β R (stasheffObjOut X p) a (stasheffDegOut deg p a) :=
   Fin.addCases
     (Fin.snoc
-      (fun j => indexedStasheffXOutEquivLeft R X deg p j
+      (fun j => stasheffInputsOutEquivLeft R X deg p j
         (x (((j.castAdd p.s).castAdd p.t).cast p.sum_eq)))
-      (indexedStasheffXOutEquivMid R X p _
-        (indexedStasheffInner x p _ (stasheffDegOut_middle deg p).symm)))
-    (fun k => indexedStasheffXOutEquivRight R X deg p k
+      (stasheffInputsOutEquivMiddle R X p _
+        (stasheffInner x p _ (stasheffDegOut_middle deg p).symm)))
+    (fun k => stasheffInputsOutEquivRight R X deg p k
       (x ((k.natAdd (p.r + p.s)).cast p.sum_eq)))
 
 /-- Before the inserted block, the outer input tuple agrees with the original inputs. -/
 @[simp]
-lemma indexedStasheffXOut_left
+lemma stasheffInputsOut_left
     (j : Fin p.r) :
-    indexedStasheffXOut x p (j.castSucc.castAdd p.t) =
-      indexedStasheffXOutEquivLeft R X deg p j
+    stasheffInputsOut x p (j.castSucc.castAdd p.t) =
+      stasheffInputsOutEquivLeft R X deg p j
         (x (((j.castAdd p.s).castAdd p.t).cast p.sum_eq)) := by
-  simp [indexedStasheffXOut]
+  simp [stasheffInputsOut]
 
 /-- After the inserted block, the outer input tuple agrees with the original inputs. -/
 @[simp]
-lemma indexedStasheffXOut_right
+lemma stasheffInputsOut_right
     (k : Fin p.t) :
-    indexedStasheffXOut x p (k.natAdd (p.r + 1)) =
-      indexedStasheffXOutEquivRight R X deg p k (x ((k.natAdd (p.r + p.s)).cast p.sum_eq)) := by
-  simp [indexedStasheffXOut]
+    stasheffInputsOut x p (k.natAdd (p.r + 1)) =
+      stasheffInputsOutEquivRight R X deg p k (x ((k.natAdd (p.r + p.s)).cast p.sum_eq)) := by
+  simp [stasheffInputsOut]
 
 /-- The middle outer input is the transported inner output. -/
 @[simp]
-lemma indexedStasheffXOut_middle :
-    indexedStasheffXOut x p (indexedStasheffMiddleIndex p) =
-      indexedStasheffXOutEquivMid R X p _
-        (indexedStasheffInner x p _ (stasheffDegOut_middle deg p).symm) := by
-  simp [indexedStasheffXOut]
+lemma stasheffInputsOut_middle :
+    stasheffInputsOut x p (stasheffMiddleIndex p) =
+      stasheffInputsOutEquivMiddle R X p _
+        (stasheffInner x p _ (stasheffDegOut_middle deg p).symm) := by
+  simp [stasheffInputsOut]
 
 /-- The middle outer input vanishes whenever the inner output vanishes. -/
-lemma indexedStasheffXOut_middle_eq_zero_of_inner_eq_zero
-    (hinner : ∀ d hd, indexedStasheffInner x p d hd = 0) :
-    indexedStasheffXOut x p (indexedStasheffMiddleIndex p) = 0 := by
-  rw [indexedStasheffXOut_middle, hinner, map_zero]
+lemma stasheffInputsOut_middle_eq_zero_of_inner_eq_zero
+    (hinner : ∀ d hd, stasheffInner x p d hd = 0) :
+    stasheffInputsOut x p (stasheffMiddleIndex p) = 0 := by
+  rw [stasheffInputsOut_middle, hinner, map_zero]
 
 /-- Helper: the outer value appearing in a Stasheff term, in any degree `d` equal to the
 degree of the outer operation. -/
-def indexedStasheffOuter
+def stasheffOuter
     (d : β)
     (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
     (stasheffObjOut X p 0 →ᵍ[R] stasheffObjOut X p (Fin.last (p.r + 1 + p.t))) d :=
-  (m (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd (indexedStasheffXOut x p)
+  (m (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd (stasheffInputsOut x p)
 
 /-- A generic Stasheff term builder for object-indexed A∞ operations, in any degree `d` equal
 to the Stasheff target degree. -/
-def indexedStasheffTerm
+def stasheffTerm
     (d : β)
     (hd : stasheffTargetDeg deg = d) :
     (X 0 →ᵍ[R] X (Fin.last n)) d :=
-  indexedStasheffTargetEquiv R X p d
-    (indexedStasheffOuter x p d ((stasheffDegOut_sum deg p).trans hd))
+  stasheffTargetEquiv R X p d
+    (stasheffOuter x p d ((stasheffDegOut_sum deg p).trans hd))
 
 /-- The inner value vanishes if the inner multilinear map itself vanishes. -/
-lemma indexedStasheffInner_eq_zero_of_map_eq_zero
+lemma stasheffInner_eq_zero_of_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd = 0)
     (d : β)
     (hd : stasheffInnerDeg deg p = d) :
-    indexedStasheffInner x p d hd = 0 := by
-  simp [indexedStasheffInner, hm]
+    stasheffInner x p d hd = 0 := by
+  simp [stasheffInner, hm]
 
 /-- The outer value vanishes if the outer multilinear map itself vanishes. -/
-lemma indexedStasheffOuter_eq_zero_of_map_eq_zero
+lemma stasheffOuter_eq_zero_of_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd = 0)
     (d : β)
     (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
-    indexedStasheffOuter x p d hd = 0 := by
-  rw [indexedStasheffOuter, hm, MultilinearMap.zero_apply]
+    stasheffOuter x p d hd = 0 := by
+  rw [stasheffOuter, hm, MultilinearMap.zero_apply]
 
 /-- The outer value vanishes whenever the inserted inner output vanishes. -/
-lemma indexedStasheffOuter_eq_zero_of_inner_eq_zero
-    (hinner : ∀ d hd, indexedStasheffInner x p d hd = 0)
+lemma stasheffOuter_eq_zero_of_inner_eq_zero
+    (hinner : ∀ d hd, stasheffInner x p d hd = 0)
     (d : β)
     (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
-    indexedStasheffOuter x p d hd = 0 :=
+    stasheffOuter x p d hd = 0 :=
   MultilinearMap.map_coord_zero ((m (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd)
-    (indexedStasheffMiddleIndex p)
-    (indexedStasheffXOut_middle_eq_zero_of_inner_eq_zero x p hinner)
+    (stasheffMiddleIndex p)
+    (stasheffInputsOut_middle_eq_zero_of_inner_eq_zero x p hinner)
 
 /-- The final transported Stasheff term vanishes exactly when the outer value vanishes. -/
-lemma indexedStasheffTerm_eq_zero_iff_outer_eq_zero
+lemma stasheffTerm_eq_zero_iff_outer_eq_zero
     (d : β)
     (hd : stasheffTargetDeg deg = d) :
-    indexedStasheffTerm x p d hd = 0 ↔
-      indexedStasheffOuter x p d ((stasheffDegOut_sum deg p).trans hd) = 0 :=
-  (indexedStasheffTargetEquiv R X p d).map_eq_zero_iff
+    stasheffTerm x p d hd = 0 ↔
+      stasheffOuter x p d ((stasheffDegOut_sum deg p).trans hd) = 0 :=
+  (stasheffTargetEquiv R X p d).map_eq_zero_iff
 
 /-- The final Stasheff term vanishes if the outer multilinear map vanishes. -/
-lemma indexedStasheffTerm_eq_zero_of_outer_map_eq_zero
+lemma stasheffTerm_eq_zero_of_outer_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd = 0)
     (d : β)
     (hd : stasheffTargetDeg deg = d) :
-    indexedStasheffTerm x p d hd = 0 :=
-  (indexedStasheffTerm_eq_zero_iff_outer_eq_zero x p d hd).2
-    (indexedStasheffOuter_eq_zero_of_map_eq_zero x p hm _ _)
+    stasheffTerm x p d hd = 0 :=
+  (stasheffTerm_eq_zero_iff_outer_eq_zero x p d hd).2
+    (stasheffOuter_eq_zero_of_map_eq_zero x p hm _ _)
 
 /-- The final Stasheff term vanishes if the inner multilinear map vanishes. -/
-lemma indexedStasheffTerm_eq_zero_of_inner_map_eq_zero
+lemma stasheffTerm_eq_zero_of_inner_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd = 0)
     (d : β)
     (hd : stasheffTargetDeg deg = d) :
-    indexedStasheffTerm x p d hd = 0 :=
-  (indexedStasheffTerm_eq_zero_iff_outer_eq_zero x p d hd).2
-    (indexedStasheffOuter_eq_zero_of_inner_eq_zero x p
-      (indexedStasheffInner_eq_zero_of_map_eq_zero x p hm) _ _)
+    stasheffTerm x p d hd = 0 :=
+  (stasheffTerm_eq_zero_iff_outer_eq_zero x p d hd).2
+    (stasheffOuter_eq_zero_of_inner_eq_zero x p
+      (stasheffInner_eq_zero_of_map_eq_zero x p hm) _ _)
 
 /-- The full Stasheff sum in arity `n`, with Koszul signs, in any degree `d` equal to the
 Stasheff target degree. -/
-def indexedStasheffSum
+def stasheffSum
     (d : β)
     (hd : stasheffTargetDeg deg = d) :
     (X 0 →ᵍ[R] X (Fin.last n)) d :=
-  signedStasheffSum deg fun q => indexedStasheffTerm x q d hd
+  signedStasheffSum deg fun q => stasheffTerm x q d hd
 
 /-- If `m` vanishes outside arity `2`, a Stasheff term vanishes unless both its inner and its
 outer operation are binary. -/
-lemma indexedStasheffTerm_eq_zero_of_arity_ne_two
+lemma stasheffTerm_eq_zero_of_arity_ne_two
     (hm : ∀ (k : ℕ) [NeZero k], k ≠ 2 → ∀ X : Fin (k + 1) → Obj, m (β := β) (R := R) X = 0)
     {n : ℕ} {X : Fin (n + 1) → Obj} {deg : Fin n → β}
     (x : ∀ i : Fin n, ComposableHom β R X i (deg i)) (p : StasheffIndex n)
     (h2 : p.s ≠ 2 ∨ p.r + 1 + p.t ≠ 2) (d : β) (hd : stasheffTargetDeg deg = d) :
-    indexedStasheffTerm x p d hd = 0 := by
+    stasheffTerm x p d hd = 0 := by
   rcases h2 with h2 | h2
-  · exact indexedStasheffTerm_eq_zero_of_inner_map_eq_zero x p
+  · exact stasheffTerm_eq_zero_of_inner_map_eq_zero x p
       (fun d hd => by simp only [hm p.s h2]; rfl) d hd
-  · exact indexedStasheffTerm_eq_zero_of_outer_map_eq_zero x p
+  · exact stasheffTerm_eq_zero_of_outer_map_eq_zero x p
       (fun d hd => by simp only [hm _ h2]; rfl) d hd
 
 end AInfinityCategoryStruct

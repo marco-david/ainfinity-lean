@@ -121,10 +121,10 @@ variable (m₁ : ∀ X : Fin (1 + 1) → Obj, AInfinityOperation β R X)
 /-- The family of operations with unary operations `m₁` and binary operations `m₂`, and
 vanishing operations in every arity `n ≥ 3`. -/
 def ofArityLeTwo {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) : AInfinityOperation β R X :=
-  match n, X with
-    | 1, X => m₁ X
-    | 2, X => m₂ X
-    | _, _ => 0
+  match n with
+    | 1 => m₁ X
+    | 2 => m₂ X
+    | _ => 0
 
 @[simp]
 theorem ofArityLeTwo_one (X : Fin (1 + 1) → Obj) : ofArityLeTwo m₁ m₂ X = m₁ X :=

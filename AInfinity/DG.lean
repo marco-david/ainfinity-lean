@@ -33,6 +33,11 @@ all higher compositions vanish.
 * `AInfinityTheory.DGCategory.differential`: the signed differential.
 * `AInfinityTheory.DGCategory.m₁`: the signed differential as a graded multilinear map in one
   variable, the arity-one `A∞` operation.
+* `AInfinityTheory.DGCategory.composition`: the signed composition.
+* `AInfinityTheory.DGCategory.m₂`: the signed composition as a graded multilinear map in two
+  variables, the arity-two `A∞` operation.
+* `AInfinityTheory.DGCategory.aInfinityCategoryStruct`: the `A∞`-category structure with
+  operations `m₁` and `m₂`, and vanishing higher compositions.
 
 ## Implementation notes
 
@@ -111,6 +116,20 @@ lemma differential_differential (X Y : C) (p q r : ℤ) (a : (X →ᵍ[R] Y) p) 
   simp only [differential_apply, Units.smul_def, map_zsmul, ← ModuleCat.comp_apply,
     HomologicalComplex.d_comp_d, ModuleCat.hom_zero, LinearMap.zero_apply, smul_zero]
 
+/-- The composition of a DG category, with Seidel's sign: morphisms `a : X → Y` of degree `p`
+and `b : Y → Z` of degree `q` are sent to `(-1)^q a ≫ b`, where `a ≫ b` is the enriched
+composition `compBilin`. -/
+noncomputable def composition (X Y Z : C) (p q i : ℤ) (h : p + q = i) :
+    (X →ᵍ[R] Y) p →ₗ[R] (Y →ᵍ[R] Z) q →ₗ[R] (X →ᵍ[R] Z) i :=
+  q.negOnePow • compBilin X Y Z p q i h
+
+/-- The composition is the enriched composition, twisted by the sign `(-1)^q`. -/
+@[simp]
+lemma composition_apply (X Y Z : C) (p q i : ℤ) (h : p + q = i) (a : (X →ᵍ[R] Y) p)
+    (b : (Y →ᵍ[R] Z) q) :
+    composition X Y Z p q i h a b = q.negOnePow • compBilin X Y Z p q i h a b :=
+  rfl
+
 /-- The arity-one `A∞` operation of a DG category: the signed differential `differential`,
 regarded as a graded multilinear map in one variable. -/
 def m₁ (X : Fin (1 + 1) → C) : AInfinityOperation ℤ R X :=
@@ -122,6 +141,38 @@ lemma m₁_v_apply (X : Fin (1 + 1) → C) (deg : Fin 1 → ℤ) (i : ℤ)
     (x : ∀ k, ComposableHom ℤ R X k (deg k)) :
     (m₁ X).v deg i h x = differential (X 0) (X 1) (deg 0) i (x 0) :=
   rfl
+
+/-- The arity-two `A∞` operation of a DG category: the signed composition `composition`,
+regarded as a graded multilinear map in two variables. -/
+noncomputable def m₂ (X : Fin (2 + 1) → C) : AInfinityOperation ℤ R X :=
+  .ofBilinear fun p q i h ↦ composition (X 0) (X 1) (X 2) p q i h
+
+@[simp]
+lemma m₂_v_apply (X : Fin (2 + 1) → C) (deg : Fin 2 → ℤ) (i : ℤ)
+    (h : (∑ k, deg k) + shift (2 - ((2 : ℕ) : ℤ)) = i)
+    (x : ∀ k, ComposableHom ℤ R X k (deg k)) :
+    (m₂ X).v deg i h x =
+      composition (X 0) (X 1) (X 2) (deg 0) (deg 1) i
+        (by simpa [Fin.sum_univ_two] using h) (x 0) (x 1) :=
+  rfl
+
+/-- The `A∞`-category structure of a DG category: `m₁` is the signed differential, `m₂` is the
+signed composition, and the higher compositions `mₙ` for `n ≥ 3` vanish. -/
+noncomputable instance aInfinityCategoryStruct : AInfinityCategoryStruct ℤ R C where
+  toGradedLinearQuiver := gradedLinearQuiver
+  m := AInfinityOperation.ofArityLeTwo m₁ m₂
+
+@[simp]
+lemma m_one (X : Fin (1 + 1) → C) : AInfinityCategoryStruct.m (β := ℤ) (R := R) X = m₁ X :=
+  rfl
+
+@[simp]
+lemma m_two (X : Fin (2 + 1) → C) : AInfinityCategoryStruct.m (β := ℤ) (R := R) X = m₂ X :=
+  rfl
+
+lemma m_eq_zero {n : ℕ} [NeZero n] (h₁ : n ≠ 1) (h₂ : n ≠ 2) (X : Fin (n + 1) → C) :
+    AInfinityCategoryStruct.m (β := ℤ) (R := R) X = 0 :=
+  AInfinityOperation.ofArityLeTwo_eq_zero _ _ h₁ h₂ X
 
 end DGCategory
 
