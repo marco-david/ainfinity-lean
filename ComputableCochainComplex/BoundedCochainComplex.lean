@@ -84,9 +84,15 @@ instance : (embed (V := V)).Full :=
 instance : Preadditive (BoundedCochainComplex V) :=
   Preadditive.ofFullyFaithful fullyFaithfulEmbed
 
+/-- `homEquiv` as an additive equivalence. Addition of morphisms in `BoundedCochainComplex V` is
+transported from `CochainComplex V ℤ` along `embed`, so `homEquiv` is additive by definition. -/
+def homAddEquiv {c₁ c₂ : BoundedCochainComplex V} :
+    (c₁ ⟶ c₂) ≃+ (c₁.toHomologicalComplex ⟶ c₂.toHomologicalComplex) :=
+  { homEquiv with map_add' := fun _ _ => rfl }
+
 variable {R : Type*} [Semiring R] [Linear R V] in
 instance : Linear R (BoundedCochainComplex V) where
-  homModule c₁ c₂ := Equiv.module R (homEquiv (c₁ := c₁) (c₂ := c₂))
+  homModule c₁ c₂ := AddEquiv.module R (homAddEquiv (c₁ := c₁) (c₂ := c₂))
   smul_comp _ _ _ r f g := Hom.ext (Linear.smul_comp _ _ _ r f.hom g.hom)
   comp_smul _ _ _ f r g := Hom.ext (Linear.comp_smul _ _ _ f.hom r g.hom)
 
