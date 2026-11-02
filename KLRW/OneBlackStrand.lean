@@ -177,12 +177,12 @@ instance : Preadditive (KLRWCategory n R) where
   homGroup P Q := inferInstanceAs (AddCommGroup (StrandSpace R))
   add_comp := by
     intro P Q S f f' g
-    letI : AddCommMonoid (StrandSpace R) := inferInstance
+    let _ : AddCommMonoid (StrandSpace R) := inferInstance
     exact DFinsupp.sum_add_index (fun k => sum_inner_zero g k (compShift P Q S))
       (fun k a b => sum_inner_add g k (compShift P Q S) a b)
   comp_add := by
     intro P Q S f g g'
-    letI : AddCommMonoid (StrandSpace R) := inferInstance
+    let _ : AddCommMonoid (StrandSpace R) := inferInstance
     suffices h : (f : StrandSpace R).sum (fun i r =>
         (g + g' : StrandSpace R).sum
           (fun j s => (r * s) • StrandSpace.dots R (i + j + compShift P Q S))) =

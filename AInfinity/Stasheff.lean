@@ -362,7 +362,8 @@ lemma indexedStasheffInner_eq_zero_of_map_eq_zero
     (d : β)
     (hd : stasheffInnerDeg deg p = d) :
     indexedStasheffInner m x p d hd = 0 := by
-  simp [indexedStasheffInner, hm]
+  have h := hm d hd
+  simp [indexedStasheffInner, h]
 
 /-- The outer value vanishes if the outer multilinear map itself vanishes. -/
 lemma indexedStasheffOuter_eq_zero_of_map_eq_zero
@@ -414,7 +415,7 @@ variable (deg) in
 `p = (r, s, t)`, where `‖a‖ = |a| - 1` is the reduced degree of an input after the inner
 operation. -/
 def stasheffSign : ℤˣ :=
-  ∏ k : Fin p.t, sign (deg ((k.natAdd (p.r + p.s)).cast p.sum_eq) - shift 1)
+  ∏ k : Fin p.t, Additive.toMul (sign (deg ((k.natAdd (p.r + p.s)).cast p.sum_eq) - shift 1))
 
 variable (deg) in
 /-- The signed sum `∑_{r + s + t = n, s ≥ 1} (-1)^(‖a_{r+s+1}‖ + ⋯ + ‖aₙ‖) f (r, s, t)` over

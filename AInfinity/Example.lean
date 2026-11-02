@@ -20,12 +20,24 @@ example (β : Type v) [AddCommGroup β] [Grading β] (R : Type u) [CommRing R] (
           { toFun x := (x 0).1 ≫ (x 1).1
             map_update_add' x j a b := ?_
             map_update_smul' x j c a := ?_ } _ fun x => ?_⟩
-        · match j with
-          | 0 => simpa using Preadditive.add_comp _ _ _ a.1 b.1 (x 1).1
-          | 1 => simpa using Preadditive.comp_add _ _ _ (x 0).1 a.1 b.1
-        · match j with
-          | 0 => simpa using Linear.smul_comp _ _ _ c a.1 (x 1).1
-          | 1 => simpa using Linear.comp_smul _ _ _ (x 0).1 c a.1
+        · have h10 : (1 : Fin 2) ≠ 0 := Fin.zero_ne_one.symm
+          have h01 : (0 : Fin 2) ≠ 1 := Fin.zero_ne_one
+          match j with
+          | 0 =>
+            simp only [Function.update_self, Function.update_of_ne h10]
+            exact Preadditive.add_comp _ _ _ a.1 b.1 (x 1).1
+          | 1 =>
+            simp only [Function.update_self, Function.update_of_ne h01]
+            exact Preadditive.comp_add _ _ _ (x 0).1 a.1 b.1
+        · have h10 : (1 : Fin 2) ≠ 0 := Fin.zero_ne_one.symm
+          have h01 : (0 : Fin 2) ≠ 1 := Fin.zero_ne_one
+          match j with
+          | 0 =>
+            simp only [Function.update_self, Function.update_of_ne h10]
+            exact Linear.smul_comp _ _ _ c a.1 (x 1).1
+          | 1 =>
+            simp only [Function.update_self, Function.update_of_ne h01]
+            exact Linear.comp_smul _ _ _ (x 0).1 c a.1
         · refine (Submodule.mem_iInf _).2 fun hi' => (Submodule.mem_bot R).2 ?_
           show (x 0).1 ≫ (x 1).1 = 0
           by_cases h0 : deg 0 = 0
@@ -34,7 +46,7 @@ example (β : Type v) [AddCommGroup β] [Grading β] (R : Type u) [CommRing R] (
             exact Limits.comp_zero
           · rw [(Submodule.mem_bot R).1 ((Submodule.mem_iInf _).1 (x 0).2 h0), Limits.zero_comp]
       else 0
-    stasheff := indexedSatisfiesStasheff_of_arity_two _ (fun _ _ hk _ => dif_neg hk)
+    stasheff := indexedSatisfiesStasheff_of_arity_two _ (fun _ _ hk _ => dite_eq_right hk)
       fun obj deg x d hd => by
         apply Subtype.ext
         change stasheffSign deg ⟨0, 2, 1, rfl, by norm_num⟩ • (((x 0).1 ≫ (x 1).1) ≫ (x 2).1) +
