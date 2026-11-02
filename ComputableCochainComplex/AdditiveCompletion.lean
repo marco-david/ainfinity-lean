@@ -278,7 +278,7 @@ private noncomputable def toMat_ofMat_iso (M' : Mat_ C) :
     by_cases hik : i = k
     · subst k
       simp only [↓reduceDIte, eqToHom_trans, eqToHom_refl, Mat_.id_apply_self]
-    · rw [dif_neg ((ofMat_equiv M').injective.ne hik), Mat_.id_apply_of_ne _ _ _ hik]
+    · rw [dite_eq_right ((ofMat_equiv M').injective.ne hik), Mat_.id_apply_of_ne _ _ _ hik]
   inv_hom_id := by
     ext j k
     rw [Mat_.comp_apply]
@@ -288,7 +288,7 @@ private noncomputable def toMat_ofMat_iso (M' : Mat_ C) :
     by_cases hjk : j = k
     · subst k
       simp only [↓reduceDIte, eqToHom_trans, eqToHom_refl, Mat_.id_apply_self]
-    · rw [dif_neg (Ne.symm hjk), Mat_.id_apply_of_ne _ _ _ hjk]
+    · rw [dite_eq_right (Ne.symm hjk), Mat_.id_apply_of_ne _ _ _ hjk]
 
 noncomputable instance : (toMat_ C).EssSurj where
   -- Aristotle generated proof

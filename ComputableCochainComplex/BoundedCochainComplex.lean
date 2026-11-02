@@ -113,7 +113,7 @@ def ofHom [DecidablePred (IsZero : V → Prop)]
     (f : ∀ i : ℤ, X i ⟶ Y i)
     (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1))
     : of X support_X h_X d_X sq_X ⟶ of Y support_Y h_Y d_Y sq_Y :=
-  ⟨CochainComplex.ofHom X d_X sq_X Y d_Y sq_Y f comm⟩
+  ⟨CochainComplex.ofHom f fun i => by simp only [CochainComplex.of_d]; exact comm i⟩
 
 theorem ofHom_f [DecidablePred (IsZero : V → Prop)]
     (X : ℤ → V) (support_X : Finset ℤ) (d_X : ∀ i : ℤ, X i ⟶ X (i + 1))
@@ -125,7 +125,7 @@ theorem ofHom_f [DecidablePred (IsZero : V → Prop)]
     (f : ∀ i : ℤ, X i ⟶ Y i)
     (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1)) (i : ℤ)
     : (ofHom X support_X d_X h_X sq_X Y support_Y d_Y h_Y sq_Y f comm).f i = f i :=
-  CochainComplex.ofHom_f X d_X sq_X Y d_Y sq_Y f comm i
+  rfl
 
 /-- Build a `BoundedCochainComplex` from a `CochainComplex` together with a finite
 superset of its true support. -/
@@ -176,8 +176,8 @@ def liftEndofunctor
     BoundedCochainComplex V ⥤ BoundedCochainComplex V where
   obj X := mkOfBounded (H.obj (embed.obj X)) (hb X)
   map {_ _} f := homMk (H.map f.hom)
-  map_id X := Hom.ext (by simp [embed])
-  map_comp f g := Hom.ext (by simp [embed])
+  map_id X := Hom.ext (H.map_id X.toHomologicalComplex)
+  map_comp f g := Hom.ext (H.map_comp f.hom g.hom)
 
 /-- The lifted functor commutes with the embedding to `CochainComplex V ℤ`. -/
 @[simps!]
