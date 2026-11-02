@@ -8,6 +8,16 @@ public import Util.Texify
 
 open CategoryTheory
 
+/-
+This file mirrors `CategoryTheory.Mat_`, whose morphisms `M ⟶ N` are a dependent function type
+only after unfolding `Hom`. Since Lean 4.35, unification no longer unfolds such semireducible
+definitions when checking implicit arguments, which breaks most proofs below. Mathlib restores the
+old behaviour declaration by declaration in `Mathlib/CategoryTheory/Preadditive/Mat.lean`; we do
+the same for the whole file, until the matrix API is restated without the identification.
+-/
+set_option backward.isDefEq.respectTransparency false
+set_option backward.isDefEq.respectTransparency.types false
+
 structure CMat_ (C : Type*) where
   ofList ::
     toList : List C

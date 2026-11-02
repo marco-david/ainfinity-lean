@@ -128,14 +128,13 @@ variable {β β' β'' β''' : Type*} [AddCommGroup β] [Grading β] [AddCommGrou
   [Grading β'] [AddCommGroup β''] [Grading β''] [AddCommGroup β'''] [Grading β''']
 
 /-- A homomorphism of gradings is applied to degrees through its underlying function. -/
-@[expose]
 public instance : FunLike (β →+ᵍ β') β β' where
   coe f := f.toFun
-  coe_injective' f g h := by
+  coe_injective f g h := by
     cases f
     cases g
     congr
-    exact DFunLike.coe_injective' h
+    exact DFunLike.coe_injective h
 
 /-- A homomorphism of gradings is in particular an additive homomorphism. -/
 public instance : AddMonoidHomClass (β →+ᵍ β') β β' where
@@ -261,7 +260,6 @@ public def TProd := β × γ
 
 variable {β γ} [AddCommGroup β] [AddCommGroup γ]
 
-@[expose]
 public instance : AddCommGroup (β ×ᵗ γ) := inferInstanceAs (AddCommGroup (β × γ))
 
 /-- `toTProd` is the identity, viewed as an equivalence from `β × γ` to `β ×ᵗ γ`. -/
@@ -333,7 +331,6 @@ public def LProd := β × γ
 
 variable {β γ} [AddCommGroup β] [AddCommGroup γ]
 
-@[expose]
 public instance : AddCommGroup (β ×ˡ γ) := inferInstanceAs (AddCommGroup (β × γ))
 
 /-- `toLProd` is the identity, viewed as an equivalence from `β × γ` to `β ×ˡ γ`. -/
@@ -419,7 +416,6 @@ public def RProd := β × γ
 
 variable {β γ} [AddCommGroup β] [AddCommGroup γ]
 
-@[expose]
 public instance : AddCommGroup (β ×ʳ γ) := inferInstanceAs (AddCommGroup (β × γ))
 
 /-- `toRProd` is the identity, viewed as an equivalence from `β × γ` to `β ×ʳ γ`. -/
