@@ -362,7 +362,8 @@ lemma indexedStasheffInner_eq_zero_of_map_eq_zero
     (d : β)
     (hd : stasheffInnerDeg deg p = d) :
     indexedStasheffInner m x p d hd = 0 := by
-  simp [indexedStasheffInner, hm]
+  have h := hm d hd
+  simp [indexedStasheffInner, h]
 
 /-- The outer value vanishes if the outer multilinear map itself vanishes. -/
 lemma indexedStasheffOuter_eq_zero_of_map_eq_zero

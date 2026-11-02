@@ -272,28 +272,23 @@ private noncomputable def toMat_ofMat_iso (M' : Mat_ C) :
   hom := fun i j ↦ if h : ofMat_equiv M' i = j then eqToHom (ofMat_X_equiv' M' i j h) else 0
   inv := fun j i ↦ if h : ofMat_equiv M' i = j then eqToHom (ofMat_X_equiv' M' i j h).symm else 0
   hom_inv_id := by
-    -- Artistotle had proved this but the proof was causing performance issues so it needs to be
-    -- replaced with a better proof
-    ext i j
-    simp_all
-    sorry
+    ext i k
+    simp only [Mat_.comp_apply, dite_comp, comp_dite, Limits.zero_comp, Limits.comp_zero,
+      Finset.sum_dite_eq, Finset.mem_univ, ite_true]
+    by_cases hik : i = k
+    · subst k
+      simp only [↓reduceDIte, eqToHom_trans, eqToHom_refl, Mat_.id_apply_self]
+    · rw [dif_neg ((ofMat_equiv M').injective.ne hik), Mat_.id_apply_of_ne _ _ _ hik]
   inv_hom_id := by
-    -- Cleaned up Aristotle proof
     ext j k
-    rw [CategoryStruct.comp]
-    convert Finset.sum_eq_single ((ofMat_equiv M').symm j) _ _ <;>
-      simp only [Equiv.apply_symm_apply, ↓reduceDIte]
-    · split_ifs with h
-      · rw [eq_comm] at h; induction h; simp [eqToHom_refl]
-      · simp [h]
-    · intro b hb
-      split_ifs with h1 h2
-      · intro hab
-        exact absurd ((ofMat_equiv M').injective (by rwa [Equiv.apply_symm_apply])) hab
-      · simp
-      · simp
-      · simp
-    · exact absurd (Finset.mem_univ _)
+    rw [Mat_.comp_apply]
+    erw [← (ofMat_equiv M').symm.sum_comp]
+    simp only [Equiv.apply_symm_apply, dite_comp, comp_dite, Limits.zero_comp, Limits.comp_zero,
+      Finset.sum_dite_eq', Finset.mem_univ, ite_true]
+    by_cases hjk : j = k
+    · subst k
+      simp only [↓reduceDIte, eqToHom_trans, eqToHom_refl, Mat_.id_apply_self]
+    · rw [dif_neg (Ne.symm hjk), Mat_.id_apply_of_ne _ _ _ hjk]
 
 noncomputable instance : (toMat_ C).EssSurj where
   -- Aristotle generated proof
@@ -375,11 +370,8 @@ def fullyFaithful : (embedding C).FullyFaithful where
     simp only [cast_cast]
     rw [Subsingleton.elim i default, Subsingleton.elim j default]
     rfl
-  preimage_map {A B} f := by
-    -- Cleaned-up Aristotle proof
-    generalize_proofs
-    convert cast_cast _ _ _;
-    grind
+  preimage_map {A B} f :=
+    (cast_cast _ _ f).trans (cast_eq _ f)
 
 instance : (embedding C).Faithful := (fullyFaithful C).faithful
 instance : (embedding C).Full := (fullyFaithful C).full
@@ -451,20 +443,14 @@ variable {R : Type*} [Semiring R]
 instance : Linear R (CMat_ C) where
   homModule M N := inferInstanceAs <| Module R
     (DMatrix M.ι N.ι fun i j => M.X i ⟶ N.X j)
-  smul_comp := by
-    -- Cleaned-up Aristotle proof
-    intros
+  smul_comp M N K r f g := by
     ext i j
-    rw [comp_apply]
-    convert Finset.smul_sum.symm
-    apply Linear.smul_comp
-  comp_smul := by
-    -- Cleaned-up Aristotle proof
-    intros
+    change ∑ x, (r • f i x) ≫ g x j = r • ∑ x, f i x ≫ g x j
+    simp only [Linear.smul_comp, Finset.smul_sum]
+  comp_smul M N K f r g := by
     ext i j
-    rw [comp_apply]
-    convert Finset.smul_sum.symm
-    apply Linear.comp_smul
+    change ∑ x, f i x ≫ (r • g x j) = r • ∑ x, f i x ≫ g x j
+    simp only [Linear.comp_smul, Finset.smul_sum]
 
 end linear
 
