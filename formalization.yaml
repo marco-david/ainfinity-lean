@@ -9,7 +9,7 @@ project:
   description: >-
     A Lean 4 / Mathlib formalization of A∞-category theory, developed as a research
     project at UC Berkeley with the goal of upstreaming to Mathlib. It defines
-    gradings (an abelian group of degrees with integer degree shifts and a Koszul
+    gradings (an abelian group of degrees with a distinguished degree one and a Koszul
     sign character, which covers bigradings such as ℤ ×ᵗ ℤ), graded linear and
     multilinear maps of a fixed degree, graded R-linear quivers, the Stasheff
     identities with Koszul signs, R-linear A∞-categories (including those with vanishing
@@ -153,12 +153,13 @@ automation:
 fidelity:
   divergences: >-
     (1) Degrees live in an arbitrary `Grading`: an additive commutative group β
-    with integer degree shifts `shift : ℤ →+ β` and a Koszul sign character
-    `sign : β →+ Additive ℤˣ` such that `shift 1` is odd. β need not be a ring, so
+    with a distinguished degree one `degOne : β`, whose integer multiples
+    `n • degOne` are the degree shifts, and a Koszul sign character
+    `sign : β →+ Additive ℤˣ` such that `degOne` is odd. β need not be a ring, so
     bigradings such as ℤ ×ᵗ ℤ or ℤ ×ᵗ ZMod 2 are allowed, not just ℤ or ℤ/2. (2) A
     graded R-linear quiver assigns to objects X, Y and a degree i an R-module
     `Hom X Y i`, over a commutative ring R. The operations m_n are graded
-    multilinear maps of degree `shift (2 − n)` on each composable string of
+    multilinear maps of degree `(2 − n) • degOne` on each composable string of
     objects. (3) Arguments are in diagrammatic (left-to-right) order, the reverse
     of Seidel's convention, so the Koszul sign of the (r, s, t) Stasheff term is
     (−1)^(|a_{r+s+1}| + ⋯ + |a_n| − t). (4) No unitality is assumed.
@@ -171,8 +172,8 @@ fidelity:
     strand and n red strands (`KLRW/OneBlackStrand.lean`), which was the project's
     first KLRW example, and its data assumes coefficients of characteristic 2.
     (7) The source and target of an A∞-functor may be graded by different
-    gradings; the functor carries a homomorphism of gradings, preserving shifts
-    and Koszul signs, along which degrees are translated.
+    gradings; the functor carries a homomorphism of gradings, preserving the degree
+    one and Koszul signs, along which degrees are translated.
 
 review:
   status: "peer-reviewed"
@@ -191,7 +192,7 @@ alignment:
       module: "AInfinity.Grading"
       status: "defined"
     - source: "Blueprint, Lemma (Sign of an integer shift)"
-      lean: "AInfinityTheory.sign_shift"
+      lean: "AInfinityTheory.sign_zsmul_degOne"
       module: "AInfinity.Grading"
       status: "proved"
     - source: "Blueprint, Definition (Standard gradings)"
@@ -207,7 +208,7 @@ alignment:
         The total sign, on the type synonym `AInfinityTheory.TProd` (`β ×ᵗ γ`). Together
         with `AInfinityTheory.instGradingLProd` on `AInfinityTheory.LProd` (`β ×ˡ γ`) for
         the sign of the first factor alone, and `AInfinityTheory.instGradingRProd` on
-        `AInfinityTheory.RProd` (`β ×ʳ γ`) for shifts and sign in the second factor alone.
+        `AInfinityTheory.RProd` (`β ×ʳ γ`) for degree one and sign in the second factor alone.
     - source: "Blueprint, Definition (Homomorphism of gradings)"
       lean: "AInfinityTheory.GradingHom"
       module: "AInfinity.Grading"

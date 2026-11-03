@@ -10,10 +10,10 @@
 Given input degrees $(d_0,\dots,d_{n-1})$ in a grading $\beta$, the
 output degree of the $n$-ary operation is
 \[
-  \sum_i d_i + \operatorname{shift}(2-n),
+  \sum_i d_i + (2-n) \cdot \mathbf{1},
 \]
-where the final summand is the image of the integer $2-n$ under the shift
-homomorphism $\mathbb{Z} \to \beta$.
+where the final summand is the $(2-n)$-fold multiple of the degree one
+$\mathbf{1} \in \beta$.
 \end{definition}
 
 \begin{definition}[Stasheff target degree]
@@ -23,7 +23,7 @@ homomorphism $\mathbb{Z} \to \beta$.
 \uses{AInfinityTheory.Grading}
 The common degree of the arity-$n$ Stasheff identity is
 \[
-  \sum_i d_i + \operatorname{shift}(3-n)
+  \sum_i d_i + (3-n) \cdot \mathbf{1}
 \]
 in the grading.
 \end{definition}
@@ -48,7 +48,7 @@ quiver $\Hom$ is a graded multilinear map
 \[
   m_n : \Hom(X_0,X_1) \times \cdots \times \Hom(X_{n-1},X_n) \to \Hom(X_0,X_n)
 \]
-of degree $\operatorname{shift}(2-n)$. Thus for input degrees
+of degree $(2-n) \cdot \mathbf{1}$. Thus for input degrees
 $(d_0,\dots,d_{n-1})$ its component lands in any degree equal to the operation
 target degree.
 \end{definition}
@@ -86,11 +86,11 @@ The sign $\pm 1$ attached to a Stasheff index $(r,s,t)$ is
 \[
   \prod_{k=r+s}^{n-1} (-1)^{\|a_k\|},
   \qquad
-  \|a_k\| := |a_k| - \operatorname{shift}(1),
+  \|a_k\| := |a_k| - \mathbf{1},
 \]
 the product of the Koszul signs of the reduced degrees of the $t$ trailing
 inputs. Since the sign character is a homomorphism, this equals
-$(-1)^{|a_{r+s}| + \cdots + |a_{n-1}| - \operatorname{shift}(t)}$.
+$(-1)^{|a_{r+s}| + \cdots + |a_{n-1}| - t \cdot \mathbf{1}}$.
 \end{definition}
 
 \begin{definition}[Signed Stasheff sum]

@@ -312,7 +312,7 @@ lemma stasheffSum_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 → β}
 lemma stasheffSum_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 → β}
     (x : ∀ i : Fin 2, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
     stasheffSum x d hd =
-      (sign (deg 1 - shift 1)).toMul • stasheffTerm x ⟨0, 1, 1, rfl, le_rfl⟩ d hd +
+      (sign (deg 1 - degOne)).toMul • stasheffTerm x ⟨0, 1, 1, rfl, le_rfl⟩ d hd +
         stasheffTerm x ⟨1, 1, 0, rfl, le_rfl⟩ d hd +
         stasheffTerm x ⟨0, 2, 0, rfl, one_le_two⟩ d hd := by
   rw [stasheffSum, signedStasheffSum, StasheffIndex.univ_two, Finset.sum_insert (by decide),
@@ -325,11 +325,11 @@ the Koszul signs `(-1)^(‖a_{r+s+1}‖ + ⋯ + ‖a₃‖)`. -/
 lemma stasheffSum_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 → β}
     (x : ∀ i : Fin 3, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
     stasheffSum x d hd =
-      ((sign (deg 1 - shift 1)).toMul * (sign (deg 2 - shift 1)).toMul) •
+      ((sign (deg 1 - degOne)).toMul * (sign (deg 2 - degOne)).toMul) •
           stasheffTerm x ⟨0, 1, 2, rfl, le_rfl⟩ d hd +
-        (sign (deg 2 - shift 1)).toMul • stasheffTerm x ⟨1, 1, 1, rfl, le_rfl⟩ d hd +
+        (sign (deg 2 - degOne)).toMul • stasheffTerm x ⟨1, 1, 1, rfl, le_rfl⟩ d hd +
         stasheffTerm x ⟨2, 1, 0, rfl, le_rfl⟩ d hd +
-        (sign (deg 2 - shift 1)).toMul • stasheffTerm x ⟨0, 2, 1, rfl, one_le_two⟩ d hd +
+        (sign (deg 2 - degOne)).toMul • stasheffTerm x ⟨0, 2, 1, rfl, one_le_two⟩ d hd +
         stasheffTerm x ⟨1, 2, 0, rfl, one_le_two⟩ d hd +
         stasheffTerm x ⟨0, 3, 0, rfl, by decide⟩ d hd := by
   rw [stasheffSum, signedStasheffSum, StasheffIndex.univ_three]

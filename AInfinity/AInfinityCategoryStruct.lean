@@ -35,7 +35,7 @@ categories and of linear categories, that vanish above arity two.
 
 `ofGradedLinearMap` and `ofBilinear` take their inputs in terms of the hom spaces
 `(X →ᵍ[R] Y) p`, and hide both `ComposableHom` and the degree arithmetic
-`(∑ k, deg k) + shift (2 - n) = j` from the user.
+`(∑ k, deg k) + (2 - n) • degOne = j` from the user.
 
 The ring of scalars `R` is an ordinary class parameter, so an object type may carry several
 rings of scalars. It is passed explicitly wherever it cannot be inferred from later arguments:
@@ -63,7 +63,7 @@ maps of degree `2 - n` from the composable hom spaces to the hom space from `X 0
 `X (Fin.last n)`. -/
 abbrev AInfinityOperation {n : ℕ} (X : Fin (n + 1) → Obj) :=
   GradedMultilinearMap R (ComposableHom β R X) (X 0 →ᵍ[R] X (Fin.last n))
-    (shift (2 - (n : ℤ)))
+    ((2 - (n : ℤ)) • degOne)
 
 end
 
@@ -83,14 +83,14 @@ namespace AInfinityOperation
 /-- The unary operation given by a graded linear map `f` of degree `1` on the morphisms from
 `X 0` to `X 1`, such as the differential of a DG category. -/
 def ofGradedLinearMap {X : Fin (1 + 1) → Obj}
-    (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) (shift 1)) :
+    (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) degOne) :
     AInfinityOperation β R X :=
   .mk fun deg j h ↦ MultilinearMap.ofSubsingletonₗ' 0 (f.v (deg 0) j (by simpa using h))
 
 @[simp]
 theorem ofGradedLinearMap_v_apply {X : Fin (1 + 1) → Obj}
-    (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) (shift 1)) (deg : Fin 1 → β)
-    (j : β) (h : (∑ k, deg k) + shift (2 - ((1 : ℕ) : ℤ)) = j)
+    (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) degOne) (deg : Fin 1 → β)
+    (j : β) (h : (∑ k, deg k) + (2 - ((1 : ℕ) : ℤ)) • degOne = j)
     (x : ∀ k, ComposableHom β R X k (deg k)) :
     (ofGradedLinearMap f).v deg j h x = f.v (deg 0) j (by simpa using h) (x 0) :=
   rfl
@@ -109,7 +109,7 @@ def ofBilinear {X : Fin (2 + 1) → Obj}
 theorem ofBilinear_v_apply {X : Fin (2 + 1) → Obj}
     (f : ∀ p q j : β, p + q = j →
       (X 0 →ᵍ[R, β] X 1) p →ₗ[R] (X 1 →ᵍ[R] X 2) q →ₗ[R] (X 0 →ᵍ[R] X 2) j)
-    (deg : Fin 2 → β) (j : β) (h : (∑ k, deg k) + shift (2 - ((2 : ℕ) : ℤ)) = j)
+    (deg : Fin 2 → β) (j : β) (h : (∑ k, deg k) + (2 - ((2 : ℕ) : ℤ)) • degOne = j)
     (x : ∀ k, ComposableHom β R X k (deg k)) :
     (ofBilinear f).v deg j h x =
       f (deg 0) (deg 1) j (by simpa [Fin.sum_univ_two] using h) (x 0) (x 1) :=

@@ -45,21 +45,21 @@ open GradedLinearQuiver
 
 variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommRing R] {Obj : Type w}
   [GradedLinearQuiver β R Obj]
-  (f : ∀ X Y : Obj, GradedLinearMap R (X →ᵍ[R, β] Y) (X →ᵍ[R] Y) (shift 1))
+  (f : ∀ X Y : Obj, GradedLinearMap R (X →ᵍ[R, β] Y) (X →ᵍ[R] Y) degOne)
   (g : ∀ (X Y Z : Obj) (p q i : β), p + q = i →
     (X →ᵍ[R, β] Y) p →ₗ[R] (Y →ᵍ[R] Z) q →ₗ[R] (X →ᵍ[R] Z) i)
 
-variable (differential_differential : ∀ (X Y : Obj) {p q r : β} (hpq : p + shift 1 = q)
-    (hqr : q + shift 1 = r) (a : (X →ᵍ[R] Y) p), (f X Y).v q r hqr ((f X Y).v p q hpq a) = 0)
-  (leibniz : ∀ (X Y Z : Obj) {p q e p' q' d : β} (h : p + q = e) (hp : p + shift 1 = p')
-    (hq : q + shift 1 = q') (he : e + shift 1 = d) (h₁ : p' + q = d) (h₂ : p + q' = d)
+variable (differential_differential : ∀ (X Y : Obj) {p q r : β} (hpq : p + degOne = q)
+    (hqr : q + degOne = r) (a : (X →ᵍ[R] Y) p), (f X Y).v q r hqr ((f X Y).v p q hpq a) = 0)
+  (leibniz : ∀ (X Y Z : Obj) {p q e p' q' d : β} (h : p + q = e) (hp : p + degOne = p')
+    (hq : q + degOne = q') (he : e + degOne = d) (h₁ : p' + q = d) (h₂ : p + q' = d)
     (a : (X →ᵍ[R] Y) p) (b : (Y →ᵍ[R] Z) q),
-    (sign (q - shift 1)).toMul • g X Y Z p' q d h₁ ((f X Y).v p p' hp a) b +
+    (sign (q - degOne)).toMul • g X Y Z p' q d h₁ ((f X Y).v p p' hp a) b +
       g X Y Z p q' d h₂ a ((f Y Z).v q q' hq b) + (f X Z).v e d he (g X Y Z p q e h a b) = 0)
   (assoc : ∀ (W X Y Z : Obj) {p q r e e' d : β} (h : p + q = e) (h' : q + r = e')
     (h₁ : e + r = d) (h₂ : p + e' = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q)
     (c : (Y →ᵍ[R] Z) r),
-    (sign (r - shift 1)).toMul • g W Y Z e r d h₁ (g W X Y p q e h a b) c +
+    (sign (r - degOne)).toMul • g W Y Z e r d h₁ (g W X Y p q e h a b) c +
       g W X Z p e' d h₂ a (g X Y Z q r e' h' b c) = 0)
 
 /-- The `A∞`-category structure whose differential `m₁` is given by the graded linear maps `f`,

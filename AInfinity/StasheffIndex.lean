@@ -43,18 +43,18 @@ variable {n : ℕ}
 degree `2 - n`. -/
 abbrev operationTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + shift (2 - (n : ℤ))
+  (∑ i, deg i) + (2 - (n : ℤ)) • degOne
 
 /-- Target degree of the arity-`n` Stasheff identity on inputs of degrees `deg`. -/
 abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + shift (3 - (n : ℤ))
+  (∑ i, deg i) + (3 - (n : ℤ)) • degOne
 
 /-- The arity-`n` Stasheff identity has degree one more than the `n`-ary operation `mₙ`. -/
-lemma stasheffTargetDeg_eq_operationTargetDeg_add_shift_one
+lemma stasheffTargetDeg_eq_operationTargetDeg_add_degOne
     (deg : Fin n → β) :
-    stasheffTargetDeg deg = operationTargetDeg deg + shift 1 := by
-  rw [stasheffTargetDeg, operationTargetDeg, add_assoc, ← map_add]
+    stasheffTargetDeg deg = operationTargetDeg deg + degOne := by
+  rw [stasheffTargetDeg, operationTargetDeg, add_assoc, ← add_one_zsmul]
   congr 2
   lia
 
@@ -203,7 +203,7 @@ lemma stasheffDegOut_sum :
   simp only [operationTargetDeg, stasheffTargetDeg, Fin.sum_univ_add, stasheffDegOut_left,
     stasheffDegOut_middle, stasheffDegOut_right, Fin.sum_univ_castSucc, stasheffInnerDeg,
     stasheffDegIn, ← Fin.sum_congr' deg p.sum_eq]
-  rw [show (3 - (n : ℤ)) = (2 - p.s) + (2 - ((p.r + 1 + p.t : ℕ) : ℤ)) by omega, map_add]
+  rw [show (3 - (n : ℤ)) = (2 - p.s) + (2 - ((p.r + 1 + p.t : ℕ) : ℤ)) by omega, add_smul]
   abel
 
 variable {deg}
@@ -213,7 +213,7 @@ variable (deg) in
 `p = (r, s, t)`, where `‖a‖ = |a| - 1` is the reduced degree of an input after the inner
 operation. -/
 def stasheffSign : ℤˣ :=
-  ∏ k : Fin p.t, sign (deg ((k.natAdd (p.r + p.s)).cast p.sum_eq) - shift 1)
+  ∏ k : Fin p.t, sign (deg ((k.natAdd (p.r + p.s)).cast p.sum_eq) - degOne)
 
 variable (deg) in
 /-- The signed sum `∑_{r + s + t = n, s ≥ 1} (-1)^(‖a_{r+s+1}‖ + ⋯ + ‖aₙ‖) f (r, s, t)` over

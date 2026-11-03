@@ -24,7 +24,7 @@ sign arises from moving it past the inputs (compare [Seidel, *Fukaya categories 
 Picard–Lefschetz theory*, (1.6)]).
 
 The source and target may be graded by different gradings `β` and `β'`; the functor then
-carries a homomorphism of gradings `β →+ᵍ β'`, which preserves the integer shifts
+carries a homomorphism of gradings `β →+ᵍ β'`, which preserves the degree one
 and the Koszul signs.
 
 ## Main definitions
@@ -43,7 +43,7 @@ and the Koszul signs.
 A `GradedMultilinearMap` has a single type of degrees for its inputs, its output and its degree.
 The inputs of `φₙ` are graded by `β` and its output by `β'`, so the output family is read
 through `degMap`: for input degrees `deg`, the component of `φₙ` lands in `Hom(F X₀, F Xₙ)` in
-degree `degMap (∑ deg + shift (1 - n))`. All degree arithmetic happens in `β`, and `φₙ` is only
+degree `degMap (∑ deg + (1 - n) • degOne)`. All degree arithmetic happens in `β`, and `φₙ` is only
 ever evaluated in target degrees of the form `degMap b`.
 
 Both sides of the functor equation are stated pointwise on composable inputs `a₁, …, aₙ` of
@@ -82,12 +82,12 @@ variable (deg : Fin n → β)
 /-- The degree of `φₙ(a₁, …, aₙ)` for inputs `aᵢ` of degrees `deg i`, where `φₙ` itself has
 degree `1 - n`. -/
 abbrev functorTargetDeg : β :=
-  (∑ i, deg i) + shift (1 - (n : ℤ))
+  (∑ i, deg i) + (1 - (n : ℤ)) • degOne
 
 /-- The `n`-ary operation `mₙ` has degree one more than the `n`-ary functor component `φₙ`. -/
-lemma operationTargetDeg_eq_functorTargetDeg_add_shift_one :
-    operationTargetDeg deg = functorTargetDeg deg + shift 1 := by
-  rw [operationTargetDeg, functorTargetDeg, add_assoc, ← map_add]
+lemma operationTargetDeg_eq_functorTargetDeg_add_degOne :
+    operationTargetDeg deg = functorTargetDeg deg + degOne := by
+  rw [operationTargetDeg, functorTargetDeg, add_assoc, ← add_one_zsmul]
   congr 2
   lia
 
@@ -95,9 +95,9 @@ lemma operationTargetDeg_eq_functorTargetDeg_add_shift_one :
 side of the functor equation, indexed by `p = (r, s, t)`, has the degree of `mₙ(a₁, …, aₙ)`. -/
 lemma functorTargetDeg_stasheffDegOut (p : StasheffIndex n) :
     functorTargetDeg (stasheffDegOut deg p) = operationTargetDeg deg := by
-  apply add_right_cancel (b := (shift 1 : β))
-  rw [← operationTargetDeg_eq_functorTargetDeg_add_shift_one, stasheffDegOut_sum,
-    stasheffTargetDeg_eq_operationTargetDeg_add_shift_one]
+  apply add_right_cancel (b := (degOne : β))
+  rw [← operationTargetDeg_eq_functorTargetDeg_add_degOne, stasheffDegOut_sum,
+    stasheffTargetDeg_eq_operationTargetDeg_add_degOne]
 
 /-- The term `mₖ(φ_{i₁}(a₁, …, a_{i₁}), …, φ_{iₖ}(a_{n-iₖ+1}, …, aₙ))` of the right-hand side of
 the functor equation, indexed by a composition `c = (i₁, …, iₖ)` of `n`, has the degree of
@@ -106,7 +106,8 @@ lemma operationTargetDeg_functorTargetDeg_embedding (c : Composition n) :
     operationTargetDeg (fun l ↦ functorTargetDeg fun j ↦ deg (c.embedding l j)) =
       operationTargetDeg deg := by
   simp only [operationTargetDeg, functorTargetDeg, Finset.sum_add_distrib, c.sum_sum_embedding,
-    add_assoc, ← map_sum, ← map_add, Finset.sum_sub_distrib, ← Nat.cast_sum]
+    add_assoc, ← GradingHom.ofInt_apply, ← map_sum, ← map_add, Finset.sum_sub_distrib,
+    ← Nat.cast_sum]
   simp
 
 end Degrees
@@ -174,7 +175,7 @@ structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
   map : {n : ℕ} → [NeZero n] → (X : Fin (n + 1) → Obj) →
     GradedMultilinearMap R (ComposableHom β R X)
       (fun b : β ↦ (obj (X 0) →ᵍ[R] obj (X (Fin.last n))) (degMap b))
-      (shift (1 - (n : ℤ)))
+      ((1 - (n : ℤ)) • degOne)
 
 namespace AInfinityFunctorData
 
@@ -191,7 +192,7 @@ variable (x : ∀ i : Fin n, ComposableHom β R X i (deg i))
 /-- A homomorphism of gradings commutes with `operationTargetDeg`. -/
 lemma operationTargetDeg_degMap {k : ℕ} (b : Fin k → β) :
     operationTargetDeg (fun i ↦ F.degMap (b i)) = F.degMap (operationTargetDeg b) := by
-  simp only [operationTargetDeg, map_add, map_sum, GradingHom.map_shift]
+  simp only [operationTargetDeg, map_add, map_sum, map_zsmul, GradingHom.map_degOne]
 
 /-- `operationTargetDeg_functorTargetDeg_embedding` translated along `degMap`: the term
 `m'ₖ(φ_{i₁}(…), …, φ_{iₖ}(…))` of the right-hand side of the functor equation has degree
