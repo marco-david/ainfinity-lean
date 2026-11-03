@@ -7,22 +7,22 @@ module
 
 public import AInfinity.AInfinityCategory
 
-/-! # `A∞`-categories with vanishing higher operations
+/-! # A∞-categories with vanishing higher operations
 
-Many `A∞`-categories, such as DG categories, have vanishing higher compositions `mₙ` for
-`n ≥ 3`. Such a structure is determined by a differential `m₁` and a composition `m₂`, and its
-Stasheff identities reduce to three identities in arities `1`, `2` and `3`: `m₁` squares to
-zero, `m₁` is a derivation of `m₂` (the Leibniz rule), and `m₂` is associative, all with Koszul
-signs. In arity at least `4`, every Stasheff term involves an operation of arity at least `3`,
-and vanishes.
+Many A∞-categories, such as DG categories, have vanishing higher compositions mₙ for
+n ≥ 3. Such a structure is determined by a differential m₁ and a composition m₂, and
+its Stasheff identities reduce to three identities in arities 1, 2 and 3: m₁ squares to
+zero, m₁ is a derivation of m₂ (the Leibniz rule), and m₂ is associative, all with
+Koszul signs. In arity at least 4, every Stasheff term involves an operation of arity at
+least 3, and vanishes.
 
 ## Main definitions
 
-* `AInfinityTheory.AInfinityCategoryStruct.ofArityLeTwo f g`: the `A∞`-category structure with
-  `m₁` given by a family `f` of graded linear maps of degree `1`, `m₂` given by a family `g` of
-  bilinear maps of degree `0`, and `mₙ = 0` for `n ≥ 3`.
-* `AInfinityTheory.AInfinityCategory.ofArityLeTwo`: the `A∞`-category with these operations,
-  from the Stasheff identities in arities `1`, `2` and `3`.
+* `AInfinityTheory.AInfinityCategoryStruct.ofArityLeTwo f g`: the A∞-category structure with
+  m₁ given by a family `f` of graded linear maps of degree `1`, m₂ given by a family `g`
+  of bilinear maps of degree `0`, and mₙ = 0 for n ≥ 3.
+* `AInfinityTheory.AInfinityCategory.ofArityLeTwo`: the A∞-category with these operations,
+  from the Stasheff identities in arities 1, 2 and 3.
 
 ## Implementation notes
 
@@ -73,9 +73,9 @@ variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommRing R] 
       (sign (r - degOne)).toMul • g W Y Z e r d h₁ (g W X Y p q e h a b) c +
         g W X Z p e' d (h' ▸ h₁ ▸ h ▸ (add_assoc p q r).symm) a (g X Y Z q r e' h' b c) = 0)
 
-/-- The `A∞`-category structure whose differential `m₁` is given by the graded linear maps `f`,
-whose composition `m₂` is given by the bilinear maps `g`, and whose higher compositions `mₙ`
-for `n ≥ 3` vanish. -/
+/-- The A∞-category structure whose differential m₁ is given by the graded linear
+maps `f`, whose composition m₂ is given by the bilinear maps `g`, and whose higher
+compositions mₙ for n ≥ 3 vanish. -/
 abbrev AInfinityCategoryStruct.ofArityLeTwo : AInfinityCategoryStruct β R Obj where
   toGradedLinearQuiver := ‹_›
   m := AInfinityOperation.ofArityLeTwo (fun X ↦ .ofGradedLinearMap (f (X 0) (X 1)))
@@ -83,7 +83,6 @@ abbrev AInfinityCategoryStruct.ofArityLeTwo : AInfinityCategoryStruct β R Obj w
 
 namespace AInfinityCategoryStruct.ofArityLeTwo
 
-/-- The higher compositions vanish in every arity other than `1` and `2`. -/
 lemma m_eq_zero {k : ℕ} [NeZero k] (hk : k ∉ ({1, 2} : Set ℕ)) (X : Fin (k + 1) → Obj) :
     letI := ofArityLeTwo f g
     m (β := β) (R := R) X = 0 :=
@@ -111,7 +110,7 @@ lemma stasheffSum_eq_zero_of_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 �
 
 include assoc in
 /-- The arity-three Stasheff identity holds as soon as the composition is associative up to
-the Koszul sign: the four terms involving an operation of arity `3` vanish. -/
+the Koszul sign: the four terms involving an operation of arity 3 vanish. -/
 lemma stasheffSum_eq_zero_of_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 → β}
     (x : ∀ i : Fin 3, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
     letI := ofArityLeTwo f g
@@ -126,8 +125,8 @@ lemma stasheffSum_eq_zero_of_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 
   simp only [smul_zero, zero_add, add_zero]
   exact assoc (X 0) (X 1) (X 2) (X 3) _ _ _ (x 0) (x 1) (x 2)
 
-/-- The Stasheff identities hold in every arity `n ≥ 4`: each Stasheff term involves an
-operation of arity at least `3`, which vanishes. -/
+/-- The Stasheff identities hold in every arity n ≥ 4: each Stasheff term involves an
+operation of arity at least 3, which vanishes. -/
 lemma stasheffSum_eq_zero_of_four_le {n : ℕ} (hn : 4 ≤ n) {X : Fin (n + 1) → Obj}
     {deg : Fin n → β} (x : ∀ i : Fin n, ComposableHom β R X i (deg i)) {d : β}
     (hd : stasheffTargetDeg deg = d) :
@@ -145,10 +144,10 @@ end AInfinityCategoryStruct.ofArityLeTwo
 
 open AInfinityCategoryStruct.ofArityLeTwo in
 include differential_differential leibniz assoc in
-/-- An `A∞`-category whose higher compositions `mₙ` for `n ≥ 3` vanish, with differential `m₁`
-given by `f` and composition `m₂` given by `g`, from the Stasheff identities in arities `1`,
-`2` and `3`: `m₁` squares to zero, `m₁` is a derivation of `m₂`, and `m₂` is associative, all
-with Koszul signs. -/
+/-- An A∞-category whose higher compositions mₙ for n ≥ 3 vanish, with differential
+m₁ given by `f` and composition m₂ given by `g`, from the Stasheff identities in arities
+1, 2 and 3: m₁ squares to zero, m₁ is a derivation of m₂, and m₂ is
+associative, all with Koszul signs. -/
 abbrev AInfinityCategory.ofArityLeTwo : AInfinityCategory β R Obj where
   __ := AInfinityCategoryStruct.ofArityLeTwo f g
   stasheffSum_eq_zero {n} _ X deg x d hd := by

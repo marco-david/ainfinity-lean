@@ -21,7 +21,7 @@ A-infinity axioms only ever use two pieces of additional structure on it:
 
 * a distinguished *degree one* `degOne : β`, the degree of the differential; a degree `d` is
   *shifted by* an integer `n` by adding `n • degOne`;
-* a *Koszul sign character* `β →+ Additive ℤˣ`, read as the map `d ↦ (-1) ^ d`.
+* a *Koszul sign character* `β →+ Additive ℤˣ`, read as the map d ↦ (-1)^d.
 
 They are compatible in that the differential, of degree `degOne`, is odd.
 
@@ -31,9 +31,10 @@ Integer shifts are written with the `ℤ`-action `n • degOne` rather than thro
 A homomorphism of gradings `GradingHom β β'`, written `β →+ᵍ β'`, is an additive
 homomorphism preserving the degree one and the signs. It translates degrees when an A-infinity
 functor changes the grading. Homomorphisms of gradings compose, with the identity as unit.
-The integers are the initial grading: `GradingHom.ofInt β : ℤ →+ᵍ β` is `n ↦ n • degOne`. The
-inclusion `inl` of the first factor into `β ×ᵗ γ` or `β ×ˡ γ`, the projection `fst` out of
-`β ×ˡ γ`, and their mirror images `inr` and `snd` for `β ×ʳ γ`, are homomorphisms of gradings.
+The integers are the initial grading: `GradingHom.ofInt β : ℤ →+ᵍ β` is
+`fun n ↦ n • degOne`. The inclusion `inl` of the first factor into `β ×ᵗ γ` or `β ×ˡ γ`, the
+projection `fst` out of `β ×ˡ γ`, and their mirror images `inr` and `snd` for `β ×ʳ γ`, are
+homomorphisms of gradings.
 -/
 
 namespace AInfinityTheory
@@ -44,7 +45,7 @@ variable (β : Type v)
 
 /-- A grading is an abelian group of degrees `β` together with a distinguished degree one
 `degOne : β`, the degree of the differential, whose integer multiples realise integer degree
-shifts (the `n`-ary operation `mₙ` has degree `(2 - n) • degOne`), and a Koszul sign
+shifts (the n-ary operation mₙ has degree `(2 - n : ℤ) • degOne`), and a Koszul sign
 character `sign : β →+ Additive ℤˣ`, such that the differential is odd. -/
 public class Grading (β : Type*) [AddCommGroup β] where
   /-- The degree one: the degree of the differential. Integer degree shifts are its
@@ -79,7 +80,7 @@ Global instances are provided for the two standard gradings `ℤ` and `ZMod 2`, 
 product gradings `β ×ᵗ γ`, `β ×ˡ γ` and `β ×ʳ γ`. -/
 
 /-- The integers, graded by themselves: the degree one is `1` and the sign of `n` is
-`(-1) ^ n`. -/
+(-1)^n. -/
 public instance : Grading ℤ where
   degOne := 1
   sign := zmultiplesHom (Additive ℤˣ) (Additive.ofMul (-1))
@@ -89,7 +90,7 @@ public instance : Grading ℤ where
 public lemma degOne_int : (degOne : ℤ) = 1 := rfl
 
 /-- The parity grading `ZMod 2`: the degree one is `1` and the sign of a parity `p` is
-`(-1) ^ p`, using Mathlib's power operation on `ℤˣ` by `ZMod 2`. -/
+(-1)^p, using Mathlib's power operation on `ℤˣ` by `ZMod 2`. -/
 public instance : Grading (ZMod 2) where
   degOne := 1
   sign := (smulAddHom (ZMod 2) (Additive ℤˣ)).flip (Additive.ofMul (-1))
@@ -149,25 +150,20 @@ public lemma coe_toAddMonoidHom (f : β →+ᵍ β') : ⇑f.toAddMonoidHom = ⇑
 @[simp]
 public lemma coe_mk (f : β →+ β') (h₁ h₂) : ⇑(⟨f, h₁, h₂⟩ : β →+ᵍ β') = ⇑f := rfl
 
-/-- Two homomorphisms of gradings are equal if they agree on every degree. -/
 @[ext]
 public lemma ext {f g : β →+ᵍ β'} (h : ∀ b, f b = g b) : f = g :=
   DFunLike.ext f g h
 
-/-- A homomorphism of gradings is determined by its underlying additive homomorphism. -/
 public lemma toAddMonoidHom_injective :
     Function.Injective (toAddMonoidHom : (β →+ᵍ β') → β →+ β') := by
   intro f g h
   ext b
   rw [← coe_toAddMonoidHom f, ← coe_toAddMonoidHom g, h]
 
-/-- A homomorphism of gradings preserves the degree one. Together with `map_zsmul`, it
-preserves all integer degree shifts. -/
 @[simp]
 public lemma map_degOne (f : β →+ᵍ β') : f degOne = degOne :=
   f.map_degOne'
 
-/-- A homomorphism of gradings preserves the Koszul signs. -/
 @[simp]
 public lemma map_sign (f : β →+ᵍ β') (b : β) : sign (f b) = sign b :=
   f.map_sign' b
@@ -199,24 +195,21 @@ public lemma comp_apply (g : β' →+ᵍ β'') (f : β →+ᵍ β') (b : β) :
 @[simp]
 public lemma coe_comp (g : β' →+ᵍ β'') (f : β →+ᵍ β') : ⇑(g.comp f) = g ∘ f := rfl
 
-/-- The identity is a right unit for composition of homomorphisms of gradings. -/
 @[simp]
 public lemma comp_id (f : β →+ᵍ β') : f.comp (GradingHom.id β) = f :=
   ext fun _ => rfl
 
-/-- The identity is a left unit for composition of homomorphisms of gradings. -/
 @[simp]
 public lemma id_comp (f : β →+ᵍ β') : (GradingHom.id β').comp f = f :=
   ext fun _ => rfl
 
-/-- Composition of homomorphisms of gradings is associative. -/
 public lemma comp_assoc (h : β'' →+ᵍ β''') (g : β' →+ᵍ β'') (f : β →+ᵍ β') :
     (h.comp g).comp f = h.comp (g.comp f) :=
   ext fun _ => rfl
 
 variable (β) in
-/-- The integers are the initial grading: the integer degree shift `n ↦ n • degOne` is the
-unique homomorphism of gradings from ℤ to β. -/
+/-- The integers are the initial grading: the integer degree shift `fun n ↦ n • degOne` is the
+unique homomorphism of gradings from `ℤ` to `β`. -/
 @[expose]
 public def ofInt : ℤ →+ᵍ β where
   toAddMonoidHom := zmultiplesHom β degOne
@@ -226,7 +219,7 @@ public def ofInt : ℤ →+ᵍ β where
 @[simp]
 public lemma ofInt_apply (n : ℤ) : ofInt β n = n • degOne := rfl
 
-/-- The homomorphism of gradings `ℤ → ZMod 2` is reduction modulo `2`. -/
+/-- The homomorphism of gradings `ℤ →+ᵍ ZMod 2` is reduction modulo `2`. -/
 public lemma ofInt_zmod_two_apply (n : ℤ) : ofInt (ZMod 2) n = (n : ZMod 2) := by
   rw [ofInt_apply, Grading.degOne_zmod_two, zsmul_one]
 
@@ -247,10 +240,7 @@ end GradingHom
 The product of two gradings, seen as abelian groups, carries three natural gradings: `β ×ᵗ γ`,
 with degree one in the first factor and the total sign, `β ×ˡ γ`, with degree one and sign in
 the first factor alone, and `β ×ʳ γ`, with degree one and sign in the second factor alone. Each
-is a type synonym for `β × γ`.
-
-The inclusion `inl` of the first factor into `β ×ᵗ γ` or `β ×ˡ γ`, the projection `fst` out of
-`β ×ˡ γ`, and their mirror images `inr` and `snd` for `β ×ʳ γ`, are homomorphisms of gradings. -/
+is a type synonym for `β × γ`. -/
 
 section TProd
 
@@ -308,7 +298,7 @@ public lemma sign_tProd (d : β ×ᵗ γ) : sign d = sign (ofTProd d).1 + sign (
 namespace TProd
 
 variable (β γ) in
-/-- The inclusion `b ↦ (b, 0)` of `β` into the product grading `β ×ᵗ γ`. -/
+/-- The inclusion b ↦ (b, 0) of `β` into the product grading `β ×ᵗ γ`. -/
 @[expose]
 public def inl : β →+ᵍ β ×ᵗ γ where
   toAddMonoidHom := toTProd.toAddMonoidHom.comp (AddMonoidHom.inl β γ)
@@ -380,7 +370,7 @@ public lemma sign_lProd (d : β ×ˡ γ) : sign d = sign (ofLProd d).1 := rfl
 namespace LProd
 
 variable (β γ) in
-/-- The inclusion `b ↦ (b, 0)` of `β` into the product grading `β ×ˡ γ`. -/
+/-- The inclusion b ↦ (b, 0) of `β` into the product grading `β ×ˡ γ`. -/
 @[expose]
 public def inl : β →+ᵍ β ×ˡ γ where
   toAddMonoidHom := toLProd.toAddMonoidHom.comp (AddMonoidHom.inl β γ)
@@ -401,7 +391,6 @@ public lemma inl_apply (b : β) : inl β γ b = toLProd (b, 0) := rfl
 @[simp]
 public lemma fst_apply (d : β ×ˡ γ) : fst β γ d = (ofLProd d).1 := rfl
 
-/-- The projection onto the first factor is a retraction of the inclusion. -/
 @[simp]
 public lemma fst_comp_inl : (fst β γ).comp (inl β γ) = GradingHom.id β :=
   GradingHom.ext fun _ => rfl
@@ -466,7 +455,7 @@ public lemma sign_rProd (d : β ×ʳ γ) : sign d = sign (ofRProd d).2 := rfl
 namespace RProd
 
 variable (β γ) in
-/-- The inclusion `c ↦ (0, c)` of `γ` into the product grading `β ×ʳ γ`. -/
+/-- The inclusion c ↦ (0, c) of `γ` into the product grading `β ×ʳ γ`. -/
 @[expose]
 public def inr : γ →+ᵍ β ×ʳ γ where
   toAddMonoidHom := toRProd.toAddMonoidHom.comp (AddMonoidHom.inr β γ)
@@ -487,7 +476,6 @@ public lemma inr_apply (c : γ) : inr β γ c = toRProd (0, c) := rfl
 @[simp]
 public lemma snd_apply (d : β ×ʳ γ) : snd β γ d = (ofRProd d).2 := rfl
 
-/-- The projection onto the second factor is a retraction of the inclusion. -/
 @[simp]
 public lemma snd_comp_inr : (snd β γ).comp (inr β γ) = GradingHom.id γ :=
   GradingHom.ext fun _ => rfl

@@ -51,8 +51,8 @@ group and module structures are inherited from Mathlib's `Pi` instances. Compone
 constructed with `GradedLinearMap.mk` and read off with `GradedLinearMap.v`, as for `Cochain`.
 `GradedMultilinearMap` follows the same pattern with `GradedMultilinearMap.Index`.
 
-The structures only need an addition on `β`; `comp` needs `AddSemigroup β` and `id` needs
-`AddZeroClass β`.
+`GradedLinearMap` only needs an addition on `β`; `comp` needs `AddSemigroup β` and `id` needs
+`AddZeroClass β`. `GradedMultilinearMap` needs `AddCommMonoid β` to sum the input degrees.
 -/
 
 @[expose] public section
@@ -112,7 +112,6 @@ theorem congr_v {f g : GradedLinearMap R M N d} (h : f = g) (i j : β) (hij : i 
     f.v i j hij = g.v i j hij := by
   rw [h]
 
-/-- Two graded linear maps are equal if all their components are. -/
 @[ext]
 theorem ext {f g : GradedLinearMap R M N d} (h : ∀ i j hij, f.v i j hij = g.v i j hij) :
     f = g := by
@@ -211,7 +210,7 @@ section Identity
 variable [AddZeroClass β]
 
 /-- The identity graded linear map, of degree `0`. Its component from degree `i` to degree `j`
-is the identity, transported along `i = i + 0 = j`. -/
+is the identity, transported along `h : i + 0 = j`. -/
 def id : GradedLinearMap R M M 0 :=
   mk fun i j h ↦ by obtain rfl : i = j := (add_zero i).symm.trans h; exact LinearMap.id
 
@@ -294,7 +293,6 @@ theorem congr_v {f g : GradedMultilinearMap R M N d} (h : f = g) (deg : ι → �
     (hdeg : (∑ k, deg k) + d = j) : f.v deg j hdeg = g.v deg j hdeg := by
   rw [h]
 
-/-- Two graded multilinear maps are equal if all their components are. -/
 @[ext]
 theorem ext {f g : GradedMultilinearMap R M N d}
     (h : ∀ deg j hdeg, f.v deg j hdeg = g.v deg j hdeg) : f = g := by

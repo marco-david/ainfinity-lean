@@ -12,15 +12,15 @@ public import Mathlib.Algebra.Homology.Monoidal
 public import Mathlib.CategoryTheory.Enriched.Basic
 public import Mathlib.CategoryTheory.Monoidal.Limits.Preserves
 
-/-! # DG categories as `A∞`-categories
+/-! # DG categories as A∞-categories
 
 A DG category over a commutative ring `R` is a category enriched over cochain complexes of
 `R`-modules. The monoidal structure on `CochainComplex (ModuleCat R) ℤ` used for the enrichment
 is Mathlib's `HomologicalComplex.monoidalCategory`: the tensor product is the total complex with
-the Koszul sign `d(a ⊗ b) = da ⊗ b + (-1)^|a| a ⊗ db`.
+the Koszul sign d(a ⊗ b) = da ⊗ b + (-1)^|a| a ⊗ db.
 
-We regard a DG category as an `A∞`-category: the graded hom spaces are the components of the
-hom complexes, `m₁` is the differential, `m₂` is the composition, and all higher compositions
+We regard a DG category as an A∞-category: the graded hom spaces are the components of the
+hom complexes, m₁ is the differential, m₂ is the composition, and all higher compositions
 vanish.
 
 ## Main definitions
@@ -31,11 +31,11 @@ vanish.
   as a bilinear map.
 * `AInfinityTheory.DGCategory.differential`: the signed differential.
 * `AInfinityTheory.DGCategory.gradedDifferential`: the signed differential as a graded linear
-  map of degree `1`, the arity-one `A∞` operation.
-* `AInfinityTheory.DGCategory.composition`: the signed composition, the arity-two `A∞`
+  map of degree `1`, the arity-one A∞ operation.
+* `AInfinityTheory.DGCategory.composition`: the signed composition, the arity-two A∞
   operation.
-* `AInfinityTheory.DGCategory.aInfinityCategory`: the `A∞`-category with `m₁` the signed
-  differential, `m₂` the signed composition and vanishing higher compositions, built with
+* `AInfinityTheory.DGCategory.aInfinityCategory`: the A∞-category with m₁ the signed
+  differential, m₂ the signed composition and vanishing higher compositions, built with
   `AInfinityCategory.ofArityLeTwo`.
 
 ## Main results
@@ -52,10 +52,11 @@ vanish.
 
 ## Implementation notes
 
-We use Seidel's sign convention, written in the path order of this repository: for
-`a : X₀ → X₁` of degree `p` and `b : X₁ → X₂` of degree `q`,
-`m₁(a) = (-1)^p da` and `m₂(a, b) = (-1)^q a ≫ b`. With these signs the Stasheff identities of
-`AInfinity.Stasheff` follow from `d² = 0`, the Leibniz rule and associativity of composition.
+We use Seidel's sign convention, written in the path order of this repository: for morphisms
+a from X₀ to X₁ of degree p and b from X₁ to X₂ of degree q, m₁(a) = (-1)^p da and
+m₂(a, b) = (-1)^q b ∘ a, where b ∘ a is the enriched composition `compBilin`. With these
+signs the Stasheff identities of `AInfinity.Stasheff` follow from d² = 0, the Leibniz rule and
+associativity of composition.
 -/
 
 @[expose] public section
@@ -87,7 +88,7 @@ instance gradedLinearQuiver : GradedLinearQuiver ℤ R C where
 
 open HomologicalComplex in
 /-- The differential of a tensor product of cochain complexes, on the summand of degree
-`(p, q)`: `d(a ⊗ b) = da ⊗ b + (-1)^p a ⊗ db`. -/
+(p, q): d(a ⊗ b) = da ⊗ b + (-1)^p a ⊗ db. -/
 lemma ιTensorObj_d (K L : V) (p q i i' : ℤ) (h : p + q = i) (h₁ : p + 1 + q = i')
     (h₂ : p + (q + 1) = i') :
     ιTensorObj K L p q i h ≫ (K ⊗ L).d i i' =
@@ -103,16 +104,12 @@ lemma ιTensorObj_d (K L : V) (p q i i' : ℤ) (h : p + q = i) (h₁ : p + 1 + q
   rfl
 
 open HomologicalComplex in
-/-- Whiskering a tensor product of cochain complexes on the left acts on the summand of degree
-`(p, q)` by whiskering its component of degree `q`. -/
 @[reassoc]
 lemma ιTensorObj_whiskerLeft_f (K : V) {L L' : V} (g : L ⟶ L') (p q i : ℤ) (h : p + q = i) :
     ιTensorObj K L p q i h ≫ (K ◁ g).f i = (K.X p ◁ g.f q) ≫ ιTensorObj K L' p q i h := by
   simpa using ι_mapBifunctorMap (𝟙 K) g (curriedTensor _) (ComplexShape.up ℤ) p q i h
 
 open HomologicalComplex in
-/-- Whiskering a tensor product of cochain complexes on the right acts on the summand of degree
-`(p, q)` by whiskering its component of degree `p`. -/
 @[reassoc]
 lemma ιTensorObj_whiskerRight_f {K K' : V} (f : K ⟶ K') (L : V) (p q i : ℤ) (h : p + q = i) :
     ιTensorObj K L p q i h ≫ (f ▷ L).f i = (f.f p ▷ L.X q) ≫ ιTensorObj K' L p q i h := by
@@ -126,8 +123,6 @@ noncomputable def compBilin (X Y Z : C) (p q i : ℤ) (h : p + q = i) :
     (((eComp V X Y Z).f i).hom ∘ₗ
       (HomologicalComplex.ιTensorObj (X ⟶[V] Y) (Y ⟶[V] Z) p q i h).hom)
 
-/-- The bilinear composition evaluates the enriched composition on the corresponding summand of
-the tensor product of hom complexes. -/
 @[simp]
 lemma compBilin_apply (X Y Z : C) (p q i : ℤ) (h : p + q = i) (a : (X ⟶[V] Y).X p)
     (b : (Y ⟶[V] Z).X q) :
@@ -136,8 +131,9 @@ lemma compBilin_apply (X Y Z : C) (p q i : ℤ) (h : p + q = i) (a : (X ⟶[V] Y
         (HomologicalComplex.ιTensorObj (X ⟶[V] Y) (Y ⟶[V] Z) p q i h (a ⊗ₜ b)) :=
   rfl
 
-/-- The enriched composition satisfies the Leibniz rule `d(a ≫ b) = da ≫ b + (-1)^p a ≫ db`.
-The degrees are arbitrary, subject to the equations relating them. -/
+/-- The enriched composition satisfies the Leibniz rule
+d(b ∘ a) = b ∘ da + (-1)^p db ∘ a, where a has degree p. The degrees are
+arbitrary, subject to the equations relating them. -/
 lemma d_compBilin (X Y Z : C) {p q i p' q' i' : ℤ} (h : p + q = i) (hp : p + 1 = p')
     (hq : q + 1 = q') (h₁ : p' + q = i') (h₂ : p + q' = i') (a : (X ⟶[V] Y).X p)
     (b : (Y ⟶[V] Z).X q) :
@@ -152,7 +148,7 @@ lemma d_compBilin (X Y Z : C) {p q i p' q' i' : ℤ} (h : p + q = i) (hp : p + 1
     ModuleCat.MonoidalCategory.whiskerLeft_apply]
 
 open HomologicalComplex GradedObject.Monoidal in
-/-- Associativity of the enriched composition, restricted to the summand of degree `(p, q, r)`
+/-- Associativity of the enriched composition, restricted to the summand of degree (p, q, r)
 of the triple tensor product of hom complexes. -/
 lemma ιTensorObj_eComp_assoc (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e)
     (h' : q + r = e') (h₁ : e + r = d) (h₂ : p + e' = d) :
@@ -169,8 +165,8 @@ lemma ιTensorObj_eComp_assoc (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e)
   rfl
 
 /-- The enriched composition is associative on homogeneous morphisms:
-`(a ≫ b) ≫ c = a ≫ (b ≫ c)`. The degrees are arbitrary, subject to the equations relating
-them. -/
+c ∘ (b ∘ a) = (c ∘ b) ∘ a. The degrees are arbitrary, subject to the
+equations relating them. -/
 lemma compBilin_assoc (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e) (h' : q + r = e')
     (h₁ : e + r = d) (h₂ : p + e' = d) (a : (W ⟶[V] X).X p) (b : (X ⟶[V] Y).X q)
     (c : (Y ⟶[V] Z).X r) :
@@ -178,20 +174,18 @@ lemma compBilin_assoc (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e) (h' : q
       compBilin W X Z p e' d h₂ a (compBilin X Y Z q r e' h' b c) :=
   congr($(ιTensorObj_eComp_assoc W X Y Z h h' h₁ h₂) ((a ⊗ₜ b) ⊗ₜ c))
 
-/-- The differential of a DG category, with Seidel's sign: a morphism `a : X → Y` of degree `p`
-is sent to `(-1)^p da`, where `d` is the differential of the hom complex `X ⟶[V] Y`. As for
+/-- The differential of a DG category, with Seidel's sign: a morphism a from X to Y of degree
+p is sent to (-1)^p da, where d is the differential of the hom complex `X ⟶[V] Y`. As for
 `HomologicalComplex.d`, it is defined for all degrees `p` and `q`, and vanishes unless
 `q = p + 1`. -/
 def differential (X Y : C) (p q : ℤ) : (X →ᵍ[R] Y) p →ₗ[R] (X →ᵍ[R] Y) q :=
   p.negOnePow • ((X ⟶[V] Y).d p q).hom
 
-/-- The differential is the differential of the hom complex, twisted by the sign `(-1)^p`. -/
 @[simp]
 lemma differential_apply (X Y : C) (p q : ℤ) (a : (X →ᵍ[R] Y) p) :
     differential X Y p q a = p.negOnePow • (X ⟶[V] Y).d p q a :=
   rfl
 
-/-- The differential vanishes between degrees that are not consecutive. -/
 lemma differential_eq_zero (X Y : C) {p q : ℤ} (h : p + 1 ≠ q) :
     differential (R := R) X Y p q = 0 := by
   rw [differential, HomologicalComplex.shape _ _ _ h, ModuleCat.hom_zero, smul_zero]
@@ -202,14 +196,13 @@ lemma differential_differential (X Y : C) (p q r : ℤ) (a : (X →ᵍ[R] Y) p) 
   simp only [differential_apply, Units.smul_def, map_zsmul, ← ModuleCat.comp_apply,
     HomologicalComplex.d_comp_d, ModuleCat.hom_zero, LinearMap.zero_apply, smul_zero]
 
-/-- The composition of a DG category, with Seidel's sign: morphisms `a : X → Y` of degree `p`
-and `b : Y → Z` of degree `q` are sent to `(-1)^q a ≫ b`, where `a ≫ b` is the enriched
+/-- The composition of a DG category, with Seidel's sign: morphisms a from X to Y of degree p
+and b from Y to Z of degree q are sent to (-1)^q b ∘ a, where b ∘ a is the enriched
 composition `compBilin`. -/
 noncomputable def composition (X Y Z : C) (p q i : ℤ) (h : p + q = i) :
     (X →ᵍ[R] Y) p →ₗ[R] (Y →ᵍ[R] Z) q →ₗ[R] (X →ᵍ[R] Z) i :=
   q.negOnePow • compBilin X Y Z p q i h
 
-/-- The composition is the enriched composition, twisted by the sign `(-1)^q`. -/
 @[simp]
 lemma composition_apply (X Y Z : C) (p q i : ℤ) (h : p + q = i) (a : (X →ᵍ[R] Y) p)
     (b : (Y →ᵍ[R] Z) q) :
@@ -217,8 +210,8 @@ lemma composition_apply (X Y Z : C) (p q i : ℤ) (h : p + q = i) (a : (X →ᵍ
   rfl
 
 /-- The signed differential is a derivation of the signed composition, with Seidel's signs:
-`m₁(m₂(a, b)) = (-1)^q m₂(m₁ a, b) - m₂(a, m₁ b)`. The degrees are arbitrary, subject to the
-equations relating them. -/
+m₁(m₂(a, b)) = (-1)^q m₂(m₁(a), b) - m₂(a, m₁(b)), where b has degree q. The
+degrees are arbitrary, subject to the equations relating them. -/
 lemma differential_composition (X Y Z : C) {p q e p' q' d : ℤ} (h : p + q = e)
     (hp : p + 1 = p') (hq : q + 1 = q') (he : e + 1 = d)
     (a : (X →ᵍ[R] Y) p) (b : (Y →ᵍ[R] Z) q) :
@@ -238,7 +231,7 @@ lemma differential_composition (X Y Z : C) {p q e p' q' d : ℤ} (h : p + q = e)
       neg_neg, smul_add, smul_neg] <;> abel
 
 /-- The signed composition is associative up to Seidel's sign:
-`m₂(m₂(a, b), c) = (-1)^r m₂(a, m₂(b, c))`, where `c` has degree `r`. The degrees are arbitrary,
+m₂(m₂(a, b), c) = (-1)^r m₂(a, m₂(b, c)), where c has degree r. The degrees are arbitrary,
 subject to the equations relating them. -/
 lemma composition_composition (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e)
     (h' : q + r = e') (h₁ : e + r = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q)
@@ -254,7 +247,7 @@ lemma composition_composition (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e)
 
 variable (R) in
 /-- The signed differential of a DG category as a graded linear map of degree `1`: the
-arity-one `A∞` operation. -/
+arity-one A∞ operation. -/
 def gradedDifferential (X Y : C) : GradedLinearMap R (X →ᵍ[R, ℤ] Y) (X →ᵍ[R] Y) degOne :=
   .mk fun p q _ ↦ differential X Y p q
 
@@ -263,15 +256,15 @@ lemma gradedDifferential_v (X Y : C) (p q : ℤ) (h : p + degOne = q) :
     (gradedDifferential R X Y).v p q h = differential X Y p q :=
   rfl
 
-/-- The Koszul sign `(-1)^‖a‖` of an input `a` of degree `n`, where `‖a‖ = n - 1`, is
-`-(-1)^n`. -/
+/-- The Koszul sign (-1)^‖a‖ of an input a of degree n, where ‖a‖ = n - 1, is
+-(-1)^n. -/
 lemma toMul_sign_sub_degOne (n : ℤ) : (sign (n - degOne)).toMul = -n.negOnePow := by
   change (n - 1).negOnePow = _
   rw [Int.negOnePow_sub, Int.negOnePow_one, mul_neg, mul_one]
 
-/-- A DG category is an `A∞`-category: `m₁` is the signed differential, `m₂` is the signed
-composition, and the higher compositions `mₙ` for `n ≥ 3` vanish. The Stasheff identities in
-arities `1`, `2` and `3` are `d² = 0`, the Leibniz rule and associativity of composition. -/
+/-- A DG category is an A∞-category: m₁ is the signed differential, m₂ is the signed
+composition, and the higher compositions mₙ for n ≥ 3 vanish. The Stasheff identities in
+arities 1, 2 and 3 are d² = 0, the Leibniz rule and associativity of composition. -/
 noncomputable instance aInfinityCategory : AInfinityCategory ℤ R C :=
   .ofArityLeTwo (gradedDifferential R) composition
     (fun X Y _ _ _ _ _ a ↦ differential_differential X Y _ _ _ a)

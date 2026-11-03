@@ -62,7 +62,7 @@ namespace LinearMap
 variable {R : Type*} [CommSemiring R] {M : Fin 2 → Type*} {N : Type*}
   [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)] [AddCommMonoid N] [Module R N]
 
-/-- A bilinear map `M 0 → M 1 → N`, regarded as a multilinear map on the family `M` indexed
+/-- A bilinear map `M 0 →ₗ[R] M 1 →ₗ[R] N`, regarded as a multilinear map on the family `M` indexed
 by `Fin 2`. -/
 def uncurryFinTwo (f : M 0 →ₗ[R] M 1 →ₗ[R] N) : MultilinearMap R M N :=
   uncurryLeft <|

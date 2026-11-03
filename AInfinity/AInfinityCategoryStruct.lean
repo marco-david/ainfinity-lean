@@ -14,17 +14,17 @@ public import AInfinity.StasheffIndex
 
 /-! # A∞-category structures
 
-An `A∞`-category structure on a graded `R`-linear quiver consists of higher compositions
-`mₙ : Hom(X₀, X₁) ⊗ ⋯ ⊗ Hom(Xₙ₋₁, Xₙ) → Hom(X₀, Xₙ)` of degree `2 - n`, one for each `n ≥ 1`.
+An A∞-category structure on a graded `R`-linear quiver consists of higher compositions
+mₙ : Hom(X₀, X₁) ⊗ ⋯ ⊗ Hom(Xₙ₋₁, Xₙ) → Hom(X₀, Xₙ) of degree 2 - n, one for each n ≥ 1.
 This file defines such structures, and constructors for operations, such as those of DG
 categories and of linear categories, that vanish above arity two.
 
 ## Main definitions
 
-* `AInfinityTheory.AInfinityOperation β R X`: the `n`-ary operations of degree `2 - n` on a
+* `AInfinityTheory.AInfinityOperation β R X`: the n-ary operations of degree 2 - n on a
   composable string of objects `X`.
 * `AInfinityTheory.AInfinityCategoryStruct β R Obj`: a graded `R`-linear quiver with higher
-  compositions `mₙ`, not yet subject to any relations.
+  compositions mₙ, not yet subject to any relations.
 * `AInfinityTheory.AInfinityOperation.ofGradedLinearMap`: a unary operation from a graded
   linear map of degree `1`.
 * `AInfinityTheory.AInfinityOperation.ofBilinear`: a binary operation from a family of bilinear
@@ -36,7 +36,7 @@ categories and of linear categories, that vanish above arity two.
 
 `ofGradedLinearMap` and `ofBilinear` take their inputs in terms of the hom spaces
 `(X →ᵍ[R] Y) p`, and hide both `ComposableHom` and the degree arithmetic
-`(∑ k, deg k) + (2 - n) • degOne = j` from the user.
+`(∑ k, deg k) + (2 - n : ℤ) • degOne = j` from the user.
 
 The ring of scalars `R` is an ordinary class parameter, so an object type may carry several
 rings of scalars. It is passed explicitly wherever it cannot be inferred from later arguments:
@@ -59,8 +59,8 @@ section
 variable [GradedLinearQuiver β R Obj]
 
 variable (β R) in
-/-- The `n`-ary `A∞` operations on a composable string of objects `X`: graded multilinear
-maps of degree `2 - n` from the composable hom spaces to the hom space from `X 0` to
+/-- The n-ary A∞ operations on a composable string of objects `X`: graded multilinear
+maps of degree 2 - n from the composable hom spaces to the hom space from `X 0` to
 `X (Fin.last n)`. -/
 abbrev AInfinityOperation {n : ℕ} (X : Fin (n + 1) → Obj) :=
   GradedMultilinearMap R (ComposableHom β R X) (X 0 →ᵍ[R] X (Fin.last n))
@@ -69,12 +69,12 @@ abbrev AInfinityOperation {n : ℕ} (X : Fin (n + 1) → Obj) :=
 end
 
 variable (β R Obj) in
-/-- The data of an `A∞`-category: a graded `R`-linear quiver together with, for each `n ≥ 1`
-and each composable string of objects `X`, a higher composition `mₙ` of degree `2 - n` from the
+/-- The data of an A∞-category: a graded `R`-linear quiver together with, for each `n ≥ 1`
+and each composable string of objects `X`, a higher composition mₙ of degree 2 - n from the
 composable hom spaces to the hom space from `X 0` to `X (Fin.last n)`. No relations are
 imposed. -/
 class AInfinityCategoryStruct extends GradedLinearQuiver β R Obj where
-  /-- The higher compositions `mₙ`. -/
+  /-- The higher compositions mₙ. -/
   m {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) : AInfinityOperation β R X
 
 variable [GradedLinearQuiver β R Obj]
