@@ -32,7 +32,9 @@ is definitionally an expression in `f` and `g`. The hypotheses of
 `AInfinityCategory.ofArityLeTwo` are stated in exactly the form produced by
 `stasheffSum_arity_one`, `stasheffSum_arity_two` and `stasheffSum_arity_three`, with all
 intermediate degrees free and constrained by equations, so that they apply without any
-transport.
+transport. As in Mathlib's `CochainComplex.HomComplex.Cochain.comp_assoc`, there is exactly one
+equation per dependent degree; the remaining degree equations are derived inside the
+statements, so callers never have to supply them.
 -/
 
 @[expose] public section
@@ -49,18 +51,24 @@ variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommRing R] 
   (g : ∀ (X Y Z : Obj) (p q i : β), p + q = i →
     (X →ᵍ[R, β] Y) p →ₗ[R] (Y →ᵍ[R] Z) q →ₗ[R] (X →ᵍ[R] Z) i)
 
+-- Arity 1: the differential squares to zero.
 variable (differential_differential : ∀ (X Y : Obj) {p q r : β} (hpq : p + degOne = q)
     (hqr : q + degOne = r) (a : (X →ᵍ[R] Y) p), (f X Y).v q r hqr ((f X Y).v p q hpq a) = 0)
-  (leibniz : ∀ (X Y Z : Obj) {p q e p' q' d : β} (h : p + q = e) (hp : p + degOne = p')
-    (hq : q + degOne = q') (he : e + degOne = d) (h₁ : p' + q = d) (h₂ : p + q' = d)
+
+-- Arity 2: the Leibniz rule.
+variable (leibniz : ∀ (X Y Z : Obj) {p q e p' q' d : β} (h : p + q = e)
+    (hp : p + degOne = p') (hq : q + degOne = q') (he : e + degOne = d)
     (a : (X →ᵍ[R] Y) p) (b : (Y →ᵍ[R] Z) q),
-    (sign (q - degOne)).toMul • g X Y Z p' q d h₁ ((f X Y).v p p' hp a) b +
-      g X Y Z p q' d h₂ a ((f Y Z).v q q' hq b) + (f X Z).v e d he (g X Y Z p q e h a b) = 0)
-  (assoc : ∀ (W X Y Z : Obj) {p q r e e' d : β} (h : p + q = e) (h' : q + r = e')
-    (h₁ : e + r = d) (h₂ : p + e' = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q)
-    (c : (Y →ᵍ[R] Z) r),
+    (sign (q - degOne)).toMul • g X Y Z p' q d (hp ▸ he ▸ h ▸ add_right_comm p degOne q)
+        ((f X Y).v p p' hp a) b +
+      g X Y Z p q' d (hq ▸ he ▸ h ▸ (add_assoc p q degOne).symm) a ((f Y Z).v q q' hq b) +
+      (f X Z).v e d he (g X Y Z p q e h a b) = 0)
+
+-- Arity 3: associativity of the composition.
+variable (assoc : ∀ (W X Y Z : Obj) {p q r e e' d : β} (h : p + q = e) (h' : q + r = e')
+    (h₁ : e + r = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q) (c : (Y →ᵍ[R] Z) r),
     (sign (r - degOne)).toMul • g W Y Z e r d h₁ (g W X Y p q e h a b) c +
-      g W X Z p e' d h₂ a (g X Y Z q r e' h' b c) = 0)
+      g W X Z p e' d (h' ▸ h₁ ▸ h ▸ (add_assoc p q r).symm) a (g X Y Z q r e' h' b c) = 0)
 
 /-- The `A∞`-category structure whose differential `m₁` is given by the graded linear maps `f`,
 whose composition `m₂` is given by the bilinear maps `g`, and whose higher compositions `mₙ`
@@ -96,7 +104,7 @@ lemma stasheffSum_eq_zero_of_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 �
     stasheffSum x d hd = 0 := by
   letI := ofArityLeTwo f g
   rw [stasheffSum_arity_two]
-  exact leibniz (X 0) (X 1) (X 2) _ _ _ _ _ _ (x 0) (x 1)
+  exact leibniz (X 0) (X 1) (X 2) _ _ _ _ (x 0) (x 1)
 
 include assoc in
 /-- The arity-three Stasheff identity holds as soon as the composition is associative up to
@@ -113,7 +121,7 @@ lemma stasheffSum_eq_zero_of_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 
     stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm x ⟨2, 1, 0, rfl, le_rfl⟩ (by simp) d hd,
     stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm x ⟨0, 3, 0, rfl, by decide⟩ (by simp) d hd]
   simp only [smul_zero, zero_add, add_zero]
-  exact assoc (X 0) (X 1) (X 2) (X 3) _ _ _ _ (x 0) (x 1) (x 2)
+  exact assoc (X 0) (X 1) (X 2) (X 3) _ _ _ (x 0) (x 1) (x 2)
 
 /-- The Stasheff identities hold in every arity `n ≥ 4`: each Stasheff term involves an
 operation of arity at least `3`, which vanishes. -/

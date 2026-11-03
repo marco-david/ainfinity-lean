@@ -10,6 +10,7 @@ public import AInfinity.Grading
 public import AInfinity.GradedLinearAlgebra
 public import AInfinity.GradedLinearQuiver
 public import AInfinity.MultilinearMap
+public import AInfinity.StasheffIndex
 
 /-! # A∞-category structures
 
@@ -63,7 +64,7 @@ maps of degree `2 - n` from the composable hom spaces to the hom space from `X 0
 `X (Fin.last n)`. -/
 abbrev AInfinityOperation {n : ℕ} (X : Fin (n + 1) → Obj) :=
   GradedMultilinearMap R (ComposableHom β R X) (X 0 →ᵍ[R] X (Fin.last n))
-    ((2 - (n : ℤ)) • degOne)
+    ((2 - n : ℤ) • degOne)
 
 end
 
@@ -90,9 +91,10 @@ def ofGradedLinearMap {X : Fin (1 + 1) → Obj}
 @[simp]
 theorem ofGradedLinearMap_v_apply {X : Fin (1 + 1) → Obj}
     (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) degOne) (deg : Fin 1 → β)
-    (j : β) (h : (∑ k, deg k) + (2 - ((1 : ℕ) : ℤ)) • degOne = j)
+    (j : β) (h : operationTargetDeg deg = j)
     (x : ∀ k, ComposableHom β R X k (deg k)) :
-    (ofGradedLinearMap f).v deg j h x = f.v (deg 0) j (by simpa using h) (x 0) :=
+    (ofGradedLinearMap f).v deg j h x =
+      f.v (deg 0) j (by simpa [operationTargetDeg] using h) (x 0) :=
   rfl
 
 /-- The binary operation given by a family of bilinear maps `f p q j`, sending morphisms of
@@ -109,10 +111,10 @@ def ofBilinear {X : Fin (2 + 1) → Obj}
 theorem ofBilinear_v_apply {X : Fin (2 + 1) → Obj}
     (f : ∀ p q j : β, p + q = j →
       (X 0 →ᵍ[R, β] X 1) p →ₗ[R] (X 1 →ᵍ[R] X 2) q →ₗ[R] (X 0 →ᵍ[R] X 2) j)
-    (deg : Fin 2 → β) (j : β) (h : (∑ k, deg k) + (2 - ((2 : ℕ) : ℤ)) • degOne = j)
+    (deg : Fin 2 → β) (j : β) (h : operationTargetDeg deg = j)
     (x : ∀ k, ComposableHom β R X k (deg k)) :
     (ofBilinear f).v deg j h x =
-      f (deg 0) (deg 1) j (by simpa [Fin.sum_univ_two] using h) (x 0) (x 1) :=
+      f (deg 0) (deg 1) j (by simpa [operationTargetDeg, Fin.sum_univ_two] using h) (x 0) (x 1) :=
   rfl
 
 variable (m₁ : ∀ X : Fin (1 + 1) → Obj, AInfinityOperation β R X)

@@ -82,14 +82,13 @@ variable (deg : Fin n → β)
 /-- The degree of `φₙ(a₁, …, aₙ)` for inputs `aᵢ` of degrees `deg i`, where `φₙ` itself has
 degree `1 - n`. -/
 abbrev functorTargetDeg : β :=
-  (∑ i, deg i) + (1 - (n : ℤ)) • degOne
+  (∑ i, deg i) + (1 - n : ℤ) • degOne
 
 /-- The `n`-ary operation `mₙ` has degree one more than the `n`-ary functor component `φₙ`. -/
 lemma operationTargetDeg_eq_functorTargetDeg_add_degOne :
     operationTargetDeg deg = functorTargetDeg deg + degOne := by
-  rw [operationTargetDeg, functorTargetDeg, add_assoc, ← add_one_zsmul]
-  congr 2
-  lia
+  rw [operationTargetDeg, functorTargetDeg]
+  module
 
 /-- The term `φ_{r+1+t}(a₁, …, aᵣ, mₛ(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, aₙ)` of the left-hand
 side of the functor equation, indexed by `p = (r, s, t)`, has the degree of `mₙ(a₁, …, aₙ)`. -/
@@ -175,7 +174,7 @@ structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
   map : {n : ℕ} → [NeZero n] → (X : Fin (n + 1) → Obj) →
     GradedMultilinearMap R (ComposableHom β R X)
       (fun b : β ↦ (obj (X 0) →ᵍ[R] obj (X (Fin.last n))) (degMap b))
-      ((1 - (n : ℤ)) • degOne)
+      ((1 - n : ℤ) • degOne)
 
 namespace AInfinityFunctorData
 

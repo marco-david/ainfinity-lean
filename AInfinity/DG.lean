@@ -220,14 +220,17 @@ lemma composition_apply (X Y Z : C) (p q i : ℤ) (h : p + q = i) (a : (X →ᵍ
 `m₁(m₂(a, b)) = (-1)^q m₂(m₁ a, b) - m₂(a, m₁ b)`. The degrees are arbitrary, subject to the
 equations relating them. -/
 lemma differential_composition (X Y Z : C) {p q e p' q' d : ℤ} (h : p + q = e)
-    (hp : p + 1 = p') (hq : q + 1 = q') (h₁ : p' + q = d) (h₂ : p + q' = d)
+    (hp : p + 1 = p') (hq : q + 1 = q') (he : e + 1 = d)
     (a : (X →ᵍ[R] Y) p) (b : (Y →ᵍ[R] Z) q) :
     differential X Z e d (composition X Y Z p q e h a b) =
-      q.negOnePow • composition X Y Z p' q d h₁ (differential X Y p p' a) b -
-        composition X Y Z p q' d h₂ a (differential Y Z q q' b) := by
-  subst h hp hq
+      q.negOnePow • composition X Y Z p' q d (hp ▸ he ▸ h ▸ add_right_comm p 1 q)
+        (differential X Y p p' a) b -
+        composition X Y Z p q' d (hq ▸ he ▸ h ▸ (add_assoc p q 1).symm) a
+          (differential Y Z q q' b) := by
+  subst h hp hq he
   simp only [differential_apply, composition_apply, Units.smul_def, map_zsmul,
-    LinearMap.smul_apply, d_compBilin X Y Z rfl rfl rfl h₁ h₂]
+    LinearMap.smul_apply, d_compBilin X Y Z rfl rfl rfl (add_right_comm _ _ _)
+      (add_assoc _ _ _).symm]
   rw [Int.negOnePow_add, Int.negOnePow_succ]
   rcases Int.units_eq_one_or p.negOnePow with hp | hp <;>
     rcases Int.units_eq_one_or q.negOnePow with hq | hq <;>
@@ -238,13 +241,14 @@ lemma differential_composition (X Y Z : C) {p q e p' q' d : ℤ} (h : p + q = e)
 `m₂(m₂(a, b), c) = (-1)^r m₂(a, m₂(b, c))`, where `c` has degree `r`. The degrees are arbitrary,
 subject to the equations relating them. -/
 lemma composition_composition (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e)
-    (h' : q + r = e') (h₁ : e + r = d) (h₂ : p + e' = d) (a : (W →ᵍ[R] X) p)
-    (b : (X →ᵍ[R] Y) q) (c : (Y →ᵍ[R] Z) r) :
+    (h' : q + r = e') (h₁ : e + r = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q)
+    (c : (Y →ᵍ[R] Z) r) :
     composition W Y Z e r d h₁ (composition W X Y p q e h a b) c =
-      r.negOnePow • composition W X Z p e' d h₂ a (composition X Y Z q r e' h' b c) := by
-  subst h h'
+      r.negOnePow • composition W X Z p e' d (h' ▸ h₁ ▸ h ▸ (add_assoc p q r).symm) a
+        (composition X Y Z q r e' h' b c) := by
+  subst h h' h₁
   simp only [composition_apply, Units.smul_def, map_zsmul, LinearMap.smul_apply, smul_smul,
-    compBilin_assoc W X Y Z rfl rfl h₁ h₂, Int.negOnePow_add]
+    compBilin_assoc W X Y Z rfl rfl rfl (add_assoc _ _ _).symm, Int.negOnePow_add]
   rcases Int.units_eq_one_or q.negOnePow with hq | hq <;>
     rcases Int.units_eq_one_or r.negOnePow with hr | hr <;> simp [hq, hr]
 
@@ -271,13 +275,13 @@ arities `1`, `2` and `3` are `d² = 0`, the Leibniz rule and associativity of co
 noncomputable instance aInfinityCategory : AInfinityCategory ℤ R C :=
   .ofArityLeTwo (gradedDifferential R) composition
     (fun X Y _ _ _ _ _ a ↦ differential_differential X Y _ _ _ a)
-    (fun X Y Z _ _ _ _ _ _ h hp hq _ h₁ h₂ a b ↦ by
+    (fun X Y Z _ _ _ _ _ _ h hp hq he a b ↦ by
       simp only [gradedDifferential_v]
-      rw [differential_composition X Y Z h hp hq h₁ h₂, toMul_sign_sub_degOne,
+      rw [differential_composition X Y Z h hp hq he, toMul_sign_sub_degOne,
         Units.neg_smul]
       abel)
-    (fun W X Y Z _ _ _ _ _ _ h h' h₁ h₂ a b c ↦ by
-      rw [composition_composition W X Y Z h h' h₁ h₂, toMul_sign_sub_degOne, Units.neg_smul,
+    (fun W X Y Z _ _ _ _ _ _ h h' h₁ a b c ↦ by
+      rw [composition_composition W X Y Z h h' h₁, toMul_sign_sub_degOne, Units.neg_smul,
         smul_smul, Int.units_mul_self, one_smul, neg_add_cancel])
 
 end DGCategory

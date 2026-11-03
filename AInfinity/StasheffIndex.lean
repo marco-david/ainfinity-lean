@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Algebra.BigOperators.Fin
 public import AInfinity.Grading
+public import Mathlib.Tactic.Module
 
 /-! # Index triples of the Stasheff identities
 
@@ -43,20 +44,19 @@ variable {n : ℕ}
 degree `2 - n`. -/
 abbrev operationTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + (2 - (n : ℤ)) • degOne
+  (∑ i, deg i) + (2 - n : ℤ) • degOne
 
 /-- Target degree of the arity-`n` Stasheff identity on inputs of degrees `deg`. -/
 abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
-  (∑ i, deg i) + (3 - (n : ℤ)) • degOne
+  (∑ i, deg i) + (3 - n : ℤ) • degOne
 
 /-- The arity-`n` Stasheff identity has degree one more than the `n`-ary operation `mₙ`. -/
 lemma stasheffTargetDeg_eq_operationTargetDeg_add_degOne
     (deg : Fin n → β) :
     stasheffTargetDeg deg = operationTargetDeg deg + degOne := by
-  rw [stasheffTargetDeg, operationTargetDeg, add_assoc, ← add_one_zsmul]
-  congr 2
-  lia
+  rw [stasheffTargetDeg, operationTargetDeg]
+  module
 
 /-- An index triple `(r, s, t)` of the arity-`n` Stasheff identity: `r + s + t = n` and
 `1 ≤ s`. -/
@@ -199,12 +199,12 @@ lemma stasheffObjOut_last :
 /-- The outer operation has the Stasheff target degree. -/
 lemma stasheffDegOut_sum :
     operationTargetDeg (stasheffDegOut deg p) = stasheffTargetDeg deg := by
-  have := p.sum_eq
+  have h : (n : ℤ) = p.r + p.s + p.t := by exact_mod_cast p.sum_eq.symm
   simp only [operationTargetDeg, stasheffTargetDeg, Fin.sum_univ_add, stasheffDegOut_left,
     stasheffDegOut_middle, stasheffDegOut_right, Fin.sum_univ_castSucc, stasheffInnerDeg,
     stasheffDegIn, ← Fin.sum_congr' deg p.sum_eq]
-  rw [show (3 - (n : ℤ)) = (2 - p.s) + (2 - ((p.r + 1 + p.t : ℕ) : ℤ)) by omega, add_smul]
-  abel
+  rw [h]
+  module
 
 variable {deg}
 
