@@ -22,7 +22,10 @@ project:
     and builds computable categorical infrastructure (explicit biproducts, the
     additive completion CMat_, bounded cochain complexes) towards an
     A∞-endofunctor on a variant of the KLRW category that acts as a braid group
-    invariant.
+    invariant. A separate finite-free computational layer represents bounded
+    complexes and cochain maps by matrices over a commutative ring, with a
+    verified interpretation in Mathlib's module complexes. It does not assume
+    finite-free cohomology or supply cohomology algorithms.
   authors:
     - "Marco David"
     - "Jason Dong"
@@ -112,17 +115,21 @@ status:
     structure and the associativity and unit laws of composition), graded R-linear
     quivers, the Stasheff identities, A∞-categories, A∞-functors with the
     A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
-    category. In progress: the computable additive completion and
-    bounded cochain complexes, and the braiding functor, whose definitions are
-    still partially stubbed with `sorry`. Temporarily removed: the composition of
+    category; finite-free matrix complexes and cochain maps, with their
+    interpretation in Mathlib's module complexes. The existing computable
+    categorical infrastructure (explicit biproducts, additive completion, and
+    bounded cochain complexes) is also sorry-free and is housed separately in
+    ComputableCochainComplex/Categorical. In progress: the specialized KLRW
+    constructions, braiding functor, and KLRW examples, which still contain
+    `sorry`. Temporarily removed: the composition of
     A∞-functors, the identity A∞-functor and the A∞ examples. They were written
     for the earlier foundation (grading indices and `GradedObject`s in
     `ModuleCat`) and will be restored once ported. A∞-algebras (blueprint
     chapter 5) are not formalized yet.
-  # Counts come from a source scan for `sorry`. They were not checked with
-  # `#print axioms`.
-  sorry_count: 23
-  sorry_in_definitions: 20
+  # Counts are individual `sorry` occurrences in the Lean sources.
+  # The finite-free layer adds none; its core declarations were also checked with `#print axioms`.
+  sorry_count: 10
+  sorry_in_definitions: 9
   axioms:
     - "propext"
     - "Classical.choice"

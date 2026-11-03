@@ -1,7 +1,9 @@
-import AInfinity.AInfinityCategory
-import AInfinity.AInfinityFunctor
-import AInfinity.Example
-import AInfinity.GradedLinearAlgebra
-import AInfinity.GradedLinearQuiver
-import AInfinity.Grading
-import AInfinity.Stasheff
+module  -- shake: keep-all
+
+public import AInfinity.AInfinityCategory
+public import AInfinity.AInfinityFunctor
+public import AInfinity.Example
+public import AInfinity.GradedLinearAlgebra
+public import AInfinity.GradedLinearQuiver
+public import AInfinity.Grading
+public import AInfinity.Stasheff

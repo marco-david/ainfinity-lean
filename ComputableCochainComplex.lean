@@ -1,3 +1,8 @@
-import ComputableCochainComplex.AdditiveCompletion
-import ComputableCochainComplex.BoundedCochainComplex
-import ComputableCochainComplex.ComputableCategories
+module  -- shake: keep-all
+
+public import ComputableCochainComplex.AdditiveCompletion
+public import ComputableCochainComplex.BoundedCochainComplex
+public import ComputableCochainComplex.ComputableCategories
+public import ComputableCochainComplex.ComputableHomology
+public import ComputableCochainComplex.Finite
+public import ComputableCochainComplex.MatrixHomology

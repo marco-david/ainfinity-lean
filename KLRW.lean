@@ -1,5 +1,7 @@
-import KLRW.Braiding
-import KLRW.Examples
-import KLRW.KLRWAlgebra
-import KLRW.KLRWCategory
-import KLRW.OneBlackStrand
+module  -- shake: keep-all
+
+public import KLRW.Braiding
+public import KLRW.Examples
+public import KLRW.KLRWAlgebra
+public import KLRW.KLRWCategory
+public import KLRW.OneBlackStrand

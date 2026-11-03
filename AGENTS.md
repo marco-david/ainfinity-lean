@@ -14,7 +14,7 @@ The project is currently organized into four Lake libraries:
 | Library | Contents |
 | --- | --- |
 | `Util/` | The `Texify` class and the `#texify` command for rendering terms and chain complexes as LaTeX. |
-| `ComputableCochainComplex/` | Computable biproducts and zero objects, the additive completion `CMat_`, bounded cochain complexes. |
+| `ComputableCochainComplex/` | computable biproducts, zero objects, `CMat_`, and bounded complexes. matrix complexes, cochain maps, and the Mathlib interpretation. |
 | `AInfinity/` | Grading types, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-functors. |
 | `KLRW/` | KLRW algebras and categories, the braiding functor, examples. |
 

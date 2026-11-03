@@ -16,7 +16,7 @@ and checked in CI, so rerun that command after adding a file.
 | Folder | Contents |
 | --- | --- |
 | `Util/` | Contains a `Texify` class and the `#texify` command for rendering terms as LaTeX. |
-| `ComputableCochainComplex/` | Computable categorical constructions: explicit biproducts and zero objects, the computable additive completion `CMat_`, and bounded cochain complexes. |
+| `ComputableCochainComplex/` | explicit biproducts and zero objects, the additive completion `CMat_`, and bounded cochain complexes. bounded matrix complexes, matrix cochain maps, and their interpretation in mathlib. |
 | `AInfinity/` | Grading indices, the Stasheff identities, A∞-categories, A∞-functors and their composition, and examples. |
 | `KLRW/` | KLRW algebras and categories: the general quiver-parametrised KLRW algebra and its $$R$$-linear category, and a computable special case with one black strand and $$n$$ red strands. | |
 
