@@ -6,8 +6,9 @@
 
 The morphisms of an \Ainf{}-category are graded by an abelian group $\beta$ of
 degrees. The \Ainf{}-axioms use exactly two further pieces of structure on
-$\beta$: integer degree shifts, so that the $n$-ary operation $m_n$ can have
-degree $2-n$, and a Koszul sign attached to every degree. No degree is ever
+$\beta$: a distinguished degree one, by whose integer multiples degrees are
+shifted, so that the $n$-ary operation $m_n$ can have degree $2-n$, and a Koszul
+sign attached to every degree. No degree is ever
 multiplied, so $\beta$ need not be a ring. Besides the standard gradings
 $\mathbb{Z}$ and $\mathbb{Z}/2$, this allows bigradings such as
 $\mathbb{Z}\times^t\mathbb{Z}$ or $\mathbb{Z}\times^t\mathbb{Z}/2$, in which $m_n$
@@ -17,29 +18,30 @@ has degree $(2-n,0)$.
 \lean{AInfinityTheory.Grading}
 \label{AInfinityTheory.Grading}
 \leanok
-A grading is an abelian group $\beta$ together with group homomorphisms
+A grading is an abelian group $\beta$ together with an element
+$\mathbf{1} \in \beta$, the \emph{degree one}, and a group homomorphism
 \[
-  \operatorname{shift} : \mathbb{Z} \to \beta,
-  \qquad
   \operatorname{sign} : \beta \to \{\pm 1\},
 \]
-such that $\operatorname{sign}(\operatorname{shift}(1)) = -1$; that is, the
-differential, which has degree $\operatorname{shift}(1)$, is odd. For a degree
-$d \in \beta$ we write $(-1)^d := \operatorname{sign}(d)$ for its Koszul sign.
+such that $\operatorname{sign}(\mathbf{1}) = -1$; that is, the differential,
+which has degree $\mathbf{1}$, is odd. A degree $d \in \beta$ is shifted by an
+integer $n$ by adding $n \cdot \mathbf{1}$. For a degree $d \in \beta$ we write
+$(-1)^d := \operatorname{sign}(d)$ for its Koszul sign. Since $\beta$ is not a
+ring, $\mathbf{1}$ is not a multiplicative unit; integers act on $\beta$ only
+through the $\mathbb{Z}$-module structure.
 \end{definition}
 
 \begin{lemma}[Sign of an integer shift]
-\lean{AInfinityTheory.sign_shift}
-\label{AInfinityTheory.sign_shift}
+\lean{AInfinityTheory.sign_zsmul_degOne}
+\label{AInfinityTheory.sign_zsmul_degOne}
 \leanok
 \uses{AInfinityTheory.Grading}
-For every integer $n$ one has $(-1)^{\operatorname{shift}(n)} = (-1)^n$.
+For every integer $n$ one has $(-1)^{n \cdot \mathbf{1}} = (-1)^n$.
 \end{lemma}
 \begin{proof}
 \leanok
-Since $\operatorname{shift}(n) = n \cdot \operatorname{shift}(1)$ and
-$\operatorname{sign}$ is a homomorphism,
-$(-1)^{\operatorname{shift}(n)} = \operatorname{sign}(\operatorname{shift}(1))^n = (-1)^n$.
+Since $\operatorname{sign}$ is a homomorphism,
+$(-1)^{n \cdot \mathbf{1}} = \operatorname{sign}(\mathbf{1})^n = (-1)^n$.
 \end{proof}
 
 \begin{definition}[Standard gradings]
@@ -47,10 +49,9 @@ $(-1)^{\operatorname{shift}(n)} = \operatorname{sign}(\operatorname{shift}(1))^n
 \label{AInfinityTheory.Grading.standard}
 \leanok
 \uses{AInfinityTheory.Grading}
-The integers $\mathbb{Z}$ form a grading with $\operatorname{shift}$ the
-identity and $\operatorname{sign}(n) = (-1)^n$. The parities $\mathbb{Z}/2$
-form a grading with $\operatorname{shift}$ the reduction modulo $2$ and
-$\operatorname{sign}(p) = (-1)^p$.
+The integers $\mathbb{Z}$ form a grading with $\mathbf{1} = 1$ and
+$\operatorname{sign}(n) = (-1)^n$. The parities $\mathbb{Z}/2$ form a grading
+with $\mathbf{1} = 1$ and $\operatorname{sign}(p) = (-1)^p$.
 \end{definition}
 
 \begin{definition}[Product gradings]
@@ -62,13 +63,13 @@ $\operatorname{sign}(p) = (-1)^p$.
 \uses{AInfinityTheory.Grading}
 Let $\beta$ be a grading and $\gamma$ an abelian group. The product
 $\beta \times \gamma$ is a grading with
-$\operatorname{shift}(n) = (\operatorname{shift}(n), 0)$ in two ways. In the
+degree one $(\mathbf{1}, 0)$ in two ways. In the
 left grading $\beta \times^l \gamma$ the sign is read off the first
 factor alone, $\operatorname{sign}(b,c) = (-1)^b$. When $\gamma$ is a grading
 as well, the total grading $\beta \times^t \gamma$ carries the total sign
 $\operatorname{sign}(b,c) = (-1)^b\,(-1)^c$. Symmetrically, when $\beta$ is an
 abelian group and $\gamma$ a grading, the right grading
-$\beta \times^r \gamma$ has $\operatorname{shift}(n) = (0, \operatorname{shift}(n))$
+$\beta \times^r \gamma$ has degree one $(0, \mathbf{1})$
 and $\operatorname{sign}(b,c) = (-1)^c$. None of these choices is canonical, so
 $\beta \times^l \gamma$, $\beta \times^t \gamma$ and $\beta \times^r \gamma$ are
 separate copies of $\beta \times \gamma$, each carrying its grading as an instance,
@@ -81,9 +82,9 @@ while the plain product $\beta \times \gamma$ carries none.
 \leanok
 \uses{AInfinityTheory.Grading}
 A homomorphism of gradings $f : \beta \to \beta'$ is a group homomorphism that
-preserves the integer shifts, $f(\operatorname{shift}(k)) = \operatorname{shift}(k)$,
+preserves the degree one, $f(\mathbf{1}) = \mathbf{1}$ (hence all integer shifts),
 and the Koszul signs, $(-1)^{f(b)} = (-1)^b$. It translates degrees in $\beta$ into
-degrees in $\beta'$ so that $m_n$ keeps degree $\operatorname{shift}(2-n)$ and no
+degrees in $\beta'$ so that $m_n$ keeps degree $(2-n) \cdot \mathbf{1}$ and no
 Koszul sign changes; this is what allows an \Ainf{}-functor to change the grading.
 Examples are the reduction $\mathbb{Z} \to \mathbb{Z}/2$, the inclusion of
 $\beta$ into either product grading $\beta \times^t \gamma$ or

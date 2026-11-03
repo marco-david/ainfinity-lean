@@ -1,7 +1,11 @@
 import AInfinity.AInfinityCategory
+import AInfinity.AInfinityCategoryStruct
 import AInfinity.AInfinityFunctor
-import AInfinity.Example
+import AInfinity.ArityLeTwo
+import AInfinity.DG
 import AInfinity.GradedLinearAlgebra
 import AInfinity.GradedLinearQuiver
 import AInfinity.Grading
+import AInfinity.MultilinearMap
 import AInfinity.Stasheff
+import AInfinity.StasheffIndex
