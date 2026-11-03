@@ -6,8 +6,8 @@
 \lean{AInfinityTheory.operationTargetDeg}
 \label{AInfinityTheory.operationTargetDeg}
 \leanok
-\uses{AInfinityTheory.GradingType}
-Given input degrees $(d_0,\dots,d_{n-1})$ in a grading type $\beta$, the
+\uses{AInfinityTheory.Grading}
+Given input degrees $(d_0,\dots,d_{n-1})$ in a grading $\beta$, the
 output degree of the $n$-ary operation is
 \[
   \sum_i d_i + \operatorname{shift}(2-n),
@@ -20,12 +20,12 @@ homomorphism $\mathbb{Z} \to \beta$.
 \lean{AInfinityTheory.stasheffTargetDeg}
 \label{AInfinityTheory.stasheffTargetDeg}
 \leanok
-\uses{AInfinityTheory.GradingType}
-The common degree of the arity-$n$ Stasheff relation is
+\uses{AInfinityTheory.Grading}
+The common degree of the arity-$n$ Stasheff identity is
 \[
   \sum_i d_i + \operatorname{shift}(3-n)
 \]
-in the grading type.
+in the grading.
 \end{definition}
 
 \begin{definition}[Composable morphism type]
@@ -53,24 +53,36 @@ $(d_0,\dots,d_{n-1})$ its component lands in any degree equal to the operation
 target degree.
 \end{definition}
 
+\begin{definition}[Stasheff index]
+\lean{AInfinityTheory.StasheffIndex}
+\label{AInfinityTheory.StasheffIndex}
+\leanok
+A Stasheff index of arity $n$ is a triple $(r,s,t)$ of natural numbers with
+$r + s + t = n$ and $s \geq 1$. It records that an inner $s$-ary operation is
+applied to the inputs in positions $r,\dots,r+s-1$, with $r$ inputs before it and
+$t$ inputs after it. The Stasheff indices of arity $n$ form a finite type: they are
+in bijection with the pairs $r < r + s$ of endpoints in $\{0,\dots,n\}$ of the
+nonempty interval of inputs fed to the inner operation.
+\end{definition}
+
 \begin{definition}[Indexed Stasheff term]
 \lean{AInfinityTheory.indexedStasheffTerm}
 \label{AInfinityTheory.indexedStasheffTerm}
 \leanok
-\uses{AInfinityTheory.GradedLinearQuiver.ComposableHomType, AInfinityTheory.AInfinityComposition, AInfinityTheory.stasheffTargetDeg}
-Fix an \Ainf{}-composition $m$. For $r + s + t = n$ with $s \geq 1$,
-\lean{AInfinityTheory.indexedStasheffTerm} is the term obtained by first applying the inner
-$s$-ary operation in positions $r,\dots,r+s-1$ and then applying the outer
-$(r+1+t)$-ary operation to the collapsed string. It lies in
-$\Hom(X_0,X_n)$ in any degree equal to the Stasheff target degree.
+\uses{AInfinityTheory.GradedLinearQuiver.ComposableHomType, AInfinityTheory.AInfinityComposition, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
+Fix an \Ainf{}-composition $m$. For a Stasheff index $(r,s,t)$ of arity $n$, the
+indexed Stasheff term is obtained by first applying the inner $s$-ary operation in
+positions $r,\dots,r+s-1$ and then applying the outer $(r+1+t)$-ary operation to
+the collapsed string. It lies in $\Hom(X_0,X_n)$ in any degree equal to the
+Stasheff target degree.
 \end{definition}
 
 \begin{definition}[Stasheff sign]
 \lean{AInfinityTheory.stasheffSign}
 \label{AInfinityTheory.stasheffSign}
 \leanok
-\uses{AInfinityTheory.GradingType}
-The sign $\pm 1$ attached to $(r,s,t)$ is
+\uses{AInfinityTheory.Grading, AInfinityTheory.StasheffIndex}
+The sign $\pm 1$ attached to a Stasheff index $(r,s,t)$ is
 \[
   \prod_{k=r+s}^{n-1} (-1)^{\|a_k\|},
   \qquad
@@ -81,15 +93,30 @@ inputs. Since the sign character is a homomorphism, this equals
 $(-1)^{|a_{r+s}| + \cdots + |a_{n-1}| - \operatorname{shift}(t)}$.
 \end{definition}
 
+\begin{definition}[Signed Stasheff sum]
+\lean{AInfinityTheory.signedStasheffSum}
+\label{AInfinityTheory.signedStasheffSum}
+\leanok
+\uses{AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffSign}
+Given input degrees $(d_0,\dots,d_{n-1})$ and a family $(v_p)$ of elements of an
+abelian group indexed by the Stasheff indices $p$ of arity $n$, the signed Stasheff
+sum is
+\[
+  \sum_{p} \operatorname{sign}(p)\, v_p,
+\]
+with the Stasheff sign of each index. Both the Stasheff identities and the
+\Ainf{}-functor equations are sums of this form.
+\end{definition}
+
 \begin{definition}[Indexed Stasheff sum]
 \lean{AInfinityTheory.indexedStasheffSum}
 \label{AInfinityTheory.indexedStasheffSum}
 \leanok
-\uses{AInfinityTheory.indexedStasheffTerm, AInfinityTheory.stasheffSign, AInfinityTheory.stasheffTargetDeg}
-The arity-$n$ Stasheff sum is the signed sum of all valid composites of an inner
-operation followed by an outer operation, that is, of the Stasheff terms indexed
-by $0 \leq r \leq n$ and $1 \leq s \leq n - r$, with $t = n - r - s$. It lies in
-$\Hom(X_0,X_n)$ in any degree equal to the Stasheff target degree.
+\uses{AInfinityTheory.indexedStasheffTerm, AInfinityTheory.signedStasheffSum, AInfinityTheory.stasheffTargetDeg}
+The arity-$n$ Stasheff sum is the signed Stasheff sum of the indexed Stasheff terms
+over all Stasheff indices of arity $n$, that is, of all valid composites of an inner
+operation followed by an outer operation. It lies in $\Hom(X_0,X_n)$ in any degree
+equal to the Stasheff target degree.
 \end{definition}
 
 \begin{definition}[Indexed Stasheff identities]

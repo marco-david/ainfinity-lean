@@ -89,3 +89,59 @@ equal to zero.
 \leanok
 This is the Stasheff identity that is part of the data of an \Ainf{}-category.
 \end{proof}
+
+\section{A-infinity Functors}
+
+The source and target of an \Ainf{}-functor may be graded by different
+gradings $\beta$ and $\beta'$; the functor then carries a homomorphism of
+gradings $\beta \to \beta'$ along which degrees are translated.
+
+\begin{definition}[\Ainf{}-functor data]
+\lean{AInfinityTheory.AInfinityFunctorData}
+\label{AInfinityTheory.AInfinityFunctorData}
+\leanok
+\uses{AInfinityTheory.GradedLinearQuiver, AInfinityTheory.GradingHom, AInfinityTheory.GradedMultilinearMap}
+The data of an \Ainf{}-functor $F$ from a graded $R$-linear quiver graded by
+$\beta$ to one graded by $\beta'$ consists of a map $F$ on objects, a homomorphism
+of gradings $\beta \to \beta'$, and, for every positive arity $n$ and every
+string of objects $X_0,\dots,X_n$, a graded multilinear map
+\[
+  \varphi_n : \Hom(X_0,X_1) \otimes \cdots \otimes \Hom(X_{n-1},X_n) \to \Hom(FX_0, FX_n)
+\]
+of degree $\operatorname{shift}(1-n)$, where a degree $b \in \beta$ on the left
+corresponds to its image in $\beta'$ on the right. No relations are imposed.
+\end{definition}
+
+\begin{definition}[\Ainf{}-functor equations]
+\lean{AInfinityTheory.AInfinityFunctorData.mapCompSum, AInfinityTheory.AInfinityFunctorData.compMapSum, AInfinityTheory.AInfinityFunctorData.SatisfiesFunctorEquations}
+\label{AInfinityTheory.AInfinityFunctorData.SatisfiesFunctorEquations}
+\leanok
+\uses{AInfinityTheory.AInfinityFunctorData, AInfinityTheory.AInfinityComposition, AInfinityTheory.signedStasheffSum, AInfinityTheory.operationTargetDeg}
+Fix \Ainf{}-compositions $m$ on the source and $m'$ on the target. For composable
+inputs $a_1,\dots,a_n$, the left-hand side of the arity-$n$ functor equation is
+the signed Stasheff sum
+\[
+  \sum_{r+s+t=n,\ s\geq 1} (-1)^{\|a_{r+s+1}\| + \cdots + \|a_n\|}\,
+  \varphi_{r+1+t}\bigl(a_1,\dots,a_r,\, m_s(a_{r+1},\dots,a_{r+s}),\, a_{r+s+1},\dots,a_n\bigr),
+\]
+and the right-hand side is the sum, over all compositions $i_1 + \cdots + i_k = n$
+of $n$ into positive parts, of
+\[
+  m'_k\bigl(\varphi_{i_1}(a_1,\dots,a_{i_1}),\dots,\varphi_{i_k}(a_{n-i_k+1},\dots,a_n)\bigr).
+\]
+There is no sign on the right-hand side, since in reduced degrees every
+$\varphi_i$ has degree $0$. Both sides lie in $\Hom(FX_0,FX_n)$, in the image under
+the grading homomorphism of the degree of $m_n(a_1,\dots,a_n)$. The functor data satisfies the
+\Ainf{}-functor equations if the two sides agree in every positive arity, for
+every string of objects, choice of input degrees and composable inputs.
+\end{definition}
+
+\begin{definition}[\Ainf{}-functor]
+\lean{AInfinityTheory.AInfinityFunctor}
+\label{AInfinityTheory.AInfinityFunctor}
+\leanok
+\uses{AInfinityTheory.AInfinityCategory, AInfinityTheory.AInfinityFunctorData.SatisfiesFunctorEquations}
+An \Ainf{}-functor between \Ainf{}-categories is \Ainf{}-functor data that
+satisfies the \Ainf{}-functor equations for the structure maps of the two
+categories.
+\end{definition}

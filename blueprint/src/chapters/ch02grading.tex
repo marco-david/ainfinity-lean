@@ -2,7 +2,7 @@
 
 \chapter{Gradings}
 
-\section{Grading types}
+\section{Gradings and their homomorphisms}
 
 The morphisms of an \Ainf{}-category are graded by an abelian group $\beta$ of
 degrees. The \Ainf{}-axioms use exactly two further pieces of structure on
@@ -10,14 +10,14 @@ $\beta$: integer degree shifts, so that the $n$-ary operation $m_n$ can have
 degree $2-n$, and a Koszul sign attached to every degree. No degree is ever
 multiplied, so $\beta$ need not be a ring. Besides the standard gradings
 $\mathbb{Z}$ and $\mathbb{Z}/2$, this allows bigradings such as
-$\mathbb{Z}\times\mathbb{Z}$ or $\mathbb{Z}\times\mathbb{Z}/2$, in which $m_n$
+$\mathbb{Z}\times^t\mathbb{Z}$ or $\mathbb{Z}\times^t\mathbb{Z}/2$, in which $m_n$
 has degree $(2-n,0)$.
 
-\begin{definition}[Grading type]
-\lean{AInfinityTheory.GradingType}
-\label{AInfinityTheory.GradingType}
+\begin{definition}[Grading]
+\lean{AInfinityTheory.Grading}
+\label{AInfinityTheory.Grading}
 \leanok
-A grading type is an abelian group $\beta$ together with group homomorphisms
+A grading is an abelian group $\beta$ together with group homomorphisms
 \[
   \operatorname{shift} : \mathbb{Z} \to \beta,
   \qquad
@@ -32,7 +32,7 @@ $d \in \beta$ we write $(-1)^d := \operatorname{sign}(d)$ for its Koszul sign.
 \lean{AInfinityTheory.sign_shift}
 \label{AInfinityTheory.sign_shift}
 \leanok
-\uses{AInfinityTheory.GradingType}
+\uses{AInfinityTheory.Grading}
 For every integer $n$ one has $(-1)^{\operatorname{shift}(n)} = (-1)^n$.
 \end{lemma}
 \begin{proof}
@@ -43,35 +43,62 @@ $(-1)^{\operatorname{shift}(n)} = \operatorname{sign}(\operatorname{shift}(1))^n
 \end{proof}
 
 \begin{definition}[Standard gradings]
-\lean{AInfinityTheory.GradingType.instInt, AInfinityTheory.GradingType.instZModOfNatNat}
-\label{AInfinityTheory.GradingType.standard}
+\lean{AInfinityTheory.Grading.instInt, AInfinityTheory.Grading.instZModOfNatNat}
+\label{AInfinityTheory.Grading.standard}
 \leanok
-\uses{AInfinityTheory.GradingType}
-The integers $\mathbb{Z}$ form a grading type with $\operatorname{shift}$ the
+\uses{AInfinityTheory.Grading}
+The integers $\mathbb{Z}$ form a grading with $\operatorname{shift}$ the
 identity and $\operatorname{sign}(n) = (-1)^n$. The parities $\mathbb{Z}/2$
-form a grading type with $\operatorname{shift}$ the reduction modulo $2$ and
+form a grading with $\operatorname{shift}$ the reduction modulo $2$ and
 $\operatorname{sign}(p) = (-1)^p$.
 \end{definition}
 
 \begin{definition}[Product gradings]
-\lean{AInfinityTheory.GradingType.prodFst, AInfinityTheory.GradingType.prodTotal}
-\label{AInfinityTheory.GradingType.prod}
+\lean{AInfinityTheory.TProd, AInfinityTheory.instGradingTProd,
+  AInfinityTheory.LProd, AInfinityTheory.instGradingLProd,
+  AInfinityTheory.RProd, AInfinityTheory.instGradingRProd}
+\label{AInfinityTheory.Grading.prod}
 \leanok
-\uses{AInfinityTheory.GradingType}
-Let $\beta$ be a grading type and $\gamma$ an abelian group. The product
-$\beta \times \gamma$ is a grading type with
-$\operatorname{shift}(n) = (\operatorname{shift}(n), 0)$ in two ways: either
-the sign is read off the first factor alone, $\operatorname{sign}(b,c) = (-1)^b$,
-or, when $\gamma$ is a grading type as well, the sign is the total sign
-$\operatorname{sign}(b,c) = (-1)^b\,(-1)^c$. Neither choice is canonical, so
-both are constructions to be activated locally rather than instances.
+\uses{AInfinityTheory.Grading}
+Let $\beta$ be a grading and $\gamma$ an abelian group. The product
+$\beta \times \gamma$ is a grading with
+$\operatorname{shift}(n) = (\operatorname{shift}(n), 0)$ in two ways. In the
+left grading $\beta \times^l \gamma$ the sign is read off the first
+factor alone, $\operatorname{sign}(b,c) = (-1)^b$. When $\gamma$ is a grading
+as well, the total grading $\beta \times^t \gamma$ carries the total sign
+$\operatorname{sign}(b,c) = (-1)^b\,(-1)^c$. Symmetrically, when $\beta$ is an
+abelian group and $\gamma$ a grading, the right grading
+$\beta \times^r \gamma$ has $\operatorname{shift}(n) = (0, \operatorname{shift}(n))$
+and $\operatorname{sign}(b,c) = (-1)^c$. None of these choices is canonical, so
+$\beta \times^l \gamma$, $\beta \times^t \gamma$ and $\beta \times^r \gamma$ are
+separate copies of $\beta \times \gamma$, each carrying its grading as an instance,
+while the plain product $\beta \times \gamma$ carries none.
+\end{definition}
+
+\begin{definition}[Homomorphism of gradings]
+\lean{AInfinityTheory.GradingHom, AInfinityTheory.GradingHom.id, AInfinityTheory.GradingHom.comp}
+\label{AInfinityTheory.GradingHom}
+\leanok
+\uses{AInfinityTheory.Grading}
+A homomorphism of gradings $f : \beta \to \beta'$ is a group homomorphism that
+preserves the integer shifts, $f(\operatorname{shift}(k)) = \operatorname{shift}(k)$,
+and the Koszul signs, $(-1)^{f(b)} = (-1)^b$. It translates degrees in $\beta$ into
+degrees in $\beta'$ so that $m_n$ keeps degree $\operatorname{shift}(2-n)$ and no
+Koszul sign changes; this is what allows an \Ainf{}-functor to change the grading.
+Examples are the reduction $\mathbb{Z} \to \mathbb{Z}/2$, the inclusion of
+$\beta$ into either product grading $\beta \times^t \gamma$ or
+$\beta \times^l \gamma$, the projection $\beta \times^l \gamma \to \beta$, and
+symmetrically the inclusion $\gamma \to \beta \times^r \gamma$ and the projection
+$\beta \times^r \gamma \to \gamma$. The projection $\beta \times^t \gamma \to \beta$
+is not one, since it forgets the sign of the second factor. Homomorphisms of
+gradings compose associatively, with the identity as unit.
 \end{definition}
 
 \section{Graded linear maps and quivers}
 
-The graded-linear-map and graded-quiver definitions below do not need a grading
-type; the type of degrees is arbitrary there, carrying at most an addition. The
-structure of a grading type is only imposed by the degree arithmetic and Koszul
+The graded-linear-map and graded-quiver definitions below do not need a grading;
+the type of degrees is arbitrary there, carrying at most an addition. The
+structure of a grading is only imposed by the degree arithmetic and Koszul
 signs of the \Ainf{}-axioms.
 
 \begin{definition}[Graded linear map]

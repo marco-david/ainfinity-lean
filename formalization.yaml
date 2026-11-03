@@ -9,12 +9,14 @@ project:
   description: >-
     A Lean 4 / Mathlib formalization of A∞-category theory, developed as a research
     project at UC Berkeley with the goal of upstreaming to Mathlib. It defines
-    grading types (an abelian group of degrees with integer degree shifts and a Koszul
-    sign character, which covers bigradings such as ℤ × ℤ), graded linear and
+    gradings (an abelian group of degrees with integer degree shifts and a Koszul
+    sign character, which covers bigradings such as ℤ ×ᵗ ℤ), graded linear and
     multilinear maps of a fixed degree, graded R-linear quivers, the Stasheff
-    identities with Koszul signs, and R-linear A∞-categories. A∞-functors, their
-    composition and the examples were developed on an earlier foundation. They are
-    temporarily removed while they are ported to the current one.
+    identities with Koszul signs, R-linear A∞-categories, and A∞-functors between
+    A∞-categories whose gradings may differ, related by a homomorphism of
+    gradings. The composition of A∞-functors and the examples were developed
+    on an earlier foundation. They are temporarily removed while they are ported
+    to the current one.
     A second strand of the project formalizes the KLRW algebra of a loopless
     quiver with prescribed black and red strands, and its R-linear KLRW category,
     and builds computable categorical infrastructure (explicit biproducts, the
@@ -44,9 +46,9 @@ sources:
     relationship: "adapts"
     note: >-
       Source for the A∞ constructions: A∞-categories and the Stasheff identities.
-      The formalization adapts these definitions to a general grading type and to
-      diagrammatic argument order; see `fidelity`. A∞-functors and their
-      composition, also from this chapter, are not in the current code (see
+      The formalization adapts these definitions to a general grading and to
+      diagrammatic argument order; see `fidelity`. A∞-functors, also from this
+      chapter, are formalized; their composition is not in the current code (see
       `status`).
     author_endorsement: "not-contacted"
   - title: "A∞ Categories in Lean (project blueprint)"
@@ -62,8 +64,8 @@ sources:
     id: "https://marcodavid.net/A∞/"
     type: "blueprint"
     location: >-
-      Chapters 2–6: gradings and graded linear maps, Stasheff data, A∞-categories,
-      A∞-algebras, KLRW category
+      Chapters 2–6: gradings and graded linear maps, Stasheff data, A∞-categories
+      and A∞-functors, A∞-algebras, KLRW category
     relationship: "formalizes"
     note: >-
       The project's own leanblueprint, which fixes the precise statements and sign
@@ -105,14 +107,15 @@ classification:
 
 status:
   scope: >-
-    Complete (sorry-free): grading types with the standard and product gradings,
-    graded linear and multilinear maps (with their module structure and the
-    associativity and unit laws of composition), graded R-linear quivers, the
-    Stasheff identities, A∞-categories, and the general KLRW algebra with its
-    R-linear KLRW category. In progress: the computable additive completion and
+    Complete (sorry-free): gradings, including the standard and product gradings,
+    and their homomorphisms, graded linear and multilinear maps (with their module
+    structure and the associativity and unit laws of composition), graded R-linear
+    quivers, the Stasheff identities, A∞-categories, A∞-functors with the
+    A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
+    category. In progress: the computable additive completion and
     bounded cochain complexes, and the braiding functor, whose definitions are
-    still partially stubbed with `sorry`. Temporarily removed: A∞-functors, their
-    composition, the identity A∞-functor and the A∞ examples. They were written
+    still partially stubbed with `sorry`. Temporarily removed: the composition of
+    A∞-functors, the identity A∞-functor and the A∞ examples. They were written
     for the earlier foundation (grading indices and `GradedObject`s in
     `ModuleCat`) and will be restored once ported. A∞-algebras (blueprint
     chapter 5) are not formalized yet.
@@ -147,16 +150,16 @@ automation:
 
 fidelity:
   divergences: >-
-    (1) Grading is over an arbitrary `GradingType`: an additive commutative group β
+    (1) Degrees live in an arbitrary `Grading`: an additive commutative group β
     with integer degree shifts `shift : ℤ →+ β` and a Koszul sign character
     `sign : β →+ Additive ℤˣ` such that `shift 1` is odd. β need not be a ring, so
-    bigradings such as ℤ × ℤ or ℤ × ZMod 2 are allowed, not just ℤ or ℤ/2. (2) A
+    bigradings such as ℤ ×ᵗ ℤ or ℤ ×ᵗ ZMod 2 are allowed, not just ℤ or ℤ/2. (2) A
     graded R-linear quiver assigns to objects X, Y and a degree i an R-module
     `Hom X Y i`, over a commutative ring R. The operations m_n are graded
     multilinear maps of degree `shift (2 − n)` on each composable string of
     objects. (3) Arguments are in diagrammatic (left-to-right) order, the reverse
-    of Seidel's convention, so the Koszul sign of the (r, s) Stasheff term is
-    (−1)^(|a_{r+s+1}| + ⋯ + |a_n| − (n − r − s)). (4) No unitality is assumed.
+    of Seidel's convention, so the Koszul sign of the (r, s, t) Stasheff term is
+    (−1)^(|a_{r+s+1}| + ⋯ + |a_n| − t). (4) No unitality is assumed.
     (5) The KLRW algebra is defined for an arbitrary loopless quiver on a finite
     vertex set, with prescribed numbers of black and red strands per vertex, over
     the coefficient ring R[u, ℏ] (`MvPolynomial (Fin 2) R`), as the quotient of a
@@ -165,6 +168,9 @@ fidelity:
     functor is still being developed on a separate computable model with one black
     strand and n red strands (`KLRW/OneBlackStrand.lean`), which was the project's
     first KLRW example, and its data assumes coefficients of characteristic 2.
+    (7) The source and target of an A∞-functor may be graded by different
+    gradings; the functor carries a homomorphism of gradings, preserving shifts
+    and Koszul signs, along which degrees are translated.
 
 review:
   status: "peer-reviewed"
@@ -178,8 +184,8 @@ alignment:
   # `source` entries prefixed "Blueprint" refer to the project blueprint, "Seidel" to
   # Seidel's book, and "LePage–Shende" to arXiv:2505.00327.
   statements:
-    - source: "Blueprint, Definition (Grading type)"
-      lean: "AInfinityTheory.GradingType"
+    - source: "Blueprint, Definition (Grading)"
+      lean: "AInfinityTheory.Grading"
       module: "AInfinity.Grading"
       status: "defined"
     - source: "Blueprint, Lemma (Sign of an integer shift)"
@@ -187,15 +193,24 @@ alignment:
       module: "AInfinity.Grading"
       status: "proved"
     - source: "Blueprint, Definition (Standard gradings)"
-      lean: "AInfinityTheory.GradingType.instInt"
+      lean: "AInfinityTheory.Grading.instInt"
       module: "AInfinity.Grading"
       status: "defined"
-      note: "Together with `AInfinityTheory.GradingType.instZModOfNatNat` for ZMod 2."
+      note: "Together with `AInfinityTheory.Grading.instZModOfNatNat` for ZMod 2."
     - source: "Blueprint, Definition (Product gradings)"
-      lean: "AInfinityTheory.GradingType.prodFst"
+      lean: "AInfinityTheory.instGradingTProd"
       module: "AInfinity.Grading"
       status: "defined"
-      note: "Together with `AInfinityTheory.GradingType.prodTotal` for the total sign."
+      note: >-
+        The total sign, on the type synonym `AInfinityTheory.TProd` (`β ×ᵗ γ`). Together
+        with `AInfinityTheory.instGradingLProd` on `AInfinityTheory.LProd` (`β ×ˡ γ`) for
+        the sign of the first factor alone, and `AInfinityTheory.instGradingRProd` on
+        `AInfinityTheory.RProd` (`β ×ʳ γ`) for shifts and sign in the second factor alone.
+    - source: "Blueprint, Definition (Homomorphism of gradings)"
+      lean: "AInfinityTheory.GradingHom"
+      module: "AInfinity.Grading"
+      status: "defined"
+      note: "Together with `AInfinityTheory.GradingHom.id` and `AInfinityTheory.GradingHom.comp`."
     - source: "Blueprint, Definition (Graded linear map)"
       lean: "AInfinityTheory.GradedLinearMap"
       module: "AInfinity.GradedLinearAlgebra"
@@ -217,12 +232,20 @@ alignment:
       lean: "AInfinityTheory.AInfinityComposition"
       module: "AInfinity.Stasheff"
       status: "defined"
+    - source: "Blueprint, Definition (Stasheff index)"
+      lean: "AInfinityTheory.StasheffIndex"
+      module: "AInfinity.Stasheff"
+      status: "defined"
     - source: "Blueprint, Definition (Indexed Stasheff term)"
       lean: "AInfinityTheory.indexedStasheffTerm"
       module: "AInfinity.Stasheff"
       status: "defined"
     - source: "Blueprint, Definition (Stasheff sign)"
       lean: "AInfinityTheory.stasheffSign"
+      module: "AInfinity.Stasheff"
+      status: "defined"
+    - source: "Blueprint, Definition (Signed Stasheff sum)"
+      lean: "AInfinityTheory.signedStasheffSum"
       module: "AInfinity.Stasheff"
       status: "defined"
     - source: "Blueprint, Definition (Indexed Stasheff sum)"
@@ -245,11 +268,14 @@ alignment:
       lean: "AInfinityTheory.AInfinityCategory.indexedStasheffSum_eq_zero"
       module: "AInfinity.AInfinityCategory"
       status: "proved"
-    - source: "Seidel, A∞-functors and the A∞-functor equations"
-      lean: ""
-      module: ""
-      status: "not-formalized"
-      note: "Formalized on the earlier foundation; temporarily removed pending a port."
+    - source: "Blueprint, Definition (A∞-functor); Seidel, A∞-functors and the A∞-functor equations"
+      lean: "AInfinityTheory.AInfinityFunctor"
+      module: "AInfinity.AInfinityFunctor"
+      status: "defined"
+      note: >-
+        Together with `AInfinityTheory.AInfinityFunctorData` and
+        `AInfinityTheory.AInfinityFunctorData.SatisfiesFunctorEquations`. Source and
+        target may have different gradings, related by a `GradingHom`.
     - source: "Seidel, composition of A∞-functors"
       lean: ""
       module: ""

@@ -12,7 +12,7 @@ public import Mathlib.LinearAlgebra.Multilinear.Basic
 /-! # Graded linear maps
 
 This file defines graded linear maps of a fixed degree between externally graded modules,
-i.e. families of modules `M N : β → Type*` indexed by a grading type `β`.
+i.e. families of modules `M N : β → Type*` indexed by a type of degrees `β`.
 
 A graded linear map `f` of degree `d` consists of one linear map `M i →ₗ[R] N j` for each pair of
 degrees with `i + d = j`.

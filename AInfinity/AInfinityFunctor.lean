@@ -14,17 +14,17 @@ An `A∞`-functor `F : A → B` between `A∞`-categories consists of a map on o
 for each `n ≥ 1`, a multilinear map
 `φₙ : Hom(X₀, X₁) ⊗ ⋯ ⊗ Hom(Xₙ₋₁, Xₙ) → Hom(F X₀, F Xₙ)` of degree `1 - n`, satisfying the
 `A∞`-functor equations
-`∑_{r + s + t = n, s ≥ 1} (-1)^(‖a_{r+s+1}‖ + ⋯ + ‖a_n‖)
-  φ_{r+1+t}(a_1, …, a_r, m_s(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, a_n)
-= ∑_{k ≥ 1} ∑_{i₁ + ⋯ + iₖ = n} m'_k(φ_{i₁}(a_1, …, a_{i₁}), …, φ_{iₖ}(a_{n-iₖ+1}, …, a_n))`.
+`∑_{r + s + t = n, s ≥ 1} (-1)^(‖a_{r+s+1}‖ + ⋯ + ‖aₙ‖)
+  φ_{r+1+t}(a₁, …, aᵣ, mₛ(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, aₙ)
+= ∑_{k ≥ 1} ∑_{i₁ + ⋯ + iₖ = n} m'ₖ(φ_{i₁}(a₁, …, a_{i₁}), …, φ_{iₖ}(a_{n-iₖ+1}, …, aₙ))`.
 
 The sign on the left is the Koszul sign `stasheffSign` of the Stasheff identities. There is no
 sign on the right: in reduced degrees `‖a‖ = |a| - 1` every `φᵢ` has degree `0`, so no Koszul
 sign arises from moving it past the inputs (compare [Seidel, *Fukaya categories and
 Picard–Lefschetz theory*, (1.6)]).
 
-The source and target may be graded by different grading types `β` and `β'`; the functor then
-carries a homomorphism of grading types `β →+ᵍ β'`, which preserves the integer shifts
+The source and target may be graded by different gradings `β` and `β'`; the functor then
+carries a homomorphism of gradings `β →+ᵍ β'`, which preserves the integer shifts
 and the Koszul signs.
 
 ## Main definitions
@@ -42,13 +42,20 @@ and the Koszul signs.
 
 ## Implementation notes
 
-The component `φₙ` is a `GradedMultilinearMap` of degree `shift (1 - n)` in the source grading,
-into the pullback `b ↦ Hom(F X₀, F Xₙ)(degMap b)` of the target hom spaces. Both sides of
-the functor equation are stated pointwise on a composable string of inputs, in degree
-`degMap d` for any `d` equal to the degree of `mₙ`, as for `indexedStasheffSum`. Like the
-Stasheff sum, the left-hand side is a `signedStasheffSum`. Changes of objects are transported
-with `homCongr`. The ordered decompositions `i₁ + ⋯ + iₖ = n` on the right-hand side are
-Mathlib's `Composition n`.
+A `GradedMultilinearMap` has a single type of degrees for its inputs, its output and its degree.
+The inputs of `φₙ` are graded by `β` and its output by `β'`, so the output family is read
+through `degMap`: for input degrees `deg`, the component of `φₙ` lands in `Hom(F X₀, F Xₙ)` in
+degree `degMap (∑ deg + shift (1 - n))`. All degree arithmetic happens in `β`, and `φₙ` is only
+ever evaluated in target degrees of the form `degMap b`.
+
+Both sides of the functor equation are stated pointwise on composable inputs `a₁, …, aₙ` of
+degrees `deg`, in degree `degMap d` for any `d` equal to the degree `operationTargetDeg deg` of
+`mₙ(a₁, …, aₙ)`, as for `indexedStasheffSum`. The left-hand side is a `signedStasheffSum`, like
+the Stasheff sum. The decompositions `i₁ + ⋯ + iₖ = n` on the right-hand side are Mathlib's
+`Composition n`. Changes of objects are transported with `homCongr`.
+
+`mapCompSum` and `compMapSum` are named in order of application: a functor component applied
+to a composition, and a composition of functor components.
 -/
 
 @[expose] public section
@@ -71,10 +78,11 @@ lemma _root_.Composition.prod_prod_embedding {M : Type*} [CommMonoid M] (c : Com
 
 section Degrees
 
-variable {β : Type*} [AddCommGroup β] [GradingType β]
+variable {β : Type*} [AddCommGroup β] [Grading β]
 variable (deg : Fin n → β)
 
-/-- Target degree of the `n`-ary functor component `φₙ`, which has degree `1 - n`. -/
+/-- The degree of `φₙ(a₁, …, aₙ)` for inputs `aᵢ` of degrees `deg i`, where `φₙ` itself has
+degree `1 - n`. -/
 abbrev functorTargetDeg : β :=
   (∑ i, deg i) + shift (1 - (n : ℤ))
 
@@ -85,29 +93,36 @@ lemma operationTargetDeg_eq_functorTargetDeg_add_shift_one :
   congr 2
   lia
 
-/-- In the term of the left-hand side of the functor equation indexed by `p = (r, s, t)`, the
-outer functor component lands in the degree of `mₙ`. -/
+/-- The term `φ_{r+1+t}(a₁, …, aᵣ, mₛ(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, aₙ)` of the left-hand
+side of the functor equation, indexed by `p = (r, s, t)`, has the degree of `mₙ(a₁, …, aₙ)`. -/
 lemma functorTargetDeg_stasheffDegOut (p : StasheffIndex n) :
     functorTargetDeg (stasheffDegOut deg p) = operationTargetDeg deg := by
   apply add_right_cancel (b := (shift 1 : β))
   rw [← operationTargetDeg_eq_functorTargetDeg_add_shift_one, stasheffDegOut_sum,
     stasheffTargetDeg_eq_operationTargetDeg_add_shift_one]
 
-/-- Applying functor components to the blocks of a composition `c` of `n` and then the
-`c.length`-ary operation lands in the degree of `mₙ`. -/
+/-- The term `mₖ(φ_{i₁}(a₁, …, a_{i₁}), …, φ_{iₖ}(a_{n-iₖ+1}, …, aₙ))` of the right-hand side of
+the functor equation, indexed by a composition `c = (i₁, …, iₖ)` of `n`, has the degree of
+`mₙ(a₁, …, aₙ)`. -/
 lemma operationTargetDeg_functorTargetDeg_embedding (c : Composition n) :
     operationTargetDeg (fun l ↦ functorTargetDeg fun j ↦ deg (c.embedding l j)) =
       operationTargetDeg deg := by
-  have hlen : ∑ l, (1 - (c.blocksFun l : ℤ)) + (2 - c.length) = 2 - n := by
-    rw [Finset.sum_sub_distrib, ← Nat.cast_sum, c.sum_blocksFun]
-    simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, mul_one]
-    lia
-  simp only [operationTargetDeg, functorTargetDeg, Finset.sum_add_distrib, c.sum_sum_embedding, add_assoc,
-    ← map_sum, ← map_add, hlen]
+  simp only [operationTargetDeg, functorTargetDeg, Finset.sum_add_distrib, c.sum_sum_embedding,
+    add_assoc, ← map_sum, ← map_add, Finset.sum_sub_distrib, ← Nat.cast_sum]
+  simp
 
 end Degrees
 
 section CompositionBlock
+
+/-! ### Blocks of a composition
+
+A composition `c = (i₁, …, iₖ)` of `n` cuts a composable string of `n` inputs into `k` blocks:
+the `l`-th block has size `iₗ = c.blocksFun l` and starts at position `c.sizeUpTo l`. In the
+right-hand side of the functor equation, the functor component `φ_{iₗ}` is applied to the
+`l`-th block and the outer operation `m'ₖ` to the resulting `k` values, so both the sizes of
+the blocks and their number must be positive. The lemmas and instances on `Composition` below
+are stated without reference to functors. -/
 
 variable {Obj : Type*} (obj : Fin (n + 1) → Obj) (c : Composition n) (l : Fin c.length)
 
@@ -115,18 +130,16 @@ variable {Obj : Type*} (obj : Fin (n + 1) → Obj) (c : Composition n) (l : Fin 
 lemma _root_.Composition.sizeUpTo_add_blocksFun_le : c.sizeUpTo l + c.blocksFun l ≤ n :=
   (c.sizeUpTo_succ' l).symm.trans_le (c.sizeUpTo_le _)
 
-/-- Every block of a composition is nonempty, so the functor component `φ_{iₗ}` applied to it
-has positive arity. -/
+/-- Every block of a composition is nonempty. -/
 instance _root_.Composition.neZero_blocksFun : NeZero (c.blocksFun l) :=
   NeZero.of_pos (c.one_le_blocksFun l)
 
-/-- A composition of a positive integer has at least one block, so the outer operation
-`m'_k` applied to the blocks has positive arity. -/
+/-- A composition of a positive integer has at least one block. -/
 instance _root_.Composition.neZero_length [NeZero n] : NeZero c.length :=
   NeZero.of_pos (c.length_pos_of_pos (NeZero.pos n))
 
-/-- The object string `obj iₗ, …, obj (iₗ + c.blocksFun l)` of the `l`-th block of a composition
-`c` of `n`, where `iₗ = c.sizeUpTo l` is the start of the block. -/
+/-- The object string of the `l`-th block of a composition `c` of `n`: its `i`-th object is
+`obj (c.sizeUpTo l + i)`, for `i ≤ c.blocksFun l`. -/
 def compositionBlockObj : Fin (c.blocksFun l + 1) → Obj :=
   fun i ↦ obj ((i.natAdd (c.sizeUpTo l)).castLE (Nat.succ_le_succ (c.sizeUpTo_add_blocksFun_le l)))
 
@@ -149,14 +162,14 @@ lemma compositionBlockObj_last :
 end CompositionBlock
 
 /-- The data of an `A∞`-functor between graded `R`-linear quivers: a map on objects, a
-homomorphism of grading types and, for each `n ≥ 1`, a functor component `φₙ` of degree `1 - n`.
+homomorphism of gradings and, for each `n ≥ 1`, a functor component `φₙ` of degree `1 - n`.
 No relations are imposed. -/
-structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [GradingType β]
-    [AddCommGroup β'] [GradingType β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
+structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
+    [AddCommGroup β'] [Grading β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
     [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj'] where
   /-- The action of the functor on objects. -/
   obj : Obj → Obj'
-  /-- The homomorphism of grading types translating source degrees into target degrees. -/
+  /-- The homomorphism of gradings translating source degrees into target degrees. -/
   degMap : β →+ᵍ β'
   /-- The action of the functor on hom spaces, i.e. the functor components `φₙ`, of degree
   `1 - n`, landing in the hom spaces of the target in the translated degrees. -/
@@ -167,21 +180,22 @@ structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [GradingType �
 
 namespace AInfinityFunctorData
 
-variable {β β' : Type*} [AddCommGroup β] [GradingType β] [AddCommGroup β']
-  [GradingType β'] {R : Type*} [CommRing R] {Obj Obj' : Type*}
+variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β']
+  [Grading β'] {R : Type*} [CommRing R] {Obj Obj' : Type*}
   [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
 variable (m : AInfinityComposition β R Obj) (m' : AInfinityComposition β' R Obj')
 variable (F : AInfinityFunctorData β β' R Obj Obj')
 variable {obj : Fin (n + 1) → Obj} {deg : Fin n → β}
 variable (x : ∀ i : Fin n, ComposableHomType R obj i (deg i))
 
-/-- The grading homomorphism commutes with taking the degree of an operation. -/
+/-- A homomorphism of gradings commutes with `operationTargetDeg`. -/
 lemma operationTargetDeg_degMap {k : ℕ} (b : Fin k → β) :
     operationTargetDeg (fun i ↦ F.degMap (b i)) = F.degMap (operationTargetDeg b) := by
   simp only [operationTargetDeg, map_add, map_sum, GradingHom.map_shift]
 
-/-- Applying functor components to the blocks of a composition `c` of `n` and then the
-`c.length`-ary operation of the target lands in the image of the degree of `mₙ`. -/
+/-- `operationTargetDeg_functorTargetDeg_embedding` translated along `degMap`: the term
+`m'ₖ(φ_{i₁}(…), …, φ_{iₖ}(…))` of the right-hand side of the functor equation has degree
+`degMap d`, where `d` is the degree of `mₙ(a₁, …, aₙ)`. -/
 lemma operationTargetDeg_degMap_functorTargetDeg_embedding (c : Composition n) (d : β)
     (hd : operationTargetDeg deg = d) :
     operationTargetDeg (fun l ↦ F.degMap (functorTargetDeg fun j ↦ deg (c.embedding l j))) =
@@ -191,9 +205,9 @@ lemma operationTargetDeg_degMap_functorTargetDeg_embedding (c : Composition n) (
 
 /-! ### The left-hand side of the functor equation -/
 
-/-- The term `φ_{r+1+t}(a_1, …, a_r, m_s(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, a_n)` of the
+/-- The term `φ_{r+1+t}(a₁, …, aᵣ, mₛ(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, aₙ)` of the
 left-hand side of the functor equation indexed by `p = (r, s, t)`, in degree `F.degMap d` for
-any `d` equal to the degree of `mₙ`. -/
+any `d` equal to the degree of `mₙ(a₁, …, aₙ)`. -/
 def mapCompTerm (p : StasheffIndex n) (d : β) (hd : operationTargetDeg deg = d) :
     (F.obj (obj 0) →ᵍ[R] F.obj (obj (Fin.last n))) (F.degMap d) :=
   homCongr R (congrArg F.obj (stasheffObjOut_zero obj p))
@@ -202,15 +216,15 @@ def mapCompTerm (p : StasheffIndex n) (d : β) (hd : operationTargetDeg deg = d)
       ((functorTargetDeg_stasheffDegOut deg p).trans hd) (indexedStasheffXOut m x p))
 
 /-- The left-hand side of the arity-`n` functor equation, with the Koszul signs of the Stasheff
-identities, in degree `F.degMap d` for any `d` equal to the degree of `mₙ`. -/
+identities, in degree `F.degMap d` for any `d` equal to the degree of `mₙ(a₁, …, aₙ)`. -/
 def mapCompSum (d : β) (hd : operationTargetDeg deg = d) :
     (F.obj (obj 0) →ᵍ[R] F.obj (obj (Fin.last n))) (F.degMap d) :=
   signedStasheffSum deg fun p ↦ F.mapCompTerm m x p d hd
 
 /-! ### The right-hand side of the functor equation -/
 
-/-- The output `φ_{iₗ}` of the `l`-th block of a composition `c = (i₁, …, iₖ)` of `n`, as the
-`l`-th input of the outer operation `m'_k`. -/
+/-- The value of the functor component `φ_{iₗ}` on the `l`-th block of a composition
+`c = (i₁, …, iₖ)` of `n`, as the `l`-th input of the outer operation `m'ₖ`. -/
 def compositionBlockMap (c : Composition n) (l : Fin c.length) :
     ComposableHomType R (fun k ↦ F.obj (obj (c.boundary k))) l
       (F.degMap (functorTargetDeg fun j ↦ deg (c.embedding l j))) :=
@@ -219,9 +233,9 @@ def compositionBlockMap (c : Composition n) (l : Fin c.length) :
     (F.map (compositionBlockObj obj c l) (fun j ↦ deg (c.embedding l j)) _ rfl
       fun j ↦ x (c.embedding l j))
 
-/-- The term `m'_k(φ_{i₁}(a_1, …, a_{i₁}), …, φ_{iₖ}(a_{n-iₖ+1}, …, a_n))` of the right-hand
+/-- The term `m'ₖ(φ_{i₁}(a₁, …, a_{i₁}), …, φ_{iₖ}(a_{n-iₖ+1}, …, aₙ))` of the right-hand
 side of the functor equation indexed by a composition `c = (i₁, …, iₖ)` of `n`, in degree
-`F.degMap d` for any `d` equal to the degree of `mₙ`. -/
+`F.degMap d` for any `d` equal to the degree of `mₙ(a₁, …, aₙ)`. -/
 def compMapTerm [NeZero n] (c : Composition n) (d : β) (hd : operationTargetDeg deg = d) :
     (F.obj (obj 0) →ᵍ[R] F.obj (obj (Fin.last n))) (F.degMap d) :=
   homCongr R (congrArg (fun k ↦ F.obj (obj k)) c.boundary_zero)
@@ -232,7 +246,7 @@ def compMapTerm [NeZero n] (c : Composition n) (d : β) (hd : operationTargetDeg
       (F.compositionBlockMap x c))
 
 /-- The right-hand side of the arity-`n` functor equation, summed over all compositions of `n`,
-in degree `F.degMap d` for any `d` equal to the degree of `mₙ`. -/
+in degree `F.degMap d` for any `d` equal to the degree of `mₙ(a₁, …, aₙ)`. -/
 def compMapSum [NeZero n] (d : β) (hd : operationTargetDeg deg = d) :
     (F.obj (obj 0) →ᵍ[R] F.obj (obj (Fin.last n))) (F.degMap d) :=
   ∑ c : Composition n, F.compMapTerm m' x c d hd
@@ -249,8 +263,8 @@ end AInfinityFunctorData
 
 /-- An `A∞`-functor between `A∞`-categories: `A∞`-functor data satisfying the functor
 equations. -/
-structure AInfinityFunctor (β β' : Type*) [AddCommGroup β] [GradingType β]
-    [AddCommGroup β'] [GradingType β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
+structure AInfinityFunctor (β β' : Type*) [AddCommGroup β] [Grading β]
+    [AddCommGroup β'] [Grading β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
     [AInfinityCategory β R Obj] [AInfinityCategory β' R Obj']
     extends AInfinityFunctorData β β' R Obj Obj' where
   /-- The functor components satisfy the functor equations in every arity. -/

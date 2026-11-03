@@ -15,18 +15,18 @@ public import AInfinity.GradedLinearQuiver
 Given a graded `R`-linear quiver with higher compositions
 `mₙ : Hom(X₀, X₁) ⊗ ⋯ ⊗ Hom(Xₙ₋₁, Xₙ) → Hom(X₀, Xₙ)` of degree `2 - n`, the arity-`n` Stasheff
 identity states that
-`∑_{r + s + t = n, s ≥ 1} (-1)^(‖a_{r+s+1}‖ + ⋯ + ‖a_n‖) m_{r+1+t}(a_1, …, a_r,
-m_s(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, a_n) = 0`.
+`∑_{r + s + t = n, s ≥ 1} (-1)^(‖a_{r+s+1}‖ + ⋯ + ‖aₙ‖) m_{r+1+t}(a₁, …, aᵣ,
+mₛ(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, aₙ) = 0`.
 
 ## Main definitions
 
 * `AInfinityTheory.AInfinityComposition`: the type of higher compositions `mₙ` on a graded
   linear quiver.
-* `AInfinityTheory.indexedStasheffTerm`: the `(r, s, t)` summand of the Stasheff sum.
 * `AInfinityTheory.StasheffIndex`: the index triples `(r, s, t)` with `r + s + t = n` and
   `1 ≤ s`.
 * `AInfinityTheory.stasheffSign`: the Koszul sign of the `(r, s, t)` summand.
 * `AInfinityTheory.signedStasheffSum`: the sum of a family of `(r, s, t)` terms with these signs.
+* `AInfinityTheory.indexedStasheffTerm`: the `(r, s, t)` summand of the Stasheff sum.
 * `AInfinityTheory.indexedStasheffSum`: the signed Stasheff sum in arity `n`.
 * `AInfinityTheory.IndexedSatisfiesStasheff`: the Stasheff identities in every arity.
 
@@ -42,20 +42,21 @@ namespace AInfinityTheory
 
 universe u v w
 
-variable {β : Type v} [AddCommGroup β] [GradingType β]
+variable {β : Type v} [AddCommGroup β] [Grading β]
 variable {n : ℕ}
 
-/-- Target degree of the `n`-ary operation `m`. -/
+/-- The degree of `mₙ(a₁, …, aₙ)` for inputs `aᵢ` of degrees `deg i`, where `mₙ` itself has
+degree `2 - n`. -/
 abbrev operationTargetDeg
     (deg : Fin n → β) : β :=
   (∑ i, deg i) + shift (2 - (n : ℤ))
 
-/-- Target degree of the arity-`n` Stasheff relation. -/
+/-- Target degree of the arity-`n` Stasheff identity on inputs of degrees `deg`. -/
 abbrev stasheffTargetDeg
     (deg : Fin n → β) : β :=
   (∑ i, deg i) + shift (3 - (n : ℤ))
 
-/-- The arity-`n` Stasheff relation has degree one more than the `n`-ary operation `m`. -/
+/-- The arity-`n` Stasheff identity has degree one more than the `n`-ary operation `mₙ`. -/
 lemma stasheffTargetDeg_eq_operationTargetDeg_add_shift_one
     (deg : Fin n → β) :
     stasheffTargetDeg deg = operationTargetDeg deg + shift 1 := by
@@ -89,6 +90,8 @@ def StasheffIndex.equivLt : StasheffIndex n ≃ {x : Fin (n + 1) × Fin (n + 1) 
   left_inv p := by have := p.sum_eq; ext <;> dsimp only <;> omega
   right_inv x := Subtype.ext <| Prod.ext rfl <| Fin.ext <| Nat.add_sub_cancel' x.2.le
 
+/-- The index triples of the arity-`n` Stasheff identity form a finite type, through their
+identification with pairs of endpoints. -/
 instance : Fintype (StasheffIndex n) :=
   .ofEquiv _ StasheffIndex.equivLt.symm
 
@@ -228,7 +231,7 @@ def indexedStasheffXIn :
     ∀ j : Fin p.s, ComposableHomType R (stasheffObjIn obj p) j (stasheffDegIn deg p j) :=
   fun j => x (((j.natAdd p.r).castAdd p.t).cast p.sum_eq)
 
-omit [AddCommGroup β] [GradingType β] in
+omit [AddCommGroup β] [Grading β] in
 /-- Evaluating the inner input tuple just picks out the corresponding original input. -/
 @[simp]
 lemma indexedStasheffXIn_apply
@@ -407,14 +410,14 @@ lemma indexedStasheffTerm_eq_zero_of_inner_map_eq_zero
       (indexedStasheffInner_eq_zero_of_map_eq_zero m x p hm) _ _)
 
 variable (deg) in
-/-- The Koszul sign `(-1)^(‖a_{r+s+1}‖ + ⋯ + ‖a_n‖)` of the Stasheff term indexed by
+/-- The Koszul sign `(-1)^(‖a_{r+s+1}‖ + ⋯ + ‖aₙ‖)` of the Stasheff term indexed by
 `p = (r, s, t)`, where `‖a‖ = |a| - 1` is the reduced degree of an input after the inner
 operation. -/
 def stasheffSign : ℤˣ :=
   ∏ k : Fin p.t, sign (deg ((k.natAdd (p.r + p.s)).cast p.sum_eq) - shift 1)
 
 variable (deg) in
-/-- The signed sum `∑_{r + s + t = n, s ≥ 1} (-1)^(‖a_{r+s+1}‖ + ⋯ + ‖a_n‖) f (r, s, t)` over
+/-- The signed sum `∑_{r + s + t = n, s ≥ 1} (-1)^(‖a_{r+s+1}‖ + ⋯ + ‖aₙ‖) f (r, s, t)` over
 the index triples `StasheffIndex n` of the arity-`n` Stasheff identity. Both the Stasheff
 identities and the `A∞`-functor equations are sums of this form. -/
 def signedStasheffSum {M : Type*} [AddCommGroup M] (f : StasheffIndex n → M) : M :=
