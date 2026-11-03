@@ -87,7 +87,6 @@ abbrev functorTargetDeg : β :=
 /-- The `n`-ary operation `mₙ` has degree one more than the `n`-ary functor component `φₙ`. -/
 lemma operationTargetDeg_eq_functorTargetDeg_add_degOne :
     operationTargetDeg deg = functorTargetDeg deg + degOne := by
-  rw [operationTargetDeg, functorTargetDeg]
   module
 
 /-- The term `φ_{r+1+t}(a₁, …, aᵣ, mₛ(a_{r+1}, …, a_{r+s}), a_{r+s+1}, …, aₙ)` of the left-hand

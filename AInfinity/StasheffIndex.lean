@@ -55,7 +55,6 @@ abbrev stasheffTargetDeg
 lemma stasheffTargetDeg_eq_operationTargetDeg_add_degOne
     (deg : Fin n → β) :
     stasheffTargetDeg deg = operationTargetDeg deg + degOne := by
-  rw [stasheffTargetDeg, operationTargetDeg]
   module
 
 /-- An index triple `(r, s, t)` of the arity-`n` Stasheff identity: `r + s + t = n` and
