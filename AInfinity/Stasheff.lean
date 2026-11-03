@@ -26,8 +26,13 @@ signs are in `AInfinity.StasheffIndex`.
 
 ## Main results
 
-* `AInfinityTheory.stasheffTerm_eq_zero_of_arity_ne_two`: if `m` vanishes outside arity `2`,
-  a Stasheff term vanishes unless both its inner and its outer operation are binary.
+* `AInfinityTheory.stasheffTerm_eq_zero_of_arity_notMem`: if `m` vanishes in every arity
+  outside `S`, a Stasheff term vanishes unless both its inner and its outer arity lie in `S`.
+* `AInfinityTheory.stasheffSum_eq_zero_of_arity_notMem`: the corresponding vanishing of the
+  Stasheff sum, when every index triple has an arity outside `S`.
+* `AInfinityTheory.stasheffSum_arity_one`, `AInfinityTheory.stasheffSum_arity_two`,
+  `AInfinityTheory.stasheffSum_arity_three`: the Stasheff sums in arities `1`, `2` and `3`,
+  written out term by term.
 -/
 
 @[expose] public section
@@ -271,19 +276,68 @@ def stasheffSum
     (X 0 →ᵍ[R] X (Fin.last n)) d :=
   signedStasheffSum deg fun q => stasheffTerm x q d hd
 
-/-- If `m` vanishes outside arity `2`, a Stasheff term vanishes unless both its inner and its
-outer operation are binary. -/
-lemma stasheffTerm_eq_zero_of_arity_ne_two
-    (hm : ∀ (k : ℕ) [NeZero k], k ≠ 2 → ∀ X : Fin (k + 1) → Obj, m (β := β) (R := R) X = 0)
+/-- If `m` vanishes in every arity outside `S`, a Stasheff term vanishes unless both its
+inner and its outer arity lie in `S`. -/
+lemma stasheffTerm_eq_zero_of_arity_notMem (S : Set ℕ)
+    (hm : ∀ (k : ℕ) [NeZero k], k ∉ S → ∀ X : Fin (k + 1) → Obj, m (β := β) (R := R) X = 0)
     {n : ℕ} {X : Fin (n + 1) → Obj} {deg : Fin n → β}
     (x : ∀ i : Fin n, ComposableHom β R X i (deg i)) (p : StasheffIndex n)
-    (h2 : p.s ≠ 2 ∨ p.r + 1 + p.t ≠ 2) (d : β) (hd : stasheffTargetDeg deg = d) :
+    (hS : p.s ∉ S ∨ p.r + 1 + p.t ∉ S) (d : β) (hd : stasheffTargetDeg deg = d) :
     stasheffTerm x p d hd = 0 := by
-  rcases h2 with h2 | h2
+  rcases hS with hS | hS
   · exact stasheffTerm_eq_zero_of_inner_map_eq_zero x p
-      (fun d hd => by simp only [hm p.s h2]; rfl) d hd
+      (fun d hd => by simp only [hm p.s hS]; rfl) d hd
   · exact stasheffTerm_eq_zero_of_outer_map_eq_zero x p
-      (fun d hd => by simp only [hm _ h2]; rfl) d hd
+      (fun d hd => by simp only [hm _ hS]; rfl) d hd
+
+/-- If `m` vanishes in every arity outside `S`, the arity-`n` Stasheff sum vanishes as soon as
+every index triple has its inner or its outer arity outside `S`. -/
+lemma stasheffSum_eq_zero_of_arity_notMem (S : Set ℕ)
+    (hm : ∀ (k : ℕ) [NeZero k], k ∉ S → ∀ X : Fin (k + 1) → Obj, m (β := β) (R := R) X = 0)
+    {n : ℕ} {X : Fin (n + 1) → Obj} {deg : Fin n → β}
+    (hS : ∀ p : StasheffIndex n, p.s ∉ S ∨ p.r + 1 + p.t ∉ S)
+    (x : ∀ i : Fin n, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
+    stasheffSum x d hd = 0 :=
+  signedStasheffSum_eq_zero fun p => stasheffTerm_eq_zero_of_arity_notMem S hm x p (hS p) d hd
+
+/-- In arity `1`, the Stasheff sum is the single term `m₁(m₁(a₁))`. -/
+lemma stasheffSum_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 → β}
+    (x : ∀ i : Fin 1, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
+    stasheffSum x d hd = stasheffTerm x ⟨0, 1, 0, rfl, le_rfl⟩ d hd := by
+  rw [stasheffSum, signedStasheffSum, StasheffIndex.univ_one, Finset.sum_singleton]
+  exact one_smul _ _
+
+/-- In arity `2`, the Stasheff sum has the three terms `m₂(m₁(a₁), a₂)`, `m₂(a₁, m₁(a₂))` and
+`m₁(m₂(a₁, a₂))`, with the Koszul sign `(-1)^‖a₂‖` on the first. -/
+lemma stasheffSum_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 → β}
+    (x : ∀ i : Fin 2, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
+    stasheffSum x d hd =
+      (sign (deg 1 - shift 1)).toMul • stasheffTerm x ⟨0, 1, 1, rfl, le_rfl⟩ d hd +
+        stasheffTerm x ⟨1, 1, 0, rfl, le_rfl⟩ d hd +
+        stasheffTerm x ⟨0, 2, 0, rfl, one_le_two⟩ d hd := by
+  rw [stasheffSum, signedStasheffSum, StasheffIndex.univ_two, Finset.sum_insert (by decide),
+    Finset.sum_insert (by decide), Finset.sum_singleton]
+  simp only [stasheffSign, Fin.prod_univ_one, Fin.prod_univ_zero, one_smul, add_assoc]
+  rfl
+
+/-- In arity `3`, the Stasheff sum has six terms, one for each index triple `(r, s, t)`, with
+the Koszul signs `(-1)^(‖a_{r+s+1}‖ + ⋯ + ‖a₃‖)`. -/
+lemma stasheffSum_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 → β}
+    (x : ∀ i : Fin 3, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
+    stasheffSum x d hd =
+      ((sign (deg 1 - shift 1)).toMul * (sign (deg 2 - shift 1)).toMul) •
+          stasheffTerm x ⟨0, 1, 2, rfl, le_rfl⟩ d hd +
+        (sign (deg 2 - shift 1)).toMul • stasheffTerm x ⟨1, 1, 1, rfl, le_rfl⟩ d hd +
+        stasheffTerm x ⟨2, 1, 0, rfl, le_rfl⟩ d hd +
+        (sign (deg 2 - shift 1)).toMul • stasheffTerm x ⟨0, 2, 1, rfl, one_le_two⟩ d hd +
+        stasheffTerm x ⟨1, 2, 0, rfl, one_le_two⟩ d hd +
+        stasheffTerm x ⟨0, 3, 0, rfl, by decide⟩ d hd := by
+  rw [stasheffSum, signedStasheffSum, StasheffIndex.univ_three]
+  repeat rw [Finset.sum_insert (by decide)]
+  rw [Finset.sum_singleton]
+  simp only [stasheffSign, Fin.prod_univ_two, Fin.prod_univ_one, Fin.prod_univ_zero,
+    one_smul, add_assoc]
+  rfl
 
 end AInfinityCategoryStruct
 

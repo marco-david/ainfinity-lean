@@ -89,6 +89,22 @@ identification with pairs of endpoints. -/
 instance : Fintype (StasheffIndex n) :=
   .ofEquiv _ StasheffIndex.equivLt.symm
 
+/-- The only index triple in arity `1` is `(0, 1, 0)`. -/
+lemma StasheffIndex.univ_one :
+    (Finset.univ : Finset (StasheffIndex 1)) = {⟨0, 1, 0, rfl, le_rfl⟩} := by
+  decide
+
+/-- The index triples in arity `2`. -/
+lemma StasheffIndex.univ_two : (Finset.univ : Finset (StasheffIndex 2)) =
+    {⟨0, 1, 1, rfl, le_rfl⟩, ⟨1, 1, 0, rfl, le_rfl⟩, ⟨0, 2, 0, rfl, one_le_two⟩} := by
+  decide
+
+/-- The index triples in arity `3`. -/
+lemma StasheffIndex.univ_three : (Finset.univ : Finset (StasheffIndex 3)) =
+    {⟨0, 1, 2, rfl, le_rfl⟩, ⟨1, 1, 1, rfl, le_rfl⟩, ⟨2, 1, 0, rfl, le_rfl⟩,
+      ⟨0, 2, 1, rfl, one_le_two⟩, ⟨1, 2, 0, rfl, one_le_two⟩, ⟨0, 3, 0, rfl, by decide⟩} := by
+  decide
+
 /-- The inner operation of a Stasheff term has positive arity. -/
 instance (p : StasheffIndex n) : NeZero p.s :=
   ⟨by have := p.one_le_s; omega⟩

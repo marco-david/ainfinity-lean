@@ -78,6 +78,45 @@ whose operations satisfy the Stasheff identities. The curvature does not enter
 the Stasheff identities, whose inner operations have positive arity.
 \end{definition}
 
+\begin{proposition}[\Ainf{}-categories with vanishing higher operations]
+\lean{AInfinityTheory.AInfinityCategoryStruct.ofArityLeTwo, AInfinityTheory.AInfinityCategory.ofArityLeTwo}
+\label{AInfinityTheory.AInfinityCategory.ofArityLeTwo}
+\leanok
+\uses{AInfinityTheory.AInfinityCategory, AInfinityTheory.stasheffSum}
+Let $m_1$ be a family of graded linear maps of degree $1$ and $m_2$ a family of bilinear maps
+of degree $0$, and set $m_n = 0$ for $n \geq 3$. Then $(m_n)$ satisfies the Stasheff identities
+as soon as it does so in arities $1$, $2$ and $3$, that is, as soon as $m_1^2 = 0$, $m_1$ is a
+derivation of $m_2$, and $m_2$ is associative, all with Koszul signs.
+\end{proposition}
+
+\begin{proof}
+\leanok
+In arity $n \geq 4$, each Stasheff term $m_{r+1+t}(\dots, m_s(\dots), \dots)$ has
+$s + (r + 1 + t) = n + 1 \geq 5$, so one of its two operations has arity at least $3$ and
+vanishes. In arity $3$, the four terms with an operation of arity $3$ vanish, and the remaining
+two form the associativity identity.
+\end{proof}
+
+\begin{proposition}[DG categories are \Ainf{}-categories]
+\lean{AInfinityTheory.DGCategory.aInfinityCategory}
+\label{AInfinityTheory.DGCategory.aInfinityCategory}
+\leanok
+\uses{AInfinityTheory.AInfinityCategory.ofArityLeTwo}
+Let $\mathcal{C}$ be a category enriched over cochain complexes of $R$-modules. For $a$ of
+degree $p$ and $b$ of degree $q$, set $m_1(a) = (-1)^p\, da$ and $m_2(a, b) = (-1)^q\, a b$,
+and $m_n = 0$ for $n \geq 3$. This is an \Ainf{}-category with grading $\mathbb{Z}$.
+\end{proposition}
+
+\begin{proof}
+\leanok
+By the previous proposition, it suffices to check the identities in arities $1$, $2$ and $3$.
+The first is $d^2 = 0$. The second follows from the Leibniz rule
+$d(ab) = (da)b + (-1)^p a\, db$, which is how the differential of the tensor product of
+complexes is defined. For the third, if $c$ has degree $r$, then associativity of composition
+gives $m_2(m_2(a, b), c) = (-1)^r m_2(a, m_2(b, c))$, and the Koszul sign $(-1)^{r-1}$ of $c$
+makes the two Stasheff terms cancel.
+\end{proof}
+
 \section{A-infinity Functors}
 
 The source and target of an \Ainf{}-functor may be graded by different

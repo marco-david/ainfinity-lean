@@ -12,7 +12,8 @@ project:
     gradings (an abelian group of degrees with integer degree shifts and a Koszul
     sign character, which covers bigradings such as ℤ ×ᵗ ℤ), graded linear and
     multilinear maps of a fixed degree, graded R-linear quivers, the Stasheff
-    identities with Koszul signs, R-linear A∞-categories, and A∞-functors between
+    identities with Koszul signs, R-linear A∞-categories (including those with vanishing
+    higher operations, such as DG categories), and A∞-functors between
     A∞-categories whose gradings may differ, related by a homomorphism of
     gradings. The composition of A∞-functors and the examples were developed
     on an earlier foundation. They are temporarily removed while they are ported
@@ -110,7 +111,8 @@ status:
     Complete (sorry-free): gradings, including the standard and product gradings,
     and their homomorphisms, graded linear and multilinear maps (with their module
     structure and the associativity and unit laws of composition), graded R-linear
-    quivers, the Stasheff identities, A∞-categories, A∞-functors with the
+    quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing
+    higher operations, DG categories as A∞-categories, A∞-functors with the
     A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
     category. In progress: the computable additive completion and
     bounded cochain complexes, and the braiding functor, whose definitions are
@@ -267,6 +269,20 @@ alignment:
       note: >-
         A field of `AInfinityTheory.AInfinityCategory`, together with
         `curvature_eq_zero`, which requires the arity-zero operation to vanish.
+    - source: "Blueprint, Proposition (A∞-categories with vanishing higher operations)"
+      lean: "AInfinityTheory.AInfinityCategory.ofArityLeTwo"
+      module: "AInfinity.ArityLeTwo"
+      status: "proved"
+      note: >-
+        Together with `AInfinityTheory.AInfinityCategoryStruct.ofArityLeTwo`. The Stasheff
+        identities reduce to `d² = 0`, the Leibniz rule and associativity, with Koszul signs.
+    - source: "Blueprint, Proposition (DG categories are A∞-categories)"
+      lean: "AInfinityTheory.DGCategory.aInfinityCategory"
+      module: "AInfinity.DG"
+      status: "proved"
+      note: >-
+        A DG category is a category enriched over Mathlib's monoidal category of cochain
+        complexes of R-modules. Seidel's signs: m₁(a) = (-1)^|a| da, m₂(a, b) = (-1)^|b| a ≫ b.
     - source: "Blueprint, Definition (A∞-functor); Seidel, A∞-functors and the A∞-functor equations"
       lean: "AInfinityTheory.AInfinityFunctor"
       module: "AInfinity.AInfinityFunctor"
