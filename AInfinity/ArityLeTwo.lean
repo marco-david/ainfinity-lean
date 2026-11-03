@@ -52,23 +52,29 @@ variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommRing R] 
     (X →ᵍ[R, β] Y) p →ₗ[R] (Y →ᵍ[R] Z) q →ₗ[R] (X →ᵍ[R] Z) i)
 
 -- Arity 1: the differential squares to zero.
-variable (differential_differential : ∀ (X Y : Obj) {p q r : β} (hpq : p + degOne = q)
-    (hqr : q + degOne = r) (a : (X →ᵍ[R] Y) p), (f X Y).v q r hqr ((f X Y).v p q hpq a) = 0)
+variable
+  (differential_differential :
+    ∀ (X Y : Obj) {p q r : β} (hpq : p + degOne = q)
+      (hqr : q + degOne = r) (a : (X →ᵍ[R] Y) p), (f X Y).v q r hqr ((f X Y).v p q hpq a) = 0)
 
 -- Arity 2: the Leibniz rule.
-variable (leibniz : ∀ (X Y Z : Obj) {p q e p' q' d : β} (h : p + q = e)
-    (hp : p + degOne = p') (hq : q + degOne = q') (he : e + degOne = d)
-    (a : (X →ᵍ[R] Y) p) (b : (Y →ᵍ[R] Z) q),
-    (sign (q - degOne)).toMul • g X Y Z p' q d (hp ▸ he ▸ h ▸ add_right_comm p degOne q)
-        ((f X Y).v p p' hp a) b +
-      g X Y Z p q' d (hq ▸ he ▸ h ▸ (add_assoc p q degOne).symm) a ((f Y Z).v q q' hq b) +
-      (f X Z).v e d he (g X Y Z p q e h a b) = 0)
+variable
+  (leibniz :
+    ∀ (X Y Z : Obj) {p q e p' q' d : β} (h : p + q = e)
+      (hp : p + degOne = p') (hq : q + degOne = q') (he : e + degOne = d)
+      (a : (X →ᵍ[R] Y) p) (b : (Y →ᵍ[R] Z) q),
+      (sign (q - degOne)).toMul • g X Y Z p' q d (hp ▸ he ▸ h ▸ add_right_comm p degOne q)
+          ((f X Y).v p p' hp a) b +
+        g X Y Z p q' d (hq ▸ he ▸ h ▸ (add_assoc p q degOne).symm) a ((f Y Z).v q q' hq b) +
+        (f X Z).v e d he (g X Y Z p q e h a b) = 0)
 
 -- Arity 3: associativity of the composition.
-variable (assoc : ∀ (W X Y Z : Obj) {p q r e e' d : β} (h : p + q = e) (h' : q + r = e')
-    (h₁ : e + r = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q) (c : (Y →ᵍ[R] Z) r),
-    (sign (r - degOne)).toMul • g W Y Z e r d h₁ (g W X Y p q e h a b) c +
-      g W X Z p e' d (h' ▸ h₁ ▸ h ▸ (add_assoc p q r).symm) a (g X Y Z q r e' h' b c) = 0)
+variable
+  (assoc :
+    ∀ (W X Y Z : Obj) {p q r e e' d : β} (h : p + q = e) (h' : q + r = e')
+      (h₁ : e + r = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q) (c : (Y →ᵍ[R] Z) r),
+      (sign (r - degOne)).toMul • g W Y Z e r d h₁ (g W X Y p q e h a b) c +
+        g W X Z p e' d (h' ▸ h₁ ▸ h ▸ (add_assoc p q r).symm) a (g X Y Z q r e' h' b c) = 0)
 
 /-- The `A∞`-category structure whose differential `m₁` is given by the graded linear maps `f`,
 whose composition `m₂` is given by the bilinear maps `g`, and whose higher compositions `mₙ`
