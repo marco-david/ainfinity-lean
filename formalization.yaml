@@ -24,8 +24,10 @@ project:
     A∞-endofunctor on a variant of the KLRW category that acts as a braid group
     invariant. A separate finite-free computational layer represents bounded
     complexes and cochain maps by matrices over a commutative ring, with a
-    verified interpretation in Mathlib's module complexes. It does not assume
-    finite-free cohomology or supply cohomology algorithms.
+    verified interpretation in Mathlib's module complexes. Explicit finite-free
+    coordinates for additive realizations connect categorical complexes to this
+    matrix layer over any commutative ring, including the zero ring. It does not
+    assume finite-free cohomology or supply cohomology algorithms.
   authors:
     - "Marco David"
     - "Jason Dong"
@@ -116,7 +118,9 @@ status:
     quivers, the Stasheff identities, A∞-categories, A∞-functors with the
     A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
     category; finite-free matrix complexes and cochain maps, with their
-    interpretation in Mathlib's module complexes. The existing computable
+    interpretation in Mathlib's module complexes; finite-free coordinates for
+    additive module realizations over commutative rings, with the coordinate
+    isomorphism to the matrix interpretation. The existing computable
     categorical infrastructure (explicit biproducts, chosen zero objects with
     `IsZero` certificates, additive completion, and
     bounded cochain complexes with supplied finite support bounds) is also

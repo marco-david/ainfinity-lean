@@ -2,7 +2,6 @@ module  -- shake: keep-all
 
 public import ComputableCochainComplex.AdditiveCompletion
 public import ComputableCochainComplex.BoundedCochainComplex
+public import ComputableCochainComplex.ComplexCoordinates
 public import ComputableCochainComplex.ComputableCategories
-public import ComputableCochainComplex.ComputableHomology
 public import ComputableCochainComplex.Finite
-public import ComputableCochainComplex.MatrixHomology

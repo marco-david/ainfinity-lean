@@ -7,14 +7,17 @@ module
 
 public import ComputableCochainComplex.BoundedCochainComplex
 public import ComputableCochainComplex.Finite
-public import ComputableCochainComplex.MatrixHomology
 public import Mathlib.CategoryTheory.Limits.Preserves.Shapes.Zero
 
-/-!+# Coordinates for realized categorical complexes
+/-!
+# Coordinates and matrices for categorical complexes
 
 The input remains a bounded complex in `CMat_ C`. An additive realization and explicit
 coordinates for this particular complex connect it to the independent matrix representation.
-All cohomology statements concern the realized module complex, not the category `CMat_ C`.
+The coefficient ring is any commutative ring, including the zero ring. Finite free coordinates
+are supplied for the chain terms; kernels, images, and cohomology need not be free.
+`coordinateIso` identifies the realized complex with the matrix interpretation. This module
+provides no rank or cohomology computation algorithms.
 -/
 
 @[expose] public section
@@ -24,49 +27,41 @@ open scoped Matrix
 
 universe u v w
 
-/-- Additional finite coordinates for one categorical complex after additive realization.
+/-- Explicit finite free coordinates for one categorical complex after additive realization.
 The matrices are supplied explicitly; their square-zero condition follows from compatibility. -/
-structure ComputableCohomologyData (k : Type u) [Field k]
+structure ComplexCoordinates (R : Type u) [CommRing R]
     {C : Type v} [Category.{w} C] [Preadditive C]
     (K : BoundedCochainComplex (CMat_ C)) where
-  /-- The module-valued interpretation whose cohomology is to be computed. -/
-  realization : CMat_ C ⥤ ModuleCat.{u} k
+  /-- The interpretation of categorical objects and maps as modules and linear maps. -/
+  realization : CMat_ C ⥤ ModuleCat.{u} R
   /-- The realization preserves addition of morphisms. -/
   additive : realization.Additive
   /-- The number of supplied coordinates in each degree. -/
   size : ℤ → ℕ
+  /-- Chosen coordinate counts vanish outside the supplied support bound.
+  This is explicit because zero modules over the zero ring can have nonempty coordinates. -/
+  size_eq_zero_of_notMem_support : ∀ n, n ∉ K.support → size n = 0
   /-- Explicit coordinates, rather than an existence assertion for a basis. -/
-  coordinates : ∀ n, realization.obj (K.X n) ≃ₗ[k] (Fin (size n) → k)
+  coordinates : ∀ n, realization.obj (K.X n) ≃ₗ[R] (Fin (size n) → R)
   /-- Differential matrices, with target rows and source columns. -/
-  differential : ∀ n, Matrix (Fin (size (n + 1))) (Fin (size n)) k
+  differential : ∀ n, Matrix (Fin (size (n + 1))) (Fin (size n)) R
   /-- Applying the realized differential agrees with matrix multiplication. -/
   differential_apply : ∀ n x,
     coordinates (n + 1) ((realization.map (K.d n (n + 1))) x) =
       differential n *ᵥ coordinates n x
 
-namespace ComputableCohomologyData
+namespace ComplexCoordinates
 
-variable {k : Type u} [Field k] {C : Type v} [Category.{w} C] [Preadditive C]
-  {K : BoundedCochainComplex (CMat_ C)} (data : ComputableCohomologyData k K)
+variable {R : Type u} [CommRing R] {C : Type v} [Category.{w} C] [Preadditive C]
+  {K : BoundedCochainComplex (CMat_ C)} (data : ComplexCoordinates R K)
 
-attribute [instance] ComputableCohomologyData.additive
+attribute [instance] ComplexCoordinates.additive
 
 /-- The realized bounded module complex, retaining the original support bound. -/
-def realized : BoundedCochainComplex (ModuleCat.{u} k) :=
+def realized : BoundedCochainComplex (ModuleCat.{u} R) :=
   BoundedCochainComplex.ofComplex
     ((data.realization.mapHomologicalComplex (.up ℤ)).obj K.toHomologicalComplex)
     (fun n hn => data.realization.map_isZero (K.isZero_of_notMem_support n hn))
-
-/-- Coordinates outside the categorical support are necessarily empty. -/
-lemma size_eq_zero_of_notMem_support (n : ℤ) (hn : n ∉ K.support) : data.size n = 0 := by
-  haveI : Subsingleton (data.realization.obj (K.X n)) :=
-    ModuleCat.isZero_iff_subsingleton.mp
-      (data.realization.map_isZero (K.isZero_of_notMem_support n hn))
-  haveI : Subsingleton (Fin (data.size n) → k) :=
-    data.coordinates n |>.symm.injective.subsingleton
-  by_contra h
-  have i : Fin (data.size n) := ⟨0, Nat.pos_of_ne_zero h⟩
-  exact zero_ne_one (congrFun (Subsingleton.elim (0 : Fin (data.size n) → k) 1) i)
 
 /-- Matrix square-zero is inherited from the original categorical complex. -/
 lemma differential_mul_differential (n : ℤ) :
@@ -82,7 +77,7 @@ lemma differential_mul_differential (n : ℤ) :
   simp
 
 /-- The existing finite-free representation, with square-zero derived from the input. -/
-def toFiniteFree : FiniteFreeCochainComplex k where
+def toFiniteFree : FiniteFreeCochainComplex R where
   size := data.size
   support := K.support
   size_eq_zero_of_notMem_support := data.size_eq_zero_of_notMem_support
@@ -104,87 +99,34 @@ def coordinateIso : data.realized.toHomologicalComplex ≅ data.toFiniteFree.toC
       rw [FiniteFreeCochainComplex.toCochainComplex_d_apply]
       exact (data.differential_apply i x).symm)
 
-section Dimensions
-
-variable [DecidableEq k]
-
-/-- Compute cohomology dimension in any specified degree by automatic exact rank calculation. -/
-def computeCohomologyDimension (n : ℤ) : ℕ :=
-  data.size n - MatrixHomology.computeRank (data.differential (n - 1)) -
-    MatrixHomology.computeRank (data.differential n)
-
-/-- Compute precisely the degrees in the original finite bound, in ascending order. -/
-def computeAllCohomologyDimensions : List (ℤ × ℕ) :=
-  (K.support.sort (· ≤ ·)).map fun n => (n, data.computeCohomologyDimension n)
-
-@[simp] lemma computeAllCohomologyDimensions_degrees :
-    data.computeAllCohomologyDimensions.map Prod.fst = K.support.sort (· ≤ ·) := by
-  simp [computeAllCohomologyDimensions, Function.comp_def]
-
-/-- Degrees outside the stored support have zero cohomology dimension. -/
-lemma computeCohomologyDimension_eq_zero (n : ℤ) (hn : n ∉ K.support) :
-    data.computeCohomologyDimension n = 0 := by
-  simp [computeCohomologyDimension, data.size_eq_zero_of_notMem_support n hn]
-
-omit [DecidableEq k] in
-private lemma finrank_range_coordinate_d (n j : ℤ) (hj : n + 1 = j) :
-    Module.finrank k (LinearMap.range
-      (data.toFiniteFree.toCochainComplex.d n j).hom) = (data.differential n).rank := by
-  subst j
-  rw [FiniteFreeCochainComplex.toCochainComplex_d]
-  rfl
-
-/-- The executable answer agrees with the homology of the realized categorical complex. -/
-theorem computeCohomologyDimension_eq_finrank (n : ℤ) :
-    data.computeCohomologyDimension n =
-      Module.finrank k (data.realized.toHomologicalComplex.homology n) := by
-  let Q := data.toFiniteFree.toCochainComplex
-  let e := (HomologicalComplex.homologyFunctor (ModuleCat k) (.up ℤ) n).mapIso data.coordinateIso
-  have he : Module.finrank k (data.realized.homology n) = Module.finrank k (Q.homology n) :=
-    e.toLinearEquiv.finrank_eq
-  rw [he]
-  have hs := Q.homologyIsoSc' (n - 1) n (n + 1) (by simp) (by simp)
-  rw [hs.toLinearEquiv.finrank_eq]
-  haveI : FiniteDimensional k (Q.sc' (n - 1) n (n + 1)).X₂ :=
-    inferInstanceAs (FiniteDimensional k (Fin (data.size n) → k))
-  rw [MatrixHomology.finrank_homology]
-  change data.computeCohomologyDimension n = Module.finrank k (Fin (data.size n) → k) -
-    Module.finrank k (LinearMap.range (Q.d (n - 1) n).hom) -
-    Module.finrank k (LinearMap.range (Q.d n (n + 1)).hom)
-  rw [Module.finrank_fin_fun, data.finrank_range_coordinate_d (n - 1) n (by omega),
-    data.finrank_range_coordinate_d n (n + 1) rfl]
-  simp only [computeCohomologyDimension, MatrixHomology.computeRank_eq_rank]
-
-end Dimensions
-
 section Support
 
-variable (F : CMat_ C ⥤ ModuleCat.{u} k) [F.Additive]
+variable (F : CMat_ C ⥤ ModuleCat.{u} R) [F.Additive]
   (r : {n // n ∈ K.support} → ℕ)
-  (e : ∀ n : {n // n ∈ K.support}, F.obj (K.X n) ≃ₗ[k] (Fin (r n) → k))
+  (e : ∀ n : {n // n ∈ K.support}, F.obj (K.X n) ≃ₗ[R] (Fin (r n) → R))
 
 /-- Extend coordinate counts by zero outside the supplied support. -/
 def supportSize (n : ℤ) : ℕ := if hn : n ∈ K.support then r ⟨n, hn⟩ else 0
 
 /-- Extend supplied coordinates using the unique maps between zero modules outside support. -/
 def supportCoordinates (n : ℤ) :
-    F.obj (K.X n) ≃ₗ[k] (Fin (supportSize r n) → k) := by
+    F.obj (K.X n) ≃ₗ[R] (Fin (supportSize r n) → R) := by
   by_cases hn : n ∈ K.support
   · have h : supportSize r n = r ⟨n, hn⟩ := dif_pos hn
-    exact (e ⟨n, hn⟩).trans (LinearEquiv.funCongrLeft k k (finCongr h))
+    exact (e ⟨n, hn⟩).trans (LinearEquiv.funCongrLeft R R (finCongr h))
   · haveI : Subsingleton (F.obj (K.X n)) :=
       ModuleCat.isZero_iff_subsingleton.mp (F.map_isZero (K.isZero_of_notMem_support n hn))
     have h : supportSize r n = 0 := dif_neg hn
     haveI : IsEmpty (Fin (supportSize r n)) := ⟨fun i => Fin.elim0 (Fin.cast h i)⟩
-    exact LinearEquiv.ofSubsingleton (R := k) (F.obj (K.X n)) _
+    exact LinearEquiv.ofSubsingleton (R := R) (F.obj (K.X n)) _
 
 variable
   (d : ∀ n (hn : n ∈ K.support) (hn' : n + 1 ∈ K.support),
-    Matrix (Fin (r ⟨n + 1, hn'⟩)) (Fin (r ⟨n, hn⟩)) k)
+    Matrix (Fin (r ⟨n + 1, hn'⟩)) (Fin (r ⟨n, hn⟩)) R)
 
 /-- Extend the differentials by zero whenever either endpoint is outside support. -/
 def supportDifferential (n : ℤ) :
-    Matrix (Fin (supportSize r (n + 1))) (Fin (supportSize r n)) k :=
+    Matrix (Fin (supportSize r (n + 1))) (Fin (supportSize r n)) R :=
   if hn : n ∈ K.support then
     if hn' : n + 1 ∈ K.support then
       (d n hn hn').submatrix (finCongr (dif_pos hn')) (finCongr (dif_pos hn))
@@ -195,10 +137,11 @@ def supportDifferential (n : ℤ) :
 def ofSupport
     (hd : ∀ n (hn : n ∈ K.support) (hn' : n + 1 ∈ K.support) x,
       e ⟨n + 1, hn'⟩ ((F.map (K.d n (n + 1))) x) = d n hn hn' *ᵥ e ⟨n, hn⟩ x) :
-    ComputableCohomologyData k K where
+    ComplexCoordinates R K where
   realization := F
   additive := inferInstance
   size := supportSize r
+  size_eq_zero_of_notMem_support := fun _ hn => dif_neg hn
   coordinates := supportCoordinates F r e
   differential := supportDifferential r d
   differential_apply n x := by
@@ -222,26 +165,27 @@ def ofSupport
 end Support
 
 /-- Explicit products give executable binary biproducts for the module realization. -/
-abbrev moduleBiproducts (k : Type u) [Field k] : ComputableBinaryBiproduct (ModuleCat.{u} k) where
+abbrev moduleBiproducts (R : Type u) [CommRing R] :
+    ComputableBinaryBiproduct (ModuleCat.{u} R) where
   computableBinaryBiproductData M N :=
-    BinaryBiproductData.mkOfProduct M N (ModuleCat.of k (M × N))
-      (ModuleCat.ofHom (LinearMap.fst k M N)) (ModuleCat.ofHom (LinearMap.snd k M N))
+    BinaryBiproductData.mkOfProduct M N (ModuleCat.of R (M × N))
+      (ModuleCat.ofHom (LinearMap.fst R M N)) (ModuleCat.ofHom (LinearMap.snd R M N))
       (fun _ f g => ModuleCat.ofHom (f.hom.prod g.hom))
       (by intros; rfl) (by intros; rfl) (by intros; rfl)
 
 /-- The zero-dimensional coordinate module is an explicit zero object. -/
-abbrev moduleZero (k : Type u) [Field k] : HasExplicitZeroObject (ModuleCat.{u} k) where
-  zero := ModuleCat.of k (Fin 0 → k)
+abbrev moduleZero (R : Type u) [CommRing R] : HasExplicitZeroObject (ModuleCat.{u} R) where
+  zero := ModuleCat.of R (Fin 0 → R)
   isZero := ModuleCat.isZero_of_subsingleton _
 
 /-- Extend an additive module realization using the existing computable additive completion. -/
-def extendRealization (F : C ⥤ ModuleCat.{u} k) [F.Additive] : CMat_ C ⥤ ModuleCat.{u} k :=
-  letI := moduleBiproducts k
-  letI := moduleZero k
+def extendRealization (F : C ⥤ ModuleCat.{u} R) [F.Additive] : CMat_ C ⥤ ModuleCat.{u} R :=
+  letI := moduleBiproducts R
+  letI := moduleZero R
   CMat_.extend F
 
-instance (F : C ⥤ ModuleCat.{u} k) [F.Additive] : (extendRealization F).Additive := by
+instance (F : C ⥤ ModuleCat.{u} R) [F.Additive] : (extendRealization F).Additive := by
   unfold extendRealization
   infer_instance
 
-end ComputableCohomologyData
+end ComplexCoordinates

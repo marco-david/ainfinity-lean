@@ -16,12 +16,19 @@ and checked in CI, so rerun that command after adding a file.
 | Folder | Contents |
 | --- | --- |
 | `Util/` | Contains a `Texify` class and the `#texify` command for rendering terms as LaTeX. |
-| `ComputableCochainComplex/` | explicit biproducts and zero objects, the additive completion `CMat_`, and bounded cochain complexes. bounded matrix complexes, matrix cochain maps, and their interpretation in mathlib. |
+| `ComputableCochainComplex/` | Explicit biproducts and zero objects, the additive completion `CMat_`, bounded complexes, and finite-free matrix complexes over commutative rings, with verified coordinates for additive module realizations. |
 | `AInfinity/` | Grading indices, the Stasheff identities, A∞-categories, A∞-functors and their composition, and examples. |
 | `KLRW/` | KLRW algebras and categories: the general quiver-parametrised KLRW algebra and its $$R$$-linear category, and a computable special case with one black strand and $$n$$ red strands. | |
 
 The blueprint sources live in `blueprint/src/` and the API documentation is built from
 `docbuild/`.
+
+`ComputableCochainComplex/ComplexCoordinates.lean` supplies `ComplexCoordinates R K`
+for an additive realization of a categorical complex with chosen finite-free coordinates over
+`[CommRing R]`. Its `ofSupport` constructor extends coordinates and matrices from a finite
+support bound; `coordinateIso` identifies the realized complex with its matrix interpretation.
+The coordinates describe the chain terms. Kernels and cohomology need not be free, and this
+layer does not implement cohomology algorithms.
 
 ### Project metadata and license
 
