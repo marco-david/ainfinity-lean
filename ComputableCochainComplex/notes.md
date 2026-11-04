@@ -5,8 +5,8 @@
 - `BoundedCochainComplex.ofComplex` equips a cochain complex with a finite support bound;
   degrees inside the bound may be zero. Use `homMk` to lift maps of underlying complexes.
 - CMat_ needs to be extended with the operations for manipulating decompositions. i.e. reindexing a list of summands by a supplied permuatation, expressing a summand and its complement as a biproduct, constructing corresponding isomorphisms, and assembling/extracting block morphisms.
-- `ComplexCoordinates R K` uses a commutative ring and supplied finite-free coordinates
-  for the realized chain terms. `ofSupport` supplies zero coordinate counts outside the bound,
+- `BasedCochainComplex R K` is an additive realization of `K` with supplied finite ordered
+  bases for its terms. `ofSupport` supplies zero coordinate counts outside the bound,
   including over the zero ring, and `coordinateIso` verifies the matrix interpretation.
 - Kernels, images, and cohomology need not be free. The complex `ℤ → ℤ` with differential
   multiplication by `2` is representable even though its cokernel is `ℤ/2ℤ`.

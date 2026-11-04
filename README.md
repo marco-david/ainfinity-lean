@@ -23,9 +23,10 @@ and checked in CI, so rerun that command after adding a file.
 The blueprint sources live in `blueprint/src/` and the API documentation is built from
 `docbuild/`.
 
-`ComputableCochainComplex/ComplexCoordinates.lean` supplies `ComplexCoordinates R K`
-for an additive realization of a categorical complex with chosen finite-free coordinates over
-`[CommRing R]`. Its `ofSupport` constructor extends coordinates and matrices from a finite
+`ComputableCochainComplex/BasedCochainComplex.lean` supplies `BasedCochainComplex R K`
+for an additive realization of a categorical complex with chosen finite ordered bases over
+`[CommRing R]`. A complex equipped with degreewise bases is called a *based cochain complex*.
+Its `ofSupport` constructor extends coordinates and matrices from a finite
 support bound; `coordinateIso` identifies the realized complex with its matrix interpretation.
 The coordinates describe the chain terms. Kernels and cohomology need not be free, and this
 layer does not implement cohomology algorithms.

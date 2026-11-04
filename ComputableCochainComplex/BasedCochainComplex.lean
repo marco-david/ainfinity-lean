@@ -10,10 +10,17 @@ public import ComputableCochainComplex.Finite
 public import Mathlib.CategoryTheory.Limits.Preserves.Shapes.Zero
 
 /-!
-# Coordinates and matrices for categorical complexes
+# Based cochain complexes from categorical realizations
 
-The input remains a bounded complex in `CMat_ C`. An additive realization and explicit
-coordinates for this particular complex connect it to the independent matrix representation.
+A based cochain complex is a cochain complex of free modules with a chosen basis in each degree.
+Here the module complex is obtained from a bounded complex `K` in `CMat_ C` by a supplied additive
+realization. The chosen finite ordered bases are encoded by equivalences with `Fin (size n) → R`,
+and the differential matrices are supplied with compatibility proofs.
+
+For the terminology, see Definition 3.3 of Breuckmann, Davydova, Eberhardt, and Tantivasadakarn,
+*Cups and Gates I: Cohomology Invariants and Logical Quantum Operations*:
+https://doi.org/10.1007/s00220-026-05570-z.
+
 The coefficient ring is any commutative ring, including the zero ring. Finite free coordinates
 are supplied for the chain terms; kernels, images, and cohomology need not be free.
 `coordinateIso` identifies the realized complex with the matrix interpretation. This module
@@ -27,9 +34,10 @@ open scoped Matrix
 
 universe u v w
 
-/-- Explicit finite free coordinates for one categorical complex after additive realization.
-The matrices are supplied explicitly; their square-zero condition follows from compatibility. -/
-structure ComplexCoordinates (R : Type u) [CommRing R]
+/-- A finite based cochain complex obtained from an additive realization of `K`.
+The chosen ordered bases are encoded by coordinate equivalences. This structure also retains
+the realization functor and compatible differential matrices; square-zero follows from `K`. -/
+structure BasedCochainComplex (R : Type u) [CommRing R]
     {C : Type v} [Category.{w} C] [Preadditive C]
     (K : BoundedCochainComplex (CMat_ C)) where
   /-- The interpretation of categorical objects and maps as modules and linear maps. -/
@@ -50,12 +58,12 @@ structure ComplexCoordinates (R : Type u) [CommRing R]
     coordinates (n + 1) ((realization.map (K.d n (n + 1))) x) =
       differential n *ᵥ coordinates n x
 
-namespace ComplexCoordinates
+namespace BasedCochainComplex
 
 variable {R : Type u} [CommRing R] {C : Type v} [Category.{w} C] [Preadditive C]
-  {K : BoundedCochainComplex (CMat_ C)} (data : ComplexCoordinates R K)
+  {K : BoundedCochainComplex (CMat_ C)} (data : BasedCochainComplex R K)
 
-attribute [instance] ComplexCoordinates.additive
+attribute [instance] BasedCochainComplex.additive
 
 /-- The realized bounded module complex, retaining the original support bound. -/
 def realized : BoundedCochainComplex (ModuleCat.{u} R) :=
@@ -137,7 +145,7 @@ def supportDifferential (n : ℤ) :
 def ofSupport
     (hd : ∀ n (hn : n ∈ K.support) (hn' : n + 1 ∈ K.support) x,
       e ⟨n + 1, hn'⟩ ((F.map (K.d n (n + 1))) x) = d n hn hn' *ᵥ e ⟨n, hn⟩ x) :
-    ComplexCoordinates R K where
+    BasedCochainComplex R K where
   realization := F
   additive := inferInstance
   size := supportSize r
@@ -188,4 +196,4 @@ instance (F : C ⥤ ModuleCat.{u} R) [F.Additive] : (extendRealization F).Additi
   unfold extendRealization
   infer_instance
 
-end ComplexCoordinates
+end BasedCochainComplex
