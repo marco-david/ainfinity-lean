@@ -117,9 +117,10 @@ status:
     A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
     category; finite-free matrix complexes and cochain maps, with their
     interpretation in Mathlib's module complexes. The existing computable
-    categorical infrastructure (explicit biproducts, additive completion, and
-    bounded cochain complexes) is also sorry-free and is housed separately in
-    ComputableCochainComplex/Categorical. In progress: the specialized KLRW
+    categorical infrastructure (explicit biproducts, chosen zero objects with
+    `IsZero` certificates, additive completion, and
+    bounded cochain complexes with supplied finite support bounds) is also
+    sorry-free and is housed in ComputableCochainComplex. In progress: the specialized KLRW
     constructions, braiding functor, and KLRW examples, which still contain
     `sorry`. Temporarily removed: the composition of
     A∞-functors, the identity A∞-functor and the A∞ examples. They were written
@@ -128,8 +129,8 @@ status:
     chapter 5) are not formalized yet.
   # Counts are individual `sorry` occurrences in the Lean sources.
   # The finite-free layer adds none; its core declarations were also checked with `#print axioms`.
-  sorry_count: 10
-  sorry_in_definitions: 9
+  sorry_count: 8
+  sorry_in_definitions: 7
   axioms:
     - "propext"
     - "Classical.choice"

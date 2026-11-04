@@ -2,6 +2,14 @@ module
 
 public import Mathlib
 
+/-!
+# Computable categorical constructions
+
+Explicit binary biproduct data and a chosen zero object support executable finite biproducts.
+The zero-object class stores only the object and its `IsZero` proof. With zero morphisms,
+the unique maps to and from that object are the existing zero morphisms.
+-/
+
 @[expose] public section
 
 open CategoryTheory Limits
@@ -159,38 +167,25 @@ end computable_biproduct
 
 section explicit_zero
 
+/-- A chosen zero object. In a category with zero morphisms, its unique incoming and outgoing
+maps are the zero morphisms, so no additional morphism data is needed. -/
 class HasExplicitZeroObject (C : Type*) [Category C] where
+  /-- The explicit object used for empty biproducts. -/
   zero : C
-  uniqueTo (Y : C) : Unique (zero ⟶ Y)
-  uniqueFrom (Y : C) : Unique (Y ⟶ zero)
+  /-- The chosen object is both initial and terminal. -/
+  isZero : IsZero zero
 
 notation "𝟎" => HasExplicitZeroObject.zero
 
 variable {C : Type*} [Category C] [HasExplicitZeroObject C]
 
-instance (Y : C) : Unique (𝟎 ⟶ Y) := HasExplicitZeroObject.uniqueTo Y
-instance (Y : C) : Unique (Y ⟶ 𝟎) := HasExplicitZeroObject.uniqueFrom Y
+theorem isZero_explicitZero : IsZero (𝟎 : C) := HasExplicitZeroObject.isZero
 
-def explicitZeroTo (Y : C) : 𝟎 ⟶ Y := default
-def explicitZeroFrom (Y : C) : Y ⟶ 𝟎 := default
+instance [HasZeroMorphisms C] (Y : C) : Unique (𝟎 ⟶ Y) :=
+  ⟨⟨0⟩, fun f => isZero_explicitZero.eq_zero_of_src f⟩
 
-theorem explicitZeroTo_eq_zero [HasZeroMorphisms C] (Y : C) : explicitZeroTo Y = 0 :=
-  (Unique.uniq _ 0).symm
-
-theorem explicitZeroFrom_eq_zero [HasZeroMorphisms C] (Y : C) : explicitZeroFrom Y = 0 :=
-  (Unique.uniq _ 0).symm
-
-theorem isZero_explicitZero : IsZero (𝟎 : C) := ⟨fun _ ↦ ⟨inferInstance⟩, fun _ ↦ ⟨inferInstance⟩⟩
-
-/--
-Special constructor for preadditive categories
--/
-abbrev HasExplicitZeroObject.mkOfPreadditive (C : Type*) [Category C] [Preadditive C]
-    (zero : C) (h₁ : ∀ (Y : C) (h : zero ⟶ Y), h = 0) (h₂ : ∀ (Y : C) (h : Y ⟶ zero), h = 0)
-    : HasExplicitZeroObject C where
-  zero := zero
-  uniqueTo Y := ⟨⟨0⟩, h₁ Y⟩
-  uniqueFrom Y := ⟨⟨0⟩, h₂ Y⟩
+instance [HasZeroMorphisms C] (Y : C) : Unique (Y ⟶ 𝟎) :=
+  ⟨⟨0⟩, fun f => isZero_explicitZero.eq_zero_of_tgt f⟩
 
 instance : HasZeroObject C where
   zero := ⟨𝟎, isZero_explicitZero⟩

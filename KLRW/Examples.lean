@@ -26,6 +26,12 @@ def d : (i : ℤ) → X i ⟶ X (i + 1)
   | 1, 1 => 2 • StrandSpace.dots ℤ 1
 | _ => 0
 
+theorem d_comp_d (i : ℤ) : d i ≫ d (i + 1) = 0 := by
+  by_cases hi : i = 0
+  · subst i
+    exact Limits.comp_zero
+  · simp [d]
+
 def g : (i : ℤ) → X i ⟶ X i
 | 0 => CMat_.Hom.ofFin _ _ fun
   | 0, 0 => StrandSpace.dots ℤ 2
@@ -39,9 +45,16 @@ def g : (i : ℤ) → X i ⟶ X i
   | 1, 1 => StrandSpace.dots ℤ 1
 | _ => 0
 
-def A : KLRWComplexCategory 3 ℤ := BoundedCochainComplex.of X {0,1} sorry d sorry
+/-- The two-term example complex, with support bounded by degrees zero and one. -/
+def A : KLRWComplexCategory 3 ℤ :=
+  BoundedCochainComplex.ofComplex (CochainComplex.of X d d_comp_d) (support := {0, 1}) (by
+    intro i hi
+    simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hi
+    simpa [X, hi.1, hi.2] using (isZero_explicitZero (C := AddKLRWCategory 3 ℤ)))
 
-def f : A ⟶ A := BoundedCochainComplex.ofHom _ _ _ _ _ _ _ _ _ _ g sorry
+/-- The endomorphism of the example complex with components `g`. -/
+def f : A ⟶ A :=
+  BoundedCochainComplex.homMk (CochainComplex.ofHom X d d_comp_d X d d_comp_d g sorry)
 
 -- #texify f
 -- #texify f ≫ f

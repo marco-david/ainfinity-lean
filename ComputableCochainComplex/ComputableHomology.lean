@@ -53,7 +53,7 @@ attribute [instance] ComputableCohomologyData.additive
 
 /-- The realized bounded module complex, retaining the original support bound. -/
 def realized : BoundedCochainComplex (ModuleCat.{u} k) :=
-  BoundedCochainComplex.mkOfBounded
+  BoundedCochainComplex.ofComplex
     ((data.realization.mapHomologicalComplex (.up ℤ)).obj K.toHomologicalComplex)
     (fun n hn => data.realization.map_isZero (K.isZero_of_notMem_support n hn))
 
@@ -230,19 +230,9 @@ abbrev moduleBiproducts (k : Type u) [Field k] : ComputableBinaryBiproduct (Modu
       (by intros; rfl) (by intros; rfl) (by intros; rfl)
 
 /-- The zero-dimensional coordinate module is an explicit zero object. -/
-abbrev moduleZero (k : Type u) [Field k] : HasExplicitZeroObject (ModuleCat.{u} k) :=
-  .mkOfPreadditive _ (ModuleCat.of k (Fin 0 → k))
-    (fun _ f => by
-      apply ModuleCat.hom_ext
-      apply LinearMap.ext
-      intro x
-      have : x = 0 := Subsingleton.elim _ _
-      simp [this])
-    (fun _ _ => by
-      apply ModuleCat.hom_ext
-      apply LinearMap.ext
-      intro x
-      exact Subsingleton.elim _ _)
+abbrev moduleZero (k : Type u) [Field k] : HasExplicitZeroObject (ModuleCat.{u} k) where
+  zero := ModuleCat.of k (Fin 0 → k)
+  isZero := ModuleCat.isZero_of_subsingleton _
 
 /-- Extend an additive module realization using the existing computable additive completion. -/
 def extendRealization (F : C ⥤ ModuleCat.{u} k) [F.Additive] : CMat_ C ⥤ ModuleCat.{u} k :=

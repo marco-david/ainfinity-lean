@@ -1,6 +1,9 @@
 # Notes
 
-- BoundedCochainComplex requires exact support, i.e. for a finite set S every degree within S must be nonzero. Changed it to require bounded but not necessarily exact support.
+- `HasExplicitZeroObject` stores a chosen object and its `IsZero` proof. Maps to and from it
+  use the existing zero morphisms; explicit binary biproduct data remains separate.
+- `BoundedCochainComplex.ofComplex` equips a cochain complex with a finite support bound;
+  degrees inside the bound may be zero. Use `homMk` to lift maps of underlying complexes.
 - CMat_ needs to be extended with the operations for manipulating decompositions. i.e. reindexing a list of summands by a supplied permuatation, expressing a summand and its complement as a biproduct, constructing corresponding isomorphisms, and assembling/extracting block morphisms.
 - A couple different levels of implementation:
     - Finite vector spaces over a computable field: you can split the chain into B^n, Z^n, and H^n. However, the simple chain 0 -> Z ->(2) Z -> 0 does not have a Z-basis for the homology, so it cannot be represented under this implementation.

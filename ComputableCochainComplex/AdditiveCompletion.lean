@@ -252,8 +252,10 @@ theorem hom_to_empty_eq_zero (h : M ⟶ []ₘ) : h = 0 := by
   ext i j
   exact isEmptyElim j
 
-instance : HasExplicitZeroObject (CMat_ C) := .mkOfPreadditive (CMat_ C) []ₘ
-  hom_from_empty_eq_zero hom_to_empty_eq_zero
+/-- The empty list is an explicit zero object in the additive completion. -/
+instance : HasExplicitZeroObject (CMat_ C) where
+  zero := []ₘ
+  isZero := (Limits.IsZero.iff_id_eq_zero _).mpr (hom_from_empty_eq_zero _ _)
 
 /-- A matrix object is zero exactly when each of its summands is zero. -/
 theorem isZero_iff (M : CMat_ C) : Limits.IsZero M ↔ ∀ i, Limits.IsZero (M.X i) := by

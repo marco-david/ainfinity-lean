@@ -14,9 +14,8 @@ A computable version of `CochainComplex` backed by an explicit `Finset ℤ`
 containing the cohomological support, analogous to `CMat_` vs `Mat_`.
 The stored bound may include degrees whose objects are zero, so constructing a
 bounded complex does not require deciding whether an object is zero.
-The compatibility constructor `of` accepts an exact-support certificate, while
-`mkOfBounded` retains any supplied bound. When `IsZero` is decidable,
-`withExactSupport` returns the same complex with its exact support as the stored bound.
+`ofComplex` equips an existing cochain complex with a supplied support bound;
+`homMk` lifts a cochain map between the underlying complexes.
 -/
 
 /-- A cochain complex with a finite bound on its support. Objects outside `support`
@@ -105,132 +104,36 @@ instance : Linear R (BoundedCochainComplex V) where
   smul_comp _ _ _ r f g := Hom.ext (Linear.smul_comp _ _ _ r f.hom g.hom)
   comp_smul _ _ _ f r g := Hom.ext (Linear.comp_smul _ _ _ f.hom r g.hom)
 
-/-- Construct a bounded complex from its objects, consecutive differentials, and
-an exact-support certificate, preserving the original constructor interface.
-For a support bound that need not be exact, use `mkOfBounded`. -/
-def of
-    (X : ℤ → V) (support : Finset ℤ)
-    (h : ∀ i : ℤ, ¬ IsZero (X i) ↔ i ∈ support)
-    (d : ∀ i : ℤ, X i ⟶ X (i + 1))
-    (hd : ∀ i : ℤ, d i ≫ d (i + 1) = 0) : BoundedCochainComplex V :=
-  ⟨CochainComplex.of X d hd, support, fun i hi =>
-    not_not.mp (fun hn => hi ((h i).mp hn))⟩
-
-/-- Construct a map between complexes built by `of`, retaining their exact-support
-certificates and the component maps commuting with the differentials. -/
-def ofHom
-    (X : ℤ → V) (support_X : Finset ℤ) (d_X : ∀ i : ℤ, X i ⟶ X (i + 1))
-    (h_X : ∀ i : ℤ, ¬ IsZero (X i) ↔ i ∈ support_X)
-    (sq_X : ∀ i : ℤ, d_X i ≫ d_X (i + 1) = 0)
-    (Y : ℤ → V) (support_Y : Finset ℤ) (d_Y : ∀ i : ℤ, Y i ⟶ Y (i + 1))
-    (h_Y : ∀ i : ℤ, ¬ IsZero (Y i) ↔ i ∈ support_Y)
-    (sq_Y : ∀ i : ℤ, d_Y i ≫ d_Y (i + 1) = 0)
-    (f : ∀ i : ℤ, X i ⟶ Y i)
-    (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1))
-    : of X support_X h_X d_X sq_X ⟶ of Y support_Y h_Y d_Y sq_Y :=
-  ⟨CochainComplex.ofHom X d_X sq_X Y d_Y sq_Y f comm⟩
-
-/-- The map constructed by `ofHom` has the prescribed components. -/
-@[simp] theorem ofHom_f
-    (X : ℤ → V) (support_X : Finset ℤ) (d_X : ∀ i : ℤ, X i ⟶ X (i + 1))
-    (h_X : ∀ i : ℤ, ¬ IsZero (X i) ↔ i ∈ support_X)
-    (sq_X : ∀ i : ℤ, d_X i ≫ d_X (i + 1) = 0)
-    (Y : ℤ → V) (support_Y : Finset ℤ) (d_Y : ∀ i : ℤ, Y i ⟶ Y (i + 1))
-    (h_Y : ∀ i : ℤ, ¬ IsZero (Y i) ↔ i ∈ support_Y)
-    (sq_Y : ∀ i : ℤ, d_Y i ≫ d_Y (i + 1) = 0)
-    (f : ∀ i : ℤ, X i ⟶ Y i)
-    (comm : ∀ i : ℤ, f i ≫ d_Y i = d_X i ≫ f (i + 1)) (i : ℤ)
-    : (ofHom X support_X d_X h_X sq_X Y support_Y d_Y h_Y sq_Y f comm).f i = f i :=
-  CochainComplex.ofHom_f X d_X sq_X Y d_Y sq_Y f comm i
-
 /-- Build a `BoundedCochainComplex` from a `CochainComplex` together with a finite
 superset of its true support, retaining the supplied bound unchanged. -/
-def mkOfBounded
-    (c : CochainComplex V ℤ) {supersetOfSupport : Finset ℤ}
-    (h : ∀ i : ℤ, i ∉ supersetOfSupport → IsZero (c.X i)) :
+def ofComplex
+    (c : CochainComplex V ℤ) {support : Finset ℤ}
+    (h : ∀ i : ℤ, i ∉ support → IsZero (c.X i)) :
     BoundedCochainComplex V where
   toHomologicalComplex := c
-  support := supersetOfSupport
+  support := support
   isZero_of_notMem_support := h
 
 /-- Adding a support bound leaves the underlying complex unchanged. -/
-@[simp] lemma mkOfBounded_toHomologicalComplex
+@[simp] lemma ofComplex_toHomologicalComplex
     (c : CochainComplex V ℤ) {s : Finset ℤ}
     (h : ∀ i : ℤ, i ∉ s → IsZero (c.X i)) :
-    (mkOfBounded c h).toHomologicalComplex = c := rfl
+    (ofComplex c h).toHomologicalComplex = c := rfl
 
-/-- `mkOfBounded` stores exactly the supplied bound. -/
-@[simp] lemma mkOfBounded_support
+/-- `ofComplex` stores exactly the supplied bound. -/
+@[simp] lemma ofComplex_support
     (c : CochainComplex V ℤ) {s : Finset ℤ}
     (h : ∀ i : ℤ, i ∉ s → IsZero (c.X i)) :
-    (mkOfBounded c h).support = s := rfl
+    (ofComplex c h).support = s := rfl
 
 /-- Different support bounds on the same complex give canonically isomorphic
 bounded complexes, although their stored bounds need not be equal. -/
-def mkOfBoundedIso (c : CochainComplex V ℤ)
+def ofComplexIso (c : CochainComplex V ℤ)
     {s₁ s₂ : Finset ℤ}
     (h₁ : ∀ i : ℤ, i ∉ s₁ → IsZero (c.X i))
     (h₂ : ∀ i : ℤ, i ∉ s₂ → IsZero (c.X i)) :
-    mkOfBounded c h₁ ≅ mkOfBounded c h₂ :=
+    ofComplex c h₁ ≅ ofComplex c h₂ :=
   fullyFaithfulEmbed.preimageIso (Iso.refl c)
-
-section ExactSupport
-
-variable [DecidablePred (IsZero : V → Prop)]
-
-/-- Replace the stored bound by exact support by discarding degrees with zero objects.
-The underlying complex is unchanged; computing the exact support requires a zero test. -/
-def withExactSupport (c : BoundedCochainComplex V) : BoundedCochainComplex V where
-  toHomologicalComplex := c.toHomologicalComplex
-  support := c.support.filter (fun i => ¬ IsZero (c.X i))
-  isZero_of_notMem_support i hi := by
-    by_contra h
-    exact hi (Finset.mem_filter.mpr ⟨c.mem_support_of_not_isZero h, h⟩)
-
-/-- Replacing the bound by exact support preserves the underlying complex. -/
-@[simp] lemma withExactSupport_toHomologicalComplex (c : BoundedCochainComplex V) :
-    c.withExactSupport.toHomologicalComplex = c.toHomologicalComplex := rfl
-
-/-- The exact support is obtained by filtering the supplied bound. -/
-lemma withExactSupport_support (c : BoundedCochainComplex V) :
-    c.withExactSupport.support = c.support.filter (fun i => ¬ IsZero (c.X i)) := rfl
-
-/-- A degree belongs to the exact support exactly when its object is nonzero. -/
-@[simp] lemma mem_withExactSupport_support (c : BoundedCochainComplex V) (i : ℤ) :
-    i ∈ c.withExactSupport.support ↔ ¬ IsZero (c.X i) := by
-  rw [withExactSupport_support, Finset.mem_filter]
-  exact ⟨And.right, fun hi => ⟨c.mem_support_of_not_isZero hi, hi⟩⟩
-
-/-- Replacing an already exact support bound leaves the bounded complex unchanged. -/
-lemma withExactSupport_eq_self (c : BoundedCochainComplex V)
-    (h : ∀ i : ℤ, ¬ IsZero (c.X i) ↔ i ∈ c.support) : c.withExactSupport = c := by
-  cases c
-  simp only [withExactSupport, mk.injEq, true_and]
-  exact Finset.filter_eq_self.mpr fun i hi => (h i).mpr hi
-
-/-- Replacing the bound by exact support twice is the same as doing so once. -/
-@[simp] lemma withExactSupport_idem (c : BoundedCochainComplex V) :
-    c.withExactSupport.withExactSupport = c.withExactSupport := by
-  apply withExactSupport_eq_self
-  intro i
-  exact (mem_withExactSupport_support c i).symm
-
-/-- Replacing different bounds on the same complex by exact support gives equal objects. -/
-lemma withExactSupport_mkOfBounded_eq (c : CochainComplex V ℤ) {s₁ s₂ : Finset ℤ}
-    (h₁ : ∀ i : ℤ, i ∉ s₁ → IsZero (c.X i))
-    (h₂ : ∀ i : ℤ, i ∉ s₂ → IsZero (c.X i)) :
-    (mkOfBounded c h₁).withExactSupport = (mkOfBounded c h₂).withExactSupport := by
-  suffices hs : (mkOfBounded c h₁).withExactSupport.support =
-      (mkOfBounded c h₂).withExactSupport.support by
-    simpa only [withExactSupport, mkOfBounded, mk.injEq, true_and] using hs
-  ext i
-  simp only [mem_withExactSupport_support, mkOfBounded_toHomologicalComplex]
-
-/-- The complex with exact support is isomorphic to the original via the identity. -/
-def withExactSupportIso (c : BoundedCochainComplex V) : c.withExactSupport ≅ c :=
-  fullyFaithfulEmbed.preimageIso (Iso.refl c.toHomologicalComplex)
-
-end ExactSupport
 
 section LiftEndofunctor
 
@@ -245,7 +148,7 @@ def liftEndofunctor
     (hb : ∀ (X : BoundedCochainComplex V) (i : ℤ),
             i ∉ b X → IsZero ((H.obj (embed.obj X)).X i)) :
     BoundedCochainComplex V ⥤ BoundedCochainComplex V where
-  obj X := mkOfBounded (H.obj (embed.obj X)) (hb X)
+  obj X := ofComplex (H.obj (embed.obj X)) (hb X)
   map {_ _} f := homMk (H.map f.hom)
   map_id X := Hom.ext (by simp [embed])
   map_comp f g := Hom.ext (by simp [embed])
