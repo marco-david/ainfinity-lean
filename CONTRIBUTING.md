@@ -47,8 +47,9 @@ Mathlib has a file, `Mathlib.lean`, that imports every file in the library. Simi
 our libraries has a root file (`Util.lean`, `ComputableCochainComplex.lean`, `AInfinity.lean`,
 `KLRW.lean`) that imports every file in its folder. `lake build` builds these root files, so
 they must import everything, or parts of the repository will silently go unchecked. Run
-`lake exe mk_all` after adding, renaming or deleting a file. CI checks this with
-`lake exe mk_all --check`.
+`lake exe mk_all --module` after adding, renaming or deleting a file. CI checks this with
+`lake exe mk_all --module --check`. The `--module` flag preserves the `module` header and
+`public import` declarations required by the module system.
 
 ### File headers
 

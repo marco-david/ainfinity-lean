@@ -30,8 +30,8 @@ Supporting files:
 ```bash
 lake exe cache get        # download prebuilt Mathlib; run once after cloning or bumping Mathlib
 lake build                # build all four libraries
-lake exe mk_all           # regenerate the root files after adding, moving or deleting a file
-lake exe mk_all --check   # what CI runs
+lake exe mk_all --module          # regenerate roots after adding, moving or deleting a file
+lake exe mk_all --module --check  # what CI runs
 lake env lean Path/To/File.lean   # check a single file
 ```
 
@@ -75,7 +75,7 @@ Each file should open an appropriate namespace, introducing meaningful layers of
   content in `public section`, or `@[expose] public section` if other files need to unfold its
   definitions.
 * **Imports.** Prefer specific Mathlib imports over `import Mathlib` in new files.
-* **Root files.** After adding, renaming or deleting a file, run `lake exe mk_all`.
+* **Root files.** After adding, renaming or deleting a file, run `lake exe mk_all --module`.
 * **Namespaces.** Code in `AInfinity/` lives in `namespace AInfinityTheory`. Do not put generic
   names such as `sum` or `size` in the root namespace.
 * Do not indent the contents of `namespace` or `section` blocks.

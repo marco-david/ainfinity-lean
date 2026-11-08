@@ -36,7 +36,7 @@ jobs:
       # We are disabling this for now, since it seems to regenerate docs for all of Mathlib, which takes too long.
       # - uses: leanprover-community/docgen-action@v1
 
-  mk-all: # checks that the top-level library files import every module (`lake exe mk_all --check`)
+  mk-all: # checks that the module-system library roots import every file
     runs-on: ubuntu-24.04
 
     steps:
@@ -47,4 +47,4 @@ jobs:
           auto-config: false
           use-github-cache: false
       - name: Check mk_all is up to date
-        run: lake exe mk_all --check
+        run: lake exe mk_all --module --check

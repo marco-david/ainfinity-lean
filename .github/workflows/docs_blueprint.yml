@@ -52,6 +52,7 @@ jobs:
           build: true
           lint: false
           mk_all-check: true
+          mk_all-args: "--module"
       - name: Generate documentation assets
         # Pinned to upstream `main` (2026-10-05); it includes the fixes for
         # https://github.com/leanprover-community/docgen-action/issues/28 that the
