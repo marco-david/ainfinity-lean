@@ -27,7 +27,9 @@ project:
     verified interpretation in Mathlib's module complexes. Based cochain complexes
     obtained from additive realizations connect categorical complexes to this
     matrix layer over any commutative ring, including the zero ring. It does not
-    assume finite-free cohomology or supply cohomology algorithms.
+    assume finite-free cohomology. A shared kernel-coordinate certificate identifies
+    cohomology with an explicit matrix presentation and transports it to Mathlib homology;
+    automatic cohomology algorithms remain in progress.
   authors:
     - "Marco David"
     - "Jason Dong"
@@ -120,11 +122,14 @@ status:
     category; finite-free matrix complexes and cochain maps, with their
     interpretation in Mathlib's module complexes; based cochain complexes from
     additive module realizations over commutative rings, with the coordinate
-    isomorphism to the matrix interpretation. The existing computable
+    isomorphism to the matrix interpretation; a certified kernel-coordinate bridge to
+    cohomology presentations, including boundary completeness and transport to Mathlib
+    homology for finite-free and based complexes. The existing computable
     categorical infrastructure (explicit biproducts, chosen zero objects with
     `IsZero` certificates, additive completion, and
     bounded cochain complexes with supplied finite support bounds) is also
-    sorry-free and is housed in ComputableCochainComplex. In progress: the specialized KLRW
+    sorry-free and is housed in ComputableCochainComplex. In progress: automatic cohomology
+    reduction backends and the specialized KLRW
     constructions, braiding functor, and KLRW examples, which still contain
     `sorry`. Temporarily removed: the composition of
     A∞-functors, the identity A∞-functor and the A∞ examples. They were written

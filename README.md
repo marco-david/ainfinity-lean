@@ -31,6 +31,13 @@ support bound; `coordinateIso` identifies the realized complex with its matrix i
 The coordinates describe the chain terms. Kernels and cohomology need not be free, and this
 layer does not implement cohomology algorithms.
 
+`ComputableCochainComplex/CohomologyKernel.lean` supplies `KernelCertificate`: explicit
+kernel coordinates with proofs of independence and completeness. Its `quotientEquiv`
+identifies the kernel quotient with the presentation matrix `L * A`, retaining cocycle
+representatives and boundary preimages. `Cohomology.lean` transports this presentation to
+Mathlib cohomology at a requested integer degree and through `BasedCochainComplex.coordinateIso`.
+This is the shared correctness bridge; automatic reduction backends are still in progress.
+
 ### Project metadata and license
 
 [`formalization.yaml`](formalization.yaml) records the project's sources, scope, status,

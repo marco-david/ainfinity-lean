@@ -3,5 +3,8 @@ module  -- shake: keep-all
 public import ComputableCochainComplex.AdditiveCompletion
 public import ComputableCochainComplex.BasedCochainComplex
 public import ComputableCochainComplex.BoundedCochainComplex
+public import ComputableCochainComplex.Cohomology
+public import ComputableCochainComplex.CohomologyExamples
+public import ComputableCochainComplex.CohomologyKernel
 public import ComputableCochainComplex.ComputableCategories
 public import ComputableCochainComplex.Finite
