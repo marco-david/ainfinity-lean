@@ -28,8 +28,10 @@ project:
     obtained from additive realizations connect categorical complexes to this
     matrix layer over any commutative ring, including the zero ring. It does not
     assume finite-free cohomology. A shared kernel-coordinate certificate identifies
-    cohomology with an explicit matrix presentation and transports it to Mathlib homology;
-    automatic cohomology algorithms remain in progress.
+    cohomology with an explicit matrix presentation and transports it to Mathlib homology.
+    Exact field reduction supplies checked class coordinates, representatives, boundary
+    preimages, and a proof-producing tactic. Integer reduction and induced maps remain
+    in progress.
   authors:
     - "Marco David"
     - "Jason Dong"
@@ -124,12 +126,14 @@ status:
     additive module realizations over commutative rings, with the coordinate
     isomorphism to the matrix interpretation; a certified kernel-coordinate bridge to
     cohomology presentations, including boundary completeness and transport to Mathlib
-    homology for finite-free and based complexes. The existing computable
+    homology for finite-free and based complexes; checked exact field cohomology calculations
+    with representatives, boundary witnesses, a rank formula, and a proof-producing tactic.
+    The existing computable
     categorical infrastructure (explicit biproducts, chosen zero objects with
     `IsZero` certificates, additive completion, and
     bounded cochain complexes with supplied finite support bounds) is also
-    sorry-free and is housed in ComputableCochainComplex. In progress: automatic cohomology
-    reduction backends and the specialized KLRW
+    sorry-free and is housed in ComputableCochainComplex. In progress: induced cohomology
+    maps, the integer reduction backend, graded adapters, and the specialized KLRW
     constructions, braiding functor, and KLRW examples, which still contain
     `sorry`. Temporarily removed: the composition of
     A∞-functors, the identity A∞-functor and the A∞ examples. They were written

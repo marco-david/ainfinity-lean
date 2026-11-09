@@ -5,6 +5,8 @@ public import ComputableCochainComplex.BasedCochainComplex
 public import ComputableCochainComplex.BoundedCochainComplex
 public import ComputableCochainComplex.Cohomology
 public import ComputableCochainComplex.CohomologyExamples
+public import ComputableCochainComplex.CohomologyField
 public import ComputableCochainComplex.CohomologyKernel
+public import ComputableCochainComplex.CohomologyReduction
 public import ComputableCochainComplex.ComputableCategories
 public import ComputableCochainComplex.Finite

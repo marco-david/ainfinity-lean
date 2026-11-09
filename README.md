@@ -36,7 +36,14 @@ kernel coordinates with proofs of independence and completeness. Its `quotientEq
 identifies the kernel quotient with the presentation matrix `L * A`, retaining cocycle
 representatives and boundary preimages. `Cohomology.lean` transports this presentation to
 Mathlib cohomology at a requested integer degree and through `BasedCochainComplex.coordinateIso`.
-This is the shared correctness bridge; automatic reduction backends are still in progress.
+`CohomologyField.lean` adds checked exact reduction over fields with decidable equality,
+including ℚ and finite fields. It computes class coordinates, cocycle representatives, and
+verified boundary preimages. For example, `certify_cohomology C at n` proves a goal of the form
+`Nonempty (C.toCochainComplex.homology n ≅ ModuleCat.of R (Fin h → R))` by kernel-checking
+the calculation and the claimed dimension. `certify_cohomology A, B` accepts local matrices.
+The executable API is `ComputableCohomology.computeField A B`, or
+`C.computeFieldCohomology n`; each returns either a certificate with usable equivalences and
+representative maps or an explicit error. Integer reduction and induced maps are still in progress.
 
 ### Project metadata and license
 

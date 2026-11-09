@@ -13,7 +13,7 @@
   over the actual solver coefficient ring. No polynomial specialization, normal-form theorem,
   independence theorem, or local-finiteness theorem is assumed.
 
-## Shared certificate bridge (checked; no full milestone complete)
+## Shared certificate bridge (checked)
 
 - `CohomologyKernel.lean` supplies `KernelCertificate`, executable `cyclesEquiv`, the equation
   `Z * (L * A) = A`, completeness of coordinate boundary equations with the same preimage,
@@ -22,8 +22,8 @@
   of `FiniteFreeCochainComplex.toCochainComplex`, and transports it through
   `BasedCochainComplex.coordinateIso`.
 - Only comparisons with abstract Mathlib homology are noncomputable.
-- Matrix reduction, field cohomology coordinates, induced maps, the integer backend, a
-  proof-producing entry point, and graded adapters remain to be implemented.
+- The field layer below builds on this bridge. Induced maps, the integer backend, and graded
+  adapters remain to be implemented.
 - The two bridge modules build successfully. `lake env lean` also accepts
   `CohomologyExamples.lean`, including rectangular integer coordinates, a boundary preimage,
   a non-boundary, and zero-complex presentation isomorphisms over ℚ and `ZMod 2`.
@@ -43,3 +43,29 @@
 - Commit `6938dd5` updates the documented commands and both CI workflows. The blueprint
   workflow uses the pinned action's supported `mk_all-args: "--module"` input.
 - Regenerated the roots with `--module`; only the intended new imports changed.
+
+## Field implementation
+
+- `CohomologyReduction.lean` provides finite, decidable checks for kernel completeness over
+  domains (`KernelData.Valid`) and free quotient coordinates (`SplitPresentationData.Valid`).
+  A successful check constructs the existing `KernelCertificate` or a quotient equivalence.
+- `CohomologyField.lean` supplies dimension-bounded exact Gaussian reduction, checked
+  `computeField`, complete normalization, original-coordinate representatives, and
+  `boundaryPreimage` returning an actual preimage together with its equation.
+- `FreeCohomologyCertificate.size_eq` proves `h = b - rank(A) - rank(B)`. The local
+  `homologyIso` and `FiniteFreeCochainComplex.fieldCohomologyIso` identify the result with
+  Mathlib homology. `computeFieldCohomology` uses only the requested degree's two matrices.
+- `certify_cohomology A, B` and `certify_cohomology C at n` are two forms of one small tactic.
+  They prove explicit cohomology isomorphisms using `decide +kernel`, with a checked dimension
+  cast. Ordinary `decide` gets stuck on the pinned rational implementation; kernel reduction
+  succeeds and adds no native-evaluation axiom.
+- Passing examples cover ℚ and `ZMod 2`, zero and identity maps, zero-dimensional terms,
+  negative degrees, endpoints, support gaps, exact three-term data, rectangular non-exact
+  three-term data, and invalid square-zero inputs. `rationalMiddle` normalizes `[3, 5, -8]`
+  to `[5]`, represents it by `[-5, 5, 0]`, and computes boundary preimages.
+- The generator's output is treated as untrusted until the finite checks pass. Failed checks
+  return explicit errors; no claim follows from a bare evaluation of the generator.
+- The field examples and full `lake build` pass (8337 jobs; only the eight pre-existing
+  `sorry` warnings), and the root check passes. Axiom audits of the checker, calculator,
+  boundary witnesses, rank formula, equivalences, and computed rational certificate report
+  only `propext`, `Classical.choice`, and `Quot.sound`.
