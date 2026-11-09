@@ -158,9 +158,9 @@ fidelity:
     `sign : β →+ Additive ℤˣ` such that `degOne` is odd. β need not be a ring, so
     bigradings such as ℤ ×ᵗ ℤ or ℤ ×ᵗ ZMod 2 are allowed, not just ℤ or ℤ/2. (2) A
     graded R-linear quiver assigns to objects X, Y and a degree i an R-module
-    `Hom X Y i`, over a commutative ring R. The operations m_n are graded
-    multilinear maps of degree `(2 − n) • degOne` on each composable string of
-    objects. (3) Arguments are in diagrammatic (left-to-right) order, the reverse
+    `Hom X Y i`, over a commutative ring R. The operations m_n, for each n ≥ 1, are
+    graded multilinear maps of degree `(2 − n) • degOne` on each composable string
+    of objects. (3) Arguments are in diagrammatic (left-to-right) order, the reverse
     of Seidel's convention, so the Koszul sign of the (r, s, t) Stasheff term is
     (−1)^(|a_{r+s+1}| + ⋯ + |a_n| − t). (4) No unitality is assumed.
     (5) The KLRW algebra is defined for an arbitrary loopless quiver on a finite
@@ -231,6 +231,18 @@ alignment:
       lean: "AInfinityTheory.GradedLinearQuiver"
       module: "AInfinity.GradedLinearQuiver"
       status: "defined"
+    - source: "Blueprint, Definition (Operation target degree)"
+      lean: "AInfinityTheory.operationTargetDeg"
+      module: "AInfinity.StasheffIndex"
+      status: "defined"
+    - source: "Blueprint, Definition (Stasheff target degree)"
+      lean: "AInfinityTheory.stasheffTargetDeg"
+      module: "AInfinity.StasheffIndex"
+      status: "defined"
+    - source: "Blueprint, Definition (Composable hom space)"
+      lean: "AInfinityTheory.GradedLinearQuiver.ComposableHom"
+      module: "AInfinity.GradedLinearQuiver"
+      status: "defined"
     - source: "Blueprint, Definition (A∞-operation)"
       lean: "AInfinityTheory.AInfinityOperation"
       module: "AInfinity.AInfinityCategoryStruct"
@@ -255,7 +267,7 @@ alignment:
       lean: "AInfinityTheory.stasheffSum"
       module: "AInfinity.Stasheff"
       status: "defined"
-    - source: "Blueprint, Definition (A∞-precategory)"
+    - source: "Blueprint, Definition (A∞-category structure)"
       lean: "AInfinityTheory.AInfinityCategoryStruct"
       module: "AInfinity.AInfinityCategoryStruct"
       status: "defined"
@@ -268,8 +280,8 @@ alignment:
       module: "AInfinity.AInfinityCategory"
       status: "defined"
       note: >-
-        A field of `AInfinityTheory.AInfinityCategory`, together with
-        `curvature_eq_zero`, which requires the arity-zero operation to vanish.
+        A field of `AInfinityTheory.AInfinityCategory`, required in every positive
+        arity n.
     - source: "Blueprint, Proposition (A∞-categories with vanishing higher operations)"
       lean: "AInfinityTheory.AInfinityCategory.ofArityLeTwo"
       module: "AInfinity.ArityLeTwo"
@@ -292,6 +304,14 @@ alignment:
         Together with `AInfinityTheory.AInfinityFunctorData`; the functor equations are
         the field `AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum`. Source and
         target may have different gradings, related by a `GradingHom`.
+    - source: "Blueprint, Definition (A∞-functor equations); Seidel, (1.6)"
+      lean: "AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum"
+      module: "AInfinity.AInfinityFunctor"
+      status: "defined"
+      note: >-
+        A field of `AInfinityTheory.AInfinityFunctor`, required in every positive arity n.
+        Its two sides are `AInfinityTheory.AInfinityFunctorData.mapCompSum` and
+        `AInfinityTheory.AInfinityFunctorData.compMapSum`.
     - source: "Seidel, composition of A∞-functors"
       lean: ""
       module: ""

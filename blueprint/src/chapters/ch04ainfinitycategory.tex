@@ -2,12 +2,12 @@
 
 \chapter{A-infinity Categories}
 
-\begin{definition}[\Ainf{}-precategory]
+\begin{definition}[\Ainf{}-category structure]
 \lean{AInfinityTheory.AInfinityCategoryStruct}
 \label{AInfinityTheory.AInfinityCategoryStruct}
 \leanok
 \uses{AInfinityTheory.GradedLinearQuiver, AInfinityTheory.AInfinityOperation}
-An \Ainf{}-precategory over $R$ with object type $\mathrm{Obj}$ consists of a
+An \Ainf{}-category structure over $R$ with object type $\mathrm{Obj}$ consists of a
 graded $R$-linear quiver
 \[
   \Hom : \mathrm{Obj} \to \mathrm{Obj} \to \grMod_R^\beta
@@ -16,54 +16,8 @@ together with \Ainf{}-operations
 \[
   m_n : \Hom(X_0, X_1) \otimes \dots \otimes \Hom(X_{n-1}, X_n) \to \Hom(X_0, X_n)
 \]
-of degree $(2-n) \cdot \mathbf{1}$ for every arity $n \geq 0$. The arity-zero
-operation $m_0$ is the curvature. No relations are imposed on these composition maps.
-\end{definition}
-
-\section{Chains}
-
-\begin{definition}[Chain]
-%\lean{AInfinityCategoryTheory.AInfinityPreCategory.Chain}
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain}
-%\leanok
-\uses{AInfinityTheory.AInfinityCategoryStruct}
-A chain in an \Ainf{}-precategory consists of a positive length $n$, a string of
-$n+1$ objects, and a degree assigned to each of the $n$ composable morphism
-slots.
-\end{definition}
-
-\begin{definition}[Chain source]
-%\lean{AInfinityCategoryTheory.AInfinityPreCategory.Chain.source}
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.source}
-%\leanok
-\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain}
-The source of a chain is its initial object.
-\end{definition}
-
-\begin{definition}[Chain target]
-%\lean{AInfinityCategoryTheory.AInfinityPreCategory.Chain.target}
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.target}
-%\leanok
-\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain}
-The target of a chain is its final object.
-\end{definition}
-
-\begin{definition}[Chain link type]
-%\lean{AInfinityTheory.GradedLinearQuiver.ComposableHom}
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.link}
-%\leanok
-\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain, AInfinityTheory.GradedLinearQuiver.ComposableHom}
-For a chain and an index $i$,
-\texttt{Chain.link} is the module of
-the $i$-th composable morphism in that chain.
-\end{definition}
-
-\begin{definition}[Chain operation target]
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.operationTarget}
-%\leanok
-\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain, AInfinityTheory.AInfinityOperation}
-For a chain, this is the graded hom-module that receives the corresponding
-multilinear operation.
+of degree $(2-n) \cdot \mathbf{1}$ for every positive arity $n \geq 1$. No relations are
+imposed on these operations.
 \end{definition}
 
 \section{Stasheff Identities}
@@ -73,9 +27,8 @@ multilinear operation.
 \label{AInfinityTheory.AInfinityCategory}
 \leanok
 \uses{AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.AInfinityCategory.stasheffSum_eq_zero}
-An \Ainf{}-category is an \Ainf{}-precategory whose curvature $m_0$ vanishes and
-whose operations satisfy the Stasheff identities. The curvature does not enter
-the Stasheff identities, whose inner operations have positive arity.
+An \Ainf{}-category is an \Ainf{}-category structure whose operations satisfy the
+Stasheff identities in every positive arity.
 \end{definition}
 
 \begin{proposition}[\Ainf{}-categories with vanishing higher operations]
@@ -83,8 +36,8 @@ the Stasheff identities, whose inner operations have positive arity.
 \label{AInfinityTheory.AInfinityCategory.ofArityLeTwo}
 \leanok
 \uses{AInfinityTheory.AInfinityCategory, AInfinityTheory.stasheffSum}
-Let $m_1$ be a family of graded linear maps of degree $1$ and $m_2$ a family of bilinear maps
-of degree $0$, and set $m_n = 0$ for $n \geq 3$. Then $(m_n)$ satisfies the Stasheff identities
+Let $m_1$ be a family of graded linear maps of degree $\mathbf{1}$ and $m_2$ a family of
+bilinear maps of degree $0$, and set $m_n = 0$ for $n \geq 3$. Then $(m_n)$ satisfies the Stasheff identities
 as soon as it does so in arities $1$, $2$ and $3$, that is, as soon as $m_1^2 = 0$, $m_1$ is a
 derivation of $m_2$, and $m_2$ is associative, all with Koszul signs.
 \end{proposition}
@@ -104,7 +57,8 @@ two form the associativity identity.
 \uses{AInfinityTheory.AInfinityCategory.ofArityLeTwo}
 Let $\mathcal{C}$ be a category enriched over cochain complexes of $R$-modules. For $a$ of
 degree $p$ and $b$ of degree $q$, set $m_1(a) = (-1)^p\, da$ and $m_2(a, b) = (-1)^q\, a b$,
-and $m_n = 0$ for $n \geq 3$. This is an \Ainf{}-category with grading $\mathbb{Z}$.
+and $m_n = 0$ for $n \geq 3$. Here $ab$ is the composite of $a$ followed by $b$, in
+diagrammatic order. This is an \Ainf{}-category with grading $\mathbb{Z}$.
 \end{proposition}
 
 \begin{proof}
@@ -136,8 +90,7 @@ string of objects $X_0,\dots,X_n$, a graded multilinear map
   \varphi_n : \Hom(X_0,X_1) \otimes \cdots \otimes \Hom(X_{n-1},X_n) \to \Hom(FX_0, FX_n)
 \]
 of degree $(1-n) \cdot \mathbf{1}$, where a degree $b \in \beta$ on the left
-corresponds to its image in $\beta'$ on the right. No relations are imposed. The
-component $\varphi_0$ does not enter the \Ainf{}-functor equations.
+corresponds to its image in $\beta'$ on the right. No relations are imposed.
 \end{definition}
 
 \begin{definition}[\Ainf{}-functor equations]
@@ -145,7 +98,7 @@ component $\varphi_0$ does not enter the \Ainf{}-functor equations.
 \label{AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum}
 \leanok
 \uses{AInfinityTheory.AInfinityFunctorData, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.signedStasheffSum, AInfinityTheory.operationTargetDeg}
-Fix \Ainf{}-compositions $m$ on the source and $m'$ on the target. For composable
+Fix \Ainf{}-category structures with operations $m$ on the source and $m'$ on the target. For composable
 inputs $a_1,\dots,a_n$, the left-hand side of the arity-$n$ functor equation is
 the signed Stasheff sum
 \[
@@ -160,9 +113,8 @@ of $n$ into positive parts, of
 There is no sign on the right-hand side, since in reduced degrees every
 $\varphi_i$ has degree $0$. Both sides lie in $\Hom(FX_0,FX_n)$, in the image under
 the grading homomorphism of the degree of $m_n(a_1,\dots,a_n)$. The functor data satisfies the
-\Ainf{}-functor equations if the two sides agree in every arity, for
-every string of objects, choice of input degrees and composable inputs. In arity
-$0$ both sides vanish as soon as the target has vanishing curvature.
+\Ainf{}-functor equations if the two sides agree in every positive arity, for
+every string of objects, choice of input degrees and composable inputs.
 \end{definition}
 
 \begin{definition}[\Ainf{}-functor]

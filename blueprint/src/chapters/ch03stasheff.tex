@@ -70,7 +70,7 @@ nonempty interval of inputs fed to the inner operation.
 \label{AInfinityTheory.stasheffTerm}
 \leanok
 \uses{AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
-Fix an \Ainf{}-composition $m$. For a Stasheff index $(r,s,t)$ of arity $n$, the
+Fix an \Ainf{}-category structure with operations $m$. For a Stasheff index $(r,s,t)$ of arity $n$, the
 indexed Stasheff term is obtained by first applying the inner $s$-ary operation in
 positions $r,\dots,r+s-1$ and then applying the outer $(r+1+t)$-ary operation to
 the collapsed string. It lies in $\Hom(X_0,X_n)$ in any degree equal to the
@@ -84,13 +84,13 @@ Stasheff target degree.
 \uses{AInfinityTheory.Grading, AInfinityTheory.StasheffIndex}
 The sign $\pm 1$ attached to a Stasheff index $(r,s,t)$ is
 \[
-  \prod_{k=r+s}^{n-1} (-1)^{\|a_k\|},
+  \prod_{k=r+s+1}^{n} (-1)^{\|a_k\|},
   \qquad
   \|a_k\| := |a_k| - \mathbf{1},
 \]
-the product of the Koszul signs of the reduced degrees of the $t$ trailing
-inputs. Since the sign character is a homomorphism, this equals
-$(-1)^{|a_{r+s}| + \cdots + |a_{n-1}| - t \cdot \mathbf{1}}$.
+for inputs $a_1,\dots,a_n$: the product of the Koszul signs of the reduced degrees of
+the $t$ trailing inputs. Since the sign character is a homomorphism, this equals
+$(-1)^{|a_{r+s+1}| + \cdots + |a_n| - t \cdot \mathbf{1}}$.
 \end{definition}
 
 \begin{definition}[Signed Stasheff sum]
@@ -124,7 +124,7 @@ equal to the Stasheff target degree.
 \label{AInfinityTheory.AInfinityCategory.stasheffSum_eq_zero}
 \leanok
 \uses{AInfinityTheory.stasheffSum}
-An \Ainf{}-composition satisfies the Stasheff identities if every indexed
-Stasheff sum vanishes, for every arity, string of objects, choice of
+The operations of an \Ainf{}-category structure satisfy the Stasheff identities if every
+indexed Stasheff sum vanishes, for every positive arity, string of objects, choice of
 input degrees and composable inputs.
 \end{definition}
