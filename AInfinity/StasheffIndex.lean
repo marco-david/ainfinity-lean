@@ -6,8 +6,8 @@ Authors: Annie Yao, Marco David, Zhan Shi
 module
 
 public import Mathlib.Algebra.BigOperators.Fin
-public import AInfinity.Grading
 public import Mathlib.Tactic.Module
+public import AInfinity.Grading
 
 /-! # Index triples of the Stasheff identities
 
