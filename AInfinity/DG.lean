@@ -40,6 +40,10 @@ vanish.
 
 ## Main results
 
+* `HomologicalComplex.ιTensorObj_d`: the differential of a tensor product of complexes on a
+  summand, d(a ⊗ b) = da ⊗ b + ε(p) a ⊗ db.
+* `HomologicalComplex.ιTensorObj_whiskerRight_ιTensorObj_associator_hom_f`: the associator of
+  complexes on a summand of the triple tensor product.
 * `AInfinityTheory.DGCategory.d_compBilin`: the Leibniz rule for the enriched composition.
 * `AInfinityTheory.DGCategory.compBilin_assoc`: associativity of the enriched composition on
   homogeneous morphisms.
@@ -57,11 +61,75 @@ a from X₀ to X₁ of degree p and b from X₁ to X₂ of degree q, m₁(a) = (
 m₂(a, b) = (-1)^q b ∘ a, where b ∘ a is the enriched composition `compBilin`. With these
 signs the Stasheff identities of `AInfinity.Stasheff` follow from d² = 0, the Leibniz rule and
 associativity of composition.
+
+Mathlib's monoidal structure on homological complexes is obtained by transport along
+`Monoidal.induced`, and its summand inclusions `HomologicalComplex.ιTensorObj` are built from
+total complexes of bicomplexes. Mathlib's API for these inclusions is stated in terms of
+`mapBifunctor` and graded objects, which agree with `⊗`, `◁`, `▷` and `α_` only up to unfolding
+definitions, so rewriting with it requires `erw`. The `HomologicalComplex` section at the start of
+this file restates the lemmas we need in terms of the monoidal structure. These lemmas live in
+Mathlib's `HomologicalComplex` namespace rather than `AInfinityTheory`, since they are candidates
+for upstreaming to `Mathlib.Algebra.Homology.Monoidal`.
 -/
 
 @[expose] public section
 
-open CategoryTheory MonoidalCategory
+open CategoryTheory Limits MonoidalCategory
+
+namespace HomologicalComplex
+
+variable {C : Type*} [Category* C] [MonoidalCategory C] [Preadditive C] [HasZeroObject C]
+  [(curriedTensor C).Additive] [∀ (X₁ : C), ((curriedTensor C).obj X₁).Additive]
+  {I : Type*} [AddMonoid I] {c : ComplexShape I} [c.TensorSigns]
+  [∀ (X₁ X₂ : GradedObject I C), GradedObject.HasTensor X₁ X₂]
+  [∀ X₁, PreservesColimit (Functor.empty.{0} C) ((curriedTensor C).obj X₁)]
+  [∀ X₂, PreservesColimit (Functor.empty.{0} C) ((curriedTensor C).flip.obj X₂)]
+  [∀ (X₁ X₂ X₃ : GradedObject I C), GradedObject.HasGoodTensor₁₂Tensor X₁ X₂ X₃]
+  [∀ (X₁ X₂ X₃ : GradedObject I C), GradedObject.HasGoodTensorTensor₂₃ X₁ X₂ X₃]
+  [DecidableEq I]
+
+/-- The differential of a tensor product of homological complexes, on the summand of degree
+(i₁, i₂): d(a ⊗ b) = da ⊗ b + ε(i₁) a ⊗ db, where ε is the sign of the complex shape. -/
+lemma ιTensorObj_d (K L : HomologicalComplex C c) {i₁ i₁' i₂ i₂' j j' : I} (h : i₁ + i₂ = j)
+    (hK : c.Rel i₁ i₁') (hL : c.Rel i₂ i₂') (h₁ : i₁' + i₂ = j') (h₂ : i₁ + i₂' = j') :
+    ιTensorObj K L i₁ i₂ j h ≫ (K ⊗ L).d j j' =
+      (K.d i₁ i₁' ▷ L.X i₂) ≫ ιTensorObj K L i₁' i₂ j' h₁ +
+        c.ε i₁ • ((K.X i₁ ◁ L.d i₂ i₂') ≫ ιTensorObj K L i₁ i₂' j' h₂) := by
+  change ιMapBifunctor K L (curriedTensor C) c i₁ i₂ j h ≫
+    (mapBifunctor K L (curriedTensor C) c).d j j' = _
+  rw [mapBifunctor.d_eq, Preadditive.comp_add, mapBifunctor.ι_D₁, mapBifunctor.ι_D₂,
+    mapBifunctor.d₁_eq _ _ _ _ hK _ _ h₁, mapBifunctor.d₂_eq _ _ _ _ _ hL _ h₂]
+  simp only [ComplexShape.ε₁, ComplexShape.ε₂, TotalComplexShape.ε₁, TotalComplexShape.ε₂,
+    one_smul]
+  rfl
+
+@[reassoc]
+lemma ιTensorObj_whiskerLeft_f (K : HomologicalComplex C c) {L L' : HomologicalComplex C c}
+    (g : L ⟶ L') (i₁ i₂ j : I) (h : i₁ + i₂ = j) :
+    ιTensorObj K L i₁ i₂ j h ≫ (K ◁ g).f j = (K.X i₁ ◁ g.f i₂) ≫ ιTensorObj K L' i₁ i₂ j h := by
+  simpa using ι_mapBifunctorMap (𝟙 K) g (curriedTensor _) c i₁ i₂ j h
+
+@[reassoc]
+lemma ιTensorObj_whiskerRight_f {K K' : HomologicalComplex C c} (f : K ⟶ K')
+    (L : HomologicalComplex C c) (i₁ i₂ j : I) (h : i₁ + i₂ = j) :
+    ιTensorObj K L i₁ i₂ j h ≫ (f ▷ L).f j = (f.f i₁ ▷ L.X i₂) ≫ ιTensorObj K' L i₁ i₂ j h := by
+  simpa using ι_mapBifunctorMap f (𝟙 L) (curriedTensor _) c i₁ i₂ j h
+
+/-- The associator of homological complexes on the summand of degree (i₁, i₂, i₃) of the triple
+tensor product: it is the associator of `C` followed by the inclusion of the summand. -/
+@[reassoc]
+lemma ιTensorObj_whiskerRight_ιTensorObj_associator_hom_f (K₁ K₂ K₃ : HomologicalComplex C c)
+    {i₁ i₂ i₃ i₁₂ i₂₃ j : I} (h₁₂ : i₁ + i₂ = i₁₂) (h₂₃ : i₂ + i₃ = i₂₃) (h : i₁₂ + i₃ = j)
+    (h' : i₁ + i₂₃ = j) :
+    (ιTensorObj K₁ K₂ i₁ i₂ i₁₂ h₁₂ ▷ K₃.X i₃) ≫ ιTensorObj (K₁ ⊗ K₂) K₃ i₁₂ i₃ j h ≫
+      (α_ K₁ K₂ K₃).hom.f j =
+    (α_ _ _ _).hom ≫ (K₁.X i₁ ◁ ιTensorObj K₂ K₃ i₂ i₃ i₂₃ h₂₃) ≫
+      ιTensorObj K₁ (K₂ ⊗ K₃) i₁ i₂₃ j h' := by
+  subst h₁₂ h₂₃
+  rw [← Category.assoc]
+  exact GradedObject.Monoidal.ιTensorObj₃'_associator_hom K₁.X K₂.X K₃.X i₁ i₂ i₃ j h
+
+end HomologicalComplex
 
 namespace AInfinityTheory
 
@@ -85,35 +153,6 @@ local notation "V" => CochainComplex (ModuleCat R) ℤ
 degree-`i` component of the hom complex `X ⟶[V] Y`. -/
 instance gradedLinearQuiver : GradedLinearQuiver ℤ R C where
   Hom X Y i := (X ⟶[V] Y).X i
-
-open HomologicalComplex in
-/-- The differential of a tensor product of cochain complexes, on the summand of degree
-(p, q): d(a ⊗ b) = da ⊗ b + (-1)^p a ⊗ db. -/
-lemma ιTensorObj_d (K L : V) (p q i i' : ℤ) (h : p + q = i) (h₁ : p + 1 + q = i')
-    (h₂ : p + (q + 1) = i') :
-    ιTensorObj K L p q i h ≫ (K ⊗ L).d i i' =
-      (K.d p (p + 1) ▷ L.X q) ≫ ιTensorObj K L (p + 1) q i' h₁ +
-        p.negOnePow • ((K.X p ◁ L.d q (q + 1)) ≫ ιTensorObj K L p (q + 1) i' h₂) := by
-  change _ ≫ (HomologicalComplex.tensorObj K L).d i i' = _
-  dsimp only [ιTensorObj]
-  rw [mapBifunctor.d_eq, Preadditive.comp_add]
-  erw [mapBifunctor.ι_D₁, mapBifunctor.ι_D₂]
-  rw [mapBifunctor.d₁_eq _ _ _ _ rfl _ _ h₁, mapBifunctor.d₂_eq _ _ _ _ _ rfl _ h₂,
-    Units.smul_def, Units.smul_def, Units.smul_def]
-  simp only [ComplexShape.ε₁, ComplexShape.ε₂, TotalComplexShape.ε₁, Units.val_one, one_smul]
-  rfl
-
-open HomologicalComplex in
-@[reassoc]
-lemma ιTensorObj_whiskerLeft_f (K : V) {L L' : V} (g : L ⟶ L') (p q i : ℤ) (h : p + q = i) :
-    ιTensorObj K L p q i h ≫ (K ◁ g).f i = (K.X p ◁ g.f q) ≫ ιTensorObj K L' p q i h := by
-  simpa using ι_mapBifunctorMap (𝟙 K) g (curriedTensor _) (ComplexShape.up ℤ) p q i h
-
-open HomologicalComplex in
-@[reassoc]
-lemma ιTensorObj_whiskerRight_f {K K' : V} (f : K ⟶ K') (L : V) (p q i : ℤ) (h : p + q = i) :
-    ιTensorObj K L p q i h ≫ (f ▷ L).f i = (f.f p ▷ L.X q) ≫ ιTensorObj K' L p q i h := by
-  simpa using ι_mapBifunctorMap f (𝟙 L) (curriedTensor _) (ComplexShape.up ℤ) p q i h
 
 /-- The component of the enriched composition on morphisms of degrees `p` and `q`, as a bilinear
 map into the degree-`i` component of the hom complex, where `p + q = i`. -/
@@ -143,11 +182,11 @@ lemma d_compBilin (X Y Z : C) {p q i p' q' i' : ℤ} (h : p + q = i) (hp : p + 1
   subst hp hq
   simp only [compBilin_apply]
   rw [← ModuleCat.comp_apply, (eComp V X Y Z).comm, ← ModuleCat.comp_apply, ← Category.assoc,
-    ιTensorObj_d _ _ _ _ _ _ _ h₁ h₂]
+    HomologicalComplex.ιTensorObj_d _ _ h rfl rfl h₁ h₂]
   simp [ModuleCat.MonoidalCategory.whiskerRight_apply,
     ModuleCat.MonoidalCategory.whiskerLeft_apply]
 
-open HomologicalComplex GradedObject.Monoidal in
+open HomologicalComplex in
 /-- Associativity of the enriched composition, restricted to the summand of degree (p, q, r)
 of the triple tensor product of hom complexes. -/
 lemma ιTensorObj_eComp_assoc (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e)
@@ -157,12 +196,9 @@ lemma ιTensorObj_eComp_assoc (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e)
     (α_ _ _ _).hom ≫ (_ ◁ ιTensorObj (X ⟶[V] Y) (Y ⟶[V] Z) q r e' h') ≫
       (_ ◁ (eComp V X Y Z).f e') ≫ ιTensorObj (W ⟶[V] X) (X ⟶[V] Z) p e' d h₂ ≫
         (eComp V W X Z).f d := by
-  have hd : p + q + r = d := by omega
   rw [← ιTensorObj_whiskerRight_f_assoc, ← comp_f, ← e_assoc' V W X Y Z,
-    ← ιTensorObj_whiskerLeft_f_assoc, comp_f, comp_f]
-  erw [← ιTensorObj₃'_eq_assoc _ _ _ p q r d hd e h, ιTensorObj₃'_associator_hom_assoc,
-    ιTensorObj₃_eq_assoc _ _ _ p q r d hd e' h']
-  rfl
+    ← ιTensorObj_whiskerLeft_f_assoc, comp_f, comp_f,
+    ιTensorObj_whiskerRight_ιTensorObj_associator_hom_f_assoc _ _ _ h h' h₁ h₂]
 
 /-- The enriched composition is associative on homogeneous morphisms:
 c ∘ (b ∘ a) = (c ∘ b) ∘ a. The degrees are arbitrary, subject to the
