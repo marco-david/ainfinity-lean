@@ -112,12 +112,12 @@ status:
     and their homomorphisms, graded linear and multilinear maps (with their module
     structure and the associativity and unit laws of composition), graded R-linear
     quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing
-    higher operations, DG categories as A∞-categories, A∞-functors with the
+    higher operations, DG and linear categories as A∞-categories, A∞-functors with the
     A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
     category. In progress: the computable additive completion and
     bounded cochain complexes, and the braiding functor, whose definitions are
     still partially stubbed with `sorry`. Temporarily removed: the composition of
-    A∞-functors, the identity A∞-functor and the A∞ examples. They were written
+    A∞-functors, the identity A∞-functor and the A∞-functor examples. They were written
     for the earlier foundation (grading indices and `GradedObject`s in
     `ModuleCat`) and will be restored once ported. A∞-algebras (blueprint
     chapter 5) are not formalized yet.

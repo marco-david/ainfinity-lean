@@ -71,6 +71,24 @@ gives $m_2(m_2(a, b), c) = (-1)^r m_2(a, m_2(b, c))$, and the Koszul sign $(-1)^
 makes the two Stasheff terms cancel.
 \end{proof}
 
+\begin{proposition}[Linear categories are \Ainf{}-categories]
+\lean{AInfinityTheory.GradedLinearQuiver.ofLinearCategory, AInfinityTheory.AInfinityCategory.ofLinearCategory}
+\label{AInfinityTheory.AInfinityCategory.ofLinearCategory}
+\leanok
+\uses{AInfinityTheory.AInfinityCategory.ofArityLeTwo}
+Let $\mathcal{C}$ be an $R$-linear category and $\beta$ a grading. Place all morphisms of
+$\mathcal{C}$ in degree $0$, and set $m_2(a, b) = ab$, the composite of $a$ followed by $b$,
+and $m_n = 0$ for $n \neq 2$. This is an \Ainf{}-category with grading $\beta$.
+\end{proposition}
+
+\begin{proof}
+\leanok
+By the proposition on vanishing higher operations, it suffices to check the identities in
+arities $1$, $2$ and $3$. Since $m_1 = 0$, the first two hold trivially. For the third, if $c$
+has degree $r \neq 0$ then $c = 0$; if $r = 0$, the Koszul sign $(-1)^{r-1} = -1$ of $c$ turns
+the identity into $(ab)c = a(bc)$, the associativity of composition.
+\end{proof}
+
 \section{A-infinity Functors}
 
 The source and target of an \Ainf{}-functor may be graded by different
