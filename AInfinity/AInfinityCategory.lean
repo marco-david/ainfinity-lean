@@ -43,9 +43,9 @@ class AInfinityCategory extends AInfinityCategoryStruct β R Obj where
   /-- The higher compositions satisfy the Stasheff identities: in every arity `n ≥ 1`, the
   Stasheff sum of any composable string of morphisms vanishes. -/
   stasheffSum_eq_zero {n : ℕ} [NeZero n] {X : Fin (n + 1) → Obj} {deg : Fin n → β}
-    (x : ∀ i : Fin n, GradedLinearQuiver.ComposableHom β R X i (deg i)) {d : β}
+    (a : ∀ i : Fin n, GradedLinearQuiver.ComposableHom β R X i (deg i)) {d : β}
     (hd : stasheffTargetDeg deg = d) :
-    stasheffSum x d hd = 0
+    stasheffSum a d hd = 0
 
 end
 

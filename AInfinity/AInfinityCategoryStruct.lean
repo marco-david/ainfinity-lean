@@ -137,9 +137,9 @@ def ofGradedLinearMap {X : Fin (1 + 1) → Obj}
 theorem ofGradedLinearMap_v_apply {X : Fin (1 + 1) → Obj}
     (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) degOne) (deg : Fin 1 → β)
     (j : β) (h : operationTargetDeg deg = j)
-    (x : ∀ k, ComposableHom β R X k (deg k)) :
-    (ofGradedLinearMap f).v deg j h x =
-      f.v (deg 0) j (by simpa [operationTargetDeg] using h) (x 0) :=
+    (a : ∀ k, ComposableHom β R X k (deg k)) :
+    (ofGradedLinearMap f).v deg j h a =
+      f.v (deg 0) j (by simpa [operationTargetDeg] using h) (a 0) :=
   rfl
 
 /-- The binary operation given by a family of bilinear maps `f p q j`, sending morphisms of
@@ -157,9 +157,9 @@ theorem ofBilinear_v_apply {X : Fin (2 + 1) → Obj}
     (f : ∀ p q j : β, p + q = j →
       (X 0 →ᵍ[R] X 1) p →ₗ[R] (X 1 →ᵍ[R] X 2) q →ₗ[R] (X 0 →ᵍ[R] X 2) j)
     (deg : Fin 2 → β) (j : β) (h : operationTargetDeg deg = j)
-    (x : ∀ k, ComposableHom β R X k (deg k)) :
-    (ofBilinear f).v deg j h x =
-      f (deg 0) (deg 1) j (by simpa [operationTargetDeg, Fin.sum_univ_two] using h) (x 0) (x 1) :=
+    (a : ∀ k, ComposableHom β R X k (deg k)) :
+    (ofBilinear f).v deg j h a =
+      f (deg 0) (deg 1) j (by simpa [operationTargetDeg, Fin.sum_univ_two] using h) (a 0) (a 1) :=
   rfl
 
 end AInfinityOperation
