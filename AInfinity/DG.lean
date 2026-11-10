@@ -107,8 +107,7 @@ lemma ιTensorObj_d (K L : HomologicalComplex C c) {i₁ i₁' i₂ i₂' j j' :
 lemma ιTensorObj_whiskerLeft_f (K : HomologicalComplex C c) {L L' : HomologicalComplex C c}
     (g : L ⟶ L') (i₁ i₂ j : I) (h : i₁ + i₂ = j) :
     ιTensorObj K L i₁ i₂ j h ≫ (K ◁ g).f j = (K.X i₁ ◁ g.f i₂) ≫ ιTensorObj K L' i₁ i₂ j h := by
-  -- `K ◁ g` is `tensorHom (𝟙 K) g` by definition of the monoidal structure, but only after
-  -- unfolding the instance, which `simp` no longer does when matching `ι_mapBifunctorMap`.
+  -- `K ◁ g` is `tensorHom (𝟙 K) g` by definition of the monoidal structure.
   change ιTensorObj K L i₁ i₂ j h ≫ (tensorHom (𝟙 K) g).f j = _
   simp
 
