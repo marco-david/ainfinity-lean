@@ -1,3 +1,10 @@
+# Local counterpart of the project that the `docgen-action` step of
+# `.github/workflows/docs_blueprint.yml` generates on CI to build the API documentation; CI
+# rewrites this file, so it only matters for building the docs locally:
+#
+#   cd docbuild && lake update ainfinity && lake build Util:docs ComputableCochainComplex:docs AInfinity:docs KLRW:docs
+#
+# Keep `rev` equal to the Lean version in `lean-toolchain`, as CI does.
 name = "docbuild"
 version = "0.1.0"
 packagesDir = "../.lake/packages"
@@ -6,9 +13,9 @@ reservoir = false
 [[require]]
 name = "doc-gen4"
 git = "https://github.com/leanprover/doc-gen4"
-rev = "main"
+rev = "v4.35.0"
 scope = "leanprover"
 
 [[require]]
-name = "AInfinity"
+name = "ainfinity"
 path = "../"

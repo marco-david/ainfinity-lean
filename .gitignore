@@ -1,4 +1,6 @@
 /.lake
+docbuild/.lake/
+docbuild/lake-manifest.json
 /.elan
 /build/
 .DS_Store

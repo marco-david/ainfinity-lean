@@ -20,8 +20,9 @@ and checked in CI, so rerun that command after adding a file.
 | `AInfinity/` | Gradings and their homomorphisms, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing higher operations, DG and linear categories as A∞-categories, A∞-functors. |
 | `KLRW/` | KLRW algebras and categories: the general quiver-parametrised KLRW algebra and its $$R$$-linear category, and a computable special case with one black strand and $$n$$ red strands. | |
 
-The blueprint sources live in `blueprint/src/` and the API documentation is built from
-`docbuild/`.
+The blueprint sources live in `blueprint/src/`. The API documentation is built on CI by
+`docgen-action`, which generates a `docbuild/` project depending on `doc-gen4` at the tag of
+the current Lean toolchain; the checked-in `docbuild/lakefile.toml` is its local counterpart.
 
 ### Project metadata and license
 
