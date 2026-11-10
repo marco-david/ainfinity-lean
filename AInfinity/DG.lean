@@ -107,13 +107,17 @@ lemma ιTensorObj_d (K L : HomologicalComplex C c) {i₁ i₁' i₂ i₂' j j' :
 lemma ιTensorObj_whiskerLeft_f (K : HomologicalComplex C c) {L L' : HomologicalComplex C c}
     (g : L ⟶ L') (i₁ i₂ j : I) (h : i₁ + i₂ = j) :
     ιTensorObj K L i₁ i₂ j h ≫ (K ◁ g).f j = (K.X i₁ ◁ g.f i₂) ≫ ιTensorObj K L' i₁ i₂ j h := by
-  simpa using ι_mapBifunctorMap (𝟙 K) g (curriedTensor _) c i₁ i₂ j h
+  -- `K ◁ g` is `tensorHom (𝟙 K) g` by definition of the monoidal structure, but only after
+  -- unfolding the instance, which `simp` no longer does when matching `ι_mapBifunctorMap`.
+  change ιTensorObj K L i₁ i₂ j h ≫ (tensorHom (𝟙 K) g).f j = _
+  simp
 
 @[reassoc]
 lemma ιTensorObj_whiskerRight_f {K K' : HomologicalComplex C c} (f : K ⟶ K')
     (L : HomologicalComplex C c) (i₁ i₂ j : I) (h : i₁ + i₂ = j) :
     ιTensorObj K L i₁ i₂ j h ≫ (f ▷ L).f j = (f.f i₁ ▷ L.X i₂) ≫ ιTensorObj K' L i₁ i₂ j h := by
-  simpa using ι_mapBifunctorMap f (𝟙 L) (curriedTensor _) c i₁ i₂ j h
+  change ιTensorObj K L i₁ i₂ j h ≫ (tensorHom f (𝟙 L)).f j = _
+  simp
 
 /-- The associator of homological complexes on the summand of degree (i₁, i₂, i₃) of the triple
 tensor product: it is the associator of `C` followed by the inclusion of the summand. -/

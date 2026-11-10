@@ -219,14 +219,15 @@ lemma stasheffInner_eq_zero_of_map_eq_zero
     (d : β)
     (hd : stasheffInnerDeg deg p = d) :
     stasheffInner x p d hd = 0 := by
-  simp [stasheffInner, hm]
+  have h := hm d hd
+  simp [stasheffInner, h]
 
 lemma stasheffOuter_eq_zero_of_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd = 0)
     (d : β)
     (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
     stasheffOuter x p d hd = 0 := by
-  rw [stasheffOuter, hm, MultilinearMap.zero_apply]
+  rw [stasheffOuter, hm, zero_apply]
 
 lemma stasheffOuter_eq_zero_of_inner_eq_zero
     (hinner : ∀ d hd, stasheffInner x p d hd = 0)
