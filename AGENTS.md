@@ -15,7 +15,7 @@ The project is currently organized into four Lake libraries:
 | --- | --- |
 | `Util/` | The `Texify` class and the `#texify` command for rendering terms and chain complexes as LaTeX. |
 | `ComputableCochainComplex/` | Computable biproducts and zero objects, the additive completion `CMat_`, bounded cochain complexes. |
-| `AInfinity/` | Grading types, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-functors. |
+| `AInfinity/` | Gradings and their homomorphisms, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-functors. |
 | `KLRW/` | KLRW algebras and categories, the braiding functor, examples. |
 
 Supporting files:
@@ -136,7 +136,7 @@ allowed. Choose names carefully, because they are expensive to change later.
 These are strong defaults. Depart from them only for a concrete reason.
 
 * **Reuse before you define.** Before writing a helper, search the workspace and Mathlib with
-  `rg`, `exact?` and `apply?`. Build on the existing foundations, e.g. `GradingType`
+  `rg`, `exact?` and `apply?`. Build on the existing foundations, e.g. `Grading`
   (`AInfinity/Grading.lean`), `GradedLinearMap` and `GradedMultilinearMap`
   (`AInfinity/GradedLinearAlgebra.lean`), `GradedLinearQuiver`, and the Stasheff sums in
   `AInfinity/Stasheff.lean`. Do not introduce an alternative foundational model unless asked.

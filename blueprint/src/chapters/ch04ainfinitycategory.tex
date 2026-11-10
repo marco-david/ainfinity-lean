@@ -2,68 +2,22 @@
 
 \chapter{A-infinity Categories}
 
-\begin{definition}[\Ainf{}-precategory]
+\begin{definition}[\Ainf{}-category structure]
 \lean{AInfinityTheory.AInfinityCategoryStruct}
 \label{AInfinityTheory.AInfinityCategoryStruct}
 \leanok
-\uses{AInfinityTheory.GradedLinearQuiver, AInfinityTheory.AInfinityComposition}
-An \Ainf{}-precategory over $R$ with object type $\mathrm{Obj}$ consists of a
+\uses{AInfinityTheory.GradedLinearQuiver, AInfinityTheory.AInfinityOperation}
+An \Ainf{}-category structure over $R$ with object type $\mathrm{Obj}$ consists of a
 graded $R$-linear quiver
 \[
   \Hom : \mathrm{Obj} \to \mathrm{Obj} \to \grMod_R^\beta
 \]
-together with an \Ainf{}-composition, that is, operations
+together with \Ainf{}-operations
 \[
   m_n : \Hom(X_0, X_1) \otimes \dots \otimes \Hom(X_{n-1}, X_n) \to \Hom(X_0, X_n)
 \]
-of degree $\operatorname{shift}(2-n)$ for every positive arity $n>0$. No relations
-are imposed on these composition maps.
-\end{definition}
-
-\section{Chains}
-
-\begin{definition}[Chain]
-%\lean{AInfinityCategoryTheory.AInfinityPreCategory.Chain}
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain}
-%\leanok
-\uses{AInfinityTheory.AInfinityCategoryStruct}
-A chain in an \Ainf{}-precategory consists of a positive length $n$, a string of
-$n+1$ objects, and a degree assigned to each of the $n$ composable morphism
-slots.
-\end{definition}
-
-\begin{definition}[Chain source]
-%\lean{AInfinityCategoryTheory.AInfinityPreCategory.Chain.source}
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.source}
-%\leanok
-\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain}
-The source of a chain is its initial object.
-\end{definition}
-
-\begin{definition}[Chain target]
-%\lean{AInfinityCategoryTheory.AInfinityPreCategory.Chain.target}
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.target}
-%\leanok
-\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain}
-The target of a chain is its final object.
-\end{definition}
-
-\begin{definition}[Chain link type]
-%\lean{AInfinityTheory.GradedLinearQuiver.ComposableHomType}
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.link}
-%\leanok
-\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain, AInfinityTheory.GradedLinearQuiver.ComposableHomType}
-For a chain and an index $i$,
-\texttt{Chain.link} is the module of
-the $i$-th composable morphism in that chain.
-\end{definition}
-
-\begin{definition}[Chain operation target]
-\label{AInfinityCategoryTheory.AInfinityPreCategory.Chain.operationTarget}
-%\leanok
-\uses{AInfinityCategoryTheory.AInfinityPreCategory.Chain, AInfinityTheory.AInfinityComposition}
-For a chain, this is the graded hom-module that receives the corresponding
-multilinear operation.
+of degree $(2-n) \cdot \mathbf{1}$ for every positive arity $n \geq 1$. No relations are
+imposed on these operations.
 \end{definition}
 
 \section{Stasheff Identities}
@@ -72,22 +26,67 @@ multilinear operation.
 \lean{AInfinityTheory.AInfinityCategory}
 \label{AInfinityTheory.AInfinityCategory}
 \leanok
-\uses{AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.IndexedSatisfiesStasheff}
-An \Ainf{}-category is an \Ainf{}-precategory together with a proof that its
-operations satisfy the Stasheff identities.
+\uses{AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.AInfinityCategory.stasheffSum_eq_zero}
+An \Ainf{}-category is an \Ainf{}-category structure whose operations satisfy the
+Stasheff identities in every positive arity.
 \end{definition}
 
-\begin{lemma}[Stasheff sum vanishes in an \Ainf{}-category]
-\lean{AInfinityTheory.AInfinityCategory.indexedStasheffSum_eq_zero}
-\label{AInfinityTheory.AInfinityCategory.indexedStasheffSum_eq_zero}
+\begin{proposition}[\Ainf{}-categories with vanishing higher operations]
+\lean{AInfinityTheory.AInfinityCategoryStruct.ofArityLeTwo, AInfinityTheory.AInfinityCategory.ofArityLeTwo}
+\label{AInfinityTheory.AInfinityCategory.ofArityLeTwo}
 \leanok
-\uses{AInfinityTheory.AInfinityCategory, AInfinityTheory.indexedStasheffSum}
-For an \Ainf{}-category, every Stasheff sum computed from the structure maps is
-equal to zero.
-\end{lemma}
+\uses{AInfinityTheory.AInfinityCategory, AInfinityTheory.stasheffSum}
+Let $m_1$ be a family of graded linear maps of degree $\mathbf{1}$ and $m_2$ a family of
+bilinear maps of degree $0$, and set $m_n = 0$ for $n \geq 3$. Then $(m_n)$ satisfies the Stasheff identities
+as soon as it does so in arities $1$, $2$ and $3$, that is, as soon as $m_1^2 = 0$, $m_1$ is a
+derivation of $m_2$, and $m_2$ is associative, all with Koszul signs.
+\end{proposition}
+
 \begin{proof}
 \leanok
-This is the Stasheff identity that is part of the data of an \Ainf{}-category.
+In arity $n \geq 4$, each Stasheff term $m_{r+1+t}(\dots, m_s(\dots), \dots)$ has
+$s + (r + 1 + t) = n + 1 \geq 5$, so one of its two operations has arity at least $3$ and
+vanishes. In arity $3$, the four terms with an operation of arity $3$ vanish, and the remaining
+two form the associativity identity.
+\end{proof}
+
+\begin{proposition}[DG categories are \Ainf{}-categories]
+\lean{AInfinityTheory.DGCategory.aInfinityCategory}
+\label{AInfinityTheory.DGCategory.aInfinityCategory}
+\leanok
+\uses{AInfinityTheory.AInfinityCategory.ofArityLeTwo}
+Let $\mathcal{C}$ be a category enriched over cochain complexes of $R$-modules. For $a$ of
+degree $p$ and $b$ of degree $q$, set $m_1(a) = (-1)^p\, da$ and $m_2(a, b) = (-1)^q\, a b$,
+and $m_n = 0$ for $n \geq 3$. Here $ab$ is the composite of $a$ followed by $b$, in
+diagrammatic order. This is an \Ainf{}-category with grading $\mathbb{Z}$.
+\end{proposition}
+
+\begin{proof}
+\leanok
+By the previous proposition, it suffices to check the identities in arities $1$, $2$ and $3$.
+The first is $d^2 = 0$. The second follows from the Leibniz rule
+$d(ab) = (da)b + (-1)^p a\, db$, which is how the differential of the tensor product of
+complexes is defined. For the third, if $c$ has degree $r$, then associativity of composition
+gives $m_2(m_2(a, b), c) = (-1)^r m_2(a, m_2(b, c))$, and the Koszul sign $(-1)^{r-1}$ of $c$
+makes the two Stasheff terms cancel.
+\end{proof}
+
+\begin{proposition}[Linear categories are \Ainf{}-categories]
+\lean{AInfinityTheory.GradedLinearQuiver.ofLinearCategory, AInfinityTheory.AInfinityCategory.ofLinearCategory}
+\label{AInfinityTheory.AInfinityCategory.ofLinearCategory}
+\leanok
+\uses{AInfinityTheory.AInfinityCategory.ofArityLeTwo}
+Let $\mathcal{C}$ be an $R$-linear category and $\beta$ a grading. Place all morphisms of
+$\mathcal{C}$ in degree $0$, and set $m_2(a, b) = ab$, the composite of $a$ followed by $b$,
+and $m_n = 0$ for $n \neq 2$. This is an \Ainf{}-category with grading $\beta$.
+\end{proposition}
+
+\begin{proof}
+\leanok
+By the proposition on vanishing higher operations, it suffices to check the identities in
+arities $1$, $2$ and $3$. Since $m_1 = 0$, the first two hold trivially. For the third, if $c$
+has degree $r \neq 0$ then $c = 0$; if $r = 0$, the Koszul sign $(-1)^{r-1} = -1$ of $c$ turns
+the identity into $(ab)c = a(bc)$, the associativity of composition.
 \end{proof}
 
 \section{A-infinity Functors}
@@ -108,16 +107,16 @@ string of objects $X_0,\dots,X_n$, a graded multilinear map
 \[
   \varphi_n : \Hom(X_0,X_1) \otimes \cdots \otimes \Hom(X_{n-1},X_n) \to \Hom(FX_0, FX_n)
 \]
-of degree $\operatorname{shift}(1-n)$, where a degree $b \in \beta$ on the left
+of degree $(1-n) \cdot \mathbf{1}$, where a degree $b \in \beta$ on the left
 corresponds to its image in $\beta'$ on the right. No relations are imposed.
 \end{definition}
 
 \begin{definition}[\Ainf{}-functor equations]
-\lean{AInfinityTheory.AInfinityFunctorData.mapCompSum, AInfinityTheory.AInfinityFunctorData.compMapSum, AInfinityTheory.AInfinityFunctorData.SatisfiesFunctorEquations}
-\label{AInfinityTheory.AInfinityFunctorData.SatisfiesFunctorEquations}
+\lean{AInfinityTheory.AInfinityFunctorData.mapCompSum, AInfinityTheory.AInfinityFunctorData.compMapSum, AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum}
+\label{AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum}
 \leanok
-\uses{AInfinityTheory.AInfinityFunctorData, AInfinityTheory.AInfinityComposition, AInfinityTheory.signedStasheffSum, AInfinityTheory.operationTargetDeg}
-Fix \Ainf{}-compositions $m$ on the source and $m'$ on the target. For composable
+\uses{AInfinityTheory.AInfinityFunctorData, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.signedStasheffSum, AInfinityTheory.operationTargetDeg}
+Fix \Ainf{}-category structures with operations $m$ on the source and $m'$ on the target. For composable
 inputs $a_1,\dots,a_n$, the left-hand side of the arity-$n$ functor equation is
 the signed Stasheff sum
 \[
@@ -140,7 +139,7 @@ every string of objects, choice of input degrees and composable inputs.
 \lean{AInfinityTheory.AInfinityFunctor}
 \label{AInfinityTheory.AInfinityFunctor}
 \leanok
-\uses{AInfinityTheory.AInfinityCategory, AInfinityTheory.AInfinityFunctorData.SatisfiesFunctorEquations}
+\uses{AInfinityTheory.AInfinityCategory, AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum}
 An \Ainf{}-functor between \Ainf{}-categories is \Ainf{}-functor data that
 satisfies the \Ainf{}-functor equations for the structure maps of the two
 categories.

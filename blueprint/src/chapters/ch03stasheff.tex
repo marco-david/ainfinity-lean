@@ -10,10 +10,10 @@
 Given input degrees $(d_0,\dots,d_{n-1})$ in a grading $\beta$, the
 output degree of the $n$-ary operation is
 \[
-  \sum_i d_i + \operatorname{shift}(2-n),
+  \sum_i d_i + (2-n) \cdot \mathbf{1},
 \]
-where the final summand is the image of the integer $2-n$ under the shift
-homomorphism $\mathbb{Z} \to \beta$.
+where the final summand is the $(2-n)$-fold multiple of the degree one
+$\mathbf{1} \in \beta$.
 \end{definition}
 
 \begin{definition}[Stasheff target degree]
@@ -23,32 +23,32 @@ homomorphism $\mathbb{Z} \to \beta$.
 \uses{AInfinityTheory.Grading}
 The common degree of the arity-$n$ Stasheff identity is
 \[
-  \sum_i d_i + \operatorname{shift}(3-n)
+  \sum_i d_i + (3-n) \cdot \mathbf{1}
 \]
 in the grading.
 \end{definition}
 
-\begin{definition}[Composable morphism type]
-\lean{AInfinityTheory.GradedLinearQuiver.ComposableHomType}
-\label{AInfinityTheory.GradedLinearQuiver.ComposableHomType}
+\begin{definition}[Composable hom space]
+\lean{AInfinityTheory.GradedLinearQuiver.ComposableHom}
+\label{AInfinityTheory.GradedLinearQuiver.ComposableHom}
 \leanok
 \uses{AInfinityTheory.GradedLinearQuiver}
-For a string of objects $X_0,\dots,X_n$, an index $i < n$ and a degree $b$,
-this is the hom-module $\Hom(X_i, X_{i+1})_b$ of the $i$-th morphism in that
-composable string, in degree $b$.
+For a string of objects $X_0,\dots,X_n$ and an index $i < n$, this is the graded
+hom-module $\Hom(X_i, X_{i+1})$ of the $i$-th morphism in that composable string,
+whose degree-$b$ piece is $\Hom(X_i, X_{i+1})_b$.
 \end{definition}
 
-\begin{definition}[\Ainf{}-composition]
-\lean{AInfinityTheory.AInfinityComposition}
-\label{AInfinityTheory.AInfinityComposition}
+\begin{definition}[\Ainf{}-operation]
+\lean{AInfinityTheory.AInfinityOperation}
+\label{AInfinityTheory.AInfinityOperation}
 \leanok
-\uses{AInfinityTheory.operationTargetDeg, AInfinityTheory.GradedLinearQuiver.ComposableHomType, AInfinityTheory.GradedMultilinearMap}
-An \Ainf{}-composition on a graded quiver $\Hom$ assigns to every positive arity
-$n$ and every string of objects $X_0,\dots,X_n$ a graded multilinear map
+\uses{AInfinityTheory.operationTargetDeg, AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.GradedMultilinearMap}
+An $n$-ary \Ainf{}-operation on a string of objects $X_0,\dots,X_n$ of a graded
+quiver $\Hom$ is a graded multilinear map
 \[
   m_n : \Hom(X_0,X_1) \times \cdots \times \Hom(X_{n-1},X_n) \to \Hom(X_0,X_n)
 \]
-of degree $\operatorname{shift}(2-n)$. Thus for input degrees
+of degree $(2-n) \cdot \mathbf{1}$. Thus for input degrees
 $(d_0,\dots,d_{n-1})$ its component lands in any degree equal to the operation
 target degree.
 \end{definition}
@@ -66,11 +66,11 @@ nonempty interval of inputs fed to the inner operation.
 \end{definition}
 
 \begin{definition}[Indexed Stasheff term]
-\lean{AInfinityTheory.indexedStasheffTerm}
-\label{AInfinityTheory.indexedStasheffTerm}
+\lean{AInfinityTheory.stasheffTerm}
+\label{AInfinityTheory.stasheffTerm}
 \leanok
-\uses{AInfinityTheory.GradedLinearQuiver.ComposableHomType, AInfinityTheory.AInfinityComposition, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
-Fix an \Ainf{}-composition $m$. For a Stasheff index $(r,s,t)$ of arity $n$, the
+\uses{AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
+Fix an \Ainf{}-category structure with operations $m$. For a Stasheff index $(r,s,t)$ of arity $n$, the
 indexed Stasheff term is obtained by first applying the inner $s$-ary operation in
 positions $r,\dots,r+s-1$ and then applying the outer $(r+1+t)$-ary operation to
 the collapsed string. It lies in $\Hom(X_0,X_n)$ in any degree equal to the
@@ -84,13 +84,13 @@ Stasheff target degree.
 \uses{AInfinityTheory.Grading, AInfinityTheory.StasheffIndex}
 The sign $\pm 1$ attached to a Stasheff index $(r,s,t)$ is
 \[
-  \prod_{k=r+s}^{n-1} (-1)^{\|a_k\|},
+  \prod_{k=r+s+1}^{n} (-1)^{\|a_k\|},
   \qquad
-  \|a_k\| := |a_k| - \operatorname{shift}(1),
+  \|a_k\| := |a_k| - \mathbf{1},
 \]
-the product of the Koszul signs of the reduced degrees of the $t$ trailing
-inputs. Since the sign character is a homomorphism, this equals
-$(-1)^{|a_{r+s}| + \cdots + |a_{n-1}| - \operatorname{shift}(t)}$.
+for inputs $a_1,\dots,a_n$: the product of the Koszul signs of the reduced degrees of
+the $t$ trailing inputs. Since the sign character is a homomorphism, this equals
+$(-1)^{|a_{r+s+1}| + \cdots + |a_n| - t \cdot \mathbf{1}}$.
 \end{definition}
 
 \begin{definition}[Signed Stasheff sum]
@@ -109,10 +109,10 @@ with the Stasheff sign of each index. Both the Stasheff identities and the
 \end{definition}
 
 \begin{definition}[Indexed Stasheff sum]
-\lean{AInfinityTheory.indexedStasheffSum}
-\label{AInfinityTheory.indexedStasheffSum}
+\lean{AInfinityTheory.stasheffSum}
+\label{AInfinityTheory.stasheffSum}
 \leanok
-\uses{AInfinityTheory.indexedStasheffTerm, AInfinityTheory.signedStasheffSum, AInfinityTheory.stasheffTargetDeg}
+\uses{AInfinityTheory.stasheffTerm, AInfinityTheory.signedStasheffSum, AInfinityTheory.stasheffTargetDeg}
 The arity-$n$ Stasheff sum is the signed Stasheff sum of the indexed Stasheff terms
 over all Stasheff indices of arity $n$, that is, of all valid composites of an inner
 operation followed by an outer operation. It lies in $\Hom(X_0,X_n)$ in any degree
@@ -120,11 +120,11 @@ equal to the Stasheff target degree.
 \end{definition}
 
 \begin{definition}[Indexed Stasheff identities]
-\lean{AInfinityTheory.IndexedSatisfiesStasheff}
-\label{AInfinityTheory.IndexedSatisfiesStasheff}
+\lean{AInfinityTheory.AInfinityCategory.stasheffSum_eq_zero}
+\label{AInfinityTheory.AInfinityCategory.stasheffSum_eq_zero}
 \leanok
-\uses{AInfinityTheory.indexedStasheffSum}
-An \Ainf{}-composition satisfies the Stasheff identities if every indexed
-Stasheff sum vanishes, for every positive arity, string of objects, choice of
+\uses{AInfinityTheory.stasheffSum}
+The operations of an \Ainf{}-category structure satisfy the Stasheff identities if every
+indexed Stasheff sum vanishes, for every positive arity, string of objects, choice of
 input degrees and composable inputs.
 \end{definition}
