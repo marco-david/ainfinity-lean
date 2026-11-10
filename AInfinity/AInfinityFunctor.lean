@@ -73,14 +73,6 @@ open GradedLinearQuiver
 
 variable {n : ℕ}
 
-/-- Taking the product over each block of a composition `c` of `n`, and then over the blocks, is
-the same as taking the product over `Fin n`. -/
-@[to_additive /-- Summing over each block of a composition `c` of `n`, and then over the blocks,
-is the same as summing over `Fin n`. -/]
-lemma _root_.Composition.prod_prod_embedding {M : Type*} [CommMonoid M] (c : Composition n)
-    (f : Fin n → M) : ∏ l, ∏ j, f (c.embedding l j) = ∏ i, f i :=
-  (Fintype.prod_sigma _).symm.trans (c.blocksFinEquiv.prod_comp f)
-
 section Degrees
 
 variable {β : Type*} [AddCommGroup β] [Grading β]
@@ -110,9 +102,9 @@ k blocks of c, has the degree of mₙ(a₁, …, aₙ). -/
 lemma operationTargetDeg_functorTargetDeg_embedding (c : Composition n) :
     operationTargetDeg (fun l ↦ functorTargetDeg fun j ↦ deg (c.embedding l j)) =
       operationTargetDeg deg := by
-  simp only [operationTargetDeg, functorTargetDeg, Finset.sum_add_distrib, c.sum_sum_embedding,
-    add_assoc, ← GradingHom.ofInt_apply, ← map_sum, ← map_add, Finset.sum_sub_distrib,
-    ← Nat.cast_sum]
+  simp only [operationTargetDeg, functorTargetDeg, Finset.sum_add_distrib,
+    c.sum_sum_apply_embedding, add_assoc, ← GradingHom.ofInt_apply, ← map_sum, ← map_add,
+    Finset.sum_sub_distrib, ← Nat.cast_sum]
   simp
 
 end Degrees
