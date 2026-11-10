@@ -17,11 +17,15 @@ $$\sum_{r + s + t = n,\ s \ge 1} (-1)^{\|a_{r+s+1}\| + \dots + \|a_n\|}
   m_{r+1+t}(a_1, \dots, a_r, m_s(a_{r+1}, \dots, a_{r+s}), a_{r+s+1}, \dots, a_n) = 0,$$
 where ‖a‖ = |a| - 1 is the reduced degree.
 
-The index triples (r, s, t), the degree and object bookkeeping attached to them and the Koszul
-signs are in `AInfinity.StasheffIndex`.
+The index triples (r, s, t), the positions of the inputs and objects of the inner and outer
+operations, the degree bookkeeping and the Koszul signs are in `AInfinity.StasheffIndex`.
 
 ## Main definitions
 
+* `AInfinityTheory.stasheffInputsIn`, `AInfinityTheory.stasheffInputsOut`: the inputs of the
+  inner and of the outer operation of the (r, s, t) summand.
+* `AInfinityTheory.stasheffInner`, `AInfinityTheory.stasheffOuter`: the inner output and the
+  outer value of the (r, s, t) summand.
 * `AInfinityTheory.stasheffTerm`: the (r, s, t) summand of the Stasheff sum.
 * `AInfinityTheory.stasheffSum`: the signed Stasheff sum in arity n.
 
@@ -42,220 +46,126 @@ namespace AInfinityTheory
 
 universe u v w
 
-variable {β : Type v} [AddCommGroup β] [Grading β]
-variable {n : ℕ}
-
 open GradedLinearQuiver
-
-variable {R : Type u} [CommRing R] {Obj : Type w}
-variable (X : Fin (n + 1) → Obj) (deg : Fin n → β)
-
-section GradedLinearQuiver
-
-variable [GradedLinearQuiver β R Obj]
-variable (x : ∀ i : Fin n, ComposableHom β R X i (deg i))
-variable (p : StasheffIndex n)
-
-/-! From here on, `X` and `deg` are inferred from the inputs `x`; declarations that do not take
-`x` bind them explicitly. -/
-
-variable {X deg}
-
-/-- The inputs of the inner operation mₛ of the (r, s, t) summand: the s inputs after the
-first r. -/
-def stasheffInputsIn :
-    ∀ j : Fin p.s, ComposableHom β R (stasheffObjIn X p) j (stasheffDegIn deg p j) :=
-  fun j => x (((j.natAdd p.r).castAdd p.t).cast p.sum_eq)
-
-omit [AddCommGroup β] [Grading β] in
-@[simp]
-lemma stasheffInputsIn_apply
-    (j : Fin p.s) :
-    stasheffInputsIn x p j = x (((j.natAdd p.r).castAdd p.t).cast p.sum_eq) :=
-  rfl
-
-/-- The position r (counting from 0) of the inner output among the inputs of the outer
-operation, of arity r + 1 + t. -/
-abbrev stasheffMiddleIndex : Fin (p.r + 1 + p.t) :=
-  (Fin.last p.r).castAdd p.t
-
-variable (R X deg) in
-/-- Before the inserted block, the space of an original input is identified with the
-corresponding outer input space. -/
-def stasheffInputsOutEquivLeft
-    (j : Fin p.r) :
-    ComposableHom β R X (((j.castAdd p.s).castAdd p.t).cast p.sum_eq)
-        (deg (((j.castAdd p.s).castAdd p.t).cast p.sum_eq)) ≃ₗ[R]
-      ComposableHom β R (stasheffObjOut X p) (j.castSucc.castAdd p.t)
-        (stasheffDegOut deg p (j.castSucc.castAdd p.t)) :=
-  homCongr R (stasheffObjOut_left X p j.castSucc).symm
-    (stasheffObjOut_left X p j.succ).symm (stasheffDegOut_left deg p j).symm
-
-variable (R X) in
-/-- At the inserted block, the space of the inner output is identified with the outer middle
-input space, in any degree `d`. -/
-def stasheffInputsOutEquivMiddle
-    (d : β) :
-    (stasheffObjIn X p 0 →ᵍ[R] stasheffObjIn X p (Fin.last p.s)) d ≃ₗ[R]
-      ComposableHom β R (stasheffObjOut X p) (stasheffMiddleIndex p) d :=
-  homCongr R (stasheffObjOut_left X p (Fin.last p.r)).symm
-    (stasheffObjOut_right X p 0).symm rfl
-
-variable (R X deg) in
-/-- After the inserted block, the space of an original input is identified with the
-corresponding outer input space. -/
-def stasheffInputsOutEquivRight
-    (k : Fin p.t) :
-    ComposableHom β R X ((k.natAdd (p.r + p.s)).cast p.sum_eq)
-        (deg ((k.natAdd (p.r + p.s)).cast p.sum_eq)) ≃ₗ[R]
-      ComposableHom β R (stasheffObjOut X p) (k.natAdd (p.r + 1))
-        (stasheffDegOut deg p (k.natAdd (p.r + 1))) :=
-  homCongr R (stasheffObjOut_right X p k.castSucc).symm
-    (stasheffObjOut_right X p k.succ).symm (stasheffDegOut_right deg p k).symm
-
-variable (R X) in
-/-- The identification of the target hom space of the outer operation with the hom space from
-`X 0` to `X (Fin.last n)`, in any degree `d`. -/
-def stasheffTargetEquiv
-    (d : β) :
-    (stasheffObjOut X p 0 →ᵍ[R] stasheffObjOut X p (Fin.last (p.r + 1 + p.t))) d
-      ≃ₗ[R] (X 0 →ᵍ[R] X (Fin.last n)) d :=
-  homCongr R (stasheffObjOut_zero X p) (stasheffObjOut_last X p) rfl
-
-end GradedLinearQuiver
-
-section AInfinityCategoryStruct
-
 open AInfinityCategoryStruct (m)
 
-variable [AInfinityCategoryStruct β R Obj]
-variable (x : ∀ i : Fin n, ComposableHom β R X i (deg i))
-variable (p : StasheffIndex n)
-variable {X deg}
+variable {β : Type v} [AddCommGroup β] [Grading β]
+variable {R : Type u} [CommRing R] {Obj : Type w} [AInfinityCategoryStruct β R Obj]
+variable {n : ℕ} {X : Fin (n + 1) → Obj} {deg : Fin n → β}
+variable (x : ∀ i : Fin n, ComposableHom β R X i (deg i)) (p : StasheffIndex n)
 
-/-- Rewriting the degree function and transporting each input does not change the value of `m`. -/
-lemma m_homCongr_deg
-    [NeZero n]
-    {deg deg' : Fin n → β}
-    (hdeg : deg = deg')
-    (x : ∀ i : Fin n, ComposableHom β R X i (deg i))
-    {d : β}
-    (hd : operationTargetDeg deg = d)
-    (hd' : operationTargetDeg deg' = d) :
-    (m X).v deg' d hd' (fun i => homCongr R rfl rfl (congrFun hdeg i) (x i)) =
-      (m X).v deg d hd x := by
-  subst hdeg
+/-- The inputs of the inner operation mₛ of the (r, s, t) summand: the s inputs after the
+first r, as morphisms between the objects of the inner operation. -/
+def stasheffInputsIn :
+    ∀ j : Fin p.s, ComposableHom β R (fun a ↦ X (p.innerObjEmb a)) j (deg (p.innerEmb j)) :=
+  fun j ↦ x (p.innerEmb j)
+
+@[simp]
+lemma stasheffInputsIn_apply (j : Fin p.s) : stasheffInputsIn x p j = x (p.innerEmb j) :=
   rfl
 
 /-- The inner output of the (r, s, t) summand, mₛ applied to the s inputs after the first r,
 in any degree `d` equal to its degree `stasheffInnerDeg deg p`. -/
-def stasheffInner
-    (d : β)
-    (hd : stasheffInnerDeg deg p = d) :
-    (stasheffObjIn X p 0 →ᵍ[R] stasheffObjIn X p (Fin.last p.s)) d :=
-  (m (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd (stasheffInputsIn x p)
+def stasheffInner (d : β) (hd : stasheffInnerDeg deg p = d) :
+    (X (p.innerObjEmb 0) →ᵍ[R] X (p.innerObjEmb (Fin.last p.s))) d :=
+  (m fun a ↦ X (p.innerObjEmb a)).v (fun j ↦ deg (p.innerEmb j)) d hd (stasheffInputsIn x p)
 
-/-- The inputs of the outer operation of the (r, s, t) summand: the first r
-inputs, then the inner output, then the last t inputs. -/
+/-- The inputs of the outer operation of the (r, s, t) summand: the first r inputs, then the
+inner output, then the last t inputs, each transported to the hom space between the
+corresponding objects of the outer operation. -/
 def stasheffInputsOut :
     ∀ a : Fin (p.r + 1 + p.t),
-      ComposableHom β R (stasheffObjOut X p) a (stasheffDegOut deg p a) :=
+      ComposableHom β R (fun a ↦ X (p.outerObjEmb a)) a (stasheffDegOut deg p a) :=
   Fin.addCases
     (Fin.snoc
-      (fun j => stasheffInputsOutEquivLeft R X deg p j
-        (x (((j.castAdd p.s).castAdd p.t).cast p.sum_eq)))
-      (stasheffInputsOutEquivMiddle R X p _
+      (fun j ↦ homCongr R (congrArg X (p.outerObjEmb_left_castSucc j)).symm
+        (congrArg X (p.outerObjEmb_left_succ j)).symm (stasheffDegOut_left deg p j).symm
+        (x (p.leftEmb j)))
+      (homCongr R (congrArg X p.outerObjEmb_middle_castSucc).symm
+        (congrArg X p.outerObjEmb_middle_succ).symm rfl
         (stasheffInner x p _ (stasheffDegOut_middle deg p).symm)))
-    (fun k => stasheffInputsOutEquivRight R X deg p k
-      (x ((k.natAdd (p.r + p.s)).cast p.sum_eq)))
+    fun k ↦ homCongr R (congrArg X (p.outerObjEmb_right_castSucc k)).symm
+      (congrArg X (p.outerObjEmb_right_succ k)).symm (stasheffDegOut_right deg p k).symm
+      (x (p.rightEmb k))
 
 @[simp]
-lemma stasheffInputsOut_left
-    (j : Fin p.r) :
+lemma stasheffInputsOut_left (j : Fin p.r) :
     stasheffInputsOut x p (j.castSucc.castAdd p.t) =
-      stasheffInputsOutEquivLeft R X deg p j
-        (x (((j.castAdd p.s).castAdd p.t).cast p.sum_eq)) := by
+      homCongr R (congrArg X (p.outerObjEmb_left_castSucc j)).symm
+        (congrArg X (p.outerObjEmb_left_succ j)).symm (stasheffDegOut_left deg p j).symm
+        (x (p.leftEmb j)) := by
   simp [stasheffInputsOut]
 
 @[simp]
-lemma stasheffInputsOut_right
-    (k : Fin p.t) :
+lemma stasheffInputsOut_right (k : Fin p.t) :
     stasheffInputsOut x p (k.natAdd (p.r + 1)) =
-      stasheffInputsOutEquivRight R X deg p k (x ((k.natAdd (p.r + p.s)).cast p.sum_eq)) := by
+      homCongr R (congrArg X (p.outerObjEmb_right_castSucc k)).symm
+        (congrArg X (p.outerObjEmb_right_succ k)).symm (stasheffDegOut_right deg p k).symm
+        (x (p.rightEmb k)) := by
   simp [stasheffInputsOut]
 
 @[simp]
 lemma stasheffInputsOut_middle :
-    stasheffInputsOut x p (stasheffMiddleIndex p) =
-      stasheffInputsOutEquivMiddle R X p _
+    stasheffInputsOut x p p.middleIndex =
+      homCongr R (congrArg X p.outerObjEmb_middle_castSucc).symm
+        (congrArg X p.outerObjEmb_middle_succ).symm rfl
         (stasheffInner x p _ (stasheffDegOut_middle deg p).symm) := by
   simp [stasheffInputsOut]
 
 lemma stasheffInputsOut_middle_eq_zero_of_inner_eq_zero
     (hinner : ∀ d hd, stasheffInner x p d hd = 0) :
-    stasheffInputsOut x p (stasheffMiddleIndex p) = 0 := by
+    stasheffInputsOut x p p.middleIndex = 0 := by
   rw [stasheffInputsOut_middle, hinner, map_zero]
 
 /-- The outer value of the (r, s, t) summand: the operation of arity r + 1 + t applied to
 `stasheffInputsOut x p`, in any degree `d` equal to its degree. -/
-def stasheffOuter
-    (d : β)
-    (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
-    (stasheffObjOut X p 0 →ᵍ[R] stasheffObjOut X p (Fin.last (p.r + 1 + p.t))) d :=
-  (m (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd (stasheffInputsOut x p)
+def stasheffOuter (d : β) (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
+    (X (p.outerObjEmb 0) →ᵍ[R] X (p.outerObjEmb (Fin.last (p.r + 1 + p.t)))) d :=
+  (m fun a ↦ X (p.outerObjEmb a)).v (stasheffDegOut deg p) d hd (stasheffInputsOut x p)
 
 /-- The (r, s, t) summand of the Stasheff sum, without its Koszul sign: the outer value
 `stasheffOuter`, transported to the hom space from `X 0` to `X (Fin.last n)`, in any degree `d`
 equal to the Stasheff target degree. -/
-def stasheffTerm
-    (d : β)
-    (hd : stasheffTargetDeg deg = d) :
-    (X 0 →ᵍ[R] X (Fin.last n)) d :=
-  stasheffTargetEquiv R X p d
+def stasheffTerm (d : β) (hd : stasheffTargetDeg deg = d) : (X 0 →ᵍ[R] X (Fin.last n)) d :=
+  homCongr R (congrArg X p.outerObjEmb_zero) (congrArg X p.outerObjEmb_last) rfl
     (stasheffOuter x p d ((stasheffDegOut_sum deg p).trans hd))
 
 lemma stasheffInner_eq_zero_of_map_eq_zero
-    (hm : ∀ d hd, (m (R := R) (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd = 0)
-    (d : β)
-    (hd : stasheffInnerDeg deg p = d) :
+    (hm : ∀ d hd,
+      (m (R := R) fun a ↦ X (p.innerObjEmb a)).v (fun j ↦ deg (p.innerEmb j)) d hd = 0)
+    (d : β) (hd : stasheffInnerDeg deg p = d) :
     stasheffInner x p d hd = 0 := by
-  simp [stasheffInner, hm d hd]
+  rw [stasheffInner, hm, zero_apply]
 
 lemma stasheffOuter_eq_zero_of_map_eq_zero
-    (hm : ∀ d hd, (m (R := R) (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd = 0)
-    (d : β)
-    (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
+    (hm : ∀ d hd, (m (R := R) fun a ↦ X (p.outerObjEmb a)).v (stasheffDegOut deg p) d hd = 0)
+    (d : β) (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
     stasheffOuter x p d hd = 0 := by
   rw [stasheffOuter, hm, zero_apply]
 
 lemma stasheffOuter_eq_zero_of_inner_eq_zero
     (hinner : ∀ d hd, stasheffInner x p d hd = 0)
-    (d : β)
-    (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
+    (d : β) (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
     stasheffOuter x p d hd = 0 :=
-  MultilinearMap.map_coord_zero ((m (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd)
-    (stasheffMiddleIndex p)
-    (stasheffInputsOut_middle_eq_zero_of_inner_eq_zero x p hinner)
+  MultilinearMap.map_coord_zero ((m fun a ↦ X (p.outerObjEmb a)).v (stasheffDegOut deg p) d hd)
+    p.middleIndex (stasheffInputsOut_middle_eq_zero_of_inner_eq_zero x p hinner)
 
-lemma stasheffTerm_eq_zero_iff_outer_eq_zero
-    (d : β)
-    (hd : stasheffTargetDeg deg = d) :
+lemma stasheffTerm_eq_zero_iff_outer_eq_zero (d : β) (hd : stasheffTargetDeg deg = d) :
     stasheffTerm x p d hd = 0 ↔
       stasheffOuter x p d ((stasheffDegOut_sum deg p).trans hd) = 0 :=
-  (stasheffTargetEquiv R X p d).map_eq_zero_iff
+  (homCongr R (congrArg X p.outerObjEmb_zero) (congrArg X p.outerObjEmb_last) rfl).map_eq_zero_iff
 
 lemma stasheffTerm_eq_zero_of_outer_map_eq_zero
-    (hm : ∀ d hd, (m (R := R) (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd = 0)
-    (d : β)
-    (hd : stasheffTargetDeg deg = d) :
+    (hm : ∀ d hd, (m (R := R) fun a ↦ X (p.outerObjEmb a)).v (stasheffDegOut deg p) d hd = 0)
+    (d : β) (hd : stasheffTargetDeg deg = d) :
     stasheffTerm x p d hd = 0 :=
   (stasheffTerm_eq_zero_iff_outer_eq_zero x p d hd).2
     (stasheffOuter_eq_zero_of_map_eq_zero x p hm _ _)
 
 lemma stasheffTerm_eq_zero_of_inner_map_eq_zero
-    (hm : ∀ d hd, (m (R := R) (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd = 0)
-    (d : β)
-    (hd : stasheffTargetDeg deg = d) :
+    (hm : ∀ d hd,
+      (m (R := R) fun a ↦ X (p.innerObjEmb a)).v (fun j ↦ deg (p.innerEmb j)) d hd = 0)
+    (d : β) (hd : stasheffTargetDeg deg = d) :
     stasheffTerm x p d hd = 0 :=
   (stasheffTerm_eq_zero_iff_outer_eq_zero x p d hd).2
     (stasheffOuter_eq_zero_of_inner_eq_zero x p
@@ -263,10 +173,7 @@ lemma stasheffTerm_eq_zero_of_inner_map_eq_zero
 
 /-- The full Stasheff sum in arity n, with Koszul signs, in any degree `d` equal to the
 Stasheff target degree. -/
-def stasheffSum
-    (d : β)
-    (hd : stasheffTargetDeg deg = d) :
-    (X 0 →ᵍ[R] X (Fin.last n)) d :=
+def stasheffSum (d : β) (hd : stasheffTargetDeg deg = d) : (X 0 →ᵍ[R] X (Fin.last n)) d :=
   signedStasheffSum deg fun q => stasheffTerm x q d hd
 
 /-- If `m` vanishes in every arity outside `S`, a Stasheff term vanishes unless both its
@@ -332,7 +239,5 @@ lemma stasheffSum_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 → β}
   simp only [stasheffSign, Fin.prod_univ_two, Fin.prod_univ_one, Fin.prod_univ_zero,
     one_smul, add_assoc]
   rfl
-
-end AInfinityCategoryStruct
 
 end AInfinityTheory
