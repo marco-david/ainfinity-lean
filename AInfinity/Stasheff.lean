@@ -50,7 +50,7 @@ open GradedLinearQuiver
 open AInfinityCategoryStruct (m)
 
 variable {β : Type v} [AddCommGroup β] [Grading β]
-variable {R : Type u} [CommRing R] {Obj : Type w} [AInfinityCategoryStruct β R Obj]
+variable {R : Type u} [Semiring R] {Obj : Type w} [AInfinityCategoryStruct β R Obj]
 variable {n : ℕ} {X : Fin (n + 1) → Obj} {deg : Fin n → β}
 variable (x : ∀ i : Fin n, ComposableHom β R X i (deg i)) (p : StasheffIndex n)
 

@@ -28,7 +28,7 @@ universe u v w
 section
 
 variable (β : Type v)
-variable (R : Type u) [CommRing R]
+variable (R : Type u) [Semiring R]
 variable (Obj : Type w)
 variable [AddCommGroup β] [Grading β]
 
