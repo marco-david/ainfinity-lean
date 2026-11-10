@@ -123,8 +123,8 @@ status:
     chapter 5) are not formalized yet.
   # Counts come from a source scan for `sorry`. They were not checked with
   # `#print axioms`.
-  sorry_count: 23
-  sorry_in_definitions: 20
+  sorry_count: 22
+  sorry_in_definitions: 19
   axioms:
     - "propext"
     - "Classical.choice"

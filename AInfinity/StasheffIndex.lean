@@ -202,7 +202,7 @@ variable (deg) in
 /-- The Koszul sign of the Stasheff term indexed by p = (r, s, t): (-1) raised to the sum of
 the reduced degrees ‖a‖ = |a| - 1 of the last t inputs. -/
 def stasheffSign : ℤˣ :=
-  ∏ k : Fin p.t, sign (deg ((k.natAdd (p.r + p.s)).cast p.sum_eq) - degOne)
+  ∏ k : Fin p.t, (sign (deg ((k.natAdd (p.r + p.s)).cast p.sum_eq) - degOne)).toMul
 
 variable (deg) in
 /-- The signed sum `∑ p, stasheffSign deg p • f p` over the index triples `p : StasheffIndex n`

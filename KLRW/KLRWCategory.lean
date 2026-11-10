@@ -51,7 +51,7 @@ lemma idem_is_idem (M : KLRWObject parameters) :
 lemma id_mul_left {X Y : KLRWObject parameters} (f : KLRWAlg R parameters)
     (hf : f ∈ KLRWHom R X Y) : idem_morph R Y * f = f := by
   obtain ⟨a, ha⟩ := hf
-  dsimp [LinearMap.mulLeft, LinearMap.mulRight, LinearMap.comp] at ha
+  simp only [LinearMap.comp_apply, LinearMap.mulLeft_apply, LinearMap.mulRight_apply] at ha
   rw [← ha, ← mul_assoc, idem_is_idem]
 
 
@@ -60,7 +60,7 @@ lemma id_mul_left {X Y : KLRWObject parameters} (f : KLRWAlg R parameters)
 lemma id_mul_right {X Y : KLRWObject parameters} (f : KLRWAlg R parameters)
     (hf : f ∈ KLRWHom R X Y) : f * idem_morph R X = f := by
   obtain ⟨a, ha⟩ := hf
-  dsimp [LinearMap.mulLeft, LinearMap.mulRight, LinearMap.comp] at ha
+  simp only [LinearMap.comp_apply, LinearMap.mulLeft_apply, LinearMap.mulRight_apply] at ha
   rw [← ha, ← mul_assoc, mul_assoc, idem_is_idem]
 
 

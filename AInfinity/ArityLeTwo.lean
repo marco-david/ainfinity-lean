@@ -94,7 +94,7 @@ lemma stasheffSum_eq_zero_of_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 �
     (x : ∀ i : Fin 1, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
     letI := ofArityLeTwo f g
     stasheffSum x d hd = 0 := by
-  letI := ofArityLeTwo f g
+  let := ofArityLeTwo f g
   rw [stasheffSum_arity_one]
   exact differential_differential (X 0) (X 1) _ _ (x 0)
 
@@ -104,7 +104,7 @@ lemma stasheffSum_eq_zero_of_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 �
     (x : ∀ i : Fin 2, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
     letI := ofArityLeTwo f g
     stasheffSum x d hd = 0 := by
-  letI := ofArityLeTwo f g
+  let := ofArityLeTwo f g
   rw [stasheffSum_arity_two]
   exact leibniz (X 0) (X 1) (X 2) _ _ _ _ (x 0) (x 1)
 
@@ -115,7 +115,7 @@ lemma stasheffSum_eq_zero_of_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 
     (x : ∀ i : Fin 3, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
     letI := ofArityLeTwo f g
     stasheffSum x d hd = 0 := by
-  letI := ofArityLeTwo f g
+  let := ofArityLeTwo f g
   have hm := fun (k : ℕ) [NeZero k] hk X ↦ m_eq_zero (β := β) (R := R) f g (k := k) hk X
   rw [stasheffSum_arity_three,
     stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm x ⟨0, 1, 2, rfl, le_rfl⟩ (by simp) d hd,

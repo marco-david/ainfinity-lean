@@ -38,6 +38,13 @@ lake env lean Path/To/File.lean   # check a single file
 Work is finished only when `lake build` succeeds with no errors and no warnings. The one
 allowed warning is "declaration uses `sorry`", and only where a `sorry` is permitted (see below).
 
+**Lean and Mathlib version.** `lean-toolchain` and `lake-manifest.json` pin a stable Lean and
+Mathlib release; `lakefile.toml` deliberately gives no `rev` for Mathlib. Bumps come from the
+`Update Mathlib` workflow (`.github/workflows/update.yml`, weekly or from the Actions tab),
+which opens one pull request per new stable release, built on the new toolchain. To do the
+same by hand, run `lake update` with the Mathlib `[[require]]` temporarily pinned
+(`rev = "v4.X.0"`), as the workflow does; a bare `lake update` moves Mathlib to `master`.
+
 ## File layout
 
 Each Lean file (other than the generated root files `Util.lean`,
