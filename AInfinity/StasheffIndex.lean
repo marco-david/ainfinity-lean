@@ -31,8 +31,10 @@ operations, their degrees, and the Koszul sign of the summand.
   positions of the objects of the inner and of the outer operation among the n + 1 objects.
 * `AInfinityTheory.StasheffIndex.middleIndex`: the position of the inner output among the inputs
   of the outer operation.
-* `AInfinityTheory.stasheffDegOut`: the input degrees of the outer operation of the (r, s, t)
-  summand.
+* `AInfinityTheory.stasheffObjIn`, `AInfinityTheory.stasheffObjOut`: the object strings of the
+  inner and of the outer operation of the (r, s, t) summand.
+* `AInfinityTheory.stasheffDegIn`, `AInfinityTheory.stasheffDegOut`: the input degrees of the
+  inner and of the outer operation of the (r, s, t) summand.
 * `AInfinityTheory.stasheffSign`: the Koszul sign of the (r, s, t) summand.
 * `AInfinityTheory.signedStasheffSum`: the sum of a family of (r, s, t) terms with these signs.
   Both the Stasheff identities and the A∞-functor equations are sums of this form.
@@ -49,7 +51,7 @@ operations, their degrees, and the Koszul sign of the summand.
 
 namespace AInfinityTheory
 
-universe v
+universe v w
 
 variable {n : ℕ}
 
@@ -270,14 +272,84 @@ lemma prod_leftEmb_mul_prod_innerEmb_mul_prod_rightEmb {M : Type*} [CommMonoid M
 
 end StasheffIndex
 
+section ObjectStrings
+
+variable {Obj : Type w} (X : Fin (n + 1) → Obj) (p : StasheffIndex n)
+
+/-- The object string of the inner operation of the (r, s, t) summand: the objects of `X`
+from position r to position r + s. -/
+def stasheffObjIn : Fin (p.s + 1) → Obj :=
+  fun a ↦ X (p.innerObjEmb a)
+
+/-- The object string of the outer operation of the (r, s, t) summand, obtained from `X` by
+deleting the objects strictly between positions r and r + s. -/
+def stasheffObjOut : Fin (p.r + 1 + p.t + 1) → Obj :=
+  fun a ↦ X (p.outerObjEmb a)
+
+/-- The outer object string starts at `X 0`. -/
+@[simp]
+lemma stasheffObjOut_zero : stasheffObjOut X p 0 = X 0 :=
+  congrArg X p.outerObjEmb_zero
+
+/-- The outer object string ends at `X (Fin.last n)`. -/
+@[simp]
+lemma stasheffObjOut_last : stasheffObjOut X p (Fin.last (p.r + 1 + p.t)) = X (Fin.last n) :=
+  congrArg X p.outerObjEmb_last
+
+/-- Before the inner output, the source of an outer input is the source of the original
+input. -/
+@[simp]
+lemma stasheffObjOut_left_castSucc (j : Fin p.r) :
+    stasheffObjOut X p (j.castSucc.castAdd p.t).castSucc = X (p.leftEmb j).castSucc :=
+  congrArg X (p.outerObjEmb_left_castSucc j)
+
+/-- Before the inner output, the target of an outer input is the target of the original
+input. -/
+@[simp]
+lemma stasheffObjOut_left_succ (j : Fin p.r) :
+    stasheffObjOut X p (j.castSucc.castAdd p.t).succ = X (p.leftEmb j).succ :=
+  congrArg X (p.outerObjEmb_left_succ j)
+
+/-- The source of the inner output, as an outer input, is the first inner object. -/
+@[simp]
+lemma stasheffObjOut_middle_castSucc :
+    stasheffObjOut X p p.middleIndex.castSucc = stasheffObjIn X p 0 :=
+  congrArg X p.outerObjEmb_middle_castSucc
+
+/-- The target of the inner output, as an outer input, is the last inner object. -/
+@[simp]
+lemma stasheffObjOut_middle_succ :
+    stasheffObjOut X p p.middleIndex.succ = stasheffObjIn X p (Fin.last p.s) :=
+  congrArg X p.outerObjEmb_middle_succ
+
+/-- After the inner output, the source of an outer input is the source of the original
+input. -/
+@[simp]
+lemma stasheffObjOut_right_castSucc (k : Fin p.t) :
+    stasheffObjOut X p (k.natAdd (p.r + 1)).castSucc = X (p.rightEmb k).castSucc :=
+  congrArg X (p.outerObjEmb_right_castSucc k)
+
+/-- After the inner output, the target of an outer input is the target of the original
+input. -/
+@[simp]
+lemma stasheffObjOut_right_succ (k : Fin p.t) :
+    stasheffObjOut X p (k.natAdd (p.r + 1)).succ = X (p.rightEmb k).succ :=
+  congrArg X (p.outerObjEmb_right_succ k)
+
+end ObjectStrings
+
 section Degrees
 
 variable {β : Type v} [AddCommGroup β] [Grading β] (deg : Fin n → β) (p : StasheffIndex n)
 
-/-- The degree of the output of the inner operation mₛ of the (r, s, t) summand: the degree
-of mₛ applied to the s inputs after the first r. -/
+/-- The input degrees of the inner operation mₛ of the (r, s, t) summand: the degrees of
+the s inputs after the first r. -/
+def stasheffDegIn : Fin p.s → β :=
+  fun j ↦ deg (p.innerEmb j)
+
+/-- The degree of the output of the inner operation mₛ of the (r, s, t) summand. -/
 abbrev stasheffInnerDeg : β :=
-  operationTargetDeg fun j ↦ deg (p.innerEmb j)
+  operationTargetDeg (stasheffDegIn deg p)
 
 /-- The input degrees of the outer operation of the (r, s, t) summand: the degrees of the
 first r inputs, then the degree of the inner output, then the degrees of the last t inputs. -/
@@ -305,7 +377,7 @@ lemma stasheffDegOut_sum :
   have h : (n : ℤ) = p.r + p.s + p.t := by exact_mod_cast p.sum_eq.symm
   simp only [operationTargetDeg, stasheffTargetDeg, Fin.sum_univ_add, stasheffDegOut_left,
     stasheffDegOut_middle, stasheffDegOut_right, Fin.sum_univ_castSucc, stasheffInnerDeg,
-    ← p.sum_leftEmb_add_sum_innerEmb_add_sum_rightEmb deg]
+    stasheffDegIn, ← p.sum_leftEmb_add_sum_innerEmb_add_sum_rightEmb deg]
   rw [h]
   module
 
