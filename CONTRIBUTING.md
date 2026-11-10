@@ -21,6 +21,16 @@ lake exe cache get   # download prebuilt Mathlib
 lake build           # build all four libraries
 ```
 
+There is no Mathlib version to choose. `lean-toolchain` and `lake-manifest.json` fix it: Mathlib
+is pinned to the release tag named like the toolchain (`leanprover/lean4:v4.N.M` means Mathlib
+`v4.N.M`), elan installs that toolchain on first use, and the two commands above build against
+exactly that Mathlib. The API documentation that CI publishes includes Mathlib's docs for the
+pinned commit, so it is the version-matched reference, where the public Mathlib docs track
+`master`. Do not run a bare `lake update`: it moves Mathlib to `master` and the toolchain to a
+release candidate. Bumps come from the `Update Mathlib` workflow in the Actions tab, which opens
+a pull request per new stable release (the manual procedure is in [`AGENTS.md`](AGENTS.md)). To
+add a dependency, run `lake update <name>` for that package only.
+
 The repository layout is described in [`README.md`](README.md). The blueprint, in
 `blueprint/src/`, gives the mathematical roadmap. Before starting on a topic, look at the
 relevant chapter to see what is planned and what already exists.
