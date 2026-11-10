@@ -260,9 +260,9 @@ lemma differential_composition (X Y Z : C) {p q e p' q' d : ℤ} (h : p + q = e)
     (hp : p + 1 = p') (hq : q + 1 = q') (he : e + 1 = d)
     (a : (X →ᵍ[R] Y) p) (b : (Y →ᵍ[R] Z) q) :
     differential X Z e d (composition X Y Z p q e h a b) =
-      q.negOnePow • composition X Y Z p' q d (leibniz_deg_left h hp he)
+      q.negOnePow • composition X Y Z p' q d (hp ▸ he ▸ h ▸ add_right_comm p 1 q)
         (differential X Y p p' a) b -
-        composition X Y Z p q' d (leibniz_deg_right h hq he) a
+        composition X Y Z p q' d (hq ▸ he ▸ h ▸ (add_assoc p q 1).symm) a
           (differential Y Z q q' b) := by
   subst h hp hq he
   simp only [differential_apply, composition_apply, Units.smul_def, map_zsmul,
@@ -281,7 +281,7 @@ lemma composition_composition (W X Y Z : C) {p q r e e' d : ℤ} (h : p + q = e)
     (h' : q + r = e') (h₁ : e + r = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q)
     (c : (Y →ᵍ[R] Z) r) :
     composition W Y Z e r d h₁ (composition W X Y p q e h a b) c =
-      r.negOnePow • composition W X Z p e' d (assoc_deg h h' h₁) a
+      r.negOnePow • composition W X Z p e' d (h' ▸ h₁ ▸ h ▸ (add_assoc p q r).symm) a
         (composition X Y Z q r e' h' b c) := by
   subst h h' h₁
   simp only [composition_apply, Units.smul_def, map_zsmul, LinearMap.smul_apply, smul_smul,

@@ -45,29 +45,6 @@ universe u v w
 
 open GradedLinearQuiver
 
-section Degrees
-
-variable {β : Type v} [AddCommSemigroup β] {p q r e e' p' q' a d : β}
-
-/-- The degree equation of the term m₂(m₁(a), b) of the Leibniz rule: it has the degree of
-m₁(m₂(a, b)). -/
-lemma leibniz_deg_left (h : p + q = e) (hp : p + a = p') (he : e + a = d) : p' + q = d := by
-  subst h hp he
-  exact add_right_comm p a q
-
-/-- The degree equation of the term m₂(a, m₁(b)) of the Leibniz rule: it has the degree of
-m₁(m₂(a, b)). -/
-lemma leibniz_deg_right (h : p + q = e) (hq : q + a = q') (he : e + a = d) : p + q' = d := by
-  subst h hq he
-  exact (add_assoc p q a).symm
-
-/-- The degree equation of associativity: m₂(a, m₂(b, c)) has the degree of m₂(m₂(a, b), c). -/
-lemma assoc_deg (h : p + q = e) (h' : q + r = e') (h₁ : e + r = d) : p + e' = d := by
-  subst h h' h₁
-  exact (add_assoc p q r).symm
-
-end Degrees
-
 variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommSemiring R] {Obj : Type w}
   [GradedLinearQuiver β R Obj]
   (f : ∀ X Y : Obj, GradedLinearMap R (X →ᵍ[R, β] Y) (X →ᵍ[R] Y) degOne)
@@ -84,9 +61,9 @@ variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommSemiring
     ∀ (X Y Z : Obj) {p q e p' q' d : β} (h : p + q = e)
       (hp : p + degOne = p') (hq : q + degOne = q') (he : e + degOne = d)
       (a : (X →ᵍ[R] Y) p) (b : (Y →ᵍ[R] Z) q),
-      (sign (q - degOne)).toMul • g X Y Z p' q d (leibniz_deg_left h hp he)
+      (sign (q - degOne)).toMul • g X Y Z p' q d (hp ▸ he ▸ h ▸ add_right_comm p degOne q)
           ((f X Y).v p p' hp a) b +
-        g X Y Z p q' d (leibniz_deg_right h hq he) a ((f Y Z).v q q' hq b) +
+        g X Y Z p q' d (hq ▸ he ▸ h ▸ (add_assoc p q degOne).symm) a ((f Y Z).v q q' hq b) +
         (f X Z).v e d he (g X Y Z p q e h a b) = 0)
 
 -- Arity 3: associativity of the composition.
@@ -94,7 +71,7 @@ variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommSemiring
     ∀ (W X Y Z : Obj) {p q r e e' d : β} (h : p + q = e) (h' : q + r = e')
       (h₁ : e + r = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q) (c : (Y →ᵍ[R] Z) r),
       (sign (r - degOne)).toMul • g W Y Z e r d h₁ (g W X Y p q e h a b) c +
-        g W X Z p e' d (assoc_deg h h' h₁) a (g X Y Z q r e' h' b c) = 0)
+        g W X Z p e' d (h' ▸ h₁ ▸ h ▸ (add_assoc p q r).symm) a (g X Y Z q r e' h' b c) = 0)
 
 /-- The A∞-category structure whose differential m₁ is given by the graded linear
 maps `f`, whose composition m₂ is given by the bilinear maps `g`, and whose higher

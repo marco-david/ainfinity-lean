@@ -100,7 +100,7 @@ lemma composition_composition (W X Y Z : C) {p q r e e' d : β} (h : p + q = e)
     (h' : q + r = e') (h₁ : e + r = d) (a : (W →ᵍ[R] X) p) (b : (X →ᵍ[R] Y) q)
     (c : (Y →ᵍ[R] Z) r) :
     (sign (r - degOne)).toMul • composition R W Y Z e r d h₁ (composition R W X Y p q e h a b) c +
-      composition R W X Z p e' d (assoc_deg h h' h₁) a
+      composition R W X Z p e' d (h' ▸ h₁ ▸ h ▸ (add_assoc p q r).symm) a
         (composition R X Y Z q r e' h' b c) = 0 := by
   rcases eq_or_ne r 0 with rfl | hr
   · have hs : (sign (0 - degOne : β)).toMul = -1 := by simp [Grading.sign_degOne]
