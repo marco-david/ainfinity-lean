@@ -38,6 +38,11 @@ operations, the degree bookkeeping and the Koszul signs are in `AInfinity.Stashe
 * `AInfinityTheory.stasheffSum_arity_one`, `AInfinityTheory.stasheffSum_arity_two`,
   `AInfinityTheory.stasheffSum_arity_three`: the Stasheff sums in arities 1, 2 and 3,
   written out term by term.
+
+## References
+
+* P. Seidel, *Fukaya categories and Picard–Lefschetz theory*, Zurich Lectures in Advanced
+  Mathematics, European Mathematical Society, 2008.
 -/
 
 @[expose] public section

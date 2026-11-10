@@ -12,12 +12,12 @@ public import Mathlib.Algebra.BigOperators.Group.Finset.Defs
 public import Mathlib.Data.Int.Cast.Lemmas
 public import Mathlib.Data.ZMod.IntUnitsPower
 
-/-! # Gradings for A-infinity categories
+/-! # Gradings for A∞-categories
 
-This file introduces the grading data needed to write down A-infinity structures.
+This file introduces the grading data needed to write down A∞-structures.
 
-The grading `β` of an A-infinity category is an abelian group of degrees. The
-A-infinity axioms only ever use two pieces of additional structure on it:
+The grading `β` of an A∞-category is an abelian group of degrees. The A∞ axioms only ever use
+two pieces of additional structure on it:
 
 * a distinguished *degree one* `degOne : β`, the degree of the differential; a degree `d` is
   *shifted by* an integer `n` by adding `n • degOne`;
@@ -25,16 +25,34 @@ A-infinity axioms only ever use two pieces of additional structure on it:
 
 They are compatible in that the differential, of degree `degOne`, is odd.
 
-Integer shifts are written with the `ℤ`-action `n • degOne` rather than through a cast
-`ℤ → β`, so that integer literals are never elaborated in `β`.
+A homomorphism of gradings is an additive homomorphism preserving the degree one and the signs.
+It translates degrees when an A∞-functor changes the grading. Homomorphisms of gradings compose,
+with the identity as unit, and the integers are the initial grading.
 
-A homomorphism of gradings `GradingHom β β'`, written `β →+ᵍ β'`, is an additive
-homomorphism preserving the degree one and the signs. It translates degrees when an A-infinity
-functor changes the grading. Homomorphisms of gradings compose, with the identity as unit.
-The integers are the initial grading: `GradingHom.ofInt β : ℤ →+ᵍ β` is
-`fun n ↦ n • degOne`. The inclusion `inl` of the first factor into `β ×ᵗ γ` or `β ×ˡ γ`, the
-projection `fst` out of `β ×ˡ γ`, and their mirror images `inr` and `snd` for `β ×ʳ γ`, are
-homomorphisms of gradings.
+## Main definitions
+
+* `AInfinityTheory.Grading β`: a grading on the abelian group `β`.
+* `AInfinityTheory.GradingHom β β'`: the homomorphisms of gradings, with `GradingHom.id`,
+  `GradingHom.comp` and the unique homomorphism `GradingHom.ofInt β : ℤ →+ᵍ β`,
+  `fun n ↦ n • degOne`, out of the integers.
+* `AInfinityTheory.TProd`, `AInfinityTheory.LProd`, `AInfinityTheory.RProd`: the product
+  gradings `β ×ᵗ γ`, `β ×ˡ γ` and `β ×ʳ γ` on `β × γ`, with the total sign, with degree one and
+  sign in the first factor, and with degree one and sign in the second factor.
+* `AInfinityTheory.TProd.inl`, `AInfinityTheory.LProd.inl`, `AInfinityTheory.LProd.fst`,
+  `AInfinityTheory.RProd.inr`, `AInfinityTheory.RProd.snd`: the inclusions of a factor into a
+  product grading and the projections onto a factor that are homomorphisms of gradings.
+
+## Notation
+
+* `β →+ᵍ β'`: the type `GradingHom β β'` of homomorphisms of gradings.
+* `β ×ᵗ γ`, `β ×ˡ γ`, `β ×ʳ γ`: the product gradings `TProd β γ`, `LProd β γ` and `RProd β γ`.
+
+## Implementation notes
+
+Integer shifts are written with the `ℤ`-action `n • degOne` rather than through a cast
+`ℤ → β`, so that integer literals are never elaborated in `β`. Global instances are provided
+for the standard gradings `ℤ` and `ZMod 2` and for the three product gradings, which are type
+synonyms of `β × γ` since they are different gradings on the same abelian group.
 -/
 
 namespace AInfinityTheory

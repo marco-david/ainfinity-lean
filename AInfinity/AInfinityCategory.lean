@@ -17,6 +17,11 @@ satisfying the Stasheff identities.
 
 * `AInfinityTheory.AInfinityCategory β R Obj`: an A∞-category structure whose higher
   compositions satisfy the Stasheff identities.
+
+## References
+
+* P. Seidel, *Fukaya categories and Picard–Lefschetz theory*, Zurich Lectures in Advanced
+  Mathematics, European Mathematical Society, 2008.
 -/
 
 @[expose] public section
