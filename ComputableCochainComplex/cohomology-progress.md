@@ -69,3 +69,23 @@
   `sorry` warnings), and the root check passes. Axiom audits of the checker, calculator,
   boundary witnesses, rank formula, equivalences, and computed rational certificate report
   only `propext`, `Classical.choice`, and `Quot.sound`.
+
+## Induced maps
+
+- `CohomologyMap.lean` constructs the concrete kernel-quotient map of an existing short
+  complex map and proves its agreement with Mathlib using `LeftHomologyMapData`.
+  `KernelCertificate.presentationMap` transports it to the shared presentation coordinates.
+- `FreeCohomologyCertificate.mapMatrix` is the executable product of normalization,
+  cochain-map, and representative matrices. Its naturality, identity, and composition
+  theorems follow from the comparison with Mathlib homology.
+- `FiniteFreeCochainComplex.Hom.fieldCohomologyMatrix` accepts the original cochain map and
+  a requested integer degree. Its naturality theorem compares with the original complexes.
+- Examples now kernel-check a map acting by 2 on boundaries, 3 on cohomology, and 5 on
+  outgoing coordinates; a change of middle basis inducing -1; and maps and composition at
+  a negative degree of a gapped complex. All field examples compile.
+- The basis-change fixture uses explicit identity matrices: categorical identities on two
+  definitionally equal module objects caused excessive elaborator unfolding. This changes
+  no mathematical data and avoids weakening or dropping the change-of-basis test.
+- Full `lake build` passes (8338 jobs, only the eight pre-existing `sorry` warnings),
+  `mk_all --module --check` passes, and `git diff --check` is clean. The map-comparison and
+  composition axiom audits report only `propext`, `Classical.choice`, and `Quot.sound`.

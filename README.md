@@ -43,7 +43,11 @@ verified boundary preimages. For example, `certify_cohomology C at n` proves a g
 the calculation and the claimed dimension. `certify_cohomology A, B` accepts local matrices.
 The executable API is `ComputableCohomology.computeField A B`, or
 `C.computeFieldCohomology n`; each returns either a certificate with usable equivalences and
-representative maps or an explicit error. Integer reduction and induced maps are still in progress.
+representative maps or an explicit error. `CohomologyMap.lean` computes induced maps with
+`f.fieldCohomologyMatrix n source target` for an existing cochain map `f : C ⟶ D` and
+computed source/target certificates. The matrix acts by representing a class, applying
+`f.f n`, and normalizing; its naturality theorem identifies it with Mathlib's induced map.
+Identity and composition follow from that comparison. Integer reduction is still in progress.
 
 ### Project metadata and license
 

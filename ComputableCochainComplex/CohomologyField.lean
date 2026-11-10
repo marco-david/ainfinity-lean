@@ -203,8 +203,7 @@ def computeFieldCohomology :
 noncomputable def fieldCohomologyIso
     (result : ComputableCohomology.FreeCohomologyCertificate (C.incoming n) (C.d n)) :
     C.toCochainComplex.homology n ≅ ModuleCat.of R (Fin result.size → R) :=
-  C.cohomologyPresentationIso n result.kernel ≪≫
-    (result.quotient.quotientEquiv _ result.valid).toModuleIso
+  C.localHomologyIso n ≪≫ result.homologyIso
 
 end FiniteFreeCochainComplex
 

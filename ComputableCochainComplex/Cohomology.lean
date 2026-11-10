@@ -54,14 +54,20 @@ def localShortComplexIso :
     (by simp [ComputableCohomology.KernelCertificate.shortComplex, ShortComplex.moduleCatMk])
     (by simp [ComputableCohomology.KernelCertificate.shortComplex, ShortComplex.moduleCatMk])
 
+/-- Cohomology at a degree depends only on its two adjacent differential matrices. -/
+noncomputable def localHomologyIso :
+    C.toCochainComplex.homology n ≅
+      (ComputableCohomology.KernelCertificate.shortComplex
+        (C.incoming n) (C.d_mul_incoming n)).homology :=
+  C.toCochainComplex.homologyIsoSc' (n - 1) n (n + 1) (by simp) (by simp) ≪≫
+    ShortComplex.homologyMapIso (C.localShortComplexIso n)
+
 /-- Kernel coordinates compute Mathlib's cohomology in the requested degree. -/
 noncomputable def cohomologyPresentationIso
     (k : ComputableCohomology.KernelCertificate (C.d n)) :
     C.toCochainComplex.homology n ≅
       ModuleCat.of R ((Fin k.size → R) ⧸ LinearMap.range (k.retraction * C.incoming n).mulVecLin) :=
-  C.toCochainComplex.homologyIsoSc' (n - 1) n (n + 1) (by simp) (by simp) ≪≫
-    ShortComplex.homologyMapIso (C.localShortComplexIso n) ≪≫
-    k.homologyIso (C.incoming n) (C.d_mul_incoming n)
+  C.localHomologyIso n ≪≫ k.homologyIso (C.incoming n) (C.d_mul_incoming n)
 
 end FiniteFreeCochainComplex
 

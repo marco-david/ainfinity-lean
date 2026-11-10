@@ -5,7 +5,7 @@ Authors: Annie Yao
 -/
 module
 
-public import ComputableCochainComplex.CohomologyField
+public import ComputableCochainComplex.CohomologyMap
 
 /-!
 # Checks for certified cohomology
@@ -189,5 +189,82 @@ example : (rationalMiddle.boundaryPreimage ![3, 5, -8] (by decide +kernel)).isSo
 
 example : (computeField ( !![1] : Matrix (Fin 1) (Fin 1) ℚ) !![1]).toOption.isSome = false := by
   decide +kernel
+
+/-- This map scales boundaries by two, cohomology by three, and outgoing coordinates by five. -/
+def rationalMiddleMap : KernelCertificate.shortComplex _ rationalMiddle.square_zero ⟶
+    KernelCertificate.shortComplex _ rationalMiddle.square_zero where
+  τ₁ := ModuleCat.ofHom ( !![2] : Matrix (Fin 1) (Fin 1) ℚ).mulVecLin
+  τ₂ := ModuleCat.ofHom ( !![5, 2, 3; 0, 3, 0; 0, 0, 2] :
+    Matrix (Fin 3) (Fin 3) ℚ).mulVecLin
+  τ₃ := ModuleCat.ofHom (5 • (1 : Matrix (Fin 2) (Fin 2) ℚ)).mulVecLin
+  comm₁₂ := by
+    apply ModuleCat.hom_ext
+    change ( !![1; 0; -1] : Matrix (Fin 3) (Fin 1) ℚ).mulVecLin.comp
+        ( !![2] : Matrix (Fin 1) (Fin 1) ℚ).mulVecLin =
+      ( !![5, 2, 3; 0, 3, 0; 0, 0, 2] : Matrix (Fin 3) (Fin 3) ℚ).mulVecLin.comp
+        ( !![1; 0; -1] : Matrix (Fin 3) (Fin 1) ℚ).mulVecLin
+    rw [← Matrix.mulVecLin_mul, ← Matrix.mulVecLin_mul]
+    congr 1
+    decide +kernel
+  comm₂₃ := by
+    apply ModuleCat.hom_ext
+    change ( !![1, 1, 1; 2, 2, 2] : Matrix (Fin 2) (Fin 3) ℚ).mulVecLin.comp
+        ( !![5, 2, 3; 0, 3, 0; 0, 0, 2] : Matrix (Fin 3) (Fin 3) ℚ).mulVecLin =
+      (5 • (1 : Matrix (Fin 2) (Fin 2) ℚ)).mulVecLin.comp
+        ( !![1, 1, 1; 2, 2, 2] : Matrix (Fin 2) (Fin 3) ℚ).mulVecLin
+    rw [← Matrix.mulVecLin_mul, ← Matrix.mulVecLin_mul]
+    congr 1
+    decide +kernel
+
+example : rationalMiddle.mapMatrix rationalMiddle rationalMiddleMap = fun _ _ => 3 := by
+  decide +kernel
+
+/-- The same local complex after swapping the first two middle coordinates. -/
+def rationalRebased : FreeCohomologyCertificate
+    (!![0; 1; -1] : Matrix (Fin 3) (Fin 1) ℚ) !![1, 1, 1; 2, 2, 2] :=
+  (computeField _ _).toOption.get (by decide +kernel)
+
+/-- The coordinate swap is a map of the original local complexes. -/
+def rationalBasisChangeMap : KernelCertificate.shortComplex _ rationalMiddle.square_zero ⟶
+    KernelCertificate.shortComplex _ rationalRebased.square_zero where
+  τ₁ := ModuleCat.ofHom (1 : Matrix (Fin 1) (Fin 1) ℚ).mulVecLin
+  τ₂ := ModuleCat.ofHom ( !![0, 1, 0; 1, 0, 0; 0, 0, 1] :
+    Matrix (Fin 3) (Fin 3) ℚ).mulVecLin
+  τ₃ := ModuleCat.ofHom (1 : Matrix (Fin 2) (Fin 2) ℚ).mulVecLin
+  comm₁₂ := by
+    apply ModuleCat.hom_ext
+    change ( !![0; 1; -1] : Matrix (Fin 3) (Fin 1) ℚ).mulVecLin.comp
+        (1 : Matrix (Fin 1) (Fin 1) ℚ).mulVecLin =
+      ( !![0, 1, 0; 1, 0, 0; 0, 0, 1] : Matrix (Fin 3) (Fin 3) ℚ).mulVecLin.comp
+        ( !![1; 0; -1] : Matrix (Fin 3) (Fin 1) ℚ).mulVecLin
+    rw [← Matrix.mulVecLin_mul, ← Matrix.mulVecLin_mul]
+    exact congrArg Matrix.mulVecLin (by decide +kernel)
+  comm₂₃ := by
+    apply ModuleCat.hom_ext
+    change ( !![1, 1, 1; 2, 2, 2] : Matrix (Fin 2) (Fin 3) ℚ).mulVecLin.comp
+        ( !![0, 1, 0; 1, 0, 0; 0, 0, 1] : Matrix (Fin 3) (Fin 3) ℚ).mulVecLin =
+      (1 : Matrix (Fin 2) (Fin 2) ℚ).mulVecLin.comp
+        ( !![1, 1, 1; 2, 2, 2] : Matrix (Fin 2) (Fin 3) ℚ).mulVecLin
+    rw [← Matrix.mulVecLin_mul, ← Matrix.mulVecLin_mul]
+    exact congrArg Matrix.mulVecLin (by decide +kernel)
+
+example : rationalMiddle.mapMatrix rationalRebased rationalBasisChangeMap = fun _ _ => -1 := by
+  decide +kernel
+
+/-- Scalar multiplication in every degree is an existing finite-free cochain map. -/
+def scalarMap {R : Type*} [CommRing R] (C : FiniteFreeCochainComplex R) (r : R) : C ⟶ C where
+  f _ := r • 1
+  comm _ := by simp
+
+/-- Computed cohomology at the negative endpoint of the gapped complex. -/
+def gappedCohomology : FreeCohomologyCertificate
+    ((gapped ℚ).incoming (-2)) ((gapped ℚ).d (-2)) :=
+  ((gapped ℚ).computeFieldCohomology (-2)).toOption.get (by decide +kernel)
+
+example : (scalarMap (gapped ℚ) 3).fieldCohomologyMatrix (-2)
+    gappedCohomology gappedCohomology = fun _ _ => 3 := by decide +kernel
+
+example : (scalarMap (gapped ℚ) 2 ≫ scalarMap (gapped ℚ) 3).fieldCohomologyMatrix (-2)
+    gappedCohomology gappedCohomology = fun _ _ => 6 := by decide +kernel
 
 end ComputableCohomology.Examples
