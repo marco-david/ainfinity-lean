@@ -73,44 +73,25 @@ abbrev ComposableHom (X : Fin (n + 1) → Obj) (i : Fin n) : β → Type w' :=
 variable (R) in
 /-- Transport between graded hom spaces along equalities of the source, target and degree.
 This is the three-index form of `LinearEquiv.cast`. -/
-def homCongr
-    {X X' Y Y' : Obj}
-    {i i' : β}
-    (hX : X = X')
-    (hY : Y = Y')
-    (hi : i = i') :
+def homCongr {X X' Y Y' : Obj} {i i' : β} (hX : X = X') (hY : Y = Y') (hi : i = i') :
     (X →ᵍ[R] Y) i ≃ₗ[R] (X' →ᵍ[R] Y') i' := by
   subst hX hY hi
   exact LinearEquiv.refl R _
 
 @[simp]
-lemma homCongr_refl
-    (X Y : Obj)
-    (i : β) :
+lemma homCongr_refl (X Y : Obj) (i : β) :
     homCongr R (rfl : X = X) (rfl : Y = Y) (rfl : i = i) = LinearEquiv.refl R _ :=
   rfl
 
 @[simp]
-lemma homCongr_symm
-    {X X' Y Y' : Obj}
-    {i i' : β}
-    (hX : X = X')
-    (hY : Y = Y')
-    (hi : i = i') :
+lemma homCongr_symm {X X' Y Y' : Obj} {i i' : β} (hX : X = X') (hY : Y = Y') (hi : i = i') :
     (homCongr R hX hY hi).symm = homCongr R hX.symm hY.symm hi.symm := by
   subst hX hY hi
   rfl
 
 @[simp]
-lemma homCongr_trans
-    {X X' X'' Y Y' Y'' : Obj}
-    {i i' i'' : β}
-    (hX : X = X')
-    (hY : Y = Y')
-    (hi : i = i')
-    (hX' : X' = X'')
-    (hY' : Y' = Y'')
-    (hi' : i' = i'') :
+lemma homCongr_trans {X X' X'' Y Y' Y'' : Obj} {i i' i'' : β} (hX : X = X') (hY : Y = Y')
+    (hi : i = i') (hX' : X' = X'') (hY' : Y' = Y'') (hi' : i' = i'') :
     (homCongr R hX hY hi).trans (homCongr R hX' hY' hi') =
       homCongr R (hX.trans hX') (hY.trans hY') (hi.trans hi') := by
   subst hX hY hi hX' hY' hi'

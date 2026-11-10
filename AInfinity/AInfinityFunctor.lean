@@ -21,8 +21,8 @@ where m and m' are the higher compositions of the source and the target.
 
 The sign on the left is the Koszul sign `stasheffSign` of the Stasheff identities. There is no
 sign on the right: in reduced degrees ‖a‖ = |a| - 1 every φᵢ has degree 0, so no Koszul
-sign arises from moving it past the inputs (compare [Seidel, *Fukaya categories and
-Picard–Lefschetz theory*, (1.6)]).
+sign arises from moving it past the inputs (compare equation (1.6) in Seidel's book, see the
+references below).
 
 The source and target may be graded by different gradings `β` and `β'`; the functor then
 carries a homomorphism of gradings `β →+ᵍ β'`, which preserves the degree one
@@ -56,6 +56,11 @@ right-hand side are Mathlib's `Composition n`. Changes of objects are transporte
 
 `mapCompSum` and `compMapSum` are named in order of application: a functor component applied
 to a composition, and a composition of functor components.
+
+## References
+
+* P. Seidel, *Fukaya categories and Picard–Lefschetz theory*, Zurich Lectures in Advanced
+  Mathematics, European Mathematical Society, 2008.
 -/
 
 @[expose] public section
@@ -170,7 +175,7 @@ structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
   degMap : β →+ᵍ β'
   /-- The action of the functor on hom spaces, i.e. the functor components φₙ, of
   degree 1 - n, landing in the hom spaces of the target in the translated degrees. -/
-  map : {n : ℕ} → [NeZero n] → (X : Fin (n + 1) → Obj) →
+  map {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) :
     GradedMultilinearMap R (ComposableHom β R X)
       (fun b : β ↦ (obj (X 0) →ᵍ[R] obj (X (Fin.last n))) (degMap b))
       ((1 - n : ℤ) • degOne)
