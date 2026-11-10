@@ -116,7 +116,7 @@ variable {a' b' c' a'' b'' c'' : ℕ}
   (ψ : KernelCertificate.shortComplex D target.square_zero ⟶
     KernelCertificate.shortComplex F next.square_zero)
 
-/-- The induced integral map is defined through the quotient, so it respects all torsion relations. -/
+/-- The induced integral map uses the quotient and respects all torsion relations. -/
 def map : result.Model →ₗ[ℤ] target.Model :=
   target.quotientEquiv.toLinearMap.comp
     ((result.kernel.presentationMap target.kernel φ).comp result.quotientEquiv.symm.toLinearMap)

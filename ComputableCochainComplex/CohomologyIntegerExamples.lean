@@ -131,4 +131,13 @@ example : (((twoTerm ℤ (-1)).computeIntegerCohomology 1).toOption.get
 example : (((twoTerm ℤ 2).computeIntegerCohomology 0).toOption.get
     (by decide +kernel)).quotient.freeRank = 0 := by decide +kernel
 
+/-- Exhaustive checked coverage for all two-by-two matrices with entries in `{-1, 0, 1}`. -/
+theorem small_integer_matrices_checked : ∀ i j k l : Fin 3,
+    let M : Matrix (Fin 2) (Fin 2) ℤ :=
+      !![(i.val : ℤ) - 1, (j.val : ℤ) - 1; (k.val : ℤ) - 1, (l.val : ℤ) - 1]
+    (match integerReduce M with
+    | .ok s => decide (s.kernelData.Valid M ∧ s.smithPresentationData.Valid M)
+    | .error _ => false) = true := by
+  decide +kernel
+
 end ComputableCohomology.Examples

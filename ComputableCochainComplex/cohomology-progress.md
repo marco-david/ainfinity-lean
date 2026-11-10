@@ -147,3 +147,27 @@
 - The full graded build passes; root checking and the axiom audit pass. In particular the
   one-dot representative theorem and the computed strand certificate use only the three
   permitted axioms, with no dependency on existing KLRW placeholders.
+
+## Final integration and checks
+
+- Added `cohomology-guide.md` covering arbitrary finite-free and based inputs, requested
+  degrees, representatives and boundary witnesses, field/integer induced maps, fixed-degree
+  adapters, supplied matrix compatibility, and the precise upstream KLRW prerequisites.
+- Added `small_integer_matrices_checked`: kernel-checked success of both integral kernel
+  and Smith-presentation verification for every two-by-two matrix with entries in
+  `{-1,0,1}` (81 matrices). This finite coverage theorem is not a universal-success claim.
+- The field tactic now performs an early coefficient-ring check within its single elaborator
+  (the same two public syntax forms). A negative test over `ℤ` previously reached an
+  elaboration timeout; it now reports the unsupported-field error and directs callers to
+  `computeInteger`. A wrong claimed field dimension is also rejected. Positive examples
+  continue to use the same kernel-checked certificate construction.
+- Final `lake build` succeeds (8346 jobs); `lake exe mk_all --module --check` succeeds;
+  `git diff --check` is clean; the new Lean files satisfy the line-length convention.
+  Metadata YAML parses and retains the eight existing proof placeholders. There are no new
+  `sorry`, `admit`, or added axioms. The final audits of rank, integer maps, the exhaustive
+  finite regression, and the diagrammatic representative contain only `propext`,
+  `Classical.choice`, and `Quot.sound`.
+- Remaining boundary: universal success of the integral candidate generator is unproved.
+  Every successful output is a complete, checked cohomology model with usable equivalences,
+  representatives, witnesses, and maps. The general quotient KLRW normal-form/basis/grading
+  construction is deliberately upstream; the implementation exposes its contract only.

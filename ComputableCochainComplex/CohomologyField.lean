@@ -8,6 +8,7 @@ module
 public import ComputableCochainComplex.CohomologyReduction
 public import ComputableCochainComplex.Cohomology
 public import Mathlib.LinearAlgebra.Matrix.Rank
+public meta import Lean.Elab.Tactic.Basic
 
 /-!
 # Certified cohomology over computable fields
@@ -207,19 +208,50 @@ noncomputable def fieldCohomologyIso
 
 end FiniteFreeCochainComplex
 
-/-- Prove an explicit local cohomology isomorphism by kernel-checking the computed certificate.
-The goal is `Nonempty (S.homology ≅ ModuleCat.of R (Fin h → R))`, with `S` the local short complex.
-An unsupported field, failed check, wrong claimed dimension, or resource limit is a tactic error. -/
-macro "certify_cohomology " A:term ", " B:term : tactic =>
-  `(tactic| (
-    refine ⟨((ComputableCohomology.computeField $A $B).toOption.get
-      (by decide +kernel)).homologyIso ≪≫ ?_⟩
-    exact (LinearEquiv.funCongrLeft _ _ (finCongr (by decide +kernel))).toModuleIso))
+open Lean Elab Tactic Meta in
+/-- Check the coefficient ring before elaborating the certificate's dependent model type. -/
+private meta def checkFieldInput (input : TSyntax `term) (complex : Bool) : TacticM Unit :=
+  withMainContext do
+    let value ← Term.elabTerm input none
+    Term.synthesizeSyntheticMVarsNoPostponing
+    let type ← instantiateMVars (← inferType value)
+    let ring ← if complex then do
+        let type ← whnf type
+        unless type.isAppOfArity ``FiniteFreeCochainComplex 2 do
+          throwError "certify_cohomology: expected a finite-free cochain complex"
+        pure type.getAppArgs[0]!
+      else forallBoundedTelescope type (some 2) fun indices ring => do
+        unless indices.size = 2 do
+          throwError "certify_cohomology: expected a matrix with two finite indices"
+        pure ring
+    try
+      let _ ← synthInstance (← mkAppM ``Field #[ring])
+    catch _ =>
+      throwError "certify_cohomology: coefficient ring {ring} is not a supported field; \
+        use computeInteger for integral cohomology"
+    try
+      let _ ← synthInstance (← mkAppM ``DecidableEq #[ring])
+    catch _ =>
+      throwError "certify_cohomology: exact decidable equality is required on {ring}"
 
-/-- Prove an explicit cohomology isomorphism for a finite-free complex at one integer degree. -/
-macro "certify_cohomology " C:term " at " n:term : tactic =>
-  `(tactic| (
-    refine ⟨FiniteFreeCochainComplex.fieldCohomologyIso $C $n
-      ((FiniteFreeCochainComplex.computeFieldCohomology $C $n).toOption.get
-        (by decide +kernel)) ≪≫ ?_⟩
-    exact (LinearEquiv.funCongrLeft _ _ (finCongr (by decide +kernel))).toModuleIso))
+/-- Prove an explicit local cohomology isomorphism using a kernel-checked field certificate. -/
+syntax "certify_cohomology " term ", " term : tactic
+
+/-- Prove an explicit cohomology isomorphism at one requested integer degree. -/
+syntax "certify_cohomology " term " at " term : tactic
+
+open Lean Elab Tactic in
+elab_rules : tactic
+  | `(tactic| certify_cohomology $A, $B) => do
+    checkFieldInput A false
+    evalTactic (← `(tactic| (
+      refine ⟨((ComputableCohomology.computeField $A $B).toOption.get
+        (by decide +kernel)).homologyIso ≪≫ ?_⟩
+      exact (LinearEquiv.funCongrLeft _ _ (finCongr (by decide +kernel))).toModuleIso)))
+  | `(tactic| certify_cohomology $C at $n) => do
+    checkFieldInput C true
+    evalTactic (← `(tactic| (
+      refine ⟨FiniteFreeCochainComplex.fieldCohomologyIso $C $n
+        ((FiniteFreeCochainComplex.computeFieldCohomology $C $n).toOption.get
+          (by decide +kernel)) ≪≫ ?_⟩
+      exact (LinearEquiv.funCongrLeft _ _ (finCongr (by decide +kernel))).toModuleIso)))
