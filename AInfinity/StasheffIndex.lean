@@ -183,10 +183,22 @@ lemma val_rightEmb (k : Fin p.t) : (p.rightEmb k : ℕ) = p.r + p.s + k :=
 lemma val_innerObjEmb (j : Fin (p.s + 1)) : (p.innerObjEmb j : ℕ) = p.r + j :=
   rfl
 
-@[simp]
 lemma val_outerObjEmb (i : Fin (p.r + 1 + p.t + 1)) :
     (p.outerObjEmb i : ℕ) = if (i : ℕ) ≤ p.r then (i : ℕ) else i + p.s - 1 :=
   rfl
+
+/-- Up to position r, the outer object string follows the original one. -/
+@[simp]
+lemma val_outerObjEmb_of_le {i : Fin (p.r + 1 + p.t + 1)} (h : (i : ℕ) ≤ p.r) :
+    (p.outerObjEmb i : ℕ) = i :=
+  ite_eq_left h
+
+/-- After position r, the outer object string skips the s - 1 objects strictly inside the
+inner block. -/
+@[simp]
+lemma val_outerObjEmb_of_lt {i : Fin (p.r + 1 + p.t + 1)} (h : p.r < i) :
+    (p.outerObjEmb i : ℕ) = i + p.s - 1 :=
+  ite_eq_right (not_le.2 h)
 
 /-- The source of the `j`-th input of the inner operation is the `j`-th inner object. -/
 @[simp]
@@ -201,7 +213,7 @@ lemma innerObjEmb_succ (j : Fin p.s) : p.innerObjEmb j.succ = (p.innerEmb j).suc
 /-- The outer object string starts at the object 0. -/
 @[simp]
 lemma outerObjEmb_zero : p.outerObjEmb 0 = 0 :=
-  Fin.ext (by simp)
+  Fin.ext (p.val_outerObjEmb_of_le (Nat.zero_le _))
 
 /-- The outer object string ends at the object n. -/
 @[simp]
@@ -217,19 +229,19 @@ input. -/
 @[simp]
 lemma outerObjEmb_left_castSucc (j : Fin p.r) :
     p.outerObjEmb (j.castSucc.castAdd p.t).castSucc = (p.leftEmb j).castSucc :=
-  Fin.ext (by simp [j.isLt.le])
+  Fin.ext (p.val_outerObjEmb_of_le j.isLt.le)
 
 /-- Before the inner output, the target of an outer input is the target of the original
 input. -/
 @[simp]
 lemma outerObjEmb_left_succ (j : Fin p.r) :
     p.outerObjEmb (j.castSucc.castAdd p.t).succ = (p.leftEmb j).succ :=
-  Fin.ext (by simp [j.isLt])
+  Fin.ext (p.val_outerObjEmb_of_le j.isLt)
 
 /-- The source of the inner output, as an outer input, is the first inner object. -/
 @[simp]
 lemma outerObjEmb_middle_castSucc : p.outerObjEmb p.middleIndex.castSucc = p.innerObjEmb 0 :=
-  Fin.ext (by simp)
+  Fin.ext (p.val_outerObjEmb_of_le le_rfl)
 
 /-- The target of the inner output, as an outer input, is the last inner object. -/
 @[simp]
@@ -348,7 +360,7 @@ def stasheffDegIn : Fin p.s → β :=
   fun j ↦ deg (p.innerEmb j)
 
 /-- The degree of the output of the inner operation mₛ of the (r, s, t) summand. -/
-abbrev stasheffInnerDeg : β :=
+def stasheffInnerDeg : β :=
   operationTargetDeg (stasheffDegIn deg p)
 
 /-- The input degrees of the outer operation of the (r, s, t) summand: the degrees of the
