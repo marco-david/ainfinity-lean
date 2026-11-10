@@ -16,7 +16,7 @@ and checked in CI, so rerun that command after adding a file.
 | Folder | Contents |
 | --- | --- |
 | `Util/` | Contains a `Texify` class and the `#texify` command for rendering terms as LaTeX. |
-| `ComputableCochainComplex/` | Explicit biproducts and zero objects, the additive completion `CMat_`, bounded complexes, and finite-free matrix complexes over commutative rings, with verified coordinates for additive module realizations. |
+| `ComputableCochainComplex/` | Explicit biproducts and zero objects, the additive completion `CMat_`, bounded complexes, and finite-free matrix complexes over commutative rings, with verified coordinates for additive module realizations, checked field/integer cohomology, induced maps, and optional graded adapters. |
 | `AInfinity/` | Grading indices, the Stasheff identities, A∞-categories, A∞-functors and their composition, and examples. |
 | `KLRW/` | KLRW algebras and categories: the general quiver-parametrised KLRW algebra and its $$R$$-linear category, and a computable special case with one black strand and $$n$$ red strands. | |
 
@@ -57,6 +57,22 @@ on torsion. `result.quotient.freeRank` and `result.quotient.torsionFactors` repo
 The Euclidean generator uses checked pivot descent without fuel; every result is verified.
 Universal success of the generator has not been proved: descent and certificate failures
 remain explicit errors. See `CohomologyIntegerExamples.lean` for kernel-checked computations.
+
+`CohomologyGraded.lean` accepts certified finite coordinates for an existing local complex
+of homogeneous pieces and proofs that the differentials preserve those pieces. It uses the
+shift convention `M⟨s⟩_q = M_(q+s)`. `CohomologyOneBlackStrand.lean` verifies the grading
+against the existing composition rule and supplies zero- or one-coordinate bases. Its
+acceptance tests identify the degree-two class for `T₀ --2·id--> T₀` with the one-dot diagram
+and prove its cohomology is `ZMod 2`.
+
+`CohomologyKLRWInput.lean` exposes `QuotientKLRWCoordinates` as an upstream input contract,
+without asserting that such data have been constructed. The general quotient category still
+needs executable normal forms, spanning/independence, local finiteness over the solver's
+coefficient ring, and differential compatibility. Finite polynomial matrices alone are not
+integer-matrix inputs; no numerical specialization is performed.
+
+See [the cohomology guide](ComputableCochainComplex/cohomology-guide.md) for inputs,
+representatives, induced maps, graded adapters, and the precise failure/coverage boundaries.
 
 ### Project metadata and license
 

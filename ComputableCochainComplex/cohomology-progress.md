@@ -90,7 +90,7 @@
   `mk_all --module --check` passes, and `git diff --check` is clean. The map-comparison and
   composition axiom audits report only `propext`, `Classical.choice`, and `Quot.sound`.
 
-## Integer backend (in progress)
+## Integer backend (checked results; universal success unproved)
 
 - Rechecked pinned Mathlib: its Smith normal form is noncomputable, and its record does not
   include the divisibility chain needed for normalized invariant factors.
@@ -118,3 +118,32 @@
 - Full `lake build` passes (8342 jobs, only the eight existing warnings), the module-root
   check passes, and the integer quotient, calculator, boundary, map, and homology-transport
   axiom audits contain only the three permitted axioms. No new proof placeholders exist.
+
+## Graded adapter and KLRW boundary
+
+- `CohomologyGraded.lean` restricts an existing Mathlib short complex using explicit
+  homogeneous-preservation proofs, with the convention `M⟨s⟩_q = M_(q+s)`.
+  `LocalCoordinates` evaluates its differentials on basis vectors, proves the matrix
+  comparison, and transports computed cohomology and representatives to the original modules.
+- `GradedHomCoordinates` requires actual homogeneous submodules, finite ordered linear
+  equivalences, executable coordinate composition, and proof that decoding agrees with
+  original composition. `CohomologyKLRWInput.lean` names this contract for the existing
+  quotient-defined KLRW category and supplies no fabricated inhabitant. Normal forms,
+  spanning/independence and finite graded pieces over the solver's ring remain upstream.
+- `CohomologyOneBlackStrand.lean` proves degree additivity for the actual `compShift`,
+  with minimal strand degree `|X-Y|` and dot degree two. It constructs executable bases
+  for every homogeneous piece (zero or one coordinate), proves original composition
+  compatibility, and verifies that the scalar differential is postcomposition by `r • id`.
+- The one-black-strand source exposes its Hom groups as `DFinsupp`, but does not register
+  their scalar module instance. The adapter registers the existing pointwise action; it
+  does not alter the original category or use its unrelated `not_isZero` placeholder.
+- `CohomologyGradedExamples.lean` kernel-checks a composition creating a dot, inadmissible
+  degrees, the shift convention, and `T₀ --2·id--> T₀` in cohomological degree one and
+  internal degree two. Its actual homogeneous-module homology is isomorphic to `ZMod 2`,
+  and the nonzero class decodes to the one-dot diagram. A boundary witness is also checked.
+- `LocalCoordinates.shortComplexIsoOfMatrices` and the two `...HomologyIsoOfMatrices`
+  methods also accept executable matrices and compatibility proofs separately, so an
+  abstract quotient category's noncomputable operations need not run inside the calculator.
+- The full graded build passes; root checking and the axiom audit pass. In particular the
+  one-dot representative theorem and the computed strand certificate use only the three
+  permitted axioms, with no dependency on existing KLRW placeholders.

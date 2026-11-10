@@ -33,7 +33,10 @@ project:
     preimages, a proof-producing tactic, and induced cohomology maps compatible with
     Mathlib, identities, and composition. Checked integral presentations additionally
     supply free and normalized torsion factors, canonical representatives, boundary witnesses,
-    and induced maps on torsion. Universal integer-generator success remains unproved.
+    and induced maps on torsion. A thin homogeneous-piece adapter and a verified
+    one-black-strand example connect these calculations to diagrammatic modules; the general
+    quotient KLRW category has an explicit upstream input contract only. Universal
+    integer-generator success remains unproved.
   authors:
     - "Marco David"
     - "Jason Dong"
@@ -132,13 +135,16 @@ status:
     with representatives, boundary witnesses, a rank formula, a proof-producing tactic,
     and induced maps compatible with Mathlib homology, identities, and composition;
     checked integral cohomology models with free and normalized torsion factors,
-    representatives, boundary preimages, and induced maps respecting torsion relations.
+    representatives, boundary preimages, and induced maps respecting torsion relations;
+    a certified homogeneous-piece adapter and one-black-strand graded coordinates,
+    composition compatibility, and a diagrammatic torsion-cohomology example.
     The existing computable
     categorical infrastructure (explicit biproducts, chosen zero objects with
     `IsZero` certificates, additive completion, and
     bounded cochain complexes with supplied finite support bounds) is also
     sorry-free and is housed in ComputableCochainComplex. In progress: a universal
-    success proof for the integral candidate generator, graded adapters, and the specialized KLRW
+    success proof for the integral candidate generator, upstream graded coordinates for
+    quotient-defined KLRW, and the specialized KLRW
     constructions, braiding functor, and KLRW examples, which still contain
     `sorry`. Temporarily removed: the composition of
     A∞-functors, the identity A∞-functor and the A∞ examples. They were written
