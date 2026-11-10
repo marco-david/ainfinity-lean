@@ -158,9 +158,9 @@ def innerObjEmb : Fin (p.s + 1) ↪o Fin (n + 1) :=
 n + 1 objects: the objects strictly between positions r and r + s are skipped. -/
 def outerObjEmb : Fin (p.r + 1 + p.t + 1) ↪o Fin (n + 1) :=
   OrderEmbedding.ofStrictMono
-    (fun a ↦ ⟨if (a : ℕ) ≤ p.r then (a : ℕ) else a + p.s - 1, by
-      have := p.sum_eq; have := p.one_le_s; have := a.isLt; split_ifs <;> omega⟩)
-    (fun a b hab ↦ by have := p.one_le_s; simp only [Fin.lt_def] at hab ⊢; split_ifs <;> omega)
+    (fun i ↦ ⟨if (i : ℕ) ≤ p.r then (i : ℕ) else i + p.s - 1, by
+      have := p.sum_eq; have := p.one_le_s; have := i.isLt; split_ifs <;> omega⟩)
+    (fun i j hij ↦ by have := p.one_le_s; simp only [Fin.lt_def] at hij ⊢; split_ifs <;> omega)
 
 /-- The position r of the inner output among the inputs of the outer operation, of arity
 r + 1 + t. -/
@@ -184,8 +184,8 @@ lemma val_innerObjEmb (j : Fin (p.s + 1)) : (p.innerObjEmb j : ℕ) = p.r + j :=
   rfl
 
 @[simp]
-lemma val_outerObjEmb (a : Fin (p.r + 1 + p.t + 1)) :
-    (p.outerObjEmb a : ℕ) = if (a : ℕ) ≤ p.r then (a : ℕ) else a + p.s - 1 :=
+lemma val_outerObjEmb (i : Fin (p.r + 1 + p.t + 1)) :
+    (p.outerObjEmb i : ℕ) = if (i : ℕ) ≤ p.r then (i : ℕ) else i + p.s - 1 :=
   rfl
 
 /-- The source of the `j`-th input of the inner operation is the `j`-th inner object. -/
@@ -279,12 +279,12 @@ variable {Obj : Type w} (X : Fin (n + 1) → Obj) (p : StasheffIndex n)
 /-- The object string of the inner operation of the (r, s, t) summand: the objects of `X`
 from position r to position r + s. -/
 def stasheffObjIn : Fin (p.s + 1) → Obj :=
-  fun a ↦ X (p.innerObjEmb a)
+  fun i ↦ X (p.innerObjEmb i)
 
 /-- The object string of the outer operation of the (r, s, t) summand, obtained from `X` by
 deleting the objects strictly between positions r and r + s. -/
 def stasheffObjOut : Fin (p.r + 1 + p.t + 1) → Obj :=
-  fun a ↦ X (p.outerObjEmb a)
+  fun i ↦ X (p.outerObjEmb i)
 
 /-- The outer object string starts at `X 0`. -/
 @[simp]
