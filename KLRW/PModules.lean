@@ -9,6 +9,11 @@ The straight-line idempotents `e_X = idem_morph R X` form a complete family of o
 idempotents in `KLRWAlg R parameters`. An object `X` is *violated* if its leftmost or rightmost
 strand is black. The sum of the `e_X` over all violated `X` is again an idempotent; it is the
 first ingredient in the construction of the right modules `eA` and `eAfA`.
+
+This implementation is based off Ben Webster's "Knot invariants and higher representation theory",
+Definition 4.3, available at https://arxiv.org/pdf/1309.3796. This definition only regards left
+violated diagrams, to later define the cyclotomic quotient. Our implementation does not use this
+quotient, but instead quotients by both left and right violated diagrams at the same time.
 -/
 
 @[expose] public section
@@ -39,7 +44,8 @@ lemma completeOrthogonalIdempotents_idem_morph (parameters : KLRWStructure V) :
 def IsRightViolated (X : KLRWObject parameters) : Prop :=
   X.strandSeq.toList.getLast?.map StrandData.color = some .black
 
-/-- An object is *left violated* if its leftmost strand is black. -/
+/-- An object is *left violated* if its leftmost strand is black. This directly matches Webster's
+Definition 4.3 in https://arxiv.org/pdf/1309.3796. -/
 def IsLeftViolated (X : KLRWObject parameters) : Prop :=
   X.strandSeq.toList.head?.map StrandData.color = some .black
 
