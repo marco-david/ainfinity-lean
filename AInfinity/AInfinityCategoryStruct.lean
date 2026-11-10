@@ -129,7 +129,9 @@ namespace AInfinityOperation
 def ofGradedLinearMap {X : Fin (1 + 1) → Obj}
     (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) degOne) :
     AInfinityOperation β R X :=
-  .mk fun deg j h ↦ MultilinearMap.ofSubsingletonₗ' 0 (f.v (deg 0) j (by simpa using h))
+  .mk fun deg j h ↦
+    LinearMap.uncurryLeft <| (MultilinearMap.constLinearEquivOfIsEmpty R R _ _).toLinearMap ∘ₗ
+      f.v (deg 0) j (by simpa using h)
 
 @[simp]
 theorem ofGradedLinearMap_v_apply {X : Fin (1 + 1) → Obj}
