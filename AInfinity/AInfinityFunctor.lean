@@ -225,9 +225,9 @@ mₛ(…) and the last t inputs, in degree `F.degMap d` for any `d` equal to the
 mₙ(a₁, …, aₙ). -/
 def mapCompTerm (p : StasheffIndex n) (d : β) (hd : operationTargetDeg deg = d) :
     (F.obj (X 0) →ᵍ[R] F.obj (X (Fin.last n))) (F.degMap d) :=
-  homCongr R (congrArg (fun k ↦ F.obj (X k)) p.outerObjEmb_zero)
-    (congrArg (fun k ↦ F.obj (X k)) p.outerObjEmb_last) rfl
-    ((F.map fun a ↦ X (p.outerObjEmb a)).v (stasheffDegOut deg p) d
+  homCongr R (congrArg F.obj (stasheffObjOut_zero X p))
+    (congrArg F.obj (stasheffObjOut_last X p)) rfl
+    ((F.map (stasheffObjOut X p)).v (stasheffDegOut deg p) d
       ((functorTargetDeg_stasheffDegOut deg p).trans hd) (stasheffInputsOut x p))
 
 /-- The left-hand side of the arity-n functor equation, with the Koszul signs of the Stasheff
