@@ -28,6 +28,7 @@ $a = b \, e_X \, c$ for some left violated object $X$. Consequently, the (left o
 diagrams span the two-sided ideal $AfA$.
 
 ## TODO
+
 * Formalize the characterizations of violated diagrams above.
 * Formalize divided-power idempotents.
 -/
@@ -42,7 +43,7 @@ variable (R : Type*) [CommRing R]
 
 -- TODO: Move the following to KLRWCategory.lean under section of idempotents.
 /-- The straight-line idempotents are a complete orthogonal family of idempotents, i.e.
-the $e_X$ are pairwise orthogonal and sum to 1. -/
+the $e_X$ are pairwise orthogonal and sum to $1$. -/
 lemma completeOrthogonalIdempotents_idem_morph (parameters : KLRWStructure V) :
     CompleteOrthogonalIdempotents (idem_morph (parameters := parameters) R) where
   idem := idem_is_idem
@@ -77,8 +78,8 @@ instance : DecidablePred (IsLeftViolated (parameters := parameters)) := fun _ =>
 instance : DecidablePred (IsViolated (parameters := parameters)) := fun X =>
   inferInstanceAs (Decidable (IsRightViolated X ∨ IsLeftViolated X))
 
-/-- The idempotent $f = \sum_{X \text{ violated}} e_X$, is the sum of the straight-line idempotents
-$e_X$ over all violated objects $X$. -/
+/-- The idempotent $f = \sum_{X \text{ violated}} e_X$, where $e_X$ is the straight-line
+idempotent `idem_morph R X`. -/
 noncomputable def violatedIdem (parameters : KLRWStructure V) : KLRWAlg R parameters :=
   ∑ X ∈ Finset.univ.filter (IsViolated (parameters := parameters)), idem_morph R X
 
