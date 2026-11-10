@@ -128,7 +128,7 @@ lemma stasheffInner_eq_zero_of_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd = 0)
     (d : β) (hd : stasheffInnerDeg deg p = d) :
     stasheffInner a p d hd = 0 := by
-  rw [stasheffInner, hm, zero_apply]
+  simp [stasheffInner, hm d hd]
 
 lemma stasheffOuter_eq_zero_of_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd = 0)
