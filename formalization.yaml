@@ -31,7 +31,9 @@ project:
     cohomology with an explicit matrix presentation and transports it to Mathlib homology.
     Exact field reduction supplies checked class coordinates, representatives, boundary
     preimages, a proof-producing tactic, and induced cohomology maps compatible with
-    Mathlib, identities, and composition. Integer reduction remains in progress.
+    Mathlib, identities, and composition. Checked integral presentations additionally
+    supply free and normalized torsion factors, canonical representatives, boundary witnesses,
+    and induced maps on torsion. Universal integer-generator success remains unproved.
   authors:
     - "Marco David"
     - "Jason Dong"
@@ -128,13 +130,15 @@ status:
     cohomology presentations, including boundary completeness and transport to Mathlib
     homology for finite-free and based complexes; checked exact field cohomology calculations
     with representatives, boundary witnesses, a rank formula, a proof-producing tactic,
-    and induced maps compatible with Mathlib homology, identities, and composition.
+    and induced maps compatible with Mathlib homology, identities, and composition;
+    checked integral cohomology models with free and normalized torsion factors,
+    representatives, boundary preimages, and induced maps respecting torsion relations.
     The existing computable
     categorical infrastructure (explicit biproducts, chosen zero objects with
     `IsZero` certificates, additive completion, and
     bounded cochain complexes with supplied finite support bounds) is also
-    sorry-free and is housed in ComputableCochainComplex. In progress: the integer
-    reduction backend, graded adapters, and the specialized KLRW
+    sorry-free and is housed in ComputableCochainComplex. In progress: a universal
+    success proof for the integral candidate generator, graded adapters, and the specialized KLRW
     constructions, braiding functor, and KLRW examples, which still contain
     `sorry`. Temporarily removed: the composition of
     A∞-functors, the identity A∞-functor and the A∞ examples. They were written

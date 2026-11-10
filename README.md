@@ -47,7 +47,16 @@ representative maps or an explicit error. `CohomologyMap.lean` computes induced 
 `f.fieldCohomologyMatrix n source target` for an existing cochain map `f : C ⟶ D` and
 computed source/target certificates. The matrix acts by representing a class, applying
 `f.f n`, and normalizing; its naturality theorem identifies it with Mathlib's induced map.
-Identity and composition follow from that comparison. Integer reduction is still in progress.
+Identity and composition follow from that comparison.
+
+`CohomologyInteger.lean` supplies `computeInteger A B` and `C.computeIntegerCohomology n`.
+A successful result has a free part and divisibility-normalized nontrivial cyclic factors,
+canonical representatives, complete boundary tests with witnesses, and an isomorphism to
+Mathlib homology. `f.integerCohomologyMap n source target` computes induced maps, including
+on torsion. `result.quotient.freeRank` and `result.quotient.torsionFactors` report the factors.
+The Euclidean generator uses checked pivot descent without fuel; every result is verified.
+Universal success of the generator has not been proved: descent and certificate failures
+remain explicit errors. See `CohomologyIntegerExamples.lean` for kernel-checked computations.
 
 ### Project metadata and license
 

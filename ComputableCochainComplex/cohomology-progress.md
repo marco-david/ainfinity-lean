@@ -89,3 +89,32 @@
 - Full `lake build` passes (8338 jobs, only the eight pre-existing `sorry` warnings),
   `mk_all --module --check` passes, and `git diff --check` is clean. The map-comparison and
   composition axiom audits report only `propext`, `Classical.choice`, and `Quot.sound`.
+
+## Integer backend (in progress)
+
+- Rechecked pinned Mathlib: its Smith normal form is noncomputable, and its record does not
+  include the divisibility chain needed for normalized invariant factors.
+- `CohomologySmith.lean` checks inverse coordinate matrices, both inclusions of relation
+  modules, and a nonnegative divisibility-normalized diagonal. Its quotient equivalence,
+  canonical representatives, and boundary preimages are proved for every checked certificate.
+  `splitEquiv` separates unrestricted integer coordinates and nontrivial `ZMod` factors,
+  omitting unit factors.
+- `CohomologyIntegerReduction.lean` retains the shared matrix-operation data. It uses
+  Euclidean row/column sweeps, corrects pivots that do not divide the remaining block, and
+  normalizes signs. Recursion checks strictly decreasing pivot absolute value; there is no
+  fuel parameter. Descent and final verification failures are explicit. Universal generator
+  success has not been proved, and is not claimed by the API.
+- `CohomologyInteger.lean` checks generated integral kernels and Smith presentations, then
+  reuses the shared Mathlib comparison. Induced maps are transported through the quotient
+  equivalence, hence respect torsion relations; naturality and composition compile.
+- Initial kernel-checked examples pass: multiplication by 2, gcd/lcm normalization of
+  `diag(4,6,0)` to factors `[2,12]` with one free coordinate, a nonzero outgoing differential,
+  canonical representatives, positive and negative boundary preimages, and negative degree.
+  Further explicit cyclic equivalences and torsion-map regressions are being checked.
+- Further checks pass: explicit `ZMod 2` homology isomorphisms, multiplication by 3 on
+  `ℤ/4` and its square, a saturated kernel of `[6,10,15]`, unit/negative pivots, empty
+  degrees, gaps, and endpoints. `BasedCochainComplex.integerCohomologyIso` supplies the
+  existing realization transport.
+- Full `lake build` passes (8342 jobs, only the eight existing warnings), the module-root
+  check passes, and the integer quotient, calculator, boundary, map, and homology-transport
+  axiom audits contain only the three permitted axioms. No new proof placeholders exist.
