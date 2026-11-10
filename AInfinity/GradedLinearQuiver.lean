@@ -37,7 +37,7 @@ universe u v w w'
 
 /-- A graded `R`-linear quiver: for objects `X` and `Y` and a degree `i`, the morphisms of
 degree `i` from `X` to `Y` form an `R`-module `Hom R X Y i`. -/
-class GradedLinearQuiver (β : Type v) (R : Type u) [CommRing R] (Obj : Type w) where
+class GradedLinearQuiver (β : Type v) (R : Type u) [Semiring R] (Obj : Type w) where
   /-- The morphisms of degree `i` from `X` to `Y`. The ring `R` is an explicit argument so that
   the notation `X →ᵍ[R] Y` can display it. -/
   Hom (R) : Obj → Obj → β → Type w'
@@ -51,7 +51,7 @@ attribute [instance_reducible, instance] GradedLinearQuiver.homGroup
 
 namespace GradedLinearQuiver
 
-variable {β : Type v} {R : Type u} [CommRing R] {Obj : Type w} [GradedLinearQuiver β R Obj]
+variable {β : Type v} {R : Type u} [Semiring R] {Obj : Type w} [GradedLinearQuiver β R Obj]
 variable {n : ℕ}
 
 /-- `X →ᵍ[R] Y` is the graded family of `R`-modules of morphisms from `X` to `Y` in a graded

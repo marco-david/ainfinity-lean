@@ -38,10 +38,12 @@ categories and of linear categories, that vanish above arity two.
 `(X →ᵍ[R] Y) p`, and hide both `ComposableHom` and the degree arithmetic
 `(∑ k, deg k) + (2 - n : ℤ) • degOne = j` from the user.
 
-The ring of scalars `R` is an ordinary class parameter, so an object type may carry several
-rings of scalars. It is passed explicitly wherever it cannot be inferred from later arguments:
-to the hom spaces `(X →ᵍ[R] Y) i`, `ComposableHom`, `AInfinityOperation` and `homCongr`. The
-type of degrees `β` is passed explicitly to `ComposableHom` and `AInfinityOperation` as well.
+The ring of scalars `R` is a semiring, except for `AInfinityOperation.ofGradedLinearMap`
+and `AInfinityOperation.ofBilinear`, which need a commutative semiring. It is an ordinary
+class parameter, so an object type may carry several rings of scalars. It is passed explicitly
+wherever it cannot be inferred from later arguments: to the hom spaces `(X →ᵍ[R] Y) i`,
+`ComposableHom`, `AInfinityOperation` and `homCongr`. The type of degrees `β` is passed
+explicitly to `ComposableHom` and `AInfinityOperation` as well.
 -/
 @[expose] public section
 
@@ -52,7 +54,10 @@ universe u v w
 open GradedLinearQuiver
 
 variable {β : Type v} [AddCommGroup β] [Grading β]
-variable {R : Type u} [CommRing R] {Obj : Type w}
+
+section Semiring
+
+variable {R : Type u} [Semiring R] {Obj : Type w}
 
 section
 
@@ -77,7 +82,45 @@ class AInfinityCategoryStruct extends GradedLinearQuiver β R Obj where
   /-- The higher compositions mₙ. -/
   m {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) : AInfinityOperation β R X
 
+namespace AInfinityOperation
+
 variable [GradedLinearQuiver β R Obj]
+variable (m₁ : ∀ X : Fin (1 + 1) → Obj, AInfinityOperation β R X)
+  (m₂ : ∀ X : Fin (2 + 1) → Obj, AInfinityOperation β R X)
+
+/-- The family of operations with unary operations `m₁` and binary operations `m₂`, and
+vanishing operations in every arity `n ≥ 3`. -/
+def ofArityLeTwo {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) : AInfinityOperation β R X :=
+  match n with
+    | 1 => m₁ X
+    | 2 => m₂ X
+    | _ => 0
+
+@[simp]
+theorem ofArityLeTwo_one (X : Fin (1 + 1) → Obj) : ofArityLeTwo m₁ m₂ X = m₁ X :=
+  rfl
+
+@[simp]
+theorem ofArityLeTwo_two (X : Fin (2 + 1) → Obj) : ofArityLeTwo m₁ m₂ X = m₂ X :=
+  rfl
+
+theorem ofArityLeTwo_eq_zero {n : ℕ} [NeZero n] (h₁ : n ≠ 1) (h₂ : n ≠ 2)
+    (X : Fin (n + 1) → Obj) : ofArityLeTwo m₁ m₂ X = 0 := by
+  unfold ofArityLeTwo
+  split <;> simp_all
+
+end AInfinityOperation
+
+end Semiring
+
+section CommSemiring
+
+/-! ### Unary and binary operations from linear and bilinear maps
+
+These constructors build multilinear maps with Mathlib's currying API, which needs a
+commutative semiring of scalars. -/
+
+variable {R : Type u} [CommSemiring R] {Obj : Type w} [GradedLinearQuiver β R Obj]
 
 namespace AInfinityOperation
 
@@ -117,30 +160,8 @@ theorem ofBilinear_v_apply {X : Fin (2 + 1) → Obj}
       f (deg 0) (deg 1) j (by simpa [operationTargetDeg, Fin.sum_univ_two] using h) (x 0) (x 1) :=
   rfl
 
-variable (m₁ : ∀ X : Fin (1 + 1) → Obj, AInfinityOperation β R X)
-  (m₂ : ∀ X : Fin (2 + 1) → Obj, AInfinityOperation β R X)
-
-/-- The family of operations with unary operations `m₁` and binary operations `m₂`, and
-vanishing operations in every arity `n ≥ 3`. -/
-def ofArityLeTwo {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) : AInfinityOperation β R X :=
-  match n with
-    | 1 => m₁ X
-    | 2 => m₂ X
-    | _ => 0
-
-@[simp]
-theorem ofArityLeTwo_one (X : Fin (1 + 1) → Obj) : ofArityLeTwo m₁ m₂ X = m₁ X :=
-  rfl
-
-@[simp]
-theorem ofArityLeTwo_two (X : Fin (2 + 1) → Obj) : ofArityLeTwo m₁ m₂ X = m₂ X :=
-  rfl
-
-theorem ofArityLeTwo_eq_zero {n : ℕ} [NeZero n] (h₁ : n ≠ 1) (h₂ : n ≠ 2)
-    (X : Fin (n + 1) → Obj) : ofArityLeTwo m₁ m₂ X = 0 := by
-  unfold ofArityLeTwo
-  split <;> simp_all
-
 end AInfinityOperation
+
+end CommSemiring
 
 end AInfinityTheory

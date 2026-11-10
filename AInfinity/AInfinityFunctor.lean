@@ -162,7 +162,7 @@ homomorphism of gradings and, for each n ≥ 1, a functor component φₙ of deg
 1 - n.
 No relations are imposed. -/
 structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
-    [AddCommGroup β'] [Grading β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
+    [AddCommGroup β'] [Grading β'] (R : Type*) [Semiring R] (Obj Obj' : Type*)
     [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj'] where
   /-- The action of the functor on objects. -/
   obj : Obj → Obj'
@@ -178,7 +178,7 @@ structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
 namespace AInfinityFunctorData
 
 variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β']
-  [Grading β'] {R : Type*} [CommRing R] {Obj Obj' : Type*}
+  [Grading β'] {R : Type*} [Semiring R] {Obj Obj' : Type*}
 
 section GradedLinearQuiver
 
@@ -267,7 +267,7 @@ end AInfinityFunctorData
 /-- An A∞-functor between A∞-categories: A∞-functor data satisfying the
 functor equations. -/
 structure AInfinityFunctor (β β' : Type*) [AddCommGroup β] [Grading β]
-    [AddCommGroup β'] [Grading β'] (R : Type*) [CommRing R] (Obj Obj' : Type*)
+    [AddCommGroup β'] [Grading β'] (R : Type*) [Semiring R] (Obj Obj' : Type*)
     [AInfinityCategory β R Obj] [AInfinityCategory β' R Obj']
     extends AInfinityFunctorData β β' R Obj Obj' where
   /-- The functor components satisfy the functor equations: in every arity `n ≥ 1`, the

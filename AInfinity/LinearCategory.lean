@@ -29,9 +29,10 @@ one in arity 3, which says that composition is associative.
 
 The morphisms of degree `i` from `X` to `Y` are the submodule ⨅ (_ : i ≠ 0), ⊥ of `X ⟶ Y`: all
 of `X ⟶ Y` in degree `0`, and zero otherwise. Using a submodule for every degree avoids casts
-along `i = 0`. The quiver is a definition rather than a global instance, since it would apply to
-every linear category and conflict with other graded structures on the same objects, such as
-that of a DG category.
+along `i = 0`. It also forces the ring of scalars to be a ring rather than a semiring: a
+submodule over a semiring need not be an additive group. The quiver is a definition rather than
+a global instance, since it would apply to every linear category and conflict with other graded
+structures on the same objects, such as that of a DG category.
 -/
 
 @[expose] public section

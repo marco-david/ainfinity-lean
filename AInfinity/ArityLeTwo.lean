@@ -45,7 +45,7 @@ universe u v w
 
 open GradedLinearQuiver
 
-variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommRing R] {Obj : Type w}
+variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommSemiring R] {Obj : Type w}
   [GradedLinearQuiver β R Obj]
   (f : ∀ X Y : Obj, GradedLinearMap R (X →ᵍ[R, β] Y) (X →ᵍ[R] Y) degOne)
   (g : ∀ (X Y Z : Obj) (p q i : β), p + q = i →
