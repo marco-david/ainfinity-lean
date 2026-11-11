@@ -129,6 +129,14 @@ instance : NeZero p.s :=
 instance : NeZero (p.r + 1 + p.t) :=
   ⟨by omega⟩
 
+/-- The first r inputs fit among the n inputs. -/
+lemma r_le : p.r ≤ n :=
+  (Nat.le_add_right p.r p.s).trans (Nat.le.intro p.sum_eq)
+
+/-- The first r + s inputs fit among the n inputs. -/
+lemma r_add_s_le : p.r + p.s ≤ n :=
+  Nat.le.intro p.sum_eq
+
 /-! ### Positions of the inputs and objects of the inner and outer operations
 
 The (r, s, t) summand cuts the n inputs into the first r inputs, the s inputs of the inner
@@ -141,11 +149,11 @@ it is needed. -/
 
 /-- The position of the `j`-th of the first r inputs among the n inputs: `j` itself. -/
 def leftIndex (j : Fin p.r) : Fin n :=
-  j.castLE ((Nat.le_add_right p.r p.s).trans (Nat.le.intro p.sum_eq))
+  j.castLE p.r_le
 
 /-- The position r + j of the `j`-th input of the inner operation among the n inputs. -/
 def innerIndex (j : Fin p.s) : Fin n :=
-  (j.natAdd p.r).castLE (Nat.le.intro p.sum_eq)
+  (j.natAdd p.r).castLE p.r_add_s_le
 
 /-- The position r + s + k of the `k`-th of the last t inputs among the n inputs. -/
 def rightIndex (k : Fin p.t) : Fin n :=
@@ -153,16 +161,14 @@ def rightIndex (k : Fin p.t) : Fin n :=
 
 /-- The position r + j of the `j`-th object of the inner operation among the n + 1 objects. -/
 def innerBoundary (j : Fin (p.s + 1)) : Fin (n + 1) :=
-  (j.natAdd p.r).castLE (Nat.succ_le_succ (Nat.le.intro p.sum_eq))
+  (j.natAdd p.r).castLE (Nat.succ_le_succ p.r_add_s_le)
 
 /-- The positions of the objects of the outer operation among the n + 1 objects: the objects
 0, …, r, then the objects r + s, …, n, so that the objects strictly between positions r and
 r + s are skipped. -/
 def outerBoundary : Fin (p.r + 1 + p.t + 1) → Fin (n + 1) :=
-  Fin.append (m := p.r + 1)
-    (fun j : Fin (p.r + 1) ↦
-      j.castLE (Nat.succ_le_succ ((Nat.le_add_right p.r p.s).trans (Nat.le.intro p.sum_eq))))
-    fun k : Fin (p.t + 1) ↦ (k.natAdd (p.r + p.s)).castLE (Nat.succ_le_succ p.sum_eq.le)
+  Fin.append (m := p.r + 1) (Fin.castLE (Nat.succ_le_succ p.r_le))
+    fun k ↦ (k.natAdd (p.r + p.s)).castLE (Nat.succ_le_succ p.sum_eq.le)
 
 /-- The position r of the inner output among the inputs of the outer operation, of arity
 r + 1 + t. -/
