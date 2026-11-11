@@ -64,10 +64,10 @@ variable (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (p : StasheffIndex 
 first r, as morphisms between the objects of the inner operation. -/
 def stasheffInputsIn :
     ∀ j : Fin p.s, ComposableHom β R (stasheffObjIn X p) j (stasheffDegIn deg p j) :=
-  fun j ↦ a (p.innerEmb j)
+  fun j ↦ a (p.innerIndex j)
 
 @[simp]
-lemma stasheffInputsIn_apply (j : Fin p.s) : stasheffInputsIn a p j = a (p.innerEmb j) :=
+lemma stasheffInputsIn_apply (j : Fin p.s) : stasheffInputsIn a p j = a (p.innerIndex j) :=
   rfl
 
 /-- The inner output of the (r, s, t) summand, mₛ applied to the s inputs after the first r,
@@ -84,24 +84,26 @@ def stasheffInputsOut :
   Fin.addCases
     (Fin.snoc
       (fun j ↦ homCongr R (stasheffObjOut_left_castSucc X p j).symm
-        (stasheffObjOut_left_succ X p j).symm (stasheffDegOut_left deg p j).symm (a (p.leftEmb j)))
+        (stasheffObjOut_left_succ X p j).symm (stasheffDegOut_left deg p j).symm
+        (a (p.leftIndex j)))
       (homCongr R (stasheffObjOut_middle_castSucc X p).symm (stasheffObjOut_middle_succ X p).symm
         rfl (stasheffInner a p _ (stasheffDegOut_middle deg p).symm)))
     fun k ↦ homCongr R (stasheffObjOut_right_castSucc X p k).symm
-      (stasheffObjOut_right_succ X p k).symm (stasheffDegOut_right deg p k).symm (a (p.rightEmb k))
+      (stasheffObjOut_right_succ X p k).symm (stasheffDegOut_right deg p k).symm
+      (a (p.rightIndex k))
 
 @[simp]
 lemma stasheffInputsOut_left (j : Fin p.r) :
     stasheffInputsOut a p (j.castSucc.castAdd p.t) =
       homCongr R (stasheffObjOut_left_castSucc X p j).symm (stasheffObjOut_left_succ X p j).symm
-        (stasheffDegOut_left deg p j).symm (a (p.leftEmb j)) := by
+        (stasheffDegOut_left deg p j).symm (a (p.leftIndex j)) := by
   simp [stasheffInputsOut]
 
 @[simp]
 lemma stasheffInputsOut_right (k : Fin p.t) :
     stasheffInputsOut a p (k.natAdd (p.r + 1)) =
       homCongr R (stasheffObjOut_right_castSucc X p k).symm (stasheffObjOut_right_succ X p k).symm
-        (stasheffDegOut_right deg p k).symm (a (p.rightEmb k)) := by
+        (stasheffDegOut_right deg p k).symm (a (p.rightIndex k)) := by
   simp [stasheffInputsOut]
 
 @[simp]
