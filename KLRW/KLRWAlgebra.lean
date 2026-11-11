@@ -660,6 +660,4 @@ abbrev KLRWAlgUniv (P : KLRWStructure V) :=
   KLRWAlg (univU R) (univℏ R) P
 
 end Universal
-
-end KLRW
 end KLRW
