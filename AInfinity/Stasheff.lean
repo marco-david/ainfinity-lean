@@ -39,6 +39,11 @@ are in `AInfinity.StasheffIndex`.
 * `AInfinityTheory.stasheffSum_arity_one`, `AInfinityTheory.stasheffSum_arity_two`,
   `AInfinityTheory.stasheffSum_arity_three`: the Stasheff sums in arities 1, 2 and 3,
   written out term by term.
+
+## References
+
+* P. Seidel, *Fukaya categories and Picard–Lefschetz theory*, Zurich Lectures in Advanced
+  Mathematics, European Mathematical Society, 2008.
 -/
 
 @[expose] public section
@@ -51,7 +56,7 @@ open GradedLinearQuiver
 open AInfinityCategoryStruct (m)
 
 variable {β : Type v} [AddCommGroup β] [Grading β]
-variable {R : Type u} [CommRing R] {Obj : Type w} [AInfinityCategoryStruct β R Obj]
+variable {R : Type u} [Semiring R] {Obj : Type w} [AInfinityCategoryStruct β R Obj]
 variable {n : ℕ} {X : Fin (n + 1) → Obj} {deg : Fin n → β}
 variable (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (p : StasheffIndex n)
 

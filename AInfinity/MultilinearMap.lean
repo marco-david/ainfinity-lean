@@ -29,6 +29,9 @@ is equal to `M i`, so `ofSubsingletonₗ'` is `ofSubsingletonₗ` followed by th
 `LinearEquiv.cast : M j ≃ₗ[R] M i`, which reduce away when evaluated.
 
 The declarations are generic and live in Mathlib's namespaces, as candidates for upstreaming.
+`ofSubsingletonₗ'` is meant to be upstreamed as a generalisation of `MultilinearMap.ofSubsingletonₗ`
+itself to dependent families, of which the constant family is the special case; the prime is a
+stopgap until then.
 -/
 
 @[expose] public section

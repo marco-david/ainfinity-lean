@@ -45,7 +45,7 @@ universe u v w
 
 open GradedLinearQuiver
 
-variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommRing R] {Obj : Type w}
+variable {β : Type v} [AddCommGroup β] [Grading β] {R : Type u} [CommSemiring R] {Obj : Type w}
   [GradedLinearQuiver β R Obj]
   (f : ∀ X Y : Obj, GradedLinearMap R (X →ᵍ[R, β] Y) (X →ᵍ[R] Y) degOne)
   (g : ∀ (X Y Z : Obj) (p q i : β), p + q = i →
@@ -91,54 +91,54 @@ lemma m_eq_zero {k : ℕ} [NeZero k] (hk : k ∉ ({1, 2} : Set ℕ)) (X : Fin (k
 include differential_differential in
 /-- The arity-one Stasheff identity holds as soon as the differential squares to zero. -/
 lemma stasheffSum_eq_zero_of_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 → β}
-    (x : ∀ i : Fin 1, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin 1, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
     letI := ofArityLeTwo f g
-    stasheffSum x d hd = 0 := by
+    stasheffSum a d hd = 0 := by
   let := ofArityLeTwo f g
   rw [stasheffSum_arity_one]
-  exact differential_differential (X 0) (X 1) _ _ (x 0)
+  exact differential_differential (X 0) (X 1) _ _ (a 0)
 
 include leibniz in
 /-- The arity-two Stasheff identity holds as soon as the Leibniz rule does. -/
 lemma stasheffSum_eq_zero_of_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 → β}
-    (x : ∀ i : Fin 2, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin 2, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
     letI := ofArityLeTwo f g
-    stasheffSum x d hd = 0 := by
+    stasheffSum a d hd = 0 := by
   let := ofArityLeTwo f g
   rw [stasheffSum_arity_two]
-  exact leibniz (X 0) (X 1) (X 2) _ _ _ _ (x 0) (x 1)
+  exact leibniz (X 0) (X 1) (X 2) _ _ _ _ (a 0) (a 1)
 
 include assoc in
 /-- The arity-three Stasheff identity holds as soon as the composition is associative up to
 the Koszul sign: the four terms involving an operation of arity 3 vanish. -/
 lemma stasheffSum_eq_zero_of_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 → β}
-    (x : ∀ i : Fin 3, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin 3, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
     letI := ofArityLeTwo f g
-    stasheffSum x d hd = 0 := by
+    stasheffSum a d hd = 0 := by
   let := ofArityLeTwo f g
   have hm := fun (k : ℕ) [NeZero k] hk X ↦ m_eq_zero (β := β) (R := R) f g (k := k) hk X
   rw [stasheffSum_arity_three,
-    stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm x ⟨0, 1, 2, rfl, le_rfl⟩ (by simp) d hd,
-    stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm x ⟨1, 1, 1, rfl, le_rfl⟩ (by simp) d hd,
-    stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm x ⟨2, 1, 0, rfl, le_rfl⟩ (by simp) d hd,
-    stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm x ⟨0, 3, 0, rfl, by decide⟩ (by simp) d hd]
+    stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm a ⟨0, 1, 2, rfl, le_rfl⟩ (by simp) d hd,
+    stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm a ⟨1, 1, 1, rfl, le_rfl⟩ (by simp) d hd,
+    stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm a ⟨2, 1, 0, rfl, le_rfl⟩ (by simp) d hd,
+    stasheffTerm_eq_zero_of_arity_notMem {1, 2} hm a ⟨0, 3, 0, rfl, by decide⟩ (by simp) d hd]
   simp only [smul_zero, zero_add, add_zero]
-  exact assoc (X 0) (X 1) (X 2) (X 3) _ _ _ (x 0) (x 1) (x 2)
+  exact assoc (X 0) (X 1) (X 2) (X 3) _ _ _ (a 0) (a 1) (a 2)
 
 /-- The Stasheff identities hold in every arity n ≥ 4: each Stasheff term involves an
 operation of arity at least 3, which vanishes. -/
 lemma stasheffSum_eq_zero_of_four_le {n : ℕ} (hn : 4 ≤ n) {X : Fin (n + 1) → Obj}
-    {deg : Fin n → β} (x : ∀ i : Fin n, ComposableHom β R X i (deg i)) {d : β}
+    {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) {d : β}
     (hd : stasheffTargetDeg deg = d) :
     letI := ofArityLeTwo f g
-    stasheffSum x d hd = 0 :=
+    stasheffSum a d hd = 0 :=
   letI := ofArityLeTwo f g
   stasheffSum_eq_zero_of_arity_notMem {1, 2} (fun _ _ hk X ↦ m_eq_zero f g hk X)
     (fun p ↦ by
       have := p.sum_eq
       simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
       omega)
-    x d hd
+    a d hd
 
 end AInfinityCategoryStruct.ofArityLeTwo
 
@@ -150,12 +150,12 @@ m₁ given by `f` and composition m₂ given by `g`, from the Stasheff identitie
 associative, all with Koszul signs. -/
 abbrev AInfinityCategory.ofArityLeTwo : AInfinityCategory β R Obj where
   __ := AInfinityCategoryStruct.ofArityLeTwo f g
-  stasheffSum_eq_zero {n} _ X deg x d hd := by
+  stasheffSum_eq_zero {n} _ X deg a d hd := by
     rcases n with _ | _ | _ | _ | n
     · exact absurd rfl (NeZero.ne 0)
-    · exact stasheffSum_eq_zero_of_arity_one f g differential_differential x hd
-    · exact stasheffSum_eq_zero_of_arity_two f g leibniz x hd
-    · exact stasheffSum_eq_zero_of_arity_three f g assoc x hd
-    · exact stasheffSum_eq_zero_of_four_le f g (by omega) x hd
+    · exact stasheffSum_eq_zero_of_arity_one f g differential_differential a hd
+    · exact stasheffSum_eq_zero_of_arity_two f g leibniz a hd
+    · exact stasheffSum_eq_zero_of_arity_three f g assoc a hd
+    · exact stasheffSum_eq_zero_of_four_le f g (by omega) a hd
 
 end AInfinityTheory

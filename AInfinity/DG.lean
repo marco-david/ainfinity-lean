@@ -70,6 +70,11 @@ definitions, so rewriting with it requires `erw`. The `HomologicalComplex` secti
 this file restates the lemmas we need in terms of the monoidal structure. These lemmas live in
 Mathlib's `HomologicalComplex` namespace rather than `AInfinityTheory`, since they are candidates
 for upstreaming to `Mathlib.Algebra.Homology.Monoidal`.
+
+## References
+
+* P. Seidel, *Fukaya categories and Picard–Lefschetz theory*, Zurich Lectures in Advanced
+  Mathematics, European Mathematical Society, 2008.
 -/
 
 @[expose] public section

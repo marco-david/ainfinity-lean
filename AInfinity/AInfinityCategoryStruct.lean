@@ -38,10 +38,12 @@ categories and of linear categories, that vanish above arity two.
 `(X →ᵍ[R] Y) p`, and hide both `ComposableHom` and the degree arithmetic
 `(∑ k, deg k) + (2 - n : ℤ) • degOne = j` from the user.
 
-The ring of scalars `R` is an ordinary class parameter, so an object type may carry several
-rings of scalars. It is passed explicitly wherever it cannot be inferred from later arguments:
-to the hom spaces `(X →ᵍ[R] Y) i`, `ComposableHom`, `AInfinityOperation` and `homCongr`. The
-type of degrees `β` is passed explicitly to `ComposableHom` and `AInfinityOperation` as well.
+The ring of scalars `R` is a semiring, except for `AInfinityOperation.ofGradedLinearMap`
+and `AInfinityOperation.ofBilinear`, which need a commutative semiring. It is an ordinary
+class parameter, so an object type may carry several rings of scalars. It is passed explicitly
+wherever it cannot be inferred from later arguments: to the hom spaces `(X →ᵍ[R] Y) i`,
+`ComposableHom`, `AInfinityOperation` and `homCongr`. The type of degrees `β` is passed
+explicitly to `ComposableHom` and `AInfinityOperation` as well.
 -/
 @[expose] public section
 
@@ -52,7 +54,10 @@ universe u v w
 open GradedLinearQuiver
 
 variable {β : Type v} [AddCommGroup β] [Grading β]
-variable {R : Type u} [CommRing R] {Obj : Type w}
+
+section Semiring
+
+variable {R : Type u} [Semiring R] {Obj : Type w}
 
 section
 
@@ -77,46 +82,9 @@ class AInfinityCategoryStruct extends GradedLinearQuiver β R Obj where
   /-- The higher compositions mₙ. -/
   m {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) : AInfinityOperation β R X
 
-variable [GradedLinearQuiver β R Obj]
-
 namespace AInfinityOperation
 
-/-- The unary operation given by a graded linear map `f` of degree `1` on the morphisms from
-`X 0` to `X 1`, such as the differential of a DG category. -/
-def ofGradedLinearMap {X : Fin (1 + 1) → Obj}
-    (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) degOne) :
-    AInfinityOperation β R X :=
-  .mk fun deg j h ↦ MultilinearMap.ofSubsingletonₗ' 0 (f.v (deg 0) j (by simpa using h))
-
-@[simp]
-theorem ofGradedLinearMap_v_apply {X : Fin (1 + 1) → Obj}
-    (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) degOne) (deg : Fin 1 → β)
-    (j : β) (h : operationTargetDeg deg = j)
-    (x : ∀ k, ComposableHom β R X k (deg k)) :
-    (ofGradedLinearMap f).v deg j h x =
-      f.v (deg 0) j (by simpa [operationTargetDeg] using h) (x 0) :=
-  rfl
-
-/-- The binary operation given by a family of bilinear maps `f p q j`, sending morphisms of
-degrees `p` and `q` to a morphism of degree `j = p + q`, such as the composition of a DG
-category. -/
-def ofBilinear {X : Fin (2 + 1) → Obj}
-    (f : ∀ p q j : β, p + q = j →
-      (X 0 →ᵍ[R] X 1) p →ₗ[R] (X 1 →ᵍ[R] X 2) q →ₗ[R] (X 0 →ᵍ[R] X 2) j) :
-    AInfinityOperation β R X :=
-  .mk fun deg j h ↦
-    LinearMap.uncurryFinTwo (f (deg 0) (deg 1) j (by simpa [Fin.sum_univ_two] using h))
-
-@[simp]
-theorem ofBilinear_v_apply {X : Fin (2 + 1) → Obj}
-    (f : ∀ p q j : β, p + q = j →
-      (X 0 →ᵍ[R] X 1) p →ₗ[R] (X 1 →ᵍ[R] X 2) q →ₗ[R] (X 0 →ᵍ[R] X 2) j)
-    (deg : Fin 2 → β) (j : β) (h : operationTargetDeg deg = j)
-    (x : ∀ k, ComposableHom β R X k (deg k)) :
-    (ofBilinear f).v deg j h x =
-      f (deg 0) (deg 1) j (by simpa [operationTargetDeg, Fin.sum_univ_two] using h) (x 0) (x 1) :=
-  rfl
-
+variable [GradedLinearQuiver β R Obj]
 variable (m₁ : ∀ X : Fin (1 + 1) → Obj, AInfinityOperation β R X)
   (m₂ : ∀ X : Fin (2 + 1) → Obj, AInfinityOperation β R X)
 
@@ -142,5 +110,58 @@ theorem ofArityLeTwo_eq_zero {n : ℕ} [NeZero n] (h₁ : n ≠ 1) (h₂ : n ≠
   split <;> simp_all
 
 end AInfinityOperation
+
+end Semiring
+
+section CommSemiring
+
+/-! ### Unary and binary operations from linear and bilinear maps
+
+These constructors build multilinear maps with Mathlib's currying API, which needs a
+commutative semiring of scalars. -/
+
+variable {R : Type u} [CommSemiring R] {Obj : Type w} [GradedLinearQuiver β R Obj]
+
+namespace AInfinityOperation
+
+/-- The unary operation given by a graded linear map `f` of degree `1` on the morphisms from
+`X 0` to `X 1`, such as the differential of a DG category. -/
+def ofGradedLinearMap {X : Fin (1 + 1) → Obj}
+    (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) degOne) :
+    AInfinityOperation β R X :=
+  .mk fun deg j h ↦ MultilinearMap.ofSubsingletonₗ' 0 (f.v (deg 0) j (by simpa using h))
+
+@[simp]
+theorem ofGradedLinearMap_v_apply {X : Fin (1 + 1) → Obj}
+    (f : GradedLinearMap R (X 0 →ᵍ[R, β] X 1) (X 0 →ᵍ[R] X 1) degOne) (deg : Fin 1 → β)
+    (j : β) (h : operationTargetDeg deg = j)
+    (a : ∀ k, ComposableHom β R X k (deg k)) :
+    (ofGradedLinearMap f).v deg j h a =
+      f.v (deg 0) j (by simpa [operationTargetDeg] using h) (a 0) :=
+  rfl
+
+/-- The binary operation given by a family of bilinear maps `f p q j`, sending morphisms of
+degrees `p` and `q` to a morphism of degree `j = p + q`, such as the composition of a DG
+category. -/
+def ofBilinear {X : Fin (2 + 1) → Obj}
+    (f : ∀ p q j : β, p + q = j →
+      (X 0 →ᵍ[R] X 1) p →ₗ[R] (X 1 →ᵍ[R] X 2) q →ₗ[R] (X 0 →ᵍ[R] X 2) j) :
+    AInfinityOperation β R X :=
+  .mk fun deg j h ↦
+    LinearMap.uncurryFinTwo (f (deg 0) (deg 1) j (by simpa [Fin.sum_univ_two] using h))
+
+@[simp]
+theorem ofBilinear_v_apply {X : Fin (2 + 1) → Obj}
+    (f : ∀ p q j : β, p + q = j →
+      (X 0 →ᵍ[R] X 1) p →ₗ[R] (X 1 →ᵍ[R] X 2) q →ₗ[R] (X 0 →ᵍ[R] X 2) j)
+    (deg : Fin 2 → β) (j : β) (h : operationTargetDeg deg = j)
+    (a : ∀ k, ComposableHom β R X k (deg k)) :
+    (ofBilinear f).v deg j h a =
+      f (deg 0) (deg 1) j (by simpa [operationTargetDeg, Fin.sum_univ_two] using h) (a 0) (a 1) :=
+  rfl
+
+end AInfinityOperation
+
+end CommSemiring
 
 end AInfinityTheory
