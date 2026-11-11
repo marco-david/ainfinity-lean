@@ -24,10 +24,10 @@ operations, their degrees, and the Koszul sign of the summand.
   mₙ(a₁, …, aₙ) and of the arity-n Stasheff identity.
 * `AInfinityTheory.StasheffIndex`: the index triples (r, s, t) with r + s + t = n and
   1 ≤ s.
-* `AInfinityTheory.StasheffIndex.leftInput`, `AInfinityTheory.StasheffIndex.innerInput`,
-  `AInfinityTheory.StasheffIndex.rightInput`: the positions of the first r inputs, of the s inputs
+* `AInfinityTheory.StasheffIndex.leftIndex`, `AInfinityTheory.StasheffIndex.innerIndex`,
+  `AInfinityTheory.StasheffIndex.rightIndex`: the positions of the first r inputs, of the s inputs
   of the inner operation and of the last t inputs among the n inputs.
-* `AInfinityTheory.StasheffIndex.innerObj`, `AInfinityTheory.StasheffIndex.outerObj`: the
+* `AInfinityTheory.StasheffIndex.innerBoundary`, `AInfinityTheory.StasheffIndex.outerBoundary`: the
   positions of the objects of the inner and of the outer operation among the n + 1 objects.
 * `AInfinityTheory.StasheffIndex.middleIndex`: the position of the inner output among the inputs
   of the outer operation.
@@ -41,7 +41,7 @@ operations, their degrees, and the Koszul sign of the summand.
 
 ## Main results
 
-* `AInfinityTheory.StasheffIndex.sum_leftInput_add_sum_innerInput_add_sum_rightInput`: the first r
+* `AInfinityTheory.StasheffIndex.sum_leftIndex_add_sum_innerIndex_add_sum_rightIndex`: the first r
   inputs, the s inputs of the inner operation and the last t inputs make up all n inputs.
 * `AInfinityTheory.stasheffDegOut_sum`: the outer operation of the (r, s, t) summand has the
   degree of the arity-n Stasheff identity.
@@ -134,31 +134,35 @@ instance : NeZero (p.r + 1 + p.t) :=
 The (r, s, t) summand cuts the n inputs into the first r inputs, the s inputs of the inner
 operation and the last t inputs. It cuts the n + 1 objects into the objects r, …, r + s of the
 inner operation and the objects 0, …, r and r + s, …, n of the outer operation. The maps below
-record these positions. They are plain functions; an order-embedding layer in the style of
-`Composition.embedding` and `Composition.boundary` can be added on top when it is needed. -/
+record these positions, with the vocabulary of `Composition`: the positions of objects are
+*boundaries*, the positions of inputs are *indices*. They are plain functions; an order-embedding
+layer in the style of `Composition.embedding` and `Composition.boundary` can be added on top when
+it is needed. -/
 
 /-- The position of the `j`-th of the first r inputs among the n inputs: `j` itself. -/
-def leftInput (j : Fin p.r) : Fin n :=
+def leftIndex (j : Fin p.r) : Fin n :=
   j.castLE ((Nat.le_add_right p.r p.s).trans (Nat.le.intro p.sum_eq))
 
 /-- The position r + j of the `j`-th input of the inner operation among the n inputs. -/
-def innerInput (j : Fin p.s) : Fin n :=
+def innerIndex (j : Fin p.s) : Fin n :=
   (j.natAdd p.r).castLE (Nat.le.intro p.sum_eq)
 
 /-- The position r + s + k of the `k`-th of the last t inputs among the n inputs. -/
-def rightInput (k : Fin p.t) : Fin n :=
+def rightIndex (k : Fin p.t) : Fin n :=
   (k.natAdd (p.r + p.s)).castLE p.sum_eq.le
 
 /-- The position r + j of the `j`-th object of the inner operation among the n + 1 objects. -/
-def innerObj (j : Fin (p.s + 1)) : Fin (n + 1) :=
+def innerBoundary (j : Fin (p.s + 1)) : Fin (n + 1) :=
   (j.natAdd p.r).castLE (Nat.succ_le_succ (Nat.le.intro p.sum_eq))
 
-/-- The position of the `i`-th object of the outer operation among the n + 1 objects: the
-outer objects are the objects 0, …, r and r + s, …, n, so the objects strictly between
-positions r and r + s are skipped. -/
-def outerObj (i : Fin (p.r + 1 + p.t + 1)) : Fin (n + 1) :=
-  ⟨if (i : ℕ) ≤ p.r then (i : ℕ) else i + p.s - 1, by
-    have := p.sum_eq; have := p.one_le_s; have := i.isLt; split_ifs <;> omega⟩
+/-- The positions of the objects of the outer operation among the n + 1 objects: the objects
+0, …, r, then the objects r + s, …, n, so that the objects strictly between positions r and
+r + s are skipped. -/
+def outerBoundary : Fin (p.r + 1 + p.t + 1) → Fin (n + 1) :=
+  Fin.append (m := p.r + 1)
+    (fun j : Fin (p.r + 1) ↦
+      j.castLE (Nat.succ_le_succ ((Nat.le_add_right p.r p.s).trans (Nat.le.intro p.sum_eq))))
+    fun k : Fin (p.t + 1) ↦ (k.natAdd (p.r + p.s)).castLE (Nat.succ_le_succ p.sum_eq.le)
 
 /-- The position r of the inner output among the inputs of the outer operation, of arity
 r + 1 + t. -/
@@ -166,117 +170,101 @@ abbrev middleIndex : Fin (p.r + 1 + p.t) :=
   (Fin.last p.r).castAdd p.t
 
 @[simp]
-lemma val_leftInput (j : Fin p.r) : (p.leftInput j : ℕ) = j :=
+lemma val_leftIndex (j : Fin p.r) : (p.leftIndex j : ℕ) = j :=
   rfl
 
 @[simp]
-lemma val_innerInput (j : Fin p.s) : (p.innerInput j : ℕ) = p.r + j :=
+lemma val_innerIndex (j : Fin p.s) : (p.innerIndex j : ℕ) = p.r + j :=
   rfl
 
 @[simp]
-lemma val_rightInput (k : Fin p.t) : (p.rightInput k : ℕ) = p.r + p.s + k :=
+lemma val_rightIndex (k : Fin p.t) : (p.rightIndex k : ℕ) = p.r + p.s + k :=
   rfl
 
 @[simp]
-lemma val_innerObj (j : Fin (p.s + 1)) : (p.innerObj j : ℕ) = p.r + j :=
-  rfl
-
-lemma val_outerObj (i : Fin (p.r + 1 + p.t + 1)) :
-    (p.outerObj i : ℕ) = if (i : ℕ) ≤ p.r then (i : ℕ) else i + p.s - 1 :=
+lemma val_innerBoundary (j : Fin (p.s + 1)) : (p.innerBoundary j : ℕ) = p.r + j :=
   rfl
 
 /-- Up to position r, the outer object string follows the original one. -/
 @[simp]
-lemma val_outerObj_of_le {i : Fin (p.r + 1 + p.t + 1)} (h : (i : ℕ) ≤ p.r) :
-    (p.outerObj i : ℕ) = i :=
-  ite_eq_left h
+lemma val_outerBoundary_castAdd (j : Fin (p.r + 1)) :
+    (p.outerBoundary (j.castAdd (p.t + 1)) : ℕ) = j := by
+  simp [outerBoundary]
 
 /-- After position r, the outer object string skips the s - 1 objects strictly inside the
 inner block. -/
 @[simp]
-lemma val_outerObj_of_lt {i : Fin (p.r + 1 + p.t + 1)} (h : p.r < i) :
-    (p.outerObj i : ℕ) = i + p.s - 1 :=
-  ite_eq_right (not_le.2 h)
+lemma val_outerBoundary_natAdd (k : Fin (p.t + 1)) :
+    (p.outerBoundary (k.natAdd (p.r + 1)) : ℕ) = p.r + p.s + k := by
+  simp [outerBoundary]
 
 /-- The source of the `j`-th input of the inner operation is the `j`-th inner object. -/
 @[simp]
-lemma innerObj_castSucc (j : Fin p.s) : p.innerObj j.castSucc = (p.innerInput j).castSucc :=
+lemma innerBoundary_castSucc (j : Fin p.s) :
+    p.innerBoundary j.castSucc = (p.innerIndex j).castSucc :=
   rfl
 
 /-- The target of the `j`-th input of the inner operation is the `(j + 1)`-st inner object. -/
 @[simp]
-lemma innerObj_succ (j : Fin p.s) : p.innerObj j.succ = (p.innerInput j).succ :=
+lemma innerBoundary_succ (j : Fin p.s) : p.innerBoundary j.succ = (p.innerIndex j).succ :=
   rfl
 
 /-- The outer object string starts at the object 0. -/
 @[simp]
-lemma outerObj_zero : p.outerObj 0 = 0 :=
-  Fin.ext (p.val_outerObj_of_le (Nat.zero_le _))
+lemma outerBoundary_zero : p.outerBoundary 0 = 0 :=
+  Fin.ext (p.val_outerBoundary_castAdd 0)
 
 /-- The outer object string ends at the object n. -/
 @[simp]
-lemma outerObj_last : p.outerObj (Fin.last _) = Fin.last n := by
-  have := p.sum_eq
-  have := p.one_le_s
-  ext
-  simp only [val_outerObj, Fin.val_last]
-  split_ifs <;> omega
+lemma outerBoundary_last : p.outerBoundary (Fin.last _) = Fin.last n :=
+  Fin.ext ((p.val_outerBoundary_natAdd (Fin.last p.t)).trans p.sum_eq)
 
 /-- Before the inner output, the source of an outer input is the source of the original
 input. -/
 @[simp]
-lemma outerObj_left_castSucc (j : Fin p.r) :
-    p.outerObj (j.castSucc.castAdd p.t).castSucc = (p.leftInput j).castSucc :=
-  Fin.ext (p.val_outerObj_of_le j.isLt.le)
+lemma outerBoundary_left_castSucc (j : Fin p.r) :
+    p.outerBoundary (j.castSucc.castAdd p.t).castSucc = (p.leftIndex j).castSucc :=
+  Fin.ext (p.val_outerBoundary_castAdd j.castSucc)
 
 /-- Before the inner output, the target of an outer input is the target of the original
 input. -/
 @[simp]
-lemma outerObj_left_succ (j : Fin p.r) :
-    p.outerObj (j.castSucc.castAdd p.t).succ = (p.leftInput j).succ :=
-  Fin.ext (p.val_outerObj_of_le j.isLt)
+lemma outerBoundary_left_succ (j : Fin p.r) :
+    p.outerBoundary (j.castSucc.castAdd p.t).succ = (p.leftIndex j).succ :=
+  Fin.ext (p.val_outerBoundary_castAdd j.succ)
 
 /-- The source of the inner output, as an outer input, is the first inner object. -/
 @[simp]
-lemma outerObj_middle_castSucc : p.outerObj p.middleIndex.castSucc = p.innerObj 0 :=
-  Fin.ext (p.val_outerObj_of_le le_rfl)
+lemma outerBoundary_middle_castSucc : p.outerBoundary p.middleIndex.castSucc = p.innerBoundary 0 :=
+  Fin.ext (p.val_outerBoundary_castAdd (Fin.last p.r))
 
 /-- The target of the inner output, as an outer input, is the last inner object. -/
 @[simp]
-lemma outerObj_middle_succ :
-    p.outerObj p.middleIndex.succ = p.innerObj (Fin.last p.s) := by
-  have := p.one_le_s
-  ext
-  simp only [val_outerObj, Fin.val_succ, Fin.val_castAdd, Fin.val_last, val_innerObj]
-  split_ifs <;> omega
+lemma outerBoundary_middle_succ :
+    p.outerBoundary p.middleIndex.succ = p.innerBoundary (Fin.last p.s) :=
+  Fin.ext (p.val_outerBoundary_natAdd 0)
 
 /-- After the inner output, the source of an outer input is the source of the original
 input. -/
 @[simp]
-lemma outerObj_right_castSucc (k : Fin p.t) :
-    p.outerObj (k.natAdd (p.r + 1)).castSucc = (p.rightInput k).castSucc := by
-  have := p.one_le_s
-  ext
-  simp only [val_outerObj, Fin.val_castSucc, Fin.val_natAdd, val_rightInput]
-  split_ifs <;> omega
+lemma outerBoundary_right_castSucc (k : Fin p.t) :
+    p.outerBoundary (k.natAdd (p.r + 1)).castSucc = (p.rightIndex k).castSucc :=
+  Fin.ext (p.val_outerBoundary_natAdd k.castSucc)
 
 /-- After the inner output, the target of an outer input is the target of the original
 input. -/
 @[simp]
-lemma outerObj_right_succ (k : Fin p.t) :
-    p.outerObj (k.natAdd (p.r + 1)).succ = (p.rightInput k).succ := by
-  have := p.one_le_s
-  ext
-  simp only [val_outerObj, Fin.val_succ, Fin.val_natAdd, val_rightInput]
-  split_ifs <;> omega
+lemma outerBoundary_right_succ (k : Fin p.t) :
+    p.outerBoundary (k.natAdd (p.r + 1)).succ = (p.rightIndex k).succ :=
+  Fin.ext (p.val_outerBoundary_natAdd k.succ)
 
 /-- The first r inputs, the s inputs of the inner operation and the last t inputs make up
 all n inputs. -/
 @[to_additive /-- The first r inputs, the s inputs of the inner operation and the last t inputs
 make up all n inputs. -/]
-lemma prod_leftInput_mul_prod_innerInput_mul_prod_rightInput {M : Type*} [CommMonoid M]
+lemma prod_leftIndex_mul_prod_innerIndex_mul_prod_rightIndex {M : Type*} [CommMonoid M]
     (f : Fin n → M) :
-    (∏ j, f (p.leftInput j)) * (∏ j, f (p.innerInput j)) * ∏ k, f (p.rightInput k) = ∏ i, f i := by
+    (∏ j, f (p.leftIndex j)) * (∏ j, f (p.innerIndex j)) * ∏ k, f (p.rightIndex k) = ∏ i, f i := by
   rw [← Fin.prod_congr' f p.sum_eq, Fin.prod_univ_add, Fin.prod_univ_add]
   rfl
 
@@ -289,62 +277,62 @@ variable {Obj : Type w} (X : Fin (n + 1) → Obj) (p : StasheffIndex n)
 /-- The object string of the inner operation of the (r, s, t) summand: the objects of `X`
 from position r to position r + s. -/
 def stasheffObjIn : Fin (p.s + 1) → Obj :=
-  fun i ↦ X (p.innerObj i)
+  fun i ↦ X (p.innerBoundary i)
 
 /-- The object string of the outer operation of the (r, s, t) summand, obtained from `X` by
 deleting the objects strictly between positions r and r + s. -/
 def stasheffObjOut : Fin (p.r + 1 + p.t + 1) → Obj :=
-  fun i ↦ X (p.outerObj i)
+  fun i ↦ X (p.outerBoundary i)
 
 /-- The outer object string starts at `X 0`. -/
 @[simp]
 lemma stasheffObjOut_zero : stasheffObjOut X p 0 = X 0 :=
-  congrArg X p.outerObj_zero
+  congrArg X p.outerBoundary_zero
 
 /-- The outer object string ends at `X (Fin.last n)`. -/
 @[simp]
 lemma stasheffObjOut_last : stasheffObjOut X p (Fin.last (p.r + 1 + p.t)) = X (Fin.last n) :=
-  congrArg X p.outerObj_last
+  congrArg X p.outerBoundary_last
 
 /-- Before the inner output, the source of an outer input is the source of the original
 input. -/
 @[simp]
 lemma stasheffObjOut_left_castSucc (j : Fin p.r) :
-    stasheffObjOut X p (j.castSucc.castAdd p.t).castSucc = X (p.leftInput j).castSucc :=
-  congrArg X (p.outerObj_left_castSucc j)
+    stasheffObjOut X p (j.castSucc.castAdd p.t).castSucc = X (p.leftIndex j).castSucc :=
+  congrArg X (p.outerBoundary_left_castSucc j)
 
 /-- Before the inner output, the target of an outer input is the target of the original
 input. -/
 @[simp]
 lemma stasheffObjOut_left_succ (j : Fin p.r) :
-    stasheffObjOut X p (j.castSucc.castAdd p.t).succ = X (p.leftInput j).succ :=
-  congrArg X (p.outerObj_left_succ j)
+    stasheffObjOut X p (j.castSucc.castAdd p.t).succ = X (p.leftIndex j).succ :=
+  congrArg X (p.outerBoundary_left_succ j)
 
 /-- The source of the inner output, as an outer input, is the first inner object. -/
 @[simp]
 lemma stasheffObjOut_middle_castSucc :
     stasheffObjOut X p p.middleIndex.castSucc = stasheffObjIn X p 0 :=
-  congrArg X p.outerObj_middle_castSucc
+  congrArg X p.outerBoundary_middle_castSucc
 
 /-- The target of the inner output, as an outer input, is the last inner object. -/
 @[simp]
 lemma stasheffObjOut_middle_succ :
     stasheffObjOut X p p.middleIndex.succ = stasheffObjIn X p (Fin.last p.s) :=
-  congrArg X p.outerObj_middle_succ
+  congrArg X p.outerBoundary_middle_succ
 
 /-- After the inner output, the source of an outer input is the source of the original
 input. -/
 @[simp]
 lemma stasheffObjOut_right_castSucc (k : Fin p.t) :
-    stasheffObjOut X p (k.natAdd (p.r + 1)).castSucc = X (p.rightInput k).castSucc :=
-  congrArg X (p.outerObj_right_castSucc k)
+    stasheffObjOut X p (k.natAdd (p.r + 1)).castSucc = X (p.rightIndex k).castSucc :=
+  congrArg X (p.outerBoundary_right_castSucc k)
 
 /-- After the inner output, the target of an outer input is the target of the original
 input. -/
 @[simp]
 lemma stasheffObjOut_right_succ (k : Fin p.t) :
-    stasheffObjOut X p (k.natAdd (p.r + 1)).succ = X (p.rightInput k).succ :=
-  congrArg X (p.outerObj_right_succ k)
+    stasheffObjOut X p (k.natAdd (p.r + 1)).succ = X (p.rightIndex k).succ :=
+  congrArg X (p.outerBoundary_right_succ k)
 
 end ObjectStrings
 
@@ -355,7 +343,7 @@ variable {β : Type v} [AddCommGroup β] [Grading β] (deg : Fin n → β) (p : 
 /-- The input degrees of the inner operation mₛ of the (r, s, t) summand: the degrees of
 the s inputs after the first r. -/
 def stasheffDegIn : Fin p.s → β :=
-  fun j ↦ deg (p.innerInput j)
+  fun j ↦ deg (p.innerIndex j)
 
 /-- The degree of the output of the inner operation mₛ of the (r, s, t) summand. -/
 def stasheffInnerDeg : β :=
@@ -364,12 +352,12 @@ def stasheffInnerDeg : β :=
 /-- The input degrees of the outer operation of the (r, s, t) summand: the degrees of the
 first r inputs, then the degree of the inner output, then the degrees of the last t inputs. -/
 def stasheffDegOut : Fin (p.r + 1 + p.t) → β :=
-  Fin.append (Fin.snoc (fun j ↦ deg (p.leftInput j)) (stasheffInnerDeg deg p))
-    fun k ↦ deg (p.rightInput k)
+  Fin.append (Fin.snoc (fun j ↦ deg (p.leftIndex j)) (stasheffInnerDeg deg p))
+    fun k ↦ deg (p.rightIndex k)
 
 @[simp]
 lemma stasheffDegOut_left (j : Fin p.r) :
-    stasheffDegOut deg p (j.castSucc.castAdd p.t) = deg (p.leftInput j) := by
+    stasheffDegOut deg p (j.castSucc.castAdd p.t) = deg (p.leftIndex j) := by
   simp [stasheffDegOut]
 
 @[simp]
@@ -378,7 +366,7 @@ lemma stasheffDegOut_middle : stasheffDegOut deg p p.middleIndex = stasheffInner
 
 @[simp]
 lemma stasheffDegOut_right (k : Fin p.t) :
-    stasheffDegOut deg p (k.natAdd (p.r + 1)) = deg (p.rightInput k) := by
+    stasheffDegOut deg p (k.natAdd (p.r + 1)) = deg (p.rightIndex k) := by
   simp [stasheffDegOut]
 
 /-- The outer operation has the Stasheff target degree. -/
@@ -387,14 +375,14 @@ lemma stasheffDegOut_sum :
   have h : (n : ℤ) = p.r + p.s + p.t := by exact_mod_cast p.sum_eq.symm
   simp only [operationTargetDeg, stasheffTargetDeg, Fin.sum_univ_add, stasheffDegOut_left,
     stasheffDegOut_middle, stasheffDegOut_right, Fin.sum_univ_castSucc, stasheffInnerDeg,
-    stasheffDegIn, ← p.sum_leftInput_add_sum_innerInput_add_sum_rightInput deg]
+    stasheffDegIn, ← p.sum_leftIndex_add_sum_innerIndex_add_sum_rightIndex deg]
   rw [h]
   module
 
 /-- The Koszul sign of the Stasheff term indexed by p = (r, s, t): (-1) raised to the sum of
 the reduced degrees ‖a‖ = |a| - 1 of the last t inputs. -/
 def stasheffSign : ℤˣ :=
-  ∏ k : Fin p.t, (sign (deg (p.rightInput k) - degOne)).toMul
+  ∏ k : Fin p.t, (sign (deg (p.rightIndex k) - degOne)).toMul
 
 /-- The signed sum `∑ p, stasheffSign deg p • f p` over the index triples `p : StasheffIndex n`
 of the arity-n Stasheff identity. Both the Stasheff identities and the A∞-functor equations are
