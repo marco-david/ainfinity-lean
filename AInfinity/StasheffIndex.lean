@@ -266,8 +266,7 @@ lemma outerBoundary_right_succ (k : Fin p.t) :
 
 /-- The first r inputs, the s inputs of the inner operation and the last t inputs make up
 all n inputs. -/
-@[to_additive /-- The first r inputs, the s inputs of the inner operation and the last t inputs
-make up all n inputs. -/]
+@[to_additive]
 lemma prod_leftIndex_mul_prod_innerIndex_mul_prod_rightIndex {M : Type*} [CommMonoid M]
     (f : Fin n → M) :
     (∏ j, f (p.leftIndex j)) * (∏ j, f (p.innerIndex j)) * ∏ k, f (p.rightIndex k) = ∏ i, f i := by
