@@ -168,7 +168,7 @@ def innerBoundary (j : Fin (p.s + 1)) : Fin (n + 1) :=
 r + s are skipped. -/
 def outerBoundary : Fin (p.r + 1 + p.t + 1) → Fin (n + 1) :=
   Fin.append (m := p.r + 1) (Fin.castLE (Nat.succ_le_succ p.r_le))
-    fun k ↦ (k.natAdd (p.r + p.s)).castLE (Nat.succ_le_succ p.sum_eq.le)
+    fun k : Fin (p.t + 1) ↦ (k.natAdd (p.r + p.s)).castLE (Nat.succ_le_succ p.sum_eq.le)
 
 /-- The position r of the inner output among the inputs of the outer operation, of arity
 r + 1 + t. -/
