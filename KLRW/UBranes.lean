@@ -717,14 +717,6 @@ lemma strandGenSeqEnd_edge {k : ℕ} {labels : Fin k → V} (Γ : SimpleDigraph 
   strandGenSeqEnd_edgeOps Γ diag v w h.dir
     (fun j hj => by rw [h.dir_spec.eq, Function.update_of_ne hj])
 
-/-- The morphism of the KLRW category given by a list of operations that takes `X.obj` to
-`Y.obj`. -/
-def KLRWObject.WithRing.homOfOps {W : Type*} [DecidableEq W] [Fintype W] {P : KLRWStructure W}
-    {S : Type*} [CommRing S] {u ℏ : S} {X Y : KLRWObject.WithRing u ℏ P}
-    (ops : List (StrandGenOp P)) (h : strandGenSeqEnd X.obj ops = Y.obj) : X ⟶ Y :=
-  (⟨(klrwRel u ℏ P).mk' (strandGenSeq X.obj ops), strandGenSeq_mem_klrwHom_of_eq _ _ _ h⟩ :
-    ↥(klrwHom u ℏ X.obj Y.obj))
-
 /-- The morphism of the KLRW category along an edge `v → w` of the cube. -/
 def edgeHom {S : Type} [CommRing S] (u ℏ : S) {k : ℕ} {labels : Fin k → V}
     (Γ : SimpleDigraph V) (diag : UBraneDiagram disk labels) (v w : CubeVertex k)
