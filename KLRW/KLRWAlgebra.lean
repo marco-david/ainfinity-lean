@@ -1,456 +1,663 @@
 module
-
 public import Mathlib
 
-@[expose] public section
+/-!
+# KLRW algebras
 
+This file defines KLRW (Khovanov–Lauda–Rouquier–Webster) objects and the KLRW algebra: the
+quotient of the free algebra on dots, crossings and idempotents by the KLRW relations, with
+coefficients in a commutative ring `S` and parameters `u ℏ : S`.
+
+## Main definitions
+
+* `KLRW.KLRWStructure`: a directed graph `Γ` on the labels `V`, together with the number of black
+  and of red strands carrying each label.
+* `KLRW.KLRWObject P`: a sequence of labeled black and red strands with the numbers of strands
+  prescribed by `P : KLRWStructure V`.
+* `KLRW.StrandGenerator P`: the dots, crossings and idempotents that generate the algebra.
+* `KLRW.KLRWImplicitConRel` and `KLRW.KLRWExplicitConRel`: the KLRW relations.
+* `KLRW.KLRWAlg u ℏ P`: the KLRW algebra with coefficients in `S` and parameters `u ℏ : S`.
+* `KLRW.klrwHom u ℏ X Y`: the morphisms from `X` to `Y`, i.e. the elements `e_Y * a * e_X`.
+* `KLRW.KLRWAlgUniv R P`: the universal KLRW algebra, with coefficients in `R[u, ℏ]`.
+
+## Implementation notes
+
+* Every generator records the object it starts from. Products of generators whose objects do
+  not match are zero (`KLRWImplicitConRel.bad_comp`), and `klrwHom u ℏ X Y` is the subspace
+  `e_Y * A * e_X` of the algebra `A`.
+* A list of operations passed to `strandGenSeq` is applied from right to left, matching the
+  order of multiplication.
+* The relations drawn in Figure 1 of LePage–Shende (the nontrivial KLRW relations) are
+  `KLRWExplicitConRel`, and their docstrings use the same letters (a)–(g). All other relations,
+  including the cases where strands pass through each other freely, are `KLRWImplicitConRel`.
+* The parameters `u` and `ℏ` are arbitrary elements of `S`. The universal case `S = R[u, ℏ]`
+  is `KLRWAlgUniv`.
+
+## References
+
+* B. Webster, *Knot invariants and higher representation theory*, arXiv:1309.3796.
+* E. LePage and V. Shende, *Aganagic's invariant is Khovanov homology*, arXiv:2505.00327.
+-/
+
+@[expose] public section
 namespace KLRW
 
+/-! ## KLRW structures and objects -/
 
-/- A SimpleDigraph is a loopless directed graph. -/
+section BasicDefs
 
-structure SimpleDigraph (V : Type*) extends Digraph V where
-  loopless : ∀ x : V, ¬ Adj x x
-
-
-/- StrandColor holds the two color options a strand can be. -/
-
+/-- The two colors a strand can have. -/
 inductive StrandColor where
-  | red   : StrandColor
-  | black : StrandColor
-  deriving DecidableEq
+  | red
+  | black
+  deriving DecidableEq, Repr
 
-/-- There are exactly two strand colours. (Written out by hand: the `Fintype` deriving handler
-identifies `List.Nodup` with `Multiset.Nodup` by unfolding, which Lean 4.35 no longer does when
-checking implicit arguments, so `deriving Fintype` fails outside Mathlib.) -/
+/-- There are two strand colors. (Written out by hand: on Lean 4.35, `deriving Fintype` fails
+outside Mathlib.) -/
 instance : Fintype StrandColor where
-  elems := {StrandColor.red, StrandColor.black}
+  elems := {.red, .black}
   complete := by intro c; cases c <;> simp
 
+variable (V : Type*)
 
-/- KLRWStructure holds the parameters for a KLRW Algebra.
-   Γ represents the directed graph with labeled verticies, BlackStrands tells you the number of
-   black strands labeled a given a is in V, and RedStrands a tells you the number of red strands
-   labeled a, given a is in V. -/
+/-- A loopless directed graph with no pair of opposite edges. -/
+structure SimpleDigraph extends Digraph V where
+  /-- No vertex has an edge to itself. -/
+  loopless : ∀ x : V, ¬ Adj x x
+  /-- There is never an edge in both directions between two vertices. -/
+  no_two_way : ∀ x y : V, Adj x y → ¬ Adj y x
 
-structure KLRWStructure (V : Type*) where
-  Γ : SimpleDigraph (V)
-  BlackStrands : V → Nat
-  RedStrands : V → Nat
+/-- The data defining a KLRW algebra: a directed graph `Γ` on the set of labels `V`, and for
+each label the number of black and of red strands carrying it. -/
+structure KLRWStructure where
+  /-- The graph on the labels. -/
+  Γ : SimpleDigraph V
+  /-- The number of black strands with each label. -/
+  blackStrands : V → ℕ
+  /-- The number of red strands with each label. -/
+  redStrands : V → ℕ
 
-
-/- StrandDate holds the information each strand is associated with (label and color). -/
-
-structure StrandData (V : Type*) where
+/-- The data carried by a single strand: its label and its color. -/
+structure StrandData where
+  /-- The label of the strand. -/
   label : V
+  /-- The color of the strand. -/
   color : StrandColor
-  deriving DecidableEq
+  deriving DecidableEq, Repr
 
-
+/-- There are finitely many kinds of strand: a strand is a label together with a color. -/
+instance {V : Type*} [Fintype V] : Fintype (StrandData V) :=
+  Fintype.ofEquiv (V × StrandColor)
+    { toFun := fun p => ⟨p.1, p.2⟩
+      invFun := fun s => (s.label, s.color)
+      left_inv := fun _ => rfl
+      right_inv := fun _ => rfl }
+end BasicDefs
 
 variable {V : Type*} [DecidableEq V] [Fintype V]
-variable {parameters : KLRWStructure V}
+variable {P : KLRWStructure V}
 
-open StrandColor
+section KLRWObject
 
+/-- The number of strands in `s` with label `k` and color `c`. -/
+def numColor {m : ℕ} (s : Fin m → StrandData V) (k : V) (c : StrandColor) : ℕ :=
+  (Finset.univ.filter (fun i => s i = ⟨k, c⟩)).card
 
-/- numColor calculates the number of strands with a given label and color. -/
+/-- The number of black strands in `s` with label `k`. -/
+abbrev numBlack {m : ℕ} (s : Fin m → StrandData V) (k : V) : ℕ := numColor s k .black
 
-def numColor {m : ℕ} (v : Vector (StrandData V) m) (k : V) (c : StrandColor) : Nat :=
-  (v.toList.filter (fun p => p.label == k && p.color == c)).length
+/-- The number of red strands in `s` with label `k`. -/
+abbrev numRed {m : ℕ} (s : Fin m → StrandData V) (k : V) : ℕ := numColor s k .red
 
-abbrev numBlack {m : ℕ} (v : Vector (StrandData V) m) (k : V) : Nat := numColor v k .black
-abbrev numRed {m : ℕ} (v : Vector (StrandData V) m) (k : V) : Nat := numColor v k .red
+omit [Fintype V] in
+/-- Rearranging the strands does not change how many have a given label and color. -/
+lemma numColor_comp_perm {m : ℕ} (s : Fin m → StrandData V) (e : Equiv.Perm (Fin m))
+    (k : V) (c : StrandColor) : numColor (s ∘ e) k c = numColor s k c :=
+  Finset.card_equiv e (by simp)
 
+/-- The total number of strands, black and red, in a KLRW structure. -/
+abbrev KLRWStructure.numStrands (P : KLRWStructure V) : ℕ :=
+  ∑ v : V, (P.blackStrands v + P.redStrands v)
 
-/- totalStrands calculates the total number of strands in a KLRWStructure. -/
+/-- An object of the KLRW category: a sequence of strands in which the number of black and of
+red strands with each label is the one prescribed by `P`. -/
+@[ext]
+structure KLRWObject (P : KLRWStructure V) where
+  /-- The strand at each position, from left to right. -/
+  strandSeq : Fin P.numStrands → StrandData V
+  /-- There are `P.blackStrands i` black strands with label `i`. -/
+  corr_num_black : ∀ i : V, P.blackStrands i = numBlack strandSeq i
+  /-- There are `P.redStrands i` red strands with label `i`. -/
+  corr_num_red : ∀ i : V, P.redStrands i = numRed strandSeq i
 
-abbrev totalStrands (parameters : KLRWStructure V) :=
-  ∑ v : V, (parameters.BlackStrands v + parameters.RedStrands v)
+/-- There are finitely many KLRW objects, since an object is determined by its strands. -/
+noncomputable instance : Fintype (KLRWObject P) :=
+  Fintype.ofInjective KLRWObject.strandSeq fun _ _ => KLRWObject.ext
 
+/-- The strand at position `i` of `M`. -/
+abbrev KLRWObject.get (M : KLRWObject P) (i : Fin P.numStrands) : StrandData V :=
+  M.strandSeq i
 
-/- strandSeq is a vector where each slot contains a strand's information.
-   Corr_num_black ensures the number of black strands for each label in strandSeq matches that of BlackStrands in blueprint.
-   Corr_num_red ensures the number of red strands for each label in strandSeq matches that of RedStrands in blueprint. -/
+/-- Two KLRW objects are equal if they have the same strand at every position. -/
+lemma KLRWObject.ext_get {X Y : KLRWObject P} (h : ∀ p, X.get p = Y.get p) : X = Y :=
+  KLRWObject.ext (funext h)
 
-structure KLRWObject (parameters : KLRWStructure V) where
-  strandSeq : Vector (StrandData V) (totalStrands parameters)
-  corr_num_black : ∀ (i : V), parameters.BlackStrands i = numBlack strandSeq i
-  corr_num_red   : ∀ (i : V), parameters.RedStrands i   = numRed strandSeq i
+end KLRWObject
 
+/-! ## Strand generators
 
-/- This function simplifies the process to access elements in strandSeq of a KLRWObject. -/
+Dots, crossings and idempotents, each attached to the object it starts from. They generate the
+free algebra whose quotient is the KLRW algebra. -/
 
-abbrev KLRWObject.get (M : KLRWObject parameters) (i : Fin (totalStrands parameters)) :
-    StrandData V :=
-  M.strandSeq.get i
+section StrandGenerators
 
+/-- The generators of the KLRW algebra. Each one records the object it starts from. -/
+inductive StrandGenerator (P : KLRWStructure V) where
+  /-- A dot on one strand of an object. -/
+  | dot : KLRWObject P → Fin P.numStrands → StrandGenerator P
+  /-- A crossing of two adjacent strands of an object. -/
+  | cross : KLRWObject P → Fin (P.numStrands - 1) → StrandGenerator P
+  /-- The idempotent (identity) of an object. -/
+  | idem : KLRWObject P → StrandGenerator P
 
+/-! ### Adjacent strands
 
+A crossing index `i : Fin (n - 1)` names the gap between strands `adjLeft i` and
+`adjRight i`; `adjSwap i` swaps those two strands. A braid index `i : Fin (n - 2)` names the
+three strands `braidLeft i`, `braidMid i`, `braidRight i` and the two crossings
+`braidCrossLeft i`, `braidCrossRight i` between them. -/
 
+section AdjacentStrands
 
-/- The following section is the basis for defining homomorphisms between KLRW objects. -/
+/-- The left strand of the adjacent pair indexed by `i`. -/
+def adjLeft {n : ℕ} (i : Fin (n - 1)) : Fin n := ⟨i, by omega⟩
 
-/- StrandGenerators describe what what happens to the ith strand of a specific KLRWObject -/
+/-- The right strand of the adjacent pair indexed by `i`. -/
+def adjRight {n : ℕ} (i : Fin (n - 1)) : Fin n := ⟨i + 1, by omega⟩
 
-inductive StrandGenerator (parameters : KLRWStructure V) where
-  | dot   : KLRWObject parameters → Fin (totalStrands parameters) → StrandGenerator parameters
-  | cross : KLRWObject parameters → Fin (totalStrands parameters - 1) → StrandGenerator parameters
-  | idem : KLRWObject parameters → StrandGenerator parameters
+/-- The position of `adjLeft i` is `i`. -/
+@[simp] lemma val_adjLeft {n : ℕ} (i : Fin (n - 1)) : (adjLeft i).val = i.val := rfl
 
+/-- The position of `adjRight i` is `i + 1`. -/
+@[simp] lemma val_adjRight {n : ℕ} (i : Fin (n - 1)) : (adjRight i).val = i.val + 1 := rfl
 
-/- This function gives you the KLRWObject before a strand generator is applied (the domain of the morphism). -/
+/-- The two strands at a gap are different strands. -/
+lemma adjLeft_ne_adjRight {n : ℕ} (i : Fin (n - 1)) : adjLeft i ≠ adjRight i :=
+  fun h => by simpa using congrArg Fin.val h
 
-def StrandGenerator.domain (gen : StrandGenerator parameters) : KLRWObject parameters :=
-  match gen with
-  | .dot M _   => M
+/-- The permutation swapping the two strands on either side of gap `i`. -/
+def adjSwap {n : ℕ} (i : Fin (n - 1)) : Equiv.Perm (Fin n) :=
+  Equiv.swap (adjLeft i) (adjRight i)
+
+/-- `adjSwap i` on positions: it exchanges `i` and `i + 1` and fixes every other position. -/
+lemma adjSwap_val {m : ℕ} (i : Fin (m - 1)) (r : Fin m) :
+    (adjSwap i r).val =
+      if r.val = i.val then i.val + 1 else if r.val = i.val + 1 then i.val else r.val := by
+  simp only [adjSwap, Equiv.swap_apply_def, Fin.ext_iff]
+  split_ifs <;> simp_all
+
+/-- `adjSwap i` sends the left strand of gap `i` to the right one. -/
+@[simp] lemma adjSwap_adjLeft {n : ℕ} (i : Fin (n - 1)) : adjSwap i (adjLeft i) = adjRight i :=
+  Equiv.swap_apply_left _ _
+
+/-- `adjSwap i` sends the right strand of gap `i` to the left one. -/
+@[simp] lemma adjSwap_adjRight {n : ℕ} (i : Fin (n - 1)) : adjSwap i (adjRight i) = adjLeft i :=
+  Equiv.swap_apply_right _ _
+
+/-- `adjSwap i` fixes every strand other than the two at gap `i`. -/
+lemma adjSwap_apply_of_ne {n : ℕ} (i : Fin (n - 1)) {r : Fin n}
+    (h₁ : r ≠ adjLeft i) (h₂ : r ≠ adjRight i) : adjSwap i r = r :=
+  Equiv.swap_apply_of_ne_of_ne h₁ h₂
+
+/-- For a braid index `i : Fin (n - 2)`, the left strand (position `i`). -/
+def braidLeft {n : ℕ} (i : Fin (n - 2)) : Fin n := ⟨i, by omega⟩
+
+/-- For a braid index `i : Fin (n - 2)`, the middle strand (position `i + 1`). -/
+def braidMid {n : ℕ} (i : Fin (n - 2)) : Fin n := ⟨i + 1, by omega⟩
+
+/-- For a braid index `i : Fin (n - 2)`, the right strand (position `i + 2`). -/
+def braidRight {n : ℕ} (i : Fin (n - 2)) : Fin n := ⟨i + 2, by omega⟩
+
+/-- The crossing between the left and middle strands of the braid at `i`. -/
+def braidCrossLeft {n : ℕ} (i : Fin (n - 2)) : Fin (n - 1) := ⟨i, by omega⟩
+
+/-- The crossing between the middle and right strands of the braid at `i`. -/
+def braidCrossRight {n : ℕ} (i : Fin (n - 2)) : Fin (n - 1) := ⟨i + 1, by omega⟩
+
+/-! The positions of the braid strands and crossings. -/
+
+@[simp] lemma val_braidLeft {n : ℕ} (i : Fin (n - 2)) : (braidLeft i).val = i.val := rfl
+@[simp] lemma val_braidMid {n : ℕ} (i : Fin (n - 2)) : (braidMid i).val = i.val + 1 := rfl
+@[simp] lemma val_braidRight {n : ℕ} (i : Fin (n - 2)) : (braidRight i).val = i.val + 2 := rfl
+@[simp] lemma val_braidCrossLeft {n : ℕ} (i : Fin (n - 2)) :
+    (braidCrossLeft i).val = i.val := rfl
+@[simp] lemma val_braidCrossRight {n : ℕ} (i : Fin (n - 2)) :
+    (braidCrossRight i).val = i.val + 1 := rfl
+
+/-! The strands on either side of each braid crossing. -/
+
+@[simp] lemma adjLeft_braidCrossLeft {n : ℕ} (i : Fin (n - 2)) :
+    adjLeft (braidCrossLeft i) = braidLeft i := rfl
+@[simp] lemma adjRight_braidCrossLeft {n : ℕ} (i : Fin (n - 2)) :
+    adjRight (braidCrossLeft i) = braidMid i := rfl
+@[simp] lemma adjLeft_braidCrossRight {n : ℕ} (i : Fin (n - 2)) :
+    adjLeft (braidCrossRight i) = braidMid i := rfl
+@[simp] lemma adjRight_braidCrossRight {n : ℕ} (i : Fin (n - 2)) :
+    adjRight (braidCrossRight i) = braidRight i := rfl
+
+end AdjacentStrands
+
+/-- The object a strand generator starts from (the domain of the morphism). -/
+def StrandGenerator.domain : StrandGenerator P → KLRWObject P
+  | .dot M _ => M
   | .cross M _ => M
-  | .idem M      => M
+  | .idem M => M
 
+/-- The object obtained from `M` by crossing strands `i` and `i + 1` (the codomain of a
+crossing). -/
+def KLRWObject.afterCross (M : KLRWObject P) (i : Fin (P.numStrands - 1)) : KLRWObject P where
+  strandSeq := M.strandSeq ∘ adjSwap i
+  corr_num_black v := by
+    rw [M.corr_num_black v]
+    exact (numColor_comp_perm M.strandSeq (adjSwap i) _ _).symm
+  corr_num_red v := by
+    rw [M.corr_num_red v]
+    exact (numColor_comp_perm M.strandSeq (adjSwap i) _ _).symm
 
-/- Lemma that shows using toList and List.ofFn to turn a vector into a list results in the same list. -/
+/-- After a crossing at `i`, the strand at position `r` is the one that was at
+`adjSwap i r`. -/
+@[simp]
+lemma KLRWObject.afterCross_strandSeq (M : KLRWObject P) (i : Fin (P.numStrands - 1)) :
+    (M.afterCross i).strandSeq = M.strandSeq ∘ adjSwap i := rfl
 
-lemma toList_eq_ofFn {α : Type*} {n : Nat} (v : Vector α n) : v.toList = List.ofFn v.get := by
-  apply List.ext_get (by simp)
-  intro i hi1 hi2
-  simp [Vector.get, List.getElem_ofFn]
+/-- The object a strand generator ends at (the codomain of the morphism). -/
+def StrandGenerator.codomain : StrandGenerator P → KLRWObject P
+  | .dot M _ => M
+  | .cross M i => M.afterCross i
+  | .idem M => M
 
+/-- The free `S`-algebra on the strand generators. -/
+abbrev KLRWFreeAlg (S : Type*) [CommRing S] (P : KLRWStructure V) :=
+  FreeAlgebra S (StrandGenerator P)
 
-/- Permuting a vector then filtering and counting results in the same count as the original. -/
+end StrandGenerators
 
-lemma filter_perm_length_eq {α : Type*} {n : Nat} (v : Vector α n)
-    (e : Equiv.Perm (Fin n)) (p : α → Bool) :
-    ((Vector.ofFn (fun k => v.get (e k))).toList.filter p).length
-      = (v.toList.filter p).length := by
-  rw [Vector.toList_ofFn, toList_eq_ofFn v]
-  exact ((Equiv.Perm.ofFn_comp_perm e v.get).filter p).length_eq
+/-! ### Building elements from lists of operations
 
+A `StrandGenOp` is a generator without its starting object. A list of them, read from right to
+left, describes a product of generators once a starting object is chosen. -/
 
-/- Helper function to swap two side-by-side slots, and show that is a permutation. -/
+section StrandGenOps
 
-def adjSwap {n : Nat} (i : Fin (n - 1)) : Equiv.Perm (Fin n) :=
-  Equiv.swap ⟨i.val, by omega⟩ ⟨i.val + 1, by omega⟩
+variable {S : Type*} [CommRing S]
+variable (M : KLRWObject P)
 
+/-- A strand operation without a starting object: a crossing, a dot, or the identity. -/
+inductive StrandGenOp (P : KLRWStructure V) where
+  /-- Cross two adjacent strands. -/
+  | cross : Fin (P.numStrands - 1) → StrandGenOp P
+  /-- Put a dot on a strand. -/
+  | dot : Fin P.numStrands → StrandGenOp P
+  /-- Do nothing. -/
+  | idem : StrandGenOp P
+  deriving Repr
 
-/- Function that gives you the KLRWObject after a cross (the codomain after a cross). -/
+/-- The strand generator that `op` gives when applied to the object `M`. -/
+def StrandGenOp.toGenerator : StrandGenOp P → StrandGenerator P
+  | .cross i => .cross M i
+  | .dot i => .dot M i
+  | .idem => .idem M
 
-def afterCross (M : KLRWObject parameters) (i : Fin (totalStrands parameters - 1)) :
-    KLRWObject parameters where
-  strandSeq := Vector.ofFn (fun k => M.get (adjSwap i k))
-  corr_num_black := fun v => by
-    rw [M.corr_num_black v, numBlack]
-    exact (filter_perm_length_eq M.strandSeq (adjSwap i) _).symm
-  corr_num_red := fun v => by
-    rw [M.corr_num_red v, numRed]
-    exact (filter_perm_length_eq M.strandSeq (adjSwap i) _).symm
+/-- The object obtained by applying `op` to `M`. -/
+def StrandGenOp.apply : StrandGenOp P → KLRWObject P
+  | .cross i => M.afterCross i
+  | .dot _ => M
+  | .idem => M
 
+/-- The generator produced by `op` ends where `op` sends `M`. -/
+@[simp]
+lemma StrandGenOp.codomain_toGenerator (op : StrandGenOp P) :
+    (op.toGenerator M).codomain = op.apply M := by
+  cases op <;> rfl
 
-/- Function that gives you the KLRWObject after applying a strand generator. -/
+/-- The generator produced by `op` starts at `M`. -/
+@[simp]
+lemma StrandGenOp.domain_toGenerator (op : StrandGenOp P) :
+    (op.toGenerator M).domain = M := by
+  cases op <;> rfl
 
-def StrandGenerator.codomain (gen : StrandGenerator parameters) : KLRWObject parameters :=
-  match gen with
-  | .dot M _   => M
-  | .cross M i => afterCross M i
-  | .idem M      => M
+/-- The object reached from `M` after applying `ops`, right to left. -/
+def strandGenSeqEnd (M : KLRWObject P) (ops : List (StrandGenOp P)) : KLRWObject P :=
+  ops.foldr (fun op N => op.apply N) M
 
+/-- The product of the generators described by `ops`, applied right to left starting at `M`. -/
+def strandGenSeq (M : KLRWObject P) : List (StrandGenOp P) → KLRWFreeAlg S P
+  | [] => FreeAlgebra.ι _ (.idem M)
+  | op :: ops =>
+      FreeAlgebra.ι _ (op.toGenerator (strandGenSeqEnd M ops)) * strandGenSeq M ops
 
-/- Lifts StrandGenerator to a Free algebra over R[x, y]. -/
+/-- `strandGenSeq` of a nonempty list: the first operation, applied after the rest. -/
+lemma strandGenSeq_cons (op : StrandGenOp P) (ops : List (StrandGenOp P)) :
+    strandGenSeq (S := S) M (op :: ops) =
+      FreeAlgebra.ι _ (op.toGenerator (strandGenSeqEnd M ops)) * strandGenSeq M ops := rfl
 
-abbrev KLRWFreeAlg (R : Type*) [CommRing R] (parameters : KLRWStructure V) :=
-  FreeAlgebra (MvPolynomial (Fin 2) R) (StrandGenerator parameters)
+/-! #### Simp lemmas for `strandGenSeqEnd` -/
 
+/-- Applying no operations leaves `M` unchanged. -/
+@[simp]
+lemma strandGenSeqEnd_nil : strandGenSeqEnd M [] = M := rfl
 
-/- StrandData V is a type with a finite number of elements. -/
+/-- Applying `ops₁ ++ ops₂` means applying `ops₂` first, then `ops₁`. -/
+lemma strandGenSeqEnd_append (ops₁ ops₂ : List (StrandGenOp P)) :
+    strandGenSeqEnd M (ops₁ ++ ops₂) = strandGenSeqEnd (strandGenSeqEnd M ops₂) ops₁ := by
+  simp only [strandGenSeqEnd, List.foldr_append]
 
-instance (V : Type*) [Fintype V] [DecidableEq V] : Fintype (StrandData V) :=
-  Fintype.ofEquiv (V × StrandColor)
-    { toFun    := fun p => ⟨p.1, p.2⟩
-      invFun   := fun s => ⟨s.label, s.color⟩
-      left_inv  := by intro ⟨v, c⟩; rfl
-      right_inv := by intro ⟨v, c⟩; rfl }
+/-- A crossing at the end of the list is applied first. -/
+@[simp]
+lemma strandGenSeqEnd_cross (i : Fin (P.numStrands - 1)) (ops : List (StrandGenOp P)) :
+    strandGenSeqEnd M (ops ++ [.cross i]) = strandGenSeqEnd (M.afterCross i) ops :=
+  strandGenSeqEnd_append M ops [.cross i]
 
+/-- A crossing at the front of the list is applied last. -/
+@[simp]
+lemma cross_strandGenSeqEnd (i : Fin (P.numStrands - 1)) (ops : List (StrandGenOp P)) :
+    strandGenSeqEnd M (.cross i :: ops) = (strandGenSeqEnd M ops).afterCross i := rfl
 
-/- Vector (StrandData V) n is a type with a finite number of elements. -/
+/-- A dot at the end of the list does not change the resulting object. -/
+@[simp]
+lemma strandGenSeqEnd_dot (i : Fin P.numStrands) (ops : List (StrandGenOp P)) :
+    strandGenSeqEnd M (ops ++ [.dot i]) = strandGenSeqEnd M ops :=
+  strandGenSeqEnd_append M ops [.dot i]
 
-instance (V : Type*) [Fintype V] [DecidableEq V] (n : ℕ) : Fintype (Vector (StrandData V) n) :=
-  Fintype.ofEquiv (Fin n → StrandData V)
-    { toFun    := fun f => Vector.ofFn f
-      invFun   := fun v => v.get
-      left_inv  := by intro f; ext i; simp
-      right_inv := by intro v; ext i; simp; rfl }
+/-- A dot at the front of the list does not change the resulting object. -/
+@[simp]
+lemma dot_strandGenSeqEnd (i : Fin P.numStrands) (ops : List (StrandGenOp P)) :
+    strandGenSeqEnd M (.dot i :: ops) = strandGenSeqEnd M ops := rfl
 
+/-- An identity at the end of the list does not change the resulting object. -/
+@[simp]
+lemma strandGenSeqEnd_idem (ops : List (StrandGenOp P)) :
+    strandGenSeqEnd M (ops ++ [.idem]) = strandGenSeqEnd M ops :=
+  strandGenSeqEnd_append M ops [.idem]
 
-/- KLRWObject parameters is a type with a finite number of elements. -/
+/-- An identity at the front of the list does not change the resulting object. -/
+@[simp]
+lemma idem_strandGenSeqEnd (ops : List (StrandGenOp P)) :
+    strandGenSeqEnd M (.idem :: ops) = strandGenSeqEnd M ops := rfl
 
-noncomputable instance (parameters : KLRWStructure V) : Fintype (KLRWObject parameters) :=
-  Fintype.ofInjective
-    (fun X => X.strandSeq)
-    (fun X Y h => by cases X; cases Y; simp at h; congr)
+end StrandGenOps
 
+/-! ## Relations between strand morphisms -/
 
-open StrandGenerator
 open FreeAlgebra
 
-variable {R : Type*} [CommRing R]
+section Relations
 
+variable {S : Type*} [CommRing S]
 
-/- Structural/implicit KLRW algebra equality relations. -/
+/-! ### Conditions used by the relations -/
 
-inductive KLRWImplicitConRel : KLRWFreeAlg R parameters → KLRWFreeAlg R parameters → Prop where
+/-- The two strands at gap `i` are both black. -/
+def BothBlack (M : KLRWObject P) (i : Fin (P.numStrands - 1)) : Prop :=
+  (M.get (adjLeft i)).color = .black ∧ (M.get (adjRight i)).color = .black
 
-  /- If there's a dot on a red strand, set the morphism equal to zero. -/
-  | dot_on_red : ∀ (M : KLRWObject parameters) i,
+/-- The two strands at gap `i` have the same label. -/
+def SameLabel (M : KLRWObject P) (i : Fin (P.numStrands - 1)) : Prop :=
+  (M.get (adjLeft i)).label = (M.get (adjRight i)).label
+
+/-- Braid correction case: three black strands, the outer two with the same label, and
+`Γ.Adj middle left`. -/
+def BraidNeighborLeft (M : KLRWObject P) (i : Fin (P.numStrands - 2)) : Prop :=
+  (M.get (braidLeft i)).color = .black ∧ (M.get (braidMid i)).color = .black ∧
+  (M.get (braidRight i)).color = .black ∧
+  (M.get (braidLeft i)).label = (M.get (braidRight i)).label ∧
+  P.Γ.Adj (M.get (braidMid i)).label (M.get (braidLeft i)).label
+
+/-- Braid correction case: three black strands, the outer two with the same label, and
+`Γ.Adj left middle`. -/
+def BraidNeighborRight (M : KLRWObject P) (i : Fin (P.numStrands - 2)) : Prop :=
+  (M.get (braidLeft i)).color = .black ∧ (M.get (braidMid i)).color = .black ∧
+  (M.get (braidRight i)).color = .black ∧
+  (M.get (braidLeft i)).label = (M.get (braidRight i)).label ∧
+  P.Γ.Adj (M.get (braidLeft i)).label (M.get (braidMid i)).label
+
+/-- Braid correction case: black outer strands with the same label, and a red middle strand
+with that label too. -/
+def BraidRedMiddle (M : KLRWObject P) (i : Fin (P.numStrands - 2)) : Prop :=
+  (M.get (braidLeft i)).color = .black ∧ (M.get (braidMid i)).color = .red ∧
+  (M.get (braidRight i)).color = .black ∧
+  (M.get (braidLeft i)).label = (M.get (braidRight i)).label ∧
+  (M.get (braidMid i)).label = (M.get (braidLeft i)).label
+
+/-- The braid at `i` has a correction term. These are exactly the cases of
+`KLRWExplicitConRel.braid_with_neighbor_j_to_i`,
+`KLRWExplicitConRel.braid_with_neighbor_i_to_j` and
+`KLRWExplicitConRel.braid_with_red`; the plain `KLRWImplicitConRel.braid` relation covers every
+other case. -/
+def BraidHasCorrection (M : KLRWObject P) (i : Fin (P.numStrands - 2)) : Prop :=
+  BraidNeighborLeft M i ∨ BraidNeighborRight M i ∨ BraidRedMiddle M i
+
+/-! ### Implicit relations -/
+
+/-- The KLRW relations not drawn in Figure 1 of LePage–Shende: the bookkeeping relations for
+idempotents and mismatched compositions, the commutation relations, and the cases where strands
+pass through each other freely. None of them involves the parameters `u` and `ℏ`. -/
+inductive KLRWImplicitConRel : KLRWFreeAlg S P → KLRWFreeAlg S P → Prop where
+  /-- A dot on a red strand is zero. -/
+  | dot_on_red : ∀ (M : KLRWObject P) (i : Fin P.numStrands),
       (M.get i).color = .red →
-      KLRWImplicitConRel
-        (ι _ (.dot M i)) 0
-
-  /- If there's a crossing with 2 red strands, set the morphism equal to zero. -/
-  | cross_two_red : ∀ M i,
-      (M.get ⟨i, by omega⟩).color = .red →
-      (M.get ⟨i + 1, by omega⟩).color = .red →
-      KLRWImplicitConRel
-        (ι _ (.cross M i)) 0
-
-  /- If there's a bad composition (domain/codomain mismatch), set the morphism equal to zero.
-     g * f means g ∘ f, or first apply the morphism f, then apply the morphism g. -/
-  | bad_comp : ∀ f g,
-      codomain f ≠ domain g →
-      KLRWImplicitConRel
-        (ι _ g * ι _ f) 0
-
-
-  /- .idem M from StrandGenerators acts as the left and right identity for morphisms with the respective domain or codomain. -/
-
-  | idem_left : ∀ M g,
-    domain g = M →
-    KLRWImplicitConRel
-      (ι _ (.idem M) * ι _ g)
-      (ι _ g)
-
-  | idem_right : ∀ M g,
-    codomain g = M →
-    KLRWImplicitConRel
-      (ι _ g * ι _ (.idem M))
-      (ι _ g)
-
-
-  /- The identity is formed by summing all the idempotents. -/
+      KLRWImplicitConRel (strandGenSeq M [.dot i]) 0
+  /-- A crossing of two red strands is zero. -/
+  | cross_two_red : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      (M.get (adjLeft i)).color = .red →
+      (M.get (adjRight i)).color = .red →
+      KLRWImplicitConRel (strandGenSeq M [.cross i]) 0
+  /-- A composition with mismatched domain and codomain is zero.
+  Here `g * f` means "first `f`, then `g`". -/
+  | bad_comp : ∀ (f g : StrandGenerator P),
+      f.codomain ≠ g.domain →
+      KLRWImplicitConRel (ι _ g * ι _ f) 0
+  /-- `idem M` is a left identity for generators ending at `M`. -/
+  | idem_left : ∀ (M : KLRWObject P) (f : StrandGenerator P),
+      f.codomain = M →
+      KLRWImplicitConRel (ι _ (.idem M) * ι _ f) (ι _ f)
+  /-- `idem M` is a right identity for generators starting at `M`. -/
+  | idem_right : ∀ (M : KLRWObject P) (f : StrandGenerator P),
+      f.domain = M →
+      KLRWImplicitConRel (ι _ f * ι _ (.idem M)) (ι _ f)
+  /-- The identity is the sum of all the idempotents. -/
   | id_sum :
-    KLRWImplicitConRel
-      (Finset.univ.sum (fun M : KLRWObject parameters => ι _ (.idem M))) 1
-
-
-  /- The following explain when two elements are commutative.
-     These all follow automatic from equality up to isotopy. -/
-
-  /- If two neighboring crosses occur on strands that are far enough apart, then the order the crosses occur doesn't matter. -/
-  | cross_cross_comm : ∀ M i j,
-      dist i.val j.val > 1 →
+      KLRWImplicitConRel (Finset.univ.sum (fun M : KLRWObject P => ι _ (.idem M))) 1
+  /-- Crossings that are far apart commute. -/
+  | cross_cross_comm : ∀ (M : KLRWObject P) (i j : Fin (P.numStrands - 1)),
+      i.val + 1 < j.val ∨ j.val + 1 < i.val →
       KLRWImplicitConRel
-        (ι _ (.cross (afterCross M i) j) *
-         ι _ (.cross M i))
-        (ι _ (.cross (afterCross M i) i) *
-         ι _ (.cross M j))
-
-  /- The order of neighboring dots doesn't matter. -/
-  | dot_dot_comm : ∀ M i j,
+        (strandGenSeq M [.cross j, .cross i])
+        (strandGenSeq M [.cross i, .cross j])
+  /-- Dots commute. -/
+  | dot_dot_comm : ∀ (M : KLRWObject P) (i j : Fin P.numStrands),
       KLRWImplicitConRel
-        (ι _ (.dot M j) *
-         ι _ (.dot M i))
-        (ι _ (.dot M i) *
-         ι _ (.dot M j))
-
-  /- If neibhoring crosses and dots are far enough apart, then the order the cross and dot occurs doesn't matter. -/
-  | cross_dot_far_comm : ∀ M i j,
-      j.val != i.val →
-      j.val != i.val + 1 →
+        (strandGenSeq M [.dot j, .dot i])
+        (strandGenSeq M [.dot i, .dot j])
+  /-- A dot on a strand not involved in a crossing commutes with that crossing. -/
+  | cross_dot_far_comm : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1))
+      (j : Fin P.numStrands),
+      j ≠ adjLeft i →
+      j ≠ adjRight i →
       KLRWImplicitConRel
-        (ι _ (.dot M j) *
-         ι _ (.cross M i))
-        (ι _ (.cross M i) *
-         ι _ (.dot M j))
-
-  /- If neibhoring crosses and dots are on strands with different labels, then the order the cross and dot occurs doesn't matter -/
-  | cross_dot_diff_index_comm : ∀ M i j,
-      (M.get ⟨i, by omega⟩).label ≠
-      (M.get ⟨i+1, by omega⟩).label →
+        (strandGenSeq M [.dot j, .cross i])
+        (strandGenSeq M [.cross i, .dot j])
+  /-- Unless the two strands are black with the same label, a dot slides along its strand
+  through a crossing: a dot on the right strand before the crossing equals a dot on the left
+  strand after it. -/
+  | dot_follows_strand_left : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      ¬ (BothBlack M i ∧ SameLabel M i) →
       KLRWImplicitConRel
-        (ι _ (.dot M j) *
-         ι _ (.cross M i))
-        (ι _ (.cross M i) *
-         ι _ (.dot M j))
-
-  /- Given neibhoring crosses and dots, if the cross involves a red strand, then the order the cross and dot occurs doesn't matter -/
-  | cross_dot_red_comm : ∀ M i j,
-      (M.get ⟨i, by omega⟩).color = .red →
+        (strandGenSeq M [.dot (adjLeft i), .cross i])
+        (strandGenSeq M [.cross i, .dot (adjRight i)])
+  /-- Unless the two strands are black with the same label, a dot slides along its strand
+  through a crossing: a dot on the left strand before the crossing equals a dot on the right
+  strand after it. -/
+  | dot_follows_strand_right : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      ¬ (BothBlack M i ∧ SameLabel M i) →
       KLRWImplicitConRel
-        (ι _ (.dot M j) *
-         ι _ (.cross M i))
-        (ι _ (.cross M i) *
-         ι _ (.dot M j))
+        (strandGenSeq M [.dot (adjRight i), .cross i])
+        (strandGenSeq M [.cross i, .dot (adjLeft i)])
+  /-- Two black strands with different, non-adjacent labels crossing twice is the identity. -/
+  | bigon_not_adjacent : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      (M.get (adjLeft i)).color = .black →
+      (M.get (adjRight i)).color = .black →
+      (M.get (adjLeft i)).label ≠ (M.get (adjRight i)).label →
+      ¬ P.Γ.Adj (M.get (adjLeft i)).label (M.get (adjRight i)).label →
+      ¬ P.Γ.Adj (M.get (adjRight i)).label (M.get (adjLeft i)).label →
+      KLRWImplicitConRel (strandGenSeq M [.cross i, .cross i]) (ι _ (.idem M))
+  /-- A black and a red strand with different labels crossing twice is the identity. -/
+  | bigon_black_red_diff : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      (M.get (adjLeft i)).color ≠ (M.get (adjRight i)).color →
+      (M.get (adjLeft i)).label ≠ (M.get (adjRight i)).label →
+      KLRWImplicitConRel (strandGenSeq M [.cross i, .cross i]) (ι _ (.idem M))
+  /-- Without a correction term, the two sides of a braid are equal. -/
+  | braid : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 2)),
+      ¬ BraidHasCorrection M i →
+      KLRWImplicitConRel
+        (strandGenSeq M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
+          .cross (braidCrossLeft i)])
+        (strandGenSeq M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
+          .cross (braidCrossRight i)])
 
+/-! ### Explicit relations -/
 
-/- uVar and ℏ are the names of the two polynomial variables. -/
-noncomputable abbrev uVar : MvPolynomial (Fin 2) R := MvPolynomial.X 0
-noncomputable abbrev ℏ : MvPolynomial (Fin 2) R := MvPolynomial.X 1
+/-- The nontrivial KLRW relations, drawn in Figure 1 of LePage–Shende and labeled (a)–(g) as
+there. They involve the parameters `u ℏ : S`. -/
+inductive KLRWExplicitConRel (u ℏ : S) : KLRWFreeAlg S P → KLRWFreeAlg S P → Prop where
+  /-- (a) Two black strands with the same label crossing twice is zero. -/
+  | bigon : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      BothBlack M i ∧ SameLabel M i →
+      KLRWExplicitConRel u ℏ (strandGenSeq M [.cross i, .cross i]) 0
+  /-- (b) Bigon of black strands with `Γ.Adj left right`. -/
+  | bigon_for_j_to_i : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      BothBlack M i →
+      P.Γ.Adj (M.get (adjLeft i)).label (M.get (adjRight i)).label →
+      KLRWExplicitConRel u ℏ
+        (strandGenSeq M [.cross i, .cross i])
+        (algebraMap S _ u *
+          (strandGenSeq M [.dot (adjRight i)] - strandGenSeq M [.dot (adjLeft i)]))
+  /-- (b) Bigon of black strands with `Γ.Adj right left`. -/
+  | bigon_for_i_to_j : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      BothBlack M i →
+      P.Γ.Adj (M.get (adjRight i)).label (M.get (adjLeft i)).label →
+      KLRWExplicitConRel u ℏ
+        (strandGenSeq M [.cross i, .cross i])
+        (algebraMap S _ u *
+          (strandGenSeq M [.dot (adjLeft i)] - strandGenSeq M [.dot (adjRight i)]))
+  /-- (c) Bigon with a red strand on the left, both strands with the same label. -/
+  | bigon_with_red_left : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      SameLabel M i →
+      (M.get (adjLeft i)).color = .red →
+      (M.get (adjRight i)).color = .black →
+      KLRWExplicitConRel u ℏ
+        (strandGenSeq M [.cross i, .cross i])
+        (algebraMap S _ u * strandGenSeq M [.dot (adjRight i)])
+  /-- (c) Bigon with a red strand on the right, both strands with the same label. -/
+  | bigon_with_red_right : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      SameLabel M i →
+      (M.get (adjLeft i)).color = .black →
+      (M.get (adjRight i)).color = .red →
+      KLRWExplicitConRel u ℏ
+        (strandGenSeq M [.cross i, .cross i])
+        (algebraMap S _ u * strandGenSeq M [.dot (adjLeft i)])
+  /-- (d) Braid with a neighboring label: outer strands `(i)`, middle strand `(j)`, with the arrow
+  `(j) → (i)` (`Γ.Adj middle left`). -/
+  | braid_with_neighbor_j_to_i : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 2)),
+      BraidNeighborLeft M i →
+      KLRWExplicitConRel u ℏ
+        (strandGenSeq M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
+            .cross (braidCrossLeft i)] -
+          strandGenSeq M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
+            .cross (braidCrossRight i)])
+        (algebraMap S _ (u * ℏ) * ι _ (.idem M))
+  /-- (d) Braid with a neighboring label, with the arrow reversed: `(i) → (j)`
+  (`Γ.Adj left middle`). As in the caption of Figure 1, the right-hand side gets an extra
+  sign. -/
+  | braid_with_neighbor_i_to_j : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 2)),
+      BraidNeighborRight M i →
+      KLRWExplicitConRel u ℏ
+        (strandGenSeq M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
+            .cross (braidCrossLeft i)] -
+          strandGenSeq M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
+            .cross (braidCrossRight i)])
+        (algebraMap S _ (-(u * ℏ)) * ι _ (.idem M))
+  /-- (e) Braid around a red middle strand with the same label as the outer strands. -/
+  | braid_with_red : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 2)),
+      BraidRedMiddle M i →
+      KLRWExplicitConRel u ℏ
+        (strandGenSeq M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
+            .cross (braidCrossLeft i)] -
+          strandGenSeq M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
+            .cross (braidCrossRight i)])
+        (algebraMap S _ (u * ℏ) * ι _ (.idem M))
+  /-- (f) A dot passing a crossing of two black strands with the same label
+  (the same diagrams as `KLRWImplicitConRel.dot_follows_strand_left`). -/
+  | dot_pass_cross_left : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      BothBlack M i ∧ SameLabel M i →
+      KLRWExplicitConRel u ℏ
+        (strandGenSeq M [.dot (adjLeft i), .cross i] -
+          strandGenSeq M [.cross i, .dot (adjRight i)])
+        (algebraMap S _ ℏ * ι _ (.idem M))
+  /-- (g) A dot passing a crossing of two black strands with the same label
+  (the same diagrams as `KLRWImplicitConRel.dot_follows_strand_right`). -/
+  | dot_pass_cross_right : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
+      BothBlack M i ∧ SameLabel M i →
+      KLRWExplicitConRel u ℏ
+        (strandGenSeq M [.cross i, .dot (adjLeft i)] -
+          strandGenSeq M [.dot (adjRight i), .cross i])
+        (algebraMap S _ ℏ * ι _ (.idem M))
 
-/- This is an abbreviation to simplify the process of accessing uVar and ℏ lifted into the free algebra. -/
-noncomputable abbrev poly (p : MvPolynomial (Fin 2) R) :
-    KLRWFreeAlg R parameters :=
-  algebraMap _ _ p
+end Relations
 
+/-! ## The KLRW algebra -/
 
--- rename u and ℏ, make R implicit -- can't do, causes errors
+section Algebra
 
+variable {S : Type*} [CommRing S] (u ℏ : S)
 
-/- Explicit KLRW algebra equality relations. -/
+/-- The smallest ring congruence on the free algebra containing all the KLRW relations. -/
+def klrwRel (P : KLRWStructure V) : RingCon (KLRWFreeAlg S P) :=
+  ringConGen (fun x y => KLRWImplicitConRel x y ∨ KLRWExplicitConRel u ℏ x y)
 
-inductive KLRWExplicitConRel :
-    KLRWFreeAlg R parameters → KLRWFreeAlg R parameters → Prop where
+/-- The KLRW algebra with coefficients in `S` and parameters `u`, `ℏ`. -/
+abbrev KLRWAlg (P : KLRWStructure V) :=
+  (klrwRel u ℏ P).Quotient
 
-  /- (a) bigon: two black strands cross twice = 0 -/
-  | bigon : ∀ M i,
-      (M.get ⟨i, by omega⟩).label =
-        (M.get ⟨i+1, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).color = .black →
-      (M.get ⟨i+1, by omega⟩).color = .black →
-      KLRWExplicitConRel
-        (ι _ (.cross M i) *
-         ι _ (.cross M i)) 0
+/-- The idempotent `e_X` of the object `X` in the KLRW algebra. -/
+def idemMorph (X : KLRWObject P) : KLRWAlg u ℏ P :=
+  (klrwRel u ℏ P).mk' (ι S (.idem X))
 
-  /- (b) bigon for (j) → (i) -/
-  | bigon_for_j_to_i : ∀ M i,
-      parameters.Γ.Adj
-        (M.get ⟨i, by omega⟩).label
-        (M.get ⟨i+1, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).color = .black →
-      (M.get ⟨i+1, by omega⟩).color = .black →
-      KLRWExplicitConRel
-        (ι _ (.cross M i) *
-         ι _ (.cross M i))
-        (poly (uVar) *
-        (ι _ (.dot M ⟨i + 1, by omega⟩) -
-         ι _ (.dot M ⟨i, by omega⟩)))
+/-- The morphisms from `X` to `Y`: the elements of the form `e_Y * a * e_X`. -/
+def klrwHom (X Y : KLRWObject P) : Submodule S (KLRWAlg u ℏ P) :=
+  LinearMap.range ((LinearMap.mulLeft S (idemMorph u ℏ Y)).comp
+    (LinearMap.mulRight S (idemMorph u ℏ X)))
 
-  /- (c) bigon with red (red on the left) -/
-  | bigon_with_red_left : ∀ M i,
-      (M.get ⟨i, by omega⟩).label =
-        (M.get ⟨i+1, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).color = .red →
-      (M.get ⟨i+1, by omega⟩).color = .black →
-      KLRWExplicitConRel
-        (ι _ (.cross M i) *
-         ι _ (.cross M i))
-        (poly (uVar) *
-        (ι _ (.dot M ⟨i+1, by omega⟩)))
+end Algebra
 
-  /- (c) bigon with red (red on the right) -/
-  | bigon_with_red_right : ∀ M i,
-      (M.get ⟨i, by omega⟩).label =
-        (M.get ⟨i+1, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).color = .black →
-      (M.get ⟨i+1, by omega⟩).color = .red →
-      KLRWExplicitConRel
-        (ι _ (.cross M i) *
-         ι _ (.cross M i))
-        (poly (uVar) *
-        (ι _ (.dot M ⟨i, by omega⟩)))
+/-! ### The universal KLRW algebra
 
-  /- (d) braid with neighbour (j) → (i) -/
-  | braid_with_neighbor : ∀ M (i : Fin ((totalStrands parameters - 2))),
-      parameters.Γ.Adj
-        (M.get ⟨i+1, by omega⟩).label
-        (M.get ⟨i, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).label =
-        (M.get ⟨i+2, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).color = .black →
-      (M.get ⟨i+1, by omega⟩).color = .black →
-      (M.get ⟨i+2, by omega⟩).color = .black →
-      KLRWExplicitConRel
-        (ι _ (.cross M ⟨i, by omega⟩) *
-         ι _ (.cross M ⟨i+1, by omega⟩) *
-         ι _ (.cross M ⟨i, by omega⟩) -
-         ι _ (.cross M ⟨i+1, by omega⟩) *
-         ι _ (.cross M ⟨i, by omega⟩) *
-         ι _ (.cross M ⟨i+1, by omega⟩))
-        ((poly uVar) * (poly ℏ) *
-        (ι _ (.idem M)))
+Taking `S = R[u, ℏ]` with `u = X 0` and `ℏ = X 1` recovers the construction with formal
+parameters; every other choice of `u` and `ℏ` is a specialization of this one. -/
 
-  /- (e) braid with red -/
-  | braid_with_red : ∀ M (i : Fin ((totalStrands parameters - 2))),
-      (M.get ⟨i+1, by omega⟩).label = (M.get ⟨i, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).label = (M.get ⟨i+2, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).color = .black →
-      (M.get ⟨i+1, by omega⟩).color = .red →
-      (M.get ⟨i+2, by omega⟩).color = .black →
-      KLRWExplicitConRel
-        (ι _ (.cross M ⟨i, by omega⟩) *
-         ι _ (.cross M ⟨i+1, by omega⟩) *
-         ι _ (.cross M ⟨i, by omega⟩) -
-         ι _ (.cross M ⟨i+1, by omega⟩) *
-         ι _ (.cross M ⟨i, by omega⟩) *
-         ι _ (.cross M ⟨i+1, by omega⟩))
-        ((poly uVar) * (poly ℏ) *
-        (ι _ (.idem M)))
+section Universal
 
-  /- (f) dot-pass-crossing -/
-  | dot_pass_cross : ∀ M (i : Fin ((totalStrands parameters - 1))),
-      (M.get ⟨i, by omega⟩).label =
-        (M.get ⟨i+1, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).color = .black →
-      (M.get ⟨i+1, by omega⟩).color = .black →
-      KLRWExplicitConRel
-        (ι _ (.dot (afterCross M i) ⟨i, by omega⟩) *
-         ι _ (.cross M i) -
-         ι _ (.cross M i) *
-         ι _ (.dot M ⟨i+1, by omega⟩))
-        ((poly ℏ) *
-        (ι _ (.idem M)))
+variable (R : Type*) [CommRing R]
 
-  /- (g) another dot-pass-crossing -/
-  | dot_pass_cross_2 : ∀ M (i : Fin (totalStrands parameters - 1)),
-      (M.get ⟨i, by omega⟩).label =
-        (M.get ⟨i+1, by omega⟩).label →
-      (M.get ⟨i, by omega⟩).color = .black →
-      (M.get ⟨i+1, by omega⟩).color = .black →
-      KLRWExplicitConRel
-        (ι _ (.cross M i) *
-         ι _ (.dot M ⟨i, by omega⟩) -
-         ι _ (.dot (afterCross M i) ⟨i + 1, by omega⟩) *
-         ι _ (.cross M i))
-        ((poly ℏ) *
-        (ι _ (.idem M)))
+/-- The parameter `u` in the universal coefficient ring `R[u, ℏ]`. -/
+noncomputable abbrev univU : MvPolynomial (Fin 2) R := MvPolynomial.X 0
 
+/-- The parameter `ℏ` in the universal coefficient ring `R[u, ℏ]`. -/
+noncomputable abbrev univℏ : MvPolynomial (Fin 2) R := MvPolynomial.X 1
 
-/- KLRWRel returns the smallest ring congruence relation on the KLRW Free Algebra that contains all the relations
-   (both implicit and explicit) that should be true. -/
+/-- The universal KLRW algebra over `R`, with coefficients in `R[u, ℏ]`. -/
+abbrev KLRWAlgUniv (P : KLRWStructure V) :=
+  KLRWAlg (univU R) (univℏ R) P
 
-noncomputable def KLRWRel (R : Type*) [CommRing R] (parameters : KLRWStructure V) :
-    RingCon (KLRWFreeAlg R parameters) :=
-  ringConGen  (fun x y => KLRWImplicitConRel x y ∨ KLRWExplicitConRel x y)
-
-
-/- Quotient out KLRWRel from KLRWFreeAlg to get KLRW Algebra. -/
-
-abbrev KLRWAlg (R : Type*) [CommRing R] (parameters : KLRWStructure V) :=
-  (KLRWRel R parameters).Quotient
-
-
-/- Idem_morph is a helper function to get the idempotent element e_X inside the quotient algebra (idem_morph R X = e_X) -/
--- LATER ON TASK: try to make computable (last priority), see why its not
-
-noncomputable def idem_morph (R : Type*) [CommRing R] (X : KLRWObject parameters) :
-    KLRWAlg R parameters :=
-  (KLRWRel R parameters).mk' (ι (MvPolynomial (Fin 2) R) (.idem X))
-
-
-/- KLRWHom uses the helper function idem_morph to get the set of all equivalence classes of morphisms in KLRAlg that start
-   from X and map to Y (KLRW Hom X Y = e_X KLRWAlg e_Y) -/
-
-noncomputable def KLRWHom (R : Type*) [CommRing R] (X Y : KLRWObject parameters) :
-    Submodule R (KLRWAlg R parameters) :=
-  LinearMap.range ((LinearMap.mulLeft R (idem_morph R Y)).comp (LinearMap.mulRight R (idem_morph R X)))
-
-
-
- end KLRW
+end Universal
+end KLRW

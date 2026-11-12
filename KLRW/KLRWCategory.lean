@@ -1,133 +1,247 @@
 module
-
 public import Mathlib
 public import KLRW.KLRWAlgebra
+
+/-!
+# The KLRW category
+
+The objects of the KLRW category are KLRW objects, and the morphisms from `X` to `Y`
+are the elements of `klrwHom u ℏ X Y`, i.e. the elements `e_Y * a * e_X` of the KLRW
+algebra. Composition is multiplication in the algebra, and the identity of `X` is its
+idempotent `e_X`.
+
+## Main definitions
+
+* `KLRW.KLRWObject.WithRing u ℏ P`: KLRW objects tagged with the coefficient ring `S` and the
+  parameters `u ℏ : S`; this is the type that carries the category structure.
+* The `Category`, `Preadditive` and `Linear S` instances on `KLRWObject.WithRing u ℏ P`.
+
+## Main results
+
+* `KLRW.mul_mem_klrwHom`: morphisms compose.
+* `KLRW.mem_klrwHom_iff`: `f` is a morphism from `X` to `Y` exactly when `e_Y * f * e_X = f`.
+* `KLRW.generator_mem_klrwHom`: every generator is a morphism from its domain to its codomain.
+* `KLRW.strandGenSeq_mem_klrwHom`: the product described by a list of operations is a
+  morphism from its starting object to its end object.
+* `KLRW.strandGenSeq_append`: the product for `ops₁ ++ ops₂` is the composite of the products
+  for `ops₂` and `ops₁`.
+
+## Implementation notes
+
+* `f ≫ g` (first `f`, then `g`) is the product `g * f` in the algebra.
+-/
+
 @[expose] public section
 
-
 namespace KLRW
-
-open CategoryTheory
-
+open CategoryTheory FreeAlgebra
 
 variable {V : Type*} [DecidableEq V] [Fintype V]
-variable {parameters : KLRWStructure V}
-variable {R : Type*} [CommRing R]
+variable {P : KLRWStructure V}
+variable {S : Type*} [CommRing S] {u ℏ : S}
 
+/-! ## From relations to equalities in the KLRW algebra -/
 
+section RelationLemmas
 
-/- If f and g are equal by a rule in KLRWImplicit, then f and g are equal. -/
+variable {f g : KLRWFreeAlg S P}
 
-lemma implicit_rel_eq_rel {f g : KLRWFreeAlg R parameters} (h : KLRWImplicitConRel f g) :
-    KLRWRel R parameters f g :=
+/-- An implicit relation holds in `klrwRel`. -/
+lemma klrwRel_of_implicit (h : KLRWImplicitConRel f g) : klrwRel u ℏ P f g :=
   RingConGen.Rel.of f g (Or.inl h)
 
-
-/- If f and g are equal by a rule in KLRWExplicit, then f and g are equal. -/
-
-lemma explicit_rel_eq_rel {f g : KLRWFreeAlg R parameters} (h : KLRWExplicitConRel f g) :
-    KLRWRel R parameters f g :=
+/-- An explicit relation holds in `klrwRel`. -/
+lemma klrwRel_of_explicit (h : KLRWExplicitConRel u ℏ f g) : klrwRel u ℏ P f g :=
   RingConGen.Rel.of f g (Or.inr h)
 
+/-- Elements related by `klrwRel` are equal in the KLRW algebra. -/
+lemma mk'_eq_of_klrwRel {X Y : KLRWFreeAlg S P} (h : klrwRel u ℏ P X Y) :
+    (klrwRel u ℏ P).mk' X = (klrwRel u ℏ P).mk' Y :=
+  (klrwRel u ℏ P).eq.mpr h
 
-/- If f and g are equal, then they are in the same equivalence class. -/
+/-- An implicit relation becomes an equality in the KLRW algebra. -/
+lemma mk'_eq_of_implicit (h : KLRWImplicitConRel f g) :
+    (klrwRel u ℏ P).mk' f = (klrwRel u ℏ P).mk' g :=
+  mk'_eq_of_klrwRel (klrwRel_of_implicit h)
 
-lemma rel_eq_same_con_class {x y : KLRWFreeAlg R parameters} (h : KLRWRel R parameters x y) :
-    (KLRWRel R parameters).mk' x = (KLRWRel R parameters).mk' y := by
-  exact (KLRWRel R parameters).eq.mpr h
+/-- An explicit relation becomes an equality in the KLRW algebra. -/
+lemma mk'_eq_of_explicit (h : KLRWExplicitConRel u ℏ f g) :
+    (klrwRel u ℏ P).mk' f = (klrwRel u ℏ P).mk' g :=
+  mk'_eq_of_klrwRel (klrwRel_of_explicit h)
 
+end RelationLemmas
 
-/- The idempotent morphism in KLRWAlg is idempotent (uses id_left in KLRW Implicit relations). -/
+/-! ## Idempotents -/
 
-lemma idem_is_idem (M : KLRWObject parameters) :
-    idem_morph R M * idem_morph R M = idem_morph R M := by
-  apply rel_eq_same_con_class
-  apply implicit_rel_eq_rel
-  exact KLRWImplicitConRel.idem_left M (.idem M) rfl
+section Idempotents
 
+/-- The idempotent of the codomain is a left identity for a generator. -/
+lemma idemMorph_mul_generator (f : StrandGenerator P) :
+    idemMorph u ℏ f.codomain * (klrwRel u ℏ P).mk' (ι _ f) = (klrwRel u ℏ P).mk' (ι _ f) :=
+  mk'_eq_of_implicit (KLRWImplicitConRel.idem_left f.codomain f rfl)
 
-/- Shows idem * f = f, so idem acts as the left identity for KLRWHom R X Y. -/
+/-- The idempotent of the domain is a right identity for a generator. -/
+lemma generator_mul_idemMorph (f : StrandGenerator P) :
+    (klrwRel u ℏ P).mk' (ι _ f) * idemMorph u ℏ f.domain = (klrwRel u ℏ P).mk' (ι _ f) :=
+  mk'_eq_of_implicit (KLRWImplicitConRel.idem_right f.domain f rfl)
 
-lemma id_mul_left {X Y : KLRWObject parameters} (f : KLRWAlg R parameters)
-    (hf : f ∈ KLRWHom R X Y) : idem_morph R Y * f = f := by
-  obtain ⟨a, ha⟩ := hf
-  simp only [LinearMap.comp_apply, LinearMap.mulLeft_apply, LinearMap.mulRight_apply] at ha
-  rw [← ha, ← mul_assoc, idem_is_idem]
+/-- The idempotent `e_X` is idempotent. -/
+lemma idemMorph_mul_idemMorph {X : KLRWObject P} :
+    idemMorph u ℏ X * idemMorph u ℏ X = idemMorph u ℏ X :=
+  idemMorph_mul_generator (.idem X)
 
+end Idempotents
 
-/- Shows f * idem = f, so idem acts as the right identity for KLRWHom R X Y. -/
+/-! ## Hom-spaces -/
 
-lemma id_mul_right {X Y : KLRWObject parameters} (f : KLRWAlg R parameters)
-    (hf : f ∈ KLRWHom R X Y) : f * idem_morph R X = f := by
-  obtain ⟨a, ha⟩ := hf
-  simp only [LinearMap.comp_apply, LinearMap.mulLeft_apply, LinearMap.mulRight_apply] at ha
-  rw [← ha, ← mul_assoc, mul_assoc, idem_is_idem]
+section HomSpaces
 
+variable {X Y Z : KLRWObject P}
 
-/- Shows the connection between f ∈ KLRWHom X Y and the idem_moprh . -/
-
-lemma mem_KLRWHom_iff {X Y : KLRWObject parameters} (f : KLRWAlg R parameters) :
-    f ∈ KLRWHom R X Y ↔ idem_morph R Y * f * idem_morph R X = f := by
+/-- `f` is a morphism from `X` to `Y` exactly when `e_Y * f * e_X = f`. -/
+lemma mem_klrwHom_iff (f : KLRWAlg u ℏ P) :
+    f ∈ klrwHom u ℏ X Y ↔ idemMorph u ℏ Y * f * idemMorph u ℏ X = f := by
+  simp only [klrwHom, LinearMap.mem_range, LinearMap.comp_apply, LinearMap.mulLeft_apply,
+    LinearMap.mulRight_apply]
   constructor
+  · rintro ⟨a, rfl⟩
+    rw [← mul_assoc (idemMorph u ℏ Y), idemMorph_mul_idemMorph, mul_assoc, mul_assoc,
+      idemMorph_mul_idemMorph]
   · intro h
-    rcases h with ⟨a, rfl⟩
-    dsimp at *
-    simp [mul_assoc, idem_is_idem]
-    simp [← mul_assoc, idem_is_idem]
-  · intro h
-    use f
-    dsimp
-    simp only [← mul_assoc]
-    exact h
+    exact ⟨f, by rw [← mul_assoc, h]⟩
 
+/-- The idempotent of the codomain is a left identity for any morphism. -/
+lemma idemMorph_mul_of_mem (f : KLRWAlg u ℏ P) (hf : f ∈ klrwHom u ℏ X Y) :
+    idemMorph u ℏ Y * f = f := by
+  obtain ⟨a, ha⟩ := hf
+  simp only [LinearMap.comp_apply, LinearMap.mulLeft_apply, LinearMap.mulRight_apply] at ha
+  rw [← ha, ← mul_assoc, idemMorph_mul_idemMorph]
 
-/- Shows the domain and codomain of the multiplication (composition) of two functions is as expected. -/
+/-- The idempotent of the domain is a right identity for any morphism. -/
+lemma mul_idemMorph_of_mem (f : KLRWAlg u ℏ P) (hf : f ∈ klrwHom u ℏ X Y) :
+    f * idemMorph u ℏ X = f := by
+  obtain ⟨a, ha⟩ := hf
+  simp only [LinearMap.comp_apply, LinearMap.mulLeft_apply, LinearMap.mulRight_apply] at ha
+  rw [← ha, ← mul_assoc, mul_assoc, idemMorph_mul_idemMorph]
 
-lemma KLRWHom_comp_mem {X Y Z : KLRWObject parameters} {f g : KLRWAlg R parameters}
-    (hf : f ∈ KLRWHom R X Y) (hg : g ∈ KLRWHom R Y Z) :
-    g * f ∈ KLRWHom R X Z := by
-  rw [mem_KLRWHom_iff, mul_assoc, mul_assoc, id_mul_right f hf]
-  rw [← mul_assoc, id_mul_left g hg]
+/-- Morphisms compose: if `f : X ⟶ Y` and `g : Y ⟶ Z`, then `g * f : X ⟶ Z`. -/
+lemma mul_mem_klrwHom {f g : KLRWAlg u ℏ P} (hf : f ∈ klrwHom u ℏ X Y)
+    (hg : g ∈ klrwHom u ℏ Y Z) : g * f ∈ klrwHom u ℏ X Z := by
+  rw [mem_klrwHom_iff, mul_assoc, mul_assoc, mul_idemMorph_of_mem f hf]
+  rw [← mul_assoc, idemMorph_mul_of_mem g hg]
 
+/-- The idempotent of `X` is a morphism from `X` to `X`. -/
+lemma idemMorph_mem_klrwHom : idemMorph u ℏ X ∈ klrwHom u ℏ X X := by
+  rw [mem_klrwHom_iff, idemMorph_mul_idemMorph, idemMorph_mul_idemMorph]
 
-/- This adds R to KLRWObject so that user can specify what ring they are working in. -/
+/-- A generator is a morphism from its domain to its codomain. -/
+lemma generator_mem_klrwHom (f : StrandGenerator P) :
+    (klrwRel u ℏ P).mk' (ι _ f) ∈ klrwHom u ℏ f.domain f.codomain := by
+  rw [mem_klrwHom_iff, mul_assoc, generator_mul_idemMorph, idemMorph_mul_generator]
 
-structure KLRWObject.WithRing (R : Type*) [CommRing R] (parameters : KLRWStructure V) where
-  obj : KLRWObject parameters
+end HomSpaces
 
+/-! ## Products of operation lists as morphisms -/
 
-/- KLRWObjectR is a category. -/
+section StrandGenSeqLemmas
 
-noncomputable instance : Category (KLRWObject.WithRing R parameters) where
+variable (M N : KLRWObject P)
+variable (ops : List (StrandGenOp P))
 
-  Hom X Y := ↥(KLRWHom R X.obj Y.obj)
+/-- A strand generator sequence is a morphism from `M` to `strandGenSeqEnd M ops`. -/
+lemma strandGenSeq_mem_klrwHom :
+    (klrwRel u ℏ P).mk' (strandGenSeq M ops) ∈ klrwHom u ℏ M (strandGenSeqEnd M ops) := by
+  induction ops generalizing M with
+  | nil => exact idemMorph_mem_klrwHom
+  | cons op ops ih =>
+      have hop :=
+        generator_mem_klrwHom (u := u) (ℏ := ℏ) (op.toGenerator (strandGenSeqEnd M ops))
+      rw [StrandGenOp.domain_toGenerator, StrandGenOp.codomain_toGenerator] at hop
+      rw [strandGenSeq_cons, map_mul]
+      exact mul_mem_klrwHom (ih M) hop
 
-  id X := ⟨idem_morph R X.obj, by
-    rw [mem_KLRWHom_iff]
-    simp [idem_is_idem]⟩
+/-- If the operations `ops` take `M` to `N`, then their product is a morphism from `M`
+to `N`. -/
+lemma strandGenSeq_mem_klrwHom_of_eq (h : strandGenSeqEnd M ops = N) :
+    (klrwRel u ℏ P).mk' (strandGenSeq M ops) ∈ klrwHom u ℏ M N := by
+  rw [← h]
+  exact strandGenSeq_mem_klrwHom M ops
 
-  comp f g := ⟨g.val * f.val, KLRWHom_comp_mem f.property g.property⟩ -- check order of f * g
+/-- The idempotent of the end object is a left identity for a strand generator sequence. -/
+lemma idemMorph_mul_strandGenSeq : idemMorph u ℏ (strandGenSeqEnd M ops) *
+    (klrwRel u ℏ P).mk' (strandGenSeq (S := S) M ops) =
+    (klrwRel u ℏ P).mk' (strandGenSeq (S := S) M ops) :=
+  idemMorph_mul_of_mem _ (strandGenSeq_mem_klrwHom M ops)
 
-  id_comp f := by ext; exact id_mul_right f.val f.property
+/-- The idempotent of the start object is a right identity for a strand generator sequence. -/
+lemma strandGenSeq_mul_idemMorph :
+    (klrwRel u ℏ P).mk' (strandGenSeq (S := S) M ops) * idemMorph u ℏ M =
+    (klrwRel u ℏ P).mk' (strandGenSeq (S := S) M ops) :=
+  mul_idemMorph_of_mem _ (strandGenSeq_mem_klrwHom M ops)
 
-  comp_id f := by ext; exact id_mul_left f.val f.property
+/-- The sequence for `ops₁ ++ ops₂` is the sequence for `ops₂` followed by the sequence for
+`ops₁`, started where `ops₂` ends. -/
+lemma strandGenSeq_append (ops₁ ops₂ : List (StrandGenOp P)) :
+    (klrwRel u ℏ P).mk' (strandGenSeq M (ops₁ ++ ops₂)) =
+      (klrwRel u ℏ P).mk'
+        (strandGenSeq (strandGenSeqEnd M ops₂) ops₁ * strandGenSeq (S := S) M ops₂) := by
+  induction ops₁ with
+  | nil =>
+      simp only [List.nil_append, strandGenSeq]
+      symm
+      exact idemMorph_mul_strandGenSeq (S := S) M ops₂
+  | cons op ops₁ ih =>
+      rw [List.cons_append, strandGenSeq_cons, map_mul, ih, strandGenSeq_cons]
+      simp [strandGenSeqEnd_append, mul_assoc]
 
+end StrandGenSeqLemmas
+
+/-! ## The category structure -/
+
+/-- KLRW objects tagged with the coefficient ring `S` and the parameters `u`, `ℏ`, so that the
+category structure knows which KLRW algebra its morphisms live in. -/
+structure KLRWObject.WithRing (u ℏ : S) (P : KLRWStructure V) where
+  /-- The underlying KLRW object. -/
+  obj : KLRWObject P
+
+/-- The KLRW category: morphisms from `X` to `Y` are the elements of `klrwHom u ℏ X.obj Y.obj`,
+and `f ≫ g` (first `f`, then `g`) is the product `g * f`. -/
+instance : Category (KLRWObject.WithRing u ℏ P) where
+  Hom X Y := ↥(klrwHom u ℏ X.obj Y.obj)
+  id X := ⟨idemMorph u ℏ X.obj, idemMorph_mem_klrwHom⟩
+  comp f g := ⟨g.val * f.val, mul_mem_klrwHom f.property g.property⟩
+  id_comp f := by ext; exact mul_idemMorph_of_mem f.val f.property
+  comp_id f := by ext; exact idemMorph_mul_of_mem f.val f.property
   assoc f g h := by ext; simp [mul_assoc]
 
-
-/- If two KLRWObjectRs have the same value, then they are equal. -/
-
+/-- Two morphisms of the KLRW category are equal if their underlying algebra elements are. -/
 @[ext]
-lemma KLRWHom.ext {X Y : KLRWObject.WithRing R parameters} {f g : X ⟶ Y} (h : f.val = g.val) : f = g :=
+lemma KLRWObject.WithRing.hom_ext {X Y : KLRWObject.WithRing u ℏ P} {f g : X ⟶ Y}
+    (h : f.val = g.val) : f = g :=
   Subtype.ext h
 
+/-- The algebra element of a composite: `f ≫ g` is `g * f`. -/
+@[simp]
+lemma KLRWObject.WithRing.comp_val {X Y Z : KLRWObject.WithRing u ℏ P} (f : X ⟶ Y)
+    (g : Y ⟶ Z) : (f ≫ g).val = g.val * f.val := rfl
 
-/- KLRWObjectR is a preadditive category. -/
+/-- The algebra element of the identity of `X` is the idempotent `e_X`. -/
+@[simp]
+lemma KLRWObject.WithRing.id_val (X : KLRWObject.WithRing u ℏ P) :
+    (𝟙 X : X ⟶ X).val = idemMorph u ℏ X.obj := rfl
 
-noncomputable instance : Preadditive (KLRWObject.WithRing R parameters) where
+/-- The morphism of the KLRW category given by a list of operations that takes `X.obj` to
+`Y.obj`. -/
+def KLRWObject.WithRing.homOfOps {X Y : KLRWObject.WithRing u ℏ P} (ops : List (StrandGenOp P))
+    (h : strandGenSeqEnd X.obj ops = Y.obj) : X ⟶ Y :=
+  (⟨(klrwRel u ℏ P).mk' (strandGenSeq X.obj ops), strandGenSeq_mem_klrwHom_of_eq _ _ _ h⟩ :
+    ↥(klrwHom u ℏ X.obj Y.obj))
 
-  homGroup X Y := inferInstanceAs (AddCommGroup (KLRWHom R X.obj Y.obj))
-
+/-- The KLRW category is preadditive: the morphisms from `X` to `Y` form the additive group
+`klrwHom u ℏ X.obj Y.obj`, and composition distributes over addition because multiplication
+in the algebra does. -/
+instance : Preadditive (KLRWObject.WithRing u ℏ P) where
+  homGroup X Y := inferInstanceAs (AddCommGroup (klrwHom u ℏ X.obj Y.obj))
   add_comp X Y Z f g h := by
     ext
     change h.val * (f.val + g.val) = h.val * f.val + h.val * g.val
@@ -137,23 +251,17 @@ noncomputable instance : Preadditive (KLRWObject.WithRing R parameters) where
     change (g.val + h.val) * f.val = g.val * f.val + h.val * f.val
     exact add_mul g.val h.val f.val
 
-
-/- KLRWObjectR is a linear category. -/
-
-noncomputable instance : CategoryTheory.Linear R (KLRWObject.WithRing R parameters) where
-
-  homModule X Y := inferInstanceAs (Module R (KLRWHom R X.obj Y.obj))
-
+/-- The KLRW category is `S`-linear: each `klrwHom u ℏ X.obj Y.obj` is an `S`-module, and
+scalars move through composition because the algebra is an `S`-algebra. -/
+instance : Linear S (KLRWObject.WithRing u ℏ P) where
+  homModule X Y := inferInstanceAs (Module S (klrwHom u ℏ X.obj Y.obj))
   smul_comp X Y Z r f g := by
     ext
     change g.val * (r • f.val) = r • (g.val * f.val)
     exact mul_smul_comm r g.val f.val
-
   comp_smul X Y Z f r g := by
     ext
     change (r • g.val) * f.val = r • (g.val * f.val)
     exact smul_mul_assoc r g.val f.val
 
-
-
- end KLRW
+end KLRW
