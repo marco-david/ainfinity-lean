@@ -16,63 +16,52 @@ and checked in CI, so rerun that command after adding a file.
 | Folder | Contents |
 | --- | --- |
 | `Util/` | Contains a `Texify` class and the `#texify` command for rendering terms as LaTeX. |
-| `ComputableCochainComplex/` | Explicit biproducts and zero objects, the additive completion `CMat_`, bounded complexes, and finite-free matrix complexes over commutative rings, with verified coordinates for additive module realizations, checked field/integer cohomology, induced maps, and optional graded adapters. |
+| `ComputableCochainComplex/` | Explicit biproducts and zero objects, the additive completion `CMat_`, independent finite support and finite free coordinate classes on ordinary complexes, and cohomology presentations and induced maps from caller-supplied effective module algorithms. |
 | `AInfinity/` | Grading indices, the Stasheff identities, A∞-categories, A∞-functors and their composition, and examples. |
 | `KLRW/` | KLRW algebras and categories: the general quiver-parametrised KLRW algebra and its $$R$$-linear category, and a computable special case with one black strand and $$n$$ red strands. | |
 
 The blueprint sources live in `blueprint/src/` and the API documentation is built from
 `docbuild/`.
 
-`ComputableCochainComplex/BasedCochainComplex.lean` supplies `BasedCochainComplex R K`
-for an additive realization of a categorical complex with chosen finite ordered bases over
-`[CommRing R]`. A complex equipped with degreewise bases is called a *based cochain complex*.
-Its `ofSupport` constructor extends coordinates and matrices from a finite
-support bound; `coordinateIso` identifies the realized complex with its matrix interpretation.
-The coordinates describe the chain terms. Kernels and cohomology need not be free, and this
-layer does not implement cohomology algorithms.
+An ordinary `C : CochainComplex (ModuleCat R) ℤ` can carry two independent data classes:
+`BoundedComplex C` supplies a finite support bound, and
+`FiniteFreeComplex C` supplies coordinate counts and linear equivalences
+for its terms. Neither class requires the other.
+The coordinate data imply Mathlib's `Module.Free` and `Module.Finite` properties in each degree.
+They do not require coordinate counts to vanish outside a support bound, including over the
+zero ring. Both classes transport independently along Mathlib's shift functor.
 
-`ComputableCochainComplex/CohomologyKernel.lean` supplies `KernelCertificate`: explicit
-kernel coordinates with proofs of independence and completeness. Its `quotientEquiv`
-identifies the kernel quotient with the presentation matrix `L * A`, retaining cocycle
-representatives and boundary preimages. `Cohomology.lean` transports this presentation to
-Mathlib cohomology at a requested integer degree and through `BasedCochainComplex.coordinateIso`.
-`CohomologyField.lean` adds checked exact reduction over fields with decidable equality,
-including ℚ and finite fields. It computes class coordinates, cocycle representatives, and
-verified boundary preimages. For example, `certify_cohomology C at n` proves a goal of the form
-`Nonempty (C.toCochainComplex.homology n ≅ ModuleCat.of R (Fin h → R))` by kernel-checking
-the calculation and the claimed dimension. `certify_cohomology A, B` accepts local matrices.
-The executable API is `ComputableCohomology.computeField A B`, or
-`C.computeFieldCohomology n`; each returns either a certificate with usable equivalences and
-representative maps or an explicit error. `CohomologyMap.lean` computes induced maps with
-`f.fieldCohomologyMatrix n source target` for an existing cochain map `f : C ⟶ D` and
-computed source/target certificates. The matrix acts by representing a class, applying
-`f.f n`, and normalizing; its naturality theorem identifies it with Mathlib's induced map.
-Identity and composition follow from that comparison.
+`C.d i j` is the original module differential; `C.dMatrix i j` expresses it in the chosen
+coordinates. `CochainComplex.ofMatrices` accepts matrix input without a support bound, and
+`CochainComplex.homOfMatrices` produces ordinary Mathlib cochain maps. Their category,
+preadditive, and linear structures are reused directly. `KLRWComplexCategory` likewise denotes
+ordinary cochain complexes in the additive KLRW category. Braiding object images supply
+`BoundedComplex` instances, and the full construction requires these instances on its inputs.
+The old bounded-complex bundle and its morphism wrappers have been removed. Render a complex
+with `C.toTex`; cochain maps with finite-support endpoints still support `#texify`.
+KLRW complexes require a module realization with finite coordinates before using the
+cohomology calculator. The braiding extensions remain work in progress.
 
-`CohomologyInteger.lean` supplies `computeInteger A B` and `C.computeIntegerCohomology n`.
-A successful result has a free part and divisibility-normalized nontrivial cyclic factors,
-canonical representatives, complete boundary tests with witnesses, and an isomorphism to
-Mathlib homology. `f.integerCohomologyMap n source target` computes induced maps, including
-on torsion. `result.quotient.freeRank` and `result.quotient.torsionFactors` report the factors.
-The Euclidean generator uses checked pivot descent without fuel; every result is verified.
-Universal success of the generator has not been proved: descent and certificate failures
-remain explicit errors. See `CohomologyIntegerExamples.lean` for kernel-checked computations.
+The cohomology calculator takes consecutive matrices or an ordinary complex with finite free
+coordinates at one degree; it needs no boundedness assumption. `EffectiveModuleAlgorithms R`
+requires certified syzygy generation and lifting
+only for vectors already proved to lie in a matrix image. Two syzygy computations and boundary
+lifts produce a finite presentation, an executable class constructor, and an isomorphism to
+Mathlib homology. Computed induced maps satisfy naturality, identity, and composition.
+Kernels and cohomology need not be free or split. Individual presentations and map matrices
+can also be supplied with proofs, without a global backend instance.
 
-`CohomologyGraded.lean` accepts certified finite coordinates for an existing local complex
-of homogeneous pieces and proofs that the differentials preserve those pieces. It uses the
-shift convention `M⟨s⟩_q = M_(q+s)`. `CohomologyOneBlackStrand.lean` verifies the grading
-against the existing composition rule and supplies zero- or one-coordinate bases. Its
-acceptance tests identify the degree-two class for `T₀ --2·id--> T₀` with the one-dot diagram
-and prove its cohomology is `ZMod 2`.
-
-`CohomologyKLRWInput.lean` exposes `QuotientKLRWCoordinates` as an upstream input contract,
-without asserting that such data have been constructed. The general quotient category still
-needs executable normal forms, spanning/independence, local finiteness over the solver's
-coefficient ring, and differential compatibility. Finite polynomial matrices alone are not
-integer-matrix inputs; no numerical specialization is performed.
-
-See [the cohomology guide](ComputableCochainComplex/cohomology-guide.md) for inputs,
-representatives, induced maps, graded adapters, and the precise failure/coverage boundaries.
+`Examples.lean` uses integer matrices for the two-term complexes `ℤ →[2] ℤ` and `ℤ →[4] ℤ`.
+Explicit certificates give degree-one presentations `ℤ / 2ℤ` and `ℤ / 4ℤ` and verify the
+nonzero induced map `[x] ↦ [2x]`. Only the complexes' degree support is bounded; integer
+coefficients are unrestricted. The example needs no global `EffectiveModuleAlgorithms ℤ`
+instance. No Gaussian, Smith, or Gröbner algorithm is implemented here. The core does not
+require a nonmembership decision or provide a general class-equality test.
+An additional example has `ℤ` in every degree and zero differentials: it admits no finite
+support bound, but its cohomology presentations and Mathlib comparisons work in every degree.
+For `ℤ[u,h]`, supply a backend or certificates over the actual polynomial ring.
+The flat layout separates `ModuleAlgorithms.lean`, `FiniteFreeCochainComplex.lean`, and the
+consolidated `Cohomology.lean`.
 
 ### Project metadata and license
 

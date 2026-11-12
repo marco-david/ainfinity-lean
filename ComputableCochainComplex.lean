@@ -1,21 +1,9 @@
 module  -- shake: keep-all
 
 public import ComputableCochainComplex.AdditiveCompletion
-public import ComputableCochainComplex.BasedCochainComplex
 public import ComputableCochainComplex.BoundedCochainComplex
 public import ComputableCochainComplex.Cohomology
-public import ComputableCochainComplex.CohomologyExamples
-public import ComputableCochainComplex.CohomologyField
-public import ComputableCochainComplex.CohomologyGraded
-public import ComputableCochainComplex.CohomologyGradedExamples
-public import ComputableCochainComplex.CohomologyInteger
-public import ComputableCochainComplex.CohomologyIntegerExamples
-public import ComputableCochainComplex.CohomologyIntegerReduction
-public import ComputableCochainComplex.CohomologyKLRWInput
-public import ComputableCochainComplex.CohomologyKernel
-public import ComputableCochainComplex.CohomologyMap
-public import ComputableCochainComplex.CohomologyOneBlackStrand
-public import ComputableCochainComplex.CohomologyReduction
-public import ComputableCochainComplex.CohomologySmith
 public import ComputableCochainComplex.ComputableCategories
-public import ComputableCochainComplex.Finite
+public import ComputableCochainComplex.Examples
+public import ComputableCochainComplex.FiniteFreeCochainComplex
+public import ComputableCochainComplex.ModuleAlgorithms

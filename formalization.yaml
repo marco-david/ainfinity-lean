@@ -22,21 +22,25 @@ project:
     and builds computable categorical infrastructure (explicit biproducts, the
     additive completion CMat_, bounded cochain complexes) towards an
     A∞-endofunctor on a variant of the KLRW category that acts as a braid group
-    invariant. A separate finite-free computational layer represents bounded
-    complexes and cochain maps by matrices over a commutative ring, with a
-    verified interpretation in Mathlib's module complexes. Based cochain complexes
-    obtained from additive realizations connect categorical complexes to this
-    matrix layer over any commutative ring, including the zero ring. It does not
-    assume finite-free cohomology. A shared kernel-coordinate certificate identifies
-    cohomology with an explicit matrix presentation and transports it to Mathlib homology.
-    Exact field reduction supplies checked class coordinates, representatives, boundary
-    preimages, a proof-producing tactic, and induced cohomology maps compatible with
-    Mathlib, identities, and composition. Checked integral presentations additionally
-    supply free and normalized torsion factors, canonical representatives, boundary witnesses,
-    and induced maps on torsion. A thin homogeneous-piece adapter and a verified
-    one-black-strand example connect these calculations to diagrammatic modules; the general
-    quotient KLRW category has an explicit upstream input contract only. Universal
-    integer-generator success remains unproved.
+    invariant. Ordinary cochain complexes carry independent BoundedComplex
+    and FiniteFreeComplex data, each transported along the existing shift
+    functor. Differential
+    matrices and cohomology use the coordinates without a boundedness assumption, and reuse
+    Mathlib's cochain maps, category, preadditive and linear structures. Direct matrix
+    constructors remain available. KLRW also uses ordinary cochain complexes with separate
+    finite support instances; the old bounded bundle and cochain-map wrappers are removed.
+    This works over any commutative ring, including the zero ring,
+    and does not assume finite-free cohomology.
+    The effective-module contract requires certified syzygy
+    generation and lifting only for known members. Two syzygy computations and boundary lifts
+    produce finite presentations with executable class construction and induced maps compatible
+    with Mathlib homology, identities, and composition. Certificate-only presentations and
+    maps need no global algorithm instance. An example in Examples.lean over the integers
+    supplies explicit certificates for multiplication-by-two and multiplication-by-four
+    complexes, with degree-one presentations Z/2 and Z/4 and a nonzero induced map. A second
+    example has Z in every degree, admits no finite support bound, and has certified
+    cohomology presentations in every degree.
+    General membership decisions and polynomial reduction backends are not supplied.
   authors:
     - "Marco David"
     - "Jason Dong"
@@ -126,26 +130,31 @@ status:
     structure and the associativity and unit laws of composition), graded R-linear
     quivers, the Stasheff identities, A∞-categories, A∞-functors with the
     A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
-    category; finite-free matrix complexes and cochain maps, with their
-    interpretation in Mathlib's module complexes; based cochain complexes from
-    additive module realizations over commutative rings, with the coordinate
-    isomorphism to the matrix interpretation; a certified kernel-coordinate bridge to
-    cohomology presentations, including boundary completeness and transport to Mathlib
-    homology for finite-free and based complexes; checked exact field cohomology calculations
-    with representatives, boundary witnesses, a rank formula, a proof-producing tactic,
-    and induced maps compatible with Mathlib homology, identities, and composition;
-    checked integral cohomology models with free and normalized torsion factors,
-    representatives, boundary preimages, and induced maps respecting torsion relations;
-    a certified homogeneous-piece adapter and one-black-strand graded coordinates,
-    composition compatibility, and a diagrammatic torsion-cohomology example.
+    category; independent finite support and finite free coordinate classes on ordinary
+    cochain complexes, with Mathlib cochain maps and shifts, executable matrix constructors,
+    and derived differential matrices without a boundedness assumption;
+    certified syzygy generators and a known-member
+    lifting contract over commutative rings; finite cohomology presentations with the standard
+    Module.FinitePresentation property, executable class construction, boundary correctness,
+    and transport to Mathlib homology for finite-free complexes; computed and
+    certificate-only induced maps compatible with Mathlib homology, identities, and composition
+    on quotient modules; an integer-coefficient example with explicit presentations Z/2 and Z/4,
+    a verified torsion class, and a nonzero induced map; an unbounded integer example with
+    certified cohomology presentations in every degree and a proof that no finite support
+    datum exists. No general integer backend is bundled. No Gaussian, Smith, or Groebner
+    implementation is bundled.
     The existing computable
     categorical infrastructure (explicit biproducts, chosen zero objects with
     `IsZero` certificates, additive completion, and
-    bounded cochain complexes with supplied finite support bounds) is also
-    sorry-free and is housed in ComputableCochainComplex. In progress: a universal
-    success proof for the integral candidate generator, upstream graded coordinates for
-    quotient-defined KLRW, and the specialized KLRW
-    constructions, braiding functor, and KLRW examples, which still contain
+    finite support data and rendering on ordinary cochain complexes) is also
+    sorry-free and is housed in ComputableCochainComplex. The infrastructure reuses Mathlib's
+    product-to-biproduct and module structures; unused comparison and convenience layers
+    have been removed. The flat seven-file layout separates the categorical infrastructure,
+    matrix algorithm contract, finite-free input, consolidated cohomology construction, and example.
+    In progress: the specialized
+    KLRW constructions,
+    braiding functor, and KLRW examples, which use ordinary cochain maps and shifts with
+    finite support supplied separately and still contain
     `sorry`. Temporarily removed: the composition of
     A∞-functors, the identity A∞-functor and the A∞ examples. They were written
     for the earlier foundation (grading indices and `GradedObject`s in

@@ -84,20 +84,25 @@ where $0 \le i \le m-1$ and $0 \le j \le n-1$.
   is $R$-linear and thus preadditive.
 \end{definition}
 \begin{definition}
+  \lean{BoundedComplex}
+  \leanok
   Let $\C$ be a preadditive category with a zero object. Then a bounded cochain
   complex of $\C$ is a ($\Z$-graded) cochain complex $A^\bullet$ of $\C$ equipped with a finite set
-  $S$ called the support, satisfying
-  $\forall i\in \Z, i\in S \Leftrightarrow A^i\not\cong 0$. Note that
-  $S$ is uniquely determined by $A^\bullet$, though included
-  for computability.
+  $S$ bounding the support, satisfying
+  $\forall i\in \Z, i\notin S \Rightarrow A^i\cong 0$.
+  The bound may include zero terms and is supplied as executable data; no decision of
+  object vanishing is needed. This support data is independent of any chosen finite free
+  coordinates on the terms of a module complex.
 \end{definition}
 
 \section{Bounded Cochain Complexes}
 \begin{definition}
-  Let $\BK(\C)$ denote the set of bounded cochain complexes in $\C$. THen
-  there is a function $F:\BK(\C)\to K^\bullet(\C)$ which forgets the finiteness.
-  Then we equip $\BK(\C)$ with the induced category structure of $F$ which makes
-  $F$ into a fully faithful functor $F:\BK(\C) \to K^\bullet (\C)$.
+  The bounded complexes form the full subcategory $\BK(\C)$ of $K^\bullet(\C)$
+  on objects admitting finite support bounds. In the formalization, constructions use
+  ordinary cochain complexes and maps in the ambient category, with
+  \texttt{BoundedComplex} data supplied separately whenever boundedness is required.
+  The KLRW complex constructions follow this convention, so no separate bundled category
+  or cochain-map wrapper is needed.
 \end{definition}
 
 \section{Functor data and functor action}

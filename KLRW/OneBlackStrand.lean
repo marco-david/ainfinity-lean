@@ -215,7 +215,9 @@ instance (R : Type*) [CommRing R] [DecidableEq R] (n : ℕ) :
 abbrev AddKLRWCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
   CMat_ (KLRWCategory n R)
 
+/-- Ordinary cochain complexes in the additive KLRW category. Constructions requiring
+boundedness take `BoundedComplex` on their individual input and output complexes. -/
 abbrev KLRWComplexCategory (n : ℕ) (R : Type u) [CommRing R] [DecidableEq R] : Type _ :=
-  BoundedCochainComplex (AddKLRWCategory n R)
+  CochainComplex (AddKLRWCategory n R) ℤ
 
 end AInfinityTheory

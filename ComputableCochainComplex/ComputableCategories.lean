@@ -1,6 +1,13 @@
+/-
+Copyright (c) 2026 Annie Yao. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Annie Yao
+-/
 module
 
-public import Mathlib
+public import Mathlib.CategoryTheory.Preadditive.Biproducts
+public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Data.List.OfFn
 
 /-!
 # Computable categorical constructions
@@ -14,100 +21,26 @@ the unique maps to and from that object are the existing zero morphisms.
 
 open CategoryTheory Limits
 
-abbrev CategoryTheory.Limits.BinaryBiproductData.mkOfMaps
-    {C : Type*} [Category C] [HasZeroMorphisms C] (P Q : C)
-    (pt : C) (fst : pt ⟶ P) (snd : pt ⟶ Q) (inl : P ⟶ pt) (inr : Q ⟶ pt)
-    (pair : ∀ X, (X ⟶ P) → (X ⟶ Q) → (X ⟶ pt)) (copair : ∀ X, (P ⟶ X) → (Q ⟶ X) → (pt ⟶ X))
-    (inl_fst : inl ≫ fst = 𝟙 P := by aesop) (inl_snd : inl ≫ snd = 0 := by aesop)
-    (inr_fst : inr ≫ fst = 0 := by aesop) (inr_snd : inr ≫ snd = 𝟙 Q := by aesop)
-    (pair_fst : ∀ X (f : X ⟶ P) (g : X ⟶ Q), pair X f g ≫ fst = f := by aesop)
-    (pair_snd : ∀ X (f : X ⟶ P) (g : X ⟶ Q), pair X f g ≫ snd = g := by aesop)
-    (inl_copair : ∀ X (f : P ⟶ X) (g : Q ⟶ X), inl ≫ copair X f g = f := by aesop)
-    (inr_copair : ∀ X (f : P ⟶ X) (g : Q ⟶ X), inr ≫ copair X f g = g := by aesop)
-    (pair_eta : ∀ X (h : X ⟶ pt), pair X (h ≫ fst) (h ≫ snd) = h := by aesop)
-    (copair_eta : ∀ X (h : pt ⟶ X), copair X (inl ≫ h) (inr ≫ h) = h := by aesop)
-    : BinaryBiproductData P Q where
-  bicone := ⟨pt, fst, snd, inl, inr, inl_fst, inl_snd, inr_fst, inr_snd⟩
-  isBilimit := {
-    isLimit := {
-      lift s := pair s.pt (s.π.app ⟨.left⟩) (s.π.app ⟨.right⟩)
-      fac s j := by
-        -- Written by Claude code
-        rcases j with ⟨_ | _⟩
-        · rw [BinaryBicone.toCone_π_app_left]; exact pair_fst _ _ _
-        · rw [BinaryBicone.toCone_π_app_right]; exact pair_snd _ _ _
-      uniq s m hm := by
-        -- Written by Claude code
-        have hl := hm ⟨.left⟩
-        have hr := hm ⟨.right⟩
-        simp [BinaryBicone.toCone_π_app_left] at hl
-        simp [BinaryBicone.toCone_π_app_right] at hr
-        rw [← hl, ← hr]
-        exact (pair_eta s.pt m).symm
-    }
-    isColimit := {
-      desc s := copair s.pt (s.ι.app ⟨.left⟩) (s.ι.app ⟨.right⟩)
-      fac s j := by
-        -- Written by Claude code
-        rcases j with ⟨_ | _⟩
-        · rw [BinaryBicone.toCocone_ι_app_left]; exact inl_copair _ _ _
-        · rw [BinaryBicone.toCocone_ι_app_right]; exact inr_copair _ _ _
-      uniq s m hm := by
-        -- Written by Claude code
-        have hl := hm ⟨.left⟩
-        have hr := hm ⟨.right⟩
-        simp [BinaryBicone.toCocone_ι_app_left] at hl
-        simp [BinaryBicone.toCocone_ι_app_right] at hr
-        rw [← hl, ← hr]
-        exact (copair_eta s.pt m).symm
-    }
-  }
-
-/--
-In a preadditive category, you can construct a binary biproduct out of a product.
--/
+/-- Build executable biproduct data from a supplied product. Mathlib constructs the
+injections and coproduct maps from the product's universal property. -/
 abbrev CategoryTheory.Limits.BinaryBiproductData.mkOfProduct
     {C : Type*} [Category C] [Preadditive C] (P Q : C)
     (pt : C) (fst : pt ⟶ P) (snd : pt ⟶ Q) (pair : ∀ X, (X ⟶ P) → (X ⟶ Q) → (X ⟶ pt))
-    (pair_fst : ∀ X (f : X ⟶ P) (g : X ⟶ Q), pair X f g ≫ fst = f := by aesop)
-    (pair_snd : ∀ X (f : X ⟶ P) (g : X ⟶ Q), pair X f g ≫ snd = g := by aesop)
-    (pair_eta : ∀ X (h : X ⟶ pt), pair X (h ≫ fst) (h ≫ snd) = h := by aesop)
-    : BinaryBiproductData P Q := .mkOfMaps P Q pt
-      (fst := fst)
-      (snd := snd)
-      (inl := pair P (𝟙 P) 0)
-      (inr := pair Q 0 (𝟙 Q))
-      (pair := pair)
-      (copair := fun X f g => fst ≫ f + snd ≫ g)
-      -- These proofs were written by Claude code
-      (inl_fst := pair_fst P (𝟙 P) 0) (inl_snd := pair_snd P (𝟙 P) 0)
-      (inr_fst := pair_fst Q 0 (𝟙 Q)) (inr_snd := pair_snd Q 0 (𝟙 Q))
-      (pair_fst := pair_fst)
-      (pair_snd := pair_snd)
-      (inl_copair := fun X f g => by
-        simp only [Preadditive.comp_add, ← Category.assoc, pair_fst, pair_snd,
-          Category.id_comp, zero_comp, add_zero])
-      (inr_copair := fun X f g => by
-        simp only [Preadditive.comp_add, ← Category.assoc, pair_fst, pair_snd,
-          Category.id_comp, zero_comp, zero_add])
-      (pair_eta := pair_eta)
-      (copair_eta := fun X h => by
-        have key : fst ≫ pair P (𝟙 P) 0 + snd ≫ pair Q 0 (𝟙 Q) = 𝟙 pt := by
-          have h1 : pair pt fst snd = fst ≫ pair P (𝟙 P) 0 + snd ≫ pair Q 0 (𝟙 Q) := by
-            have := pair_eta pt (fst ≫ pair P (𝟙 P) 0 + snd ≫ pair Q 0 (𝟙 Q))
-            simp only [Preadditive.add_comp, Category.assoc, pair_fst, pair_snd,
-              Category.comp_id, comp_zero, add_zero, zero_add] at this
-            exact this
-          have h2 : pair pt fst snd = 𝟙 pt := by
-            have := pair_eta pt (𝟙 pt)
-            simp only [Category.id_comp] at this
-            exact this
-          exact h1.symm.trans h2
-        simp only [← Category.assoc, ← Preadditive.add_comp, key, Category.id_comp])
+    (pair_fst : ∀ X (f : X ⟶ P) (g : X ⟶ Q), pair X f g ≫ fst = f)
+    (pair_snd : ∀ X (f : X ⟶ P) (g : X ⟶ Q), pair X f g ≫ snd = g)
+    (pair_eta : ∀ X (h : X ⟶ pt), pair X (h ≫ fst) (h ≫ snd) = h) :
+    BinaryBiproductData P Q :=
+  let h := BinaryFan.IsLimit.mk (BinaryFan.mk fst snd) (pair _)
+    (pair_fst _) (pair_snd _) (fun _ _ m hf hg => by
+      rw [← hf, ← hg]
+      exact (pair_eta _ m).symm)
+  ⟨BinaryBicone.ofLimitCone h, binaryBiconeIsBilimitOfLimitConeOfIsLimit h⟩
 
 section computable_biproduct
 
+/-- Chosen binary biproduct data keeps its objects and structure maps executable. -/
 class ComputableBinaryBiproduct (C : Type*) [Category C] [HasZeroMorphisms C] where
+  /-- Explicit object, maps, and universal properties for each pair. -/
   computableBinaryBiproductData (P Q : C) : BinaryBiproductData P Q
 
 open ComputableBinaryBiproduct
@@ -120,11 +53,10 @@ If C has computable biproducts, it also has noncomputable biproducts.
 instance : HasBinaryBiproducts C where
   has_binary_biproduct P Q := ⟨⟨computableBinaryBiproductData P Q⟩⟩
 
+/-- The chosen bicone exposes the maps used to assemble finite sums. -/
 abbrev cbicone : BinaryBicone X Y := (computableBinaryBiproductData X Y).bicone
 
-@[simp] theorem ComputableBinaryBiproduct.bicone_computableBinaryBiproductData :
-    (computableBinaryBiproductData X Y).bicone = cbicone X Y := rfl
-
+/-- The chosen bicone satisfies both universal properties, certifying finite-sum construction. -/
 def isBilimit_cbicone : (cbicone X Y).IsBilimit := (computableBinaryBiproductData X Y).isBilimit
 
 /--
@@ -134,9 +66,13 @@ def cbiprod : C := (cbicone X Y).pt
 
 @[inherit_doc] infixl:65 " ⊞ᶜ " => cbiprod
 
+/-- Project an explicit binary sum onto its left summand. -/
 abbrev cbiprod.fst {X Y : C} : X ⊞ᶜ Y ⟶ X := (computableBinaryBiproductData X Y).bicone.fst
+/-- Project an explicit binary sum onto its right summand. -/
 abbrev cbiprod.snd {X Y : C} : X ⊞ᶜ Y ⟶ Y := (computableBinaryBiproductData X Y).bicone.snd
+/-- Include the left summand in an explicit binary sum. -/
 abbrev cbiprod.inl {X Y : C} : X ⟶ X ⊞ᶜ Y := (computableBinaryBiproductData X Y).bicone.inl
+/-- Include the right summand in an explicit binary sum. -/
 abbrev cbiprod.inr {X Y : C} : Y ⟶ X ⊞ᶜ Y := (computableBinaryBiproductData X Y).bicone.inr
 
 /-- The left injection followed by the left projection is the identity. -/
@@ -159,10 +95,6 @@ theorem cbiprod.inr_fst {X Y : C} :
 theorem cbiprod.inr_snd {X Y : C} :
     (cbiprod.inr : Y ⟶ X ⊞ᶜ Y) ≫ cbiprod.snd = 𝟙 Y := (cbicone X Y).inr_snd
 
-/-- The computable binary biproduct is isomorphic to the chosen mathlib biproduct. -/
-noncomputable def cbiprod_iso_biprod : X ⊞ᶜ Y ≅ X ⊞ Y :=
-  biprod.uniqueUpToIso X Y (isBilimit_cbicone X Y)
-
 end computable_biproduct
 
 section explicit_zero
@@ -179,19 +111,16 @@ notation "𝟎" => HasExplicitZeroObject.zero
 
 variable {C : Type*} [Category C] [HasExplicitZeroObject C]
 
+/-- Certify the explicit zero object when constructing support bounds for categorical complexes. -/
 theorem isZero_explicitZero : IsZero (𝟎 : C) := HasExplicitZeroObject.isZero
 
-instance [HasZeroMorphisms C] (Y : C) : Unique (𝟎 ⟶ Y) :=
-  ⟨⟨0⟩, fun f => isZero_explicitZero.eq_zero_of_src f⟩
-
-instance [HasZeroMorphisms C] (Y : C) : Unique (Y ⟶ 𝟎) :=
-  ⟨⟨0⟩, fun f => isZero_explicitZero.eq_zero_of_tgt f⟩
-
+/-- Forget the explicit choice when Mathlib only needs existence of a zero object. -/
 instance : HasZeroObject C where
   zero := ⟨𝟎, isZero_explicitZero⟩
 
 end explicit_zero
 
+/-- Evaluate a finite list of summands by an executable left fold, starting at the chosen zero. -/
 def List.cbiprod {C : Type*} [Category C] [HasZeroMorphisms C] [ComputableBinaryBiproduct C]
   [HasExplicitZeroObject C] : List C → C := foldl (· ⊞ᶜ ·) 𝟎
 
@@ -242,10 +171,6 @@ theorem finCBicone_total {n : ℕ} (f : Fin n → C) :
     erw [← Preadditive.comp_sum (C := C) Finset.univ]
     rw [ih, Category.comp_id]
     exact IsBilimit.binary_total (isBilimit_cbicone _ _)
-
-/-- The finite bicone is a biproduct, using its explicit identity decomposition. -/
-def finCBiconeIsBilimit {n : ℕ} (f : Fin n → C) : (finCBicone f).IsBilimit :=
-  isBilimitOfTotal _ (finCBicone_total f)
 
 /-- The finite bicone has the same underlying object as the left fold of its summands. -/
 theorem finCBicone_pt {n : ℕ} (f : Fin n → C) :

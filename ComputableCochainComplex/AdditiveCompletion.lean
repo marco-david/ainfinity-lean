@@ -1,17 +1,39 @@
+/-
+Copyright (c) 2026 Annie Yao. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Annie Yao
+-/
 module
 
-public import Mathlib
+public import Mathlib.CategoryTheory.Linear.Basic
+public import Mathlib.CategoryTheory.Preadditive.AdditiveFunctor
+public import Mathlib.Algebra.Module.Pi
+public import Mathlib.Algebra.BigOperators.GroupWithZero.Action
+public import Mathlib.Data.Matrix.DMatrix
+public import Mathlib.Data.Finset.Sort
 public import ComputableCochainComplex.ComputableCategories
 public import Util.Texify
+
+/-!
+# Computable additive completion
+
+Objects are finite lists and morphisms are matrices of morphisms in a preadditive category.
+List concatenation supplies binary biproducts; the empty list supplies the zero object.
+`extend` evaluates formal sums through an additive functor using explicit target biproducts.
+These constructions support bounded categorical complexes and their module realizations.
+-/
 
 @[expose] public section
 
 open CategoryTheory
 
+/-- A finite formal sum with a supplied order, so morphisms have executable matrix coordinates. -/
 structure CMat_ (C : Type*) where
   ofList ::
+    /-- Ordered summands, retained explicitly for computation. -/
     toList : List C
 
+/-- Render a formal sum using its ordered list of summands, with the empty sum displayed as zero. -/
 instance (C : Type*) [Texify C] : Texify (CMat_ C) where
   texify x := if x.toList = [] then "0" else
     x.toList.map texifyWithBracketsAndParenthesesIfNecessary |> r" \oplus ".intercalate
@@ -27,15 +49,6 @@ recommended_spelling "singleton" for "[x]ₘ" in [«term[_,]ₘ»]
 
 namespace CMat_
 
-section lists
-variable {C : Type*} (A : C) (M N K : CMat_ C)
-
-theorem toList_empty : ([]ₘ : CMat_ C).toList = [] := rfl
-
-theorem toList_singleton : [A]ₘ.toList = [A] := rfl
-
-end lists
-
 section indexing
 
 variable {C : Type*} {M : CMat_ C}
@@ -47,17 +60,21 @@ This is irreducible because it is effectively irreducible in `Mat_`, and we shou
 @[irreducible]
 def ι (M : CMat_ C) : Type := Fin M.toList.length
 
-/- Auxillary definitions that are used to avoid defeq abuse. -/
 unseal ι in
+/-- Read an abstract summand index as a list position for executable lookup. -/
 def ι.toFin {M : CMat_ C} (i : M.ι) : Fin M.toList.length := i
 unseal ι in
+/-- Construct a summand index from a list position when building explicit matrices. -/
 def ι.ofFin {M : CMat_ C} (i : Fin M.toList.length) : M.ι := i
 
+/-- Converting an abstract summand index to a list position and back changes nothing. -/
 @[simp]
 theorem ι.ofFin_toFin {M : CMat_ C} (i : M.ι) : ι.ofFin i.toFin = i := rfl
+/-- Converting a list position to an abstract summand index and back changes nothing. -/
 @[simp]
 theorem ι.toFin_ofFin {M : CMat_ C} (i : Fin M.toList.length) : (ι.ofFin i).toFin = i := rfl
 
+/-- Identify summand indices with list positions for finite reindexing and summation. -/
 def ι.finEquiv {M : CMat_ C} : M.ι ≃ Fin M.toList.length where
   toFun := ι.toFin
   invFun := ι.ofFin
@@ -65,8 +82,10 @@ def ι.finEquiv {M : CMat_ C} : M.ι ≃ Fin M.toList.length where
   right_inv j := by dsimp
 
 unseal ι in
+/-- Enumerate the finitely many summands for matrix multiplication. -/
 instance fintype : Fintype M.ι := inferInstanceAs <| Fintype (Fin M.toList.length)
 unseal ι in
+/-- Decide index equality when constructing identity matrices. -/
 instance : DecidableEq M.ι := inferInstanceAs <| DecidableEq (Fin M.toList.length)
 
 /-- Mirrors the API of `CategoryTheory.Mat_.X` -/
@@ -90,6 +109,7 @@ def Hom.id : Hom M M :=
 def Hom.comp {M N K : CMat_ C} (f : Hom M N) (g : Hom N K) : Hom M K :=
   fun i k => ∑ j : N.ι, f i j ≫ g j k
 
+/-- Matrix identities and matrix multiplication form the additive-completion category. -/
 instance : Category (CMat_ C) where
   Hom := CMat_.Hom
   id := CMat_.Hom.id
@@ -105,6 +125,7 @@ instance : Category (CMat_ C) where
       Category.assoc]
     rw [Finset.sum_comm]
 
+/-- Render a morphism matrix with target summands as rows and source summands as columns. -/
 instance [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
     Texify (CMat_.Hom M N) where
   texify x :=
@@ -119,6 +140,7 @@ instance [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
       r"\begin{pmatrix} " ++ entries ++ r" \end{pmatrix}"
   requiresParentheses := false
 
+/-- Expose matrix rendering through categorical morphism notation. -/
 instance [∀ (X Y : C), Texify (X ⟶ Y)] (M N : CMat_ C) :
     Texify (M ⟶ N) := inferInstanceAs (Texify (CMat_.Hom M N))
 
@@ -130,30 +152,36 @@ def Hom.ofFin {C : Type*} [Category C] [Preadditive C] (xs ys : List C)
     (f : Π (i : Fin xs.length) (j : Fin ys.length), xs[i] ⟶ ys[j]) :
     ofList xs ⟶ ofList ys := f
 
--- These theorems and instances are almost directly copied from `CategoryTheory.Mat_`.
+/-- Equality of matrix entries determines a morphism, enabling entrywise categorical proofs. -/
 @[ext] theorem hom_ext {M N : CMat_ C} (f g : M ⟶ N) (H : ∀ i j, f i j = g i j) : f = g :=
   DMatrix.ext_iff.mp H
-theorem id_def (M : CMat_ C) :
-    (𝟙 M : Hom M M) = fun i j => if h : i = j then eqToHom (congr_arg M.X h) else 0 := rfl
+/-- Expand an identity matrix entry for the biproduct and functor proofs. -/
 theorem id_apply (M : CMat_ C) (i j : M.ι) :
     (𝟙 M : Hom M M) i j = if h : i = j then eqToHom (congr_arg M.X h) else 0 := rfl
+/-- A diagonal identity entry is the identity of its summand. -/
 @[simp] theorem id_apply_self (M : CMat_ C) (i : M.ι) : (𝟙 M : Hom M M) i i = 𝟙 _ := by
   simp [id_apply]
+/-- An off-diagonal identity entry is zero. -/
 @[simp] theorem id_apply_of_ne (M : CMat_ C) (i j : M.ι) (h : i ≠ j) : (𝟙 M : Hom M M) i j = 0 := by
   simp [id_apply, h]
-theorem comp_def {M N K : CMat_ C} (f : M ⟶ N) (g : N ⟶ K) :
-    f ≫ g = fun i k => ∑ j : N.ι, f i j ≫ g j k := rfl
+/-- Composition is the finite sum of entrywise compositions. -/
 @[simp] theorem comp_apply {M N K : CMat_ C} (f : M ⟶ N) (g : N ⟶ K) (i k) :
     (f ≫ g) i k = ∑ j : N.ι, f i j ≫ g j k := rfl
+/-- Zero entries provide a default morphism matrix. -/
 instance : Inhabited (M ⟶ N) := ⟨fun i j => (0 : M.X i ⟶ N.X j)⟩
+/-- Add and subtract morphism matrices entrywise, reusing the dependent-function instance. -/
 instance : AddCommGroup (M ⟶ N) := inferInstanceAs <| AddCommGroup (DMatrix M.ι N.ι _)
+/-- Expose entrywise addition when proving additivity of realization. -/
 @[simp] theorem add_apply {M N : CMat_ C} (f g : M ⟶ N) (i j) : (f + g) i j = f i j + g i j := rfl
+/-- Finite sums distribute over matrix composition, so the completion is preadditive. -/
 instance : Preadditive (CMat_ C) where
   add_comp M N K f f' g := by ext; simp [Finset.sum_add_distrib]
   comp_add M N K f g g' := by ext; simp [Finset.sum_add_distrib]
 
+/-- Concatenate summand lists to compute a binary sum without choosing categorical limits. -/
 def cbiprod : CMat_ C := .ofList (M.toList ++ N.toList)
 
+/-- Split concatenated-list indices into their left and right blocks for the biproduct maps. -/
 def cbiprod_ι_equiv' {M N : CMat_ C} : (M.cbiprod N).ι ≃ M.ι ⊕ N.ι :=
   have : (CMat_.ofList (M.toList ++ N.toList)).toList.length = M.toList.length + N.toList.length
     := by simp
@@ -236,247 +264,21 @@ instance : ComputableBinaryBiproduct (CMat_ C) where
           cbiprod.comp_fst_apply, cbiprod.comp_snd_apply,
           Category.assoc, eqToHom_trans, eqToHom_refl, Category.comp_id])
 
-/--
-Same as `cbiprod_ι_equiv` but expressed with proper notation and thus with types
--/
-def cbiprod_ι_equiv {M N : CMat_ C} : (M ⊞ᶜ N).ι ≃ M.ι ⊕ N.ι := cbiprod_ι_equiv'
-
+/-- The empty formal sum has no matrix indices. -/
 instance : IsEmpty ([]ₘ : CMat_ C).ι where
   false i := isEmptyElim (by simpa using i.toFin)
 
+/-- No source entries remain for the empty sum, certifying it as a zero object. -/
 theorem hom_from_empty_eq_zero (h : []ₘ ⟶ M) : h = 0 := by
   ext i j
   exact isEmptyElim i
-
-theorem hom_to_empty_eq_zero (h : M ⟶ []ₘ) : h = 0 := by
-  ext i j
-  exact isEmptyElim j
 
 /-- The empty list is an explicit zero object in the additive completion. -/
 instance : HasExplicitZeroObject (CMat_ C) where
   zero := []ₘ
   isZero := (Limits.IsZero.iff_id_eq_zero _).mpr (hom_from_empty_eq_zero _ _)
 
-/-- A matrix object is zero exactly when each of its summands is zero. -/
-theorem isZero_iff (M : CMat_ C) : Limits.IsZero M ↔ ∀ i, Limits.IsZero (M.X i) := by
-  constructor
-  · intro h i
-    rw [Limits.IsZero.iff_id_eq_zero] at h ⊢
-    simpa only [id_apply_self] using congrFun (congrFun h i) i
-  · intro h
-    rw [Limits.IsZero.iff_id_eq_zero]
-    ext i j
-    by_cases hij : i = j
-    · subst j
-      simpa only [id_apply_self] using (Limits.IsZero.iff_id_eq_zero _).mp (h i)
-    · exact id_apply_of_ne M i j hij
-
-/-- A matrix object is zero exactly when all objects in its list are zero. -/
-theorem isZero_iff_forall_mem (M : CMat_ C) :
-    Limits.IsZero M ↔ ∀ X ∈ M.toList, Limits.IsZero X := by
-  rw [isZero_iff]
-  constructor
-  · intro h X hX
-    obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.mp hX
-    simpa only [X, ι.toFin_ofFin] using h (ι.ofFin ⟨i, hi⟩)
-  · intro h i
-    simpa only [CMat_.X] using h _ (List.getElem_mem i.toFin.isLt)
-
-/-- Decide whether a matrix object is zero by checking its finitely many summands. -/
-instance {V : Type*} [Category V] [Preadditive V] [DecidablePred (Limits.IsZero : V → Prop)] :
-    DecidablePred (Limits.IsZero : CMat_ V → Prop) := fun M ↦
-  decidable_of_iff (∀ X ∈ M.toList, Limits.IsZero X) (isZero_iff_forall_mem M).symm
-
--- Idea: Maybe we can translate the `HasFiniteBiproducts` instance from `CategoryTheory.Mat_` using
--- an equivalence. I don't know if this would make it computable though, which we might need.
--- This would show existence of finite biproducts but it would make them noncomputable. --Annie
-
--- We split the equivalence into two parts rather than just having a singular
--- `CategoryTheory.Equivalence` structure because one direction is computable.
-def toMat_ (C : Type*) [Category C] [Preadditive C] : CMat_ C ⥤ Mat_ C where
-  obj M := {
-    ι := M.ι
-    fintype := M.fintype
-    X := M.X
-  }
-  map f := f
-  map_id M := by
-    rw [id_def, Mat_.id_def]
-    convert rfl
-
-instance : (toMat_ C).Faithful where
-  map_injective {M N} f g := by aesop
-
-instance : (toMat_ C).Full where
-  -- Cleaned-up Aristotle proof
-  map_surjective {M N} f' := by constructor; rfl
-
--- Aristotle generated definition
-/-- Given a Mat_ object M', construct the corresponding CMat_ object. -/
-noncomputable def ofMat_ (M' : Mat_ C) : CMat_ C :=
-  CMat_.ofList (List.ofFn (M'.X ∘ (Fintype.equivFin M'.ι).symm))
-
--- Aristotle generated definition
-unseal ι in
-private noncomputable def ofMat_equiv_fin (M' : Mat_ C) :
-    (ofMat_ M').ι ≃ Fin (Fintype.card M'.ι) :=
-  finCongr (by simp [ofMat_, List.length_ofFn])
-
--- Aristotle generated definition
-private noncomputable def ofMat_equiv (M' : Mat_ C) :
-    (ofMat_ M').ι ≃ M'.ι :=
-  (ofMat_equiv_fin M').trans (Fintype.equivFin M'.ι).symm
-
--- Cleaned-up Aristotle generated theorem
-omit [Category C] [Preadditive C] in
-private theorem ofMat_X_equiv (M' : Mat_ C) (i : (ofMat_ M').ι) :
-    (ofMat_ M').X i = M'.X (ofMat_equiv M' i) := by
-  simp only [CMat_.X, Fin.getElem_fin, ofMat_, List.getElem_ofFn, Function.comp_apply]
-  rfl
-
--- Cleaned-up Aristotle generated theorem
-omit [Category C] [Preadditive C] in
-private theorem ofMat_X_equiv' (M' : Mat_ C) (i : (ofMat_ M').ι) (j : M'.ι)
-    (h : ofMat_equiv M' i = j) :
-    (ofMat_ M').X i = M'.X j := by subst h; exact ofMat_X_equiv M' i
-
-open Classical in
-/-- Reindexing by `ofMat_equiv` identifies the reconstructed list with the original matrix
-object. -/
-private noncomputable def toMat_ofMat_iso (M' : Mat_ C) :
-    (toMat_ C).obj (ofMat_ M') ≅ M' where
-  hom := fun i j ↦ if h : ofMat_equiv M' i = j then eqToHom (ofMat_X_equiv' M' i j h) else 0
-  inv := fun j i ↦ if h : ofMat_equiv M' i = j then eqToHom (ofMat_X_equiv' M' i j h).symm else 0
-  hom_inv_id := by
-    ext i k
-    simp only [Mat_.comp_apply, dite_comp, comp_dite, Limits.zero_comp, Limits.comp_zero,
-      Finset.sum_dite_eq, Finset.mem_univ, ite_true]
-    by_cases hik : i = k
-    · subst k
-      simp only [↓reduceDIte, eqToHom_trans, eqToHom_refl, Mat_.id_apply_self]
-    · rw [dif_neg ((ofMat_equiv M').injective.ne hik), Mat_.id_apply_of_ne _ _ _ hik]
-  inv_hom_id := by
-    ext j k
-    rw [Mat_.comp_apply]
-    erw [← (ofMat_equiv M').symm.sum_comp]
-    simp only [Equiv.apply_symm_apply, dite_comp, comp_dite, Limits.zero_comp, Limits.comp_zero,
-      Finset.sum_dite_eq', Finset.mem_univ, ite_true]
-    by_cases hjk : j = k
-    · subst k
-      simp only [↓reduceDIte, eqToHom_trans, eqToHom_refl, Mat_.id_apply_self]
-    · rw [dif_neg (Ne.symm hjk), Mat_.id_apply_of_ne _ _ _ hjk]
-
-noncomputable instance : (toMat_ C).EssSurj where
-  -- Aristotle generated proof
-  mem_essImage M' := ⟨ofMat_ M', ⟨toMat_ofMat_iso M'⟩⟩
-
-instance : (toMat_ C).IsEquivalence where
-  faithful := inferInstance
-  full := inferInstance
-  essSurj := inferInstance
-
 end category
-
-section embedding
-
-variable (C : Type*)
-
-/--
-This is not a simp lemma because I am worried that this is often an equality of types.
-But I think this could work as a simp lemma, I'm just not sure if it would cause defeq issues.
--/
-theorem apply_X_ofList_singleton {A : C} (i : [A]ₘ.ι) :
-    (CMat_.ofList [A]).X i = A := by
-  -- Cleaned-up Aristotle proof
-  simp only [X, List.length_cons, List.length_nil, Nat.reduceAdd, ι.toFin]
-  unfold CMat_.ι at i
-  fin_cases i
-  rfl
-
-unseal ι in
-theorem singleton_ι_card {A : C} : Fintype.card [A]ₘ.ι = 1 := by
-  -- Cleaned-up Aristotle proof
-  simp [CMat_.ι]
-
--- Aristotle proof
-unseal ι in
-instance singleton_ι_unique {A : C} : Unique [A]ₘ.ι :=
-  inferInstanceAs (Unique (Fin 1))
-
-variable [Category C] [Preadditive C]
-
-def embedding : C ⥤ CMat_ C where
-  obj X := CMat_.ofList [X]
-  map {A B} f i j := cast (by simp [apply_X_ofList_singleton]) f
-  map_id f := by
-    -- Cleaned-up Aristotle proof
-    ext i j
-    simp only [id_apply, Subsingleton.elim i j, ↓reduceDIte, eqToHom, eq_mpr_eq_cast]
-    congr! 2
-    exact (apply_X_ofList_singleton C j).symm
-  map_comp f g := by
-    -- Cleaned-up Aristotle proof
-    ext i j
-    simp only [comp_apply, Finset.univ_unique]
-    unfold CMat_.X at *
-    grind
-
-@[simp]
-theorem ofList_singleton {A : C} : CMat_.ofList [A] = (embedding C).obj A := rfl
-
-@[simp]
-theorem toList_embedding {A : C} : ((embedding C).obj A).toList = [A] := rfl
-
-theorem X_embedding {A : C} (i : ((embedding C).obj A).ι) : ((embedding C).obj A).X i = A :=
-  apply_X_ofList_singleton C i
-
--- Aristotle generated definition
-instance {A : C} : Unique ((embedding C).obj A).ι := singleton_ι_unique C
-
-namespace Embedding
-
-def fullyFaithful : (embedding C).FullyFaithful where
-  preimage {A B} f' :=
-    -- The default here means 0, and it comes from the `Unique` instance above.
-    cast (by simp [X_embedding]) (f' default default)
-  map_preimage {A B} f' := by
-    -- Cleaned-up Aristotle proof
-    unfold embedding
-    ext i j
-    simp only [cast_cast]
-    rw [Subsingleton.elim i default, Subsingleton.elim j default]
-    rfl
-  preimage_map {A B} f := by
-    -- Cleaned-up Aristotle proof
-    generalize_proofs
-    convert cast_cast _ _ _;
-    grind
-
-instance : (embedding C).Faithful := (fullyFaithful C).faithful
-instance : (embedding C).Full := (fullyFaithful C).full
-
-instance : Functor.Additive (embedding C) where
-  map_add {M N f g} := by
-    -- Cleaned-up Aristotle proof
-    ext i j
-    convert congr_arg (fun x : M ⟶ N ↦ x) rfl using 1
-    rotate_right
-    · exact f + g
-    · exact congr_arg₂ _ (X_embedding C i) (X_embedding C j)
-    · rename_i h
-      exact HEq.symm (heq_of_eqRec_eq h.symm rfl)
-    · unfold embedding
-      simp only [add_apply]
-      congr! 1
-      · congr!
-        · exact X_embedding C i
-        · exact X_embedding C j
-      · aesop
-      · aesop
-
-end Embedding
-
-end embedding
 
 section lift
 
@@ -603,65 +405,31 @@ def extend : CMat_ C ⥤ D where
   map_id := extendMap_id F
   map_comp := extendMap_comp F
 
+/-- The realization of formal sums preserves matrix addition. -/
 instance : (extend F).Additive where
   map_add {_ _ f g} := extendMap_add F f g
 
-/-- The extension evaluates objects using the chosen list biproduct. -/
-@[simp]
-theorem extend_obj (M : CMat_ C) : (extend F).obj M = (M.toList.map F.obj).cbiprod := rfl
-
-/-- Matrix entries of the functor can be computed without unfolding its construction. -/
-@[reassoc (attr := simp)]
-theorem ι_extend_map_π {M N : CMat_ C} (f : M ⟶ N) (i : M.ι) (j : N.ι) :
-    (extendBicone F M).ι i ≫ (extend F).map f ≫ (extendBicone F N).π j = F.map (f i j) :=
-  ι_extendMap_π F f i j
-
 end extension
-
-/-- Flatten a formal sum of formal sums using the computable biproducts in `CMat_ C`. -/
-def bind : CMat_ (CMat_ C) ⥤ CMat_ C := extend (𝟭 (CMat_ C))
-
-/-- Apply an additive functor to formal sums and their matrices of morphisms. -/
-def mapCMat_ (F : C ⥤ D) [F.Additive] : CMat_ C ⥤ CMat_ D := extend (F ⋙ embedding D)
 
 end lift
 
--- TODO: Pick a simp normal form
--- TODO: implement Repr using cibiprod and the embedding
-
 section linear
-
-instance {R : Type*} [Semiring R] (m n : Type*) (α : m → n → Type*)
-    [(i : m) → (j : n) → AddCommGroup (α i j)] [(i : m) → (j : n) → Module R (α i j)] :
-    Module R (DMatrix m n α) where
-  smul r M := fun i j ↦ r • (M i j)
-  mul_smul r s M := by ext i j; exact mul_smul r s (M i j)
-  one_smul M := by ext i j; exact one_smul R (M i j)
-  smul_zero r := by ext i j; exact smul_zero r
-  smul_add r M N := by ext i j; exact smul_add r (M i j) (N i j)
-  add_smul r s N := by ext i j; exact add_smul r s (N i j)
-  zero_smul M := by ext i j; exact zero_smul R (M i j)
 
 variable {R : Type*} [Semiring R]
   {C : Type*} [Category C] [Preadditive C] [Linear R C]
 
+/-- Scalar multiplication is entrywise and commutes with matrix composition. -/
 instance : Linear R (CMat_ C) where
   homModule M N := inferInstanceAs <| Module R
-    (DMatrix M.ι N.ι fun i j => M.X i ⟶ N.X j)
-  smul_comp := by
-    -- Cleaned-up Aristotle proof
-    intros
+    (∀ (i : M.ι) (j : N.ι), M.X i ⟶ N.X j)
+  smul_comp _ _ _ r f g := by
     ext i j
-    rw [comp_apply]
-    convert Finset.smul_sum.symm
-    apply Linear.smul_comp
-  comp_smul := by
-    -- Cleaned-up Aristotle proof
-    intros
+    change (∑ k, (r • f i k) ≫ g k j) = r • ∑ k, f i k ≫ g k j
+    simp only [Linear.smul_comp, Finset.smul_sum]
+  comp_smul _ _ _ f r g := by
     ext i j
-    rw [comp_apply]
-    convert Finset.smul_sum.symm
-    apply Linear.comp_smul
+    change (∑ k, f i k ≫ (r • g k j)) = r • ∑ k, f i k ≫ g k j
+    simp only [Linear.comp_smul, Finset.smul_sum]
 
 end linear
 
