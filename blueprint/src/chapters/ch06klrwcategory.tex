@@ -94,11 +94,24 @@ where $0 \le i \le m-1$ and $0 \le j \le n-1$.
 
 \section{Bounded Cochain Complexes}
 \begin{definition}
-  Let $\BK(\C)$ denote the set of bounded cochain complexes in $\C$. THen
+  Let $\BK(\C)$ denote the set of bounded cochain complexes in $\C$. Then
   there is a function $F:\BK(\C)\to K^\bullet(\C)$ which forgets the finiteness.
   Then we equip $\BK(\C)$ with the induced category structure of $F$ which makes
   $F$ into a fully faithful functor $F:\BK(\C) \to K^\bullet (\C)$.
 \end{definition}
+
+We regard $\BK(\C)$ as an $A_\infty$-category with
+\begin{itemize}
+  \item $m_1$ the Hom differential: on a degree-$p$ morphism $f$ with components
+  $f^i\colon A^i\to B^{i+p}$ it is $m_1(f)=d_B\circ f-(-1)^{p}f\circ d_A$, i.e.\
+  componentwise $(m_1 f)^i = d_B^{i+p}\circ f^i - (-1)^p f^{i+1}\circ d_A^i$;
+  \item $m_2$ the composition, $m_2(f, g) = g\circ f \in \Hom^{p+q}(A^\bullet, C^\bullet)$
+  for $f \in \Hom^p(A^\bullet, B^\bullet)$ and $g \in \Hom^q(B^\bullet, C^\bullet)$, up to the
+  Koszul sign fixed by the general sign conventions of this blueprint;
+  \item $m_i = 0$ for $i\ge 3$.
+\end{itemize}
+The Stasheff identities for this structure reduce to $d^2 = 0$, the Leibniz rule and the
+associativity of composition.
 
 \section{Functor data and functor action}
 
@@ -263,5 +276,53 @@ $$
 \end{remark}
 
 \section{Proofs of the braiding functor satisfying A-\texorpdfstring{$\infty$}{infinity} axioms}
+
+\subsection{Axioms for \texorpdfstring{$\beta.gen$}{beta.gen}}
+Ultimately we would like to satisfy the above $A_\infty$ axioms. To do so, we first show that the
+corresponding axioms hold for $\beta.gen\colon \KLRW \to K^\bullet(\operatorname{Add}(\KLRW))$.
+Within $\KLRW$ there is no differential, though composition is defined, so terms are dropped from
+each $[\mathrm{SF}_i]$:
+\begin{itemize}
+    \item \textbf{[SF\textsubscript{1}].}
+    $0 = \mu_1^B(\beta_1(f))$.
+    \item \textbf{[SF\textsubscript{2}].}
+    $\beta_1(\mu_2^A(f, g)) = \mu_2^B(\beta_1(f), \beta_1(g)) + \mu_1^B(\beta_2(f, g))$.
+    \item \textbf{[SF\textsubscript{3}].}
+    $\beta_2(f, \mu_2^A(g, h)) + \beta_2 (\mu_2^A(f, g), h)
+      = \mu_2^B(\beta_1(f), \beta_2(g, h)) + \mu_2^B(\beta_2(f, g), \beta_1(h))$.
+    \item \textbf{[SF\textsubscript{4}].}
+    $0 = \mu_2^B(\beta_2(f, g), \beta_2(h, k))$.
+\end{itemize}
+Here $\beta$ refers to $\beta.gen$, the arguments of $\mu_2$ are written in diagrammatic order
+(first $f$, then $g$), matching the Lean convention $f \gg g$, and the signs are those of
+characteristic $2$. For $n \ge 5$ every term of $[\mathrm{SF}_n]$ contains a $\beta_k$ with
+$k \ge 3$ or a $\mu_k$ with $k \ge 3$, so these axioms hold trivially. Showing that the four
+identities hold for the $\beta.gen$ data amounts to checking them for all morphisms, pairs,
+triples and quadruples of composable morphisms, respectively.
+
+\subsection{Axioms for \texorpdfstring{$\beta.add$}{beta.add}}
+For $\beta.add\colon \operatorname{Add}(\KLRW)\to K^{\bullet}(\operatorname{Add}(\KLRW))$ the
+source category still has composition and no differential, so the SF axioms take the same shape;
+denote them by \textbf{[SF\textsubscript{i}']}. They follow from the $\beta.gen$ axioms by
+linearity.
+
+For \textbf{[SF\textsubscript{1}']}, consider any morphism
+$f\in \operatorname{Hom}\left(\bigoplus_i A_i, \bigoplus_j B_j\right)$. By definition,
+$\beta_1.add(f) = \sum_{k, l}g_{k, l}$, where $k, l$ range over pairs of components. Hence
+$$0=\mu_1^B\Big(\sum_{k, l}g_{k, l}\Big)=\sum_{k, l}\mu_1^B(g_{k, l})$$
+by linearity, and each term is zero by \textbf{[SF\textsubscript{1}]}.
+
+For \textbf{[SF\textsubscript{2}']}, by bilinearity of composition and linearity of the target
+differential,
+\begin{align*}
+  \sum_{k, l, m}\beta_1.add(\mu_2^A(f_{k, l}, g_{l, m}))
+    = &\sum_{k, l, m}\mu_2^B(\beta_1.add(f_{k, l}), \beta_1.add(g_{l, m})) \\
+      &+ \sum_{k, l, m}\mu_1^B(\beta_2.add(f_{k, l}, g_{l, m})).
+\end{align*}
+Since $\beta.add = \beta.gen$ on components, this is a sum of instances of
+\textbf{[SF\textsubscript{2}]}, one for each pair of component morphisms.
+
+\textbf{[SF\textsubscript{3}']} and \textbf{[SF\textsubscript{4}']} follow in the same way, by
+bilinearity of composition and linearity of the differential.
 
 \section{Generating the beta data}
