@@ -304,11 +304,11 @@ def peelChainComplex (disk : @MarkedDisk V n) (labels : Fin k → V) (p : PeelDa
       peelComplexHom u ℏ Γ disk labels p i.val (by omega) ≫
         eqToHom (congrArg (peelComplex u ℏ Γ disk labels p) h)
     else 0
-  shape i j hij := dite_eq_right (c := i.val + 1 = j.val) hij
+  shape i j hij := dif_neg (c := i.val + 1 = j.val) hij
   d_comp_d' := by
     rintro ⟨i, hi⟩ ⟨j, hj⟩ ⟨l, hl⟩ (hij : i + 1 = j) (hjl : j + 1 = l)
     subst hij hjl
-    simp only [Fin.val_mk, dite_eq_left, eqToHom_refl, Category.comp_id]
+    simp only [Fin.val_mk, dif_pos, eqToHom_refl, Category.comp_id]
     exact hd i (by omega)
 
 end KLRWCube
