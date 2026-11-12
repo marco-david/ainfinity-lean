@@ -12,11 +12,8 @@ maxSynthPendingDepth = 3
 name = "checkdecls"
 git = "https://github.com/PatrickMassot/checkdecls.git"
 
-[[require]]
-name = "«doc-gen4»"
-git = "https://github.com/leanprover/doc-gen4"
-rev = "v4.30.0-rc1"
-
+# No `rev`: the pinned release is recorded in `lake-manifest.json`, and the `Update Mathlib`
+# workflow pins the next one there (see AGENTS.md, "Lean and Mathlib version").
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"

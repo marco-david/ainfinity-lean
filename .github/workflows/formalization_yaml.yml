@@ -1,0 +1,28 @@
+name: Validate formalization.yaml
+
+on:
+  push:
+    paths:
+      - formalization.yaml
+      - .github/workflows/formalization_yaml.yml
+  pull_request:
+    branches:
+      - master
+    paths:
+      - formalization.yaml
+      - .github/workflows/formalization_yaml.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate against the formalization.yaml schema
+        run: >-
+          pipx run check-jsonschema
+          --schemafile https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+          formalization.yaml

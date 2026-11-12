@@ -1,8 +1,10 @@
-## A∞-categories in Lean
+## A<sub>∞</sub> Categories in Lean
 
-*Marco David, Jason Dong, Hallvard Hareide, Jasper van de Kreeke, Justin Mu, Niels Voss, Annie Yao*
+*Marco David, Jason Dong, Hallvard Hareide, Jasper van de Kreeke, Lillian Liu, Justin Mu, Zhan Shi, Niels Voss, Annie Yao*
 
-Repository for the URAP formalization project at UC Berkeley.
+Repository for the formalization of $$A_\infty$$ category theory in Lean, a research project run at UC Berkeley.
+
+Check out the [**blueprint homepage**](https://marcodavid.net/A∞/) for this project.
 
 ### Repository structure
 
@@ -13,10 +15,21 @@ and checked in CI, so rerun that command after adding a file.
 
 | Folder | Contents |
 | --- | --- |
-| `Util/` | General-purpose utilities: the `Texify` class and the `#texify` command for rendering terms as LaTeX. |
+| `Util/` | Contains a `Texify` class and the `#texify` command for rendering terms as LaTeX. |
 | `ComputableCochainComplex/` | Computable categorical constructions: explicit biproducts and zero objects, the computable additive completion `CMat_`, and bounded cochain complexes. |
-| `AInfinity/` | Grading indices, the Stasheff identities, A∞-categories, A∞-functors and their composition, and examples. |
-| `KLRW/` | The KLRW category of one black strand and `n` red strands, the braiding functor data, and examples. |
+| `AInfinity/` | Gradings and their homomorphisms, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing higher operations, DG and linear categories as A∞-categories, A∞-functors. |
+| `KLRW/` | KLRW algebras and categories: the general quiver-parametrised KLRW algebra and its $$R$$-linear category, and a computable special case with one black strand and $$n$$ red strands. | |
 
-The blueprint sources live in `blueprint/src/` and the API documentation is built from
-`docbuild/`.
+The blueprint sources live in `blueprint/src/`. The API documentation is built on CI by
+`docgen-action`, which generates a `docbuild/` project depending on `doc-gen4` at the tag of
+the current Lean toolchain; the checked-in `docbuild/lakefile.toml` is its local counterpart.
+
+### Project metadata and license
+
+[`formalization.yaml`](formalization.yaml) records the project's sources, scope, status,
+fidelity to the literature, and how it was produced, following the
+[community standards](https://github.com/mathlib-initiative/formalization.yaml).
+Please keep it up to date (e.g. the `sorry` counts and scope) when making significant
+changes; CI validates it against the schema.
+
+The code is released under the Apache 2.0 license; see [`LICENSE`](LICENSE).

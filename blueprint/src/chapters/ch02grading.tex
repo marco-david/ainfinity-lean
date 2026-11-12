@@ -2,40 +2,156 @@
 
 \chapter{Gradings}
 
-\begin{definition}[Parity group]
-\label{AInfinityTheory.Parity}
-The type of parities is $\mathbb{Z}/2\mathbb{Z}$, implemented as \texttt{ZMod 2}.
-\end{definition}
+\section{Gradings and their homomorphisms}
+
+The morphisms of an \Ainf{}-category are graded by an abelian group $\beta$ of
+degrees. The \Ainf{}-axioms use exactly two further pieces of structure on
+$\beta$: a distinguished degree one, by whose integer multiples degrees are
+shifted, so that the $n$-ary operation $m_n$ can have degree $2-n$, and a Koszul
+sign attached to every degree. No degree is ever
+multiplied, so $\beta$ need not be a ring. Besides the standard gradings
+$\mathbb{Z}$ and $\mathbb{Z}/2$, this allows bigradings such as
+$\mathbb{Z}\times^t\mathbb{Z}$ or $\mathbb{Z}\times^t\mathbb{Z}/2$, in which $m_n$
+has degree $(2-n,0)$.
 
 \begin{definition}[Grading]
-\lean{AInfinityTheory.GradingIndex}
-\label{AInfinityTheory.GradingIndex}
+\lean{AInfinityTheory.Grading}
+\label{AInfinityTheory.Grading}
 \leanok
-\uses{AInfinityTheory.Parity}
-A grading on a type $\beta$ consists of an additive commutative group structure
-on $\beta$, together with homomorphisms
+A grading is an abelian group $\beta$ together with an element
+$\mathbf{1} \in \beta$, the \emph{degree one}, and a group homomorphism
 \[
-  \phi : \mathbb{Z} \to \beta,
-  \qquad
-  \sigma : \beta \to \mathbb{Z}/2\mathbb{Z},
+  \operatorname{sign} : \beta \to \{\pm 1\},
 \]
-such that $\sigma(\phi(n))$ is the parity class of $n$ for every integer $n$.
+such that $\operatorname{sign}(\mathbf{1}) = -1$; that is, the differential,
+which has degree $\mathbf{1}$, is odd. A degree $d \in \beta$ is shifted by an
+integer $n$ by adding $n \cdot \mathbf{1}$. For a degree $d \in \beta$ we write
+$(-1)^d := \operatorname{sign}(d)$ for its Koszul sign. Since $\beta$ is not a
+ring, $\mathbf{1}$ is not a multiplicative unit; integers act on $\beta$ only
+through the $\mathbb{Z}$-module structure.
 \end{definition}
 
-\begin{definition}[Graded $R$-module]
-\lean{AInfinityTheory.GradedRModule}
-\label{AInfinityTheory.GradedRModule}
+\begin{lemma}[Sign of an integer shift]
+\lean{AInfinityTheory.sign_zsmul_degOne}
+\label{AInfinityTheory.sign_zsmul_degOne}
 \leanok
-\uses{AInfinityTheory.GradingIndex}
-For a commutative ring $R$, a graded $R$-module is a $\beta$-indexed family of
-$R$-modules, implemented as a graded object in \texttt{ModuleCat R}.
+\uses{AInfinityTheory.Grading}
+For every integer $n$ one has $(-1)^{n \cdot \mathbf{1}} = (-1)^n$.
+\end{lemma}
+\begin{proof}
+\leanok
+Since $\operatorname{sign}$ is a homomorphism,
+$(-1)^{n \cdot \mathbf{1}} = \operatorname{sign}(\mathbf{1})^n = (-1)^n$.
+\end{proof}
+
+\begin{definition}[Standard gradings]
+\lean{AInfinityTheory.Grading.instInt, AInfinityTheory.Grading.instZModOfNatNat}
+\label{AInfinityTheory.Grading.standard}
+\leanok
+\uses{AInfinityTheory.Grading}
+The integers $\mathbb{Z}$ form a grading with $\mathbf{1} = 1$ and
+$\operatorname{sign}(n) = (-1)^n$. The parities $\mathbb{Z}/2$ form a grading
+with $\mathbf{1} = 1$ and $\operatorname{sign}(p) = (-1)^p$.
 \end{definition}
 
-\begin{definition}[$R$-linear graded quiver]
-\lean{AInfinityTheory.RLinearGradedQuiver}
-\label{AInfinityTheory.RLinearGradedQuiver}
+\begin{definition}[Product gradings]
+\lean{AInfinityTheory.TProd, AInfinityTheory.instGradingTProd,
+  AInfinityTheory.LProd, AInfinityTheory.instGradingLProd,
+  AInfinityTheory.RProd, AInfinityTheory.instGradingRProd}
+\label{AInfinityTheory.Grading.prod}
 \leanok
-\uses{AInfinityTheory.GradedRModule}
-An $R$-linear graded quiver on an object type $\mathrm{Obj}$ assigns to each pair
-of objects $(X,Y)$ a graded $R$-module of morphisms from $X$ to $Y$.
+\uses{AInfinityTheory.Grading}
+Let $\beta$ be a grading and $\gamma$ an abelian group. The product
+$\beta \times \gamma$ is a grading with
+degree one $(\mathbf{1}, 0)$ in two ways. In the
+left grading $\beta \times^l \gamma$ the sign is read off the first
+factor alone, $\operatorname{sign}(b,c) = (-1)^b$. When $\gamma$ is a grading
+as well, the total grading $\beta \times^t \gamma$ carries the total sign
+$\operatorname{sign}(b,c) = (-1)^b\,(-1)^c$. Symmetrically, when $\beta$ is an
+abelian group and $\gamma$ a grading, the right grading
+$\beta \times^r \gamma$ has degree one $(0, \mathbf{1})$
+and $\operatorname{sign}(b,c) = (-1)^c$. None of these choices is canonical, so
+$\beta \times^l \gamma$, $\beta \times^t \gamma$ and $\beta \times^r \gamma$ are
+separate copies of $\beta \times \gamma$, each carrying its grading as an instance,
+while the plain product $\beta \times \gamma$ carries none.
+\end{definition}
+
+\begin{definition}[Homomorphism of gradings]
+\lean{AInfinityTheory.GradingHom, AInfinityTheory.GradingHom.id, AInfinityTheory.GradingHom.comp}
+\label{AInfinityTheory.GradingHom}
+\leanok
+\uses{AInfinityTheory.Grading}
+A homomorphism of gradings $f : \beta \to \beta'$ is a group homomorphism that
+preserves the degree one, $f(\mathbf{1}) = \mathbf{1}$ (hence all integer shifts),
+and the Koszul signs, $(-1)^{f(b)} = (-1)^b$. It translates degrees in $\beta$ into
+degrees in $\beta'$ so that $m_n$ keeps degree $(2-n) \cdot \mathbf{1}$ and no
+Koszul sign changes; this is what allows an \Ainf{}-functor to change the grading.
+Examples are the reduction $\mathbb{Z} \to \mathbb{Z}/2$, the inclusion of
+$\beta$ into either product grading $\beta \times^t \gamma$ or
+$\beta \times^l \gamma$, the projection $\beta \times^l \gamma \to \beta$, and
+symmetrically the inclusion $\gamma \to \beta \times^r \gamma$ and the projection
+$\beta \times^r \gamma \to \gamma$. The projection $\beta \times^t \gamma \to \beta$
+is not one, since it forgets the sign of the second factor. Homomorphisms of
+gradings compose associatively, with the identity as unit.
+\end{definition}
+
+\section{Graded linear maps and quivers}
+
+The graded-linear-map and graded-quiver definitions below do not need a grading;
+the type of degrees is arbitrary there, carrying at most an addition. The
+structure of a grading is only imposed by the degree arithmetic and Koszul
+signs of the \Ainf{}-axioms.
+
+\begin{definition}[Graded linear map]
+\lean{AInfinityTheory.GradedLinearMap}
+\label{AInfinityTheory.GradedLinearMap}
+\leanok
+Let $R$ be a semiring and let $M, N$ be $\beta$-indexed families of $R$-modules.
+A graded $R$-linear map $f : M \to N$ of degree $d \in \beta$ consists of an
+$R$-linear map $f_{i,j} : M(i) \to N(j)$ for every pair of degrees with
+$i + d = j$. Graded linear maps of degree $d$ form an $R$-module under
+componentwise operations.
+\end{definition}
+
+\begin{lemma}[Composition of graded linear maps]
+\lean{AInfinityTheory.GradedLinearMap.comp, AInfinityTheory.GradedLinearMap.id,
+  AInfinityTheory.GradedLinearMap.comp_assoc, AInfinityTheory.GradedLinearMap.id_comp,
+  AInfinityTheory.GradedLinearMap.comp_id}
+\label{AInfinityTheory.GradedLinearMap.comp}
+\leanok
+\uses{AInfinityTheory.GradedLinearMap}
+The composite of graded linear maps of degrees $d$ and $e$ is a graded linear map
+of degree $d + e$, whose component from degree $i$ factors through degree $i + d$.
+The identity is a graded linear map of degree $0$. Composition is associative and
+unital.
+\end{lemma}
+\begin{proof}
+\leanok
+Componentwise, this is associativity and unitality of composition of linear maps,
+once every component of a composite is seen to factor through any middle degree.
+\end{proof}
+
+\begin{definition}[Graded multilinear map]
+\lean{AInfinityTheory.GradedMultilinearMap}
+\label{AInfinityTheory.GradedMultilinearMap}
+\leanok
+Let $R$ be a semiring, let $(M_j)_{j \in \iota}$ be a finite family of
+$\beta$-indexed families of $R$-modules, and let $N$ be a $\beta$-indexed family of
+$R$-modules. A graded $R$-multilinear map of degree $d \in \beta$ consists, for every
+choice of input degrees $(d_j)_{j \in \iota}$ and every output degree $i$ with
+$\sum_j d_j + d = i$, of an $R$-multilinear map
+\[
+  \prod_j M_j(d_j) \to N(i).
+\]
+Graded multilinear maps of degree $d$ form an $R$-module under componentwise
+operations.
+\end{definition}
+
+\begin{definition}[Graded linear quiver]
+\lean{AInfinityTheory.GradedLinearQuiver}
+\label{AInfinityTheory.GradedLinearQuiver}
+\leanok
+For a commutative ring $R$, a graded $R$-linear quiver on an object type
+$\mathrm{Obj}$ assigns to each pair of objects $(X,Y)$ and each degree $i \in \beta$
+an $R$-module $\Hom(X,Y)_i$ of morphisms of degree $i$ from $X$ to $Y$.
 \end{definition}
