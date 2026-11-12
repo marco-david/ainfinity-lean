@@ -230,10 +230,17 @@ lemma KLRWObject.WithRing.comp_val {X Y Z : KLRWObject.WithRing u ℏ P} (f : X 
 lemma KLRWObject.WithRing.id_val (X : KLRWObject.WithRing u ℏ P) :
     (𝟙 X : X ⟶ X).val = idemMorph u ℏ X.obj := rfl
 
+/-- The morphism of the KLRW category given by a list of operations that takes `X.obj` to
+`Y.obj`. -/
+def KLRWObject.WithRing.homOfOps {X Y : KLRWObject.WithRing u ℏ P} (ops : List (StrandGenOp P))
+    (h : strandGenSeqEnd X.obj ops = Y.obj) : X ⟶ Y :=
+  (⟨(klrwRel u ℏ P).mk' (strandGenSeq X.obj ops), strandGenSeq_mem_klrwHom_of_eq _ _ _ h⟩ :
+    ↥(klrwHom u ℏ X.obj Y.obj))
+
 /-- The KLRW category is preadditive: the morphisms from `X` to `Y` form the additive group
 `klrwHom u ℏ X.obj Y.obj`, and composition distributes over addition because multiplication
 in the algebra does. -/
-noncomputable instance : Preadditive (KLRWObject.WithRing u ℏ P) where
+instance : Preadditive (KLRWObject.WithRing u ℏ P) where
   homGroup X Y := inferInstanceAs (AddCommGroup (klrwHom u ℏ X.obj Y.obj))
   add_comp X Y Z f g h := by
     ext
@@ -246,7 +253,7 @@ noncomputable instance : Preadditive (KLRWObject.WithRing u ℏ P) where
 
 /-- The KLRW category is `S`-linear: each `klrwHom u ℏ X.obj Y.obj` is an `S`-module, and
 scalars move through composition because the algebra is an `S`-algebra. -/
-noncomputable instance : Linear S (KLRWObject.WithRing u ℏ P) where
+instance : Linear S (KLRWObject.WithRing u ℏ P) where
   homModule X Y := inferInstanceAs (Module S (klrwHom u ℏ X.obj Y.obj))
   smul_comp X Y Z r f g := by
     ext
