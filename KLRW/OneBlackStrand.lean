@@ -312,26 +312,27 @@ def braided (Tneg Tpos A : TBrane n R) :
     · exfalso
       rcases h01 with ⟨rfl, rfl⟩
       exact hij (by simp [ComplexShape.up, ComplexShape.up'])
-    · simp [h01]
+    · exact dite_eq_right h01
   d_comp_d' i j l hij hjl := by
     by_cases h01 : i = 0 ∧ j = 1
     · rcases h01 with ⟨rfl, rfl⟩
-      rw [dif_pos ⟨rfl, rfl⟩, dif_neg (show ¬((1 : ℤ) = 0 ∧ l = 1) by norm_num), Limits.comp_zero]
-    · rw [dif_neg h01]
+      rw [dite_eq_left ⟨rfl, rfl⟩, dite_eq_right (show ¬((1 : ℤ) = 0 ∧ l = 1) by norm_num),
+        Limits.comp_zero]
+    · rw [dite_eq_right h01]
       exact Limits.zero_comp
 
 /-- `single A` vanishes outside degree `0`. -/
 lemma isZero_single_X (A : TBrane n R) {i : ℤ} (hi : i ≠ 0) :
     Limits.IsZero ((single A).X i) := by
   show Limits.IsZero (if i = 0 then _ else _)
-  rw [if_neg hi]
+  rw [ite_eq_right hi]
   exact isZero_explicitZero
 
 /-- `braided Tneg Tpos A` vanishes outside degrees `0` and `1`. -/
 lemma isZero_braided_X (Tneg Tpos A : TBrane n R) {i : ℤ} (h0 : i ≠ 0)
     (h1 : i ≠ 1) : Limits.IsZero ((braided Tneg Tpos A).X i) := by
   show Limits.IsZero (if i = 0 then _ else if i = 1 then _ else _)
-  rw [if_neg h0, if_neg h1]
+  rw [ite_eq_right h0, ite_eq_right h1]
   exact isZero_explicitZero
 
 /-- The one-term complex has support contained in degree `0`. -/

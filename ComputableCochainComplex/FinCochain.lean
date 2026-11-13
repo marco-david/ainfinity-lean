@@ -111,10 +111,10 @@ def getV (z : FinCochain A B n) (p : ℤ) : A.X p ⟶ B.X (p + n) :=
   if hp : p ∈ activePairs A B n then z.v hp else 0
 
 @[simp] lemma getV_of_mem (z : FinCochain A B n) {p : ℤ} (hp : p ∈ activePairs A B n) :
-    z.getV p = z.v hp := dif_pos hp
+    z.getV p = z.v hp := dite_eq_left hp
 
 @[simp] lemma getV_of_not_mem (z : FinCochain A B n) {p : ℤ} (hp : p ∉ activePairs A B n) :
-    z.getV p = 0 := dif_neg hp
+    z.getV p = 0 := dite_eq_right hp
 
 lemma getV_add (z w : FinCochain A B n) (p : ℤ) :
     (z + w).getV p = z.getV p + w.getV p := by
