@@ -144,3 +144,34 @@ An \Ainf{}-functor between \Ainf{}-categories is \Ainf{}-functor data that
 satisfies the \Ainf{}-functor equations for the structure maps of the two
 categories.
 \end{definition}
+
+\begin{proposition}[\Ainf{}-functors with vanishing higher components]
+\lean{AInfinityTheory.AInfinityFunctorData.ofArityLeTwo, AInfinityTheory.AInfinityFunctorData.ofArityLeTwo_mapCompSum_eq_compMapSum}
+\label{AInfinityTheory.AInfinityFunctorData.ofArityLeTwo_mapCompSum_eq_compMapSum}
+\leanok
+\uses{AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum, AInfinityTheory.AInfinityCategory.ofArityLeTwo}
+Let $m$ and $m'$ be \Ainf{}-category structures on the source and the target with $m_n = 0$ and
+$m'_n = 0$ for $n \geq 3$, and let $\varphi$ be \Ainf{}-functor data with $\varphi_n = 0$ for
+$n \geq 3$. Then $\varphi$ satisfies the \Ainf{}-functor equations in every arity as soon as it
+does so in arities $1$, $2$, $3$ and $4$, that is, as soon as
+\begin{align*}
+  \varphi_1(m_1(a)) &= m'_1(\varphi_1(a)), \\
+  (-1)^{\|b\|} \varphi_2(m_1(a), b) + \varphi_2(a, m_1(b)) + \varphi_1(m_2(a, b))
+    &= m'_2(\varphi_1(a), \varphi_1(b)) + m'_1(\varphi_2(a, b)), \\
+  (-1)^{\|c\|} \varphi_2(m_2(a, b), c) + \varphi_2(a, m_2(b, c))
+    &= m'_2(\varphi_2(a, b), \varphi_1(c)) + m'_2(\varphi_1(a), \varphi_2(b, c)), \\
+  m'_2(\varphi_2(a, b), \varphi_2(c, e)) &= 0
+\end{align*}
+for all composable $a, b, c, e$.
+\end{proposition}
+
+\begin{proof}
+\leanok
+A term $\varphi_{r+1+t}(\dots, m_s(\dots), \dots)$ of the left-hand side in arity $n$ has
+$s + (r + 1 + t) = n + 1$. It vanishes unless $s \leq 2$ and $r + 1 + t \leq 2$, so the left-hand
+side vanishes for $n \geq 4$, and in arity $3$ only the two terms with $s = 2$ remain. A term
+$m'_k(\varphi_{i_1}(\dots), \dots, \varphi_{i_k}(\dots))$ of the right-hand side vanishes unless
+$k \leq 2$ and every $i_j \leq 2$. This leaves the compositions $(1)$ of $1$; $(2)$ and $(1, 1)$
+of $2$; $(2, 1)$ and $(1, 2)$ of $3$; and $(2, 2)$ of $4$, and none for $n \geq 5$. The remaining
+terms are the four identities.
+\end{proof}

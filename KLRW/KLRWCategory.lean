@@ -2,6 +2,7 @@ module
 
 public import Mathlib
 public import KLRW.KLRWAlgebra
+public import AInfinity.LinearCategory
 @[expose] public section
 
 
@@ -153,6 +154,12 @@ noncomputable instance : CategoryTheory.Linear R (KLRWObject.WithRing R paramete
     ext
     change (r • g.val) * f.val = r • (g.val * f.val)
     exact smul_mul_assoc r g.val f.val
+
+/-- The KLRW category as an A∞-category with grading `ℤ`: all morphisms sit in degree `0`, m₂ is
+composition, and all other operations vanish. -/
+noncomputable instance KLRWObject.WithRing.aInfinityCategory :
+    AInfinityTheory.AInfinityCategory ℤ R (KLRWObject.WithRing R parameters) :=
+  .ofLinearCategory ℤ R (KLRWObject.WithRing R parameters)
 
 
 
