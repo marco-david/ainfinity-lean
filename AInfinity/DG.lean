@@ -300,12 +300,6 @@ lemma gradedDifferential_v (X Y : C) (p q : ℤ) (h : p + degOne = q) :
     (gradedDifferential R X Y).v p q h = differential X Y p q :=
   rfl
 
-/-- The Koszul sign (-1)^‖a‖ of an input a of degree n, where ‖a‖ = n - 1, is
--(-1)^n. -/
-lemma toMul_sign_sub_degOne (n : ℤ) : (sign (n - degOne)).toMul = -n.negOnePow := by
-  change (n - 1).negOnePow = _
-  rw [Int.negOnePow_sub, Int.negOnePow_one, mul_neg, mul_one]
-
 /-- A DG category is an A∞-category: m₁ is the signed differential, m₂ is the signed
 composition, and the higher compositions mₙ for n ≥ 3 vanish. The Stasheff identities in
 arities 1, 2 and 3 are d² = 0, the Leibniz rule and associativity of composition. -/
@@ -314,11 +308,11 @@ noncomputable instance aInfinityCategory : AInfinityCategory ℤ R C :=
     (fun X Y _ _ _ _ _ a ↦ differential_differential X Y _ _ _ a)
     (fun X Y Z _ _ _ _ _ _ h hp hq he a b ↦ by
       simp only [gradedDifferential_v]
-      rw [differential_composition X Y Z h hp hq he, toMul_sign_sub_degOne,
+      rw [differential_composition X Y Z h hp hq he, toMul_sign_sub_degOne_int,
         Units.neg_smul]
       abel)
     (fun W X Y Z _ _ _ _ _ _ h h' h₁ a b c ↦ by
-      rw [composition_composition W X Y Z h h' h₁, toMul_sign_sub_degOne, Units.neg_smul,
+      rw [composition_composition W X Y Z h h' h₁, toMul_sign_sub_degOne_int, Units.neg_smul,
         smul_smul, Int.units_mul_self, one_smul, neg_add_cancel])
 
 end DGCategory

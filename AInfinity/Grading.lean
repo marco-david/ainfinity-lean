@@ -128,6 +128,12 @@ public lemma sign_int (n : ℤ) : sign n = Int.negOnePow n := rfl
 /-- In the parity grading, `sign` is Mathlib's power operation on `ℤˣ` by `ZMod 2`. -/
 public lemma sign_zmod_two (p : ZMod 2) : sign p = (-1 : ℤˣ) ^ p := rfl
 
+/-- In the grading `ℤ`, the Koszul sign (-1)^‖a‖ of an input a of degree n, where its reduced
+degree is ‖a‖ = n - 1, is -(-1)^n. -/
+public lemma toMul_sign_sub_degOne_int (n : ℤ) : (sign (n - degOne)).toMul = -n.negOnePow := by
+  change (n - 1).negOnePow = _
+  rw [Int.negOnePow_sub, Int.negOnePow_one, mul_neg, mul_one]
+
 /-! ### Homomorphisms of gradings -/
 
 /-- A homomorphism of gradings is an additive homomorphism `β →+ β'` that preserves the
