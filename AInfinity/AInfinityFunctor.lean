@@ -257,6 +257,138 @@ def compMapSum [NeZero n] (d : β) (hd : operationTargetDeg deg = d) :
     (F.obj (X 0) →ᵍ[R] F.obj (X (Fin.last n))) (F.degMap d) :=
   ∑ c : Composition n, F.compMapTerm a c d hd
 
+/-! ### Vanishing terms -/
+
+/-- A term of the left-hand side of the functor equation vanishes if its outer functor component
+vanishes. -/
+lemma mapCompTerm_eq_zero_of_map_eq_zero (p : StasheffIndex n)
+    (hF : F.map (stasheffObjOut X p) = 0) (d : β) (hd : operationTargetDeg deg = d) :
+    F.mapCompTerm a p d hd = 0 := by
+  rw [mapCompTerm, hF, GradedMultilinearMap.zero_v, zero_apply, map_zero]
+
+/-- A term of the left-hand side of the functor equation vanishes if its inner operation
+vanishes. -/
+lemma mapCompTerm_eq_zero_of_inner_map_eq_zero (p : StasheffIndex n)
+    (hm : ∀ e he,
+      (AInfinityCategoryStruct.m (R := R) (stasheffObjIn X p)).v (stasheffDegIn deg p) e he = 0)
+    (d : β) (hd : operationTargetDeg deg = d) :
+    F.mapCompTerm a p d hd = 0 := by
+  rw [mapCompTerm, MultilinearMap.map_coord_zero _ p.middleIndex
+    (stasheffInputsOut_middle_eq_zero_of_inner_eq_zero a p
+      (stasheffInner_eq_zero_of_map_eq_zero a p hm)), map_zero]
+
+/-- A term of the right-hand side of the functor equation vanishes if its outer operation
+vanishes. -/
+lemma compMapTerm_eq_zero_of_map_eq_zero [NeZero n] (c : Composition n)
+    (hm : AInfinityCategoryStruct.m (β := β') (R := R) (fun k ↦ F.obj (X (c.boundary k))) = 0)
+    (d : β)
+    (hd : operationTargetDeg deg = d) :
+    F.compMapTerm a c d hd = 0 := by
+  rw [compMapTerm, hm, GradedMultilinearMap.zero_v, zero_apply, map_zero]
+
+/-- A term of the right-hand side of the functor equation vanishes if the functor component on
+one of its blocks vanishes. -/
+lemma compMapTerm_eq_zero_of_block_map_eq_zero [NeZero n] (c : Composition n) (l : Fin c.length)
+    (hF : F.map (compositionBlockObj X c l) = 0) (d : β) (hd : operationTargetDeg deg = d) :
+    F.compMapTerm a c d hd = 0 := by
+  have hl : F.compositionBlockMap a c l = 0 := by
+    rw [compositionBlockMap, hF, GradedMultilinearMap.zero_v]
+    exact map_zero _
+  rw [compMapTerm, MultilinearMap.map_coord_zero _ l hl, map_zero]
+
+/-- If the operations of the source vanish in every arity outside `S` and the functor components
+in every arity outside `T`, a term of the left-hand side of the functor equation vanishes unless
+its inner arity lies in `S` and its outer arity lies in `T`. -/
+lemma mapCompTerm_eq_zero_of_arity_notMem (S T : Set ℕ)
+    (hm : ∀ (k : ℕ) [NeZero k], k ∉ S → ∀ X : Fin (k + 1) → Obj,
+      AInfinityCategoryStruct.m (β := β) (R := R) X = 0)
+    (hF : ∀ (k : ℕ) [NeZero k], k ∉ T → ∀ X : Fin (k + 1) → Obj, F.map X = 0)
+    (p : StasheffIndex n) (hST : p.s ∉ S ∨ p.r + 1 + p.t ∉ T) (d : β)
+    (hd : operationTargetDeg deg = d) :
+    F.mapCompTerm a p d hd = 0 := by
+  rcases hST with hS | hT
+  · exact F.mapCompTerm_eq_zero_of_inner_map_eq_zero a p
+      (fun e he ↦ by simp only [hm p.s hS]; rfl) d hd
+  · exact F.mapCompTerm_eq_zero_of_map_eq_zero a p (hF _ hT _) d hd
+
+/-- If the operations of the target vanish in every arity outside `S` and the functor components
+in every arity outside `T`, a term of the right-hand side of the functor equation vanishes unless
+its number of blocks lies in `S` and the sizes of all its blocks lie in `T`. -/
+lemma compMapTerm_eq_zero_of_arity_notMem [NeZero n] (S T : Set ℕ)
+    (hm : ∀ (k : ℕ) [NeZero k], k ∉ S → ∀ Y : Fin (k + 1) → Obj',
+      AInfinityCategoryStruct.m (β := β') (R := R) Y = 0)
+    (hF : ∀ (k : ℕ) [NeZero k], k ∉ T → ∀ X : Fin (k + 1) → Obj, F.map X = 0)
+    (c : Composition n) (hST : c.length ∉ S ∨ ∃ l, c.blocksFun l ∉ T) (d : β)
+    (hd : operationTargetDeg deg = d) :
+    F.compMapTerm a c d hd = 0 := by
+  rcases hST with hS | ⟨l, hT⟩
+  · exact F.compMapTerm_eq_zero_of_map_eq_zero a c (hm _ hS _) d hd
+  · exact F.compMapTerm_eq_zero_of_block_map_eq_zero a c l (hF _ hT _) d hd
+
+/-! ### The functor equation in low arities -/
+
+/-- In arity 1, the left-hand side of the functor equation is the single term φ₁(m₁(a₁)). -/
+lemma mapCompSum_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 → β}
+    (a : ∀ i : Fin 1, ComposableHom β R X i (deg i)) (d : β) (hd : operationTargetDeg deg = d) :
+    F.mapCompSum a d hd = F.mapCompTerm a ⟨0, 1, 0, rfl, le_rfl⟩ d hd := by
+  rw [mapCompSum, signedStasheffSum, StasheffIndex.univ_one, Finset.sum_singleton]
+  exact one_smul _ _
+
+/-- In arity 2, the left-hand side of the functor equation has the three terms
+φ₂(m₁(a₁), a₂), φ₂(a₁, m₁(a₂)) and φ₁(m₂(a₁, a₂)), with the Koszul sign (-1)^‖a₂‖ on the
+first. -/
+lemma mapCompSum_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 → β}
+    (a : ∀ i : Fin 2, ComposableHom β R X i (deg i)) (d : β) (hd : operationTargetDeg deg = d) :
+    F.mapCompSum a d hd =
+      (sign (deg 1 - degOne)).toMul • F.mapCompTerm a ⟨0, 1, 1, rfl, le_rfl⟩ d hd +
+        F.mapCompTerm a ⟨1, 1, 0, rfl, le_rfl⟩ d hd +
+        F.mapCompTerm a ⟨0, 2, 0, rfl, one_le_two⟩ d hd := by
+  rw [mapCompSum, signedStasheffSum, StasheffIndex.univ_two, Finset.sum_insert (by decide),
+    Finset.sum_insert (by decide), Finset.sum_singleton]
+  simp only [stasheffSign, Fin.prod_univ_one, Fin.prod_univ_zero, one_smul, add_assoc]
+  rfl
+
+/-- In arity 3, the left-hand side of the functor equation has six terms, one for each index
+triple (r, s, t), with the Koszul signs given by `stasheffSign`. -/
+lemma mapCompSum_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 → β}
+    (a : ∀ i : Fin 3, ComposableHom β R X i (deg i)) (d : β) (hd : operationTargetDeg deg = d) :
+    F.mapCompSum a d hd =
+      ((sign (deg 1 - degOne)).toMul * (sign (deg 2 - degOne)).toMul) •
+          F.mapCompTerm a ⟨0, 1, 2, rfl, le_rfl⟩ d hd +
+        (sign (deg 2 - degOne)).toMul • F.mapCompTerm a ⟨1, 1, 1, rfl, le_rfl⟩ d hd +
+        F.mapCompTerm a ⟨2, 1, 0, rfl, le_rfl⟩ d hd +
+        (sign (deg 2 - degOne)).toMul • F.mapCompTerm a ⟨0, 2, 1, rfl, one_le_two⟩ d hd +
+        F.mapCompTerm a ⟨1, 2, 0, rfl, one_le_two⟩ d hd +
+        F.mapCompTerm a ⟨0, 3, 0, rfl, by decide⟩ d hd := by
+  rw [mapCompSum, signedStasheffSum, StasheffIndex.univ_three]
+  repeat rw [Finset.sum_insert (by decide)]
+  rw [Finset.sum_singleton]
+  simp only [stasheffSign, Fin.prod_univ_two, Fin.prod_univ_one, Fin.prod_univ_zero,
+    one_smul, add_assoc]
+  rfl
+
+/-- In arity 1, the right-hand side of the functor equation is the single term m'₁(φ₁(a₁)),
+indexed by the only composition of 1. -/
+lemma compMapSum_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 → β}
+    (a : ∀ i : Fin 1, ComposableHom β R X i (deg i)) (d : β) (hd : operationTargetDeg deg = d) :
+    F.compMapSum a d hd = F.compMapTerm a (Composition.ones 1) d hd :=
+  Fintype.sum_eq_single _ fun c hc ↦ absurd (Composition.eq_ones_iff_length.2
+    (le_antisymm c.length_le (c.length_pos_of_pos one_pos))) hc
+
+/-- In arity 2, the right-hand side of the functor equation has the two terms
+m'₂(φ₁(a₁), φ₁(a₂)) and m'₁(φ₂(a₁, a₂)), indexed by the two compositions of 2. -/
+lemma compMapSum_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 → β}
+    (a : ∀ i : Fin 2, ComposableHom β R X i (deg i)) (d : β) (hd : operationTargetDeg deg = d) :
+    F.compMapSum a d hd =
+      F.compMapTerm a (Composition.ones 2) d hd +
+        F.compMapTerm a (Composition.single 2 two_pos) d hd := by
+  refine Fintype.sum_eq_add _ _ (by decide) fun c ⟨h₁, h₂⟩ ↦ absurd ?_ h₂
+  refine (Composition.eq_single_iff_length two_pos).2 ?_
+  have := c.length_pos_of_pos two_pos
+  have := c.length_le
+  have : c.length ≠ 2 := fun h ↦ h₁ (Composition.eq_ones_iff_length.2 h)
+  omega
+
 end AInfinityCategoryStruct
 
 end AInfinityFunctorData
