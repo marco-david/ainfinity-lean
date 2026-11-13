@@ -5,6 +5,7 @@ public import Util.Texify
 public meta import Util.Texify
 public import ComputableCochainComplex.AdditiveCompletion
 public import ComputableCochainComplex.BoundedCochainComplex
+public import AInfinity.LinearCategory
 
 @[expose] public section
 
@@ -245,6 +246,11 @@ instance : Linear R (TBrane n R) where
   homModule _ _ := inferInstanceAs (Module R (StrandSpace R))
   smul_comp P Q S r f g := StrandSpace.convolution_smul_left r f g (compShift P Q S)
   comp_smul P Q S f r g := StrandSpace.convolution_smul_right r f g (compShift P Q S)
+
+/-- The one-black-strand KLRW category as an A∞-category with grading `ℤ`: all morphisms sit in
+degree `0`, m₂ is composition, and all other operations vanish. -/
+instance TBrane.aInfinityCategory : AInfinityTheory.AInfinityCategory ℤ R (TBrane n R) :=
+  .ofLinearCategory ℤ R (TBrane n R)
 
 instance (R : Type*) [CommRing R] [DecidableEq R] [ToString R] (n : ℕ)
     (S T : TBrane n R) : Texify (S ⟶ T) :=
