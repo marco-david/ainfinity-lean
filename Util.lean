@@ -1,3 +1,3 @@
-module  -- shake: keep-all
+module  -- shake: keep-all --deprecated_module: ignore
 
 public import Util.Texify

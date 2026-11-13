@@ -133,6 +133,8 @@ def toCyclesQuotient : p.PresentedModule →ₗ[R]
     obtain ⟨y, hy⟩ := (p.relation_iff x).mp ⟨z, hz⟩
     exact ⟨y, Subtype.ext hy⟩)
 
+set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.respectTransparency.types false in
 /-- The computed presentation is exactly the cocycle quotient. Classical inversion is
 confined to this comparison; representative computations use the supplied solver. -/
 noncomputable def cyclesQuotientEquiv : p.PresentedModule ≃ₗ[R]
@@ -149,7 +151,9 @@ noncomputable def cyclesQuotientEquiv : p.PresentedModule ≃ₗ[R]
           obtain ⟨z, hz⟩ := (Submodule.Quotient.eq _).mp h
           apply (p.relation_iff (x - y)).mpr
           refine ⟨z, ?_⟩
-          simpa only [Matrix.mulVec_sub] using congrArg Subtype.val hz
+          have hz' := congrArg Subtype.val hz
+          change A *ᵥ z = p.kernel.generators *ᵥ x - p.kernel.generators *ᵥ y at hz'
+          simpa only [Matrix.mulVec_sub] using hz'
     · intro x
       induction x using Submodule.Quotient.induction_on with
       | _ x =>
@@ -265,6 +269,8 @@ lemma generators_mul_mapMatrix [EffectiveModuleAlgorithms R] :
 variable (U : Matrix (Fin l.kernel.size) (Fin k.kernel.size) R)
   (hU : l.kernel.generators * U = LinearMap.toMatrix' φ.τ₂.hom * k.kernel.generators)
 
+set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.respectTransparency.types false in
 include hU in
 /-- A certified generator matrix represents the cochain map on every vector. This finite
 equation is sufficient for validating externally computed map matrices. -/
@@ -299,6 +305,8 @@ lemma toCyclesQuotient_naturality :
     apply congrArg Submodule.Quotient.mk
     exact Subtype.ext (k.generators_mulVec_mulVec l φ U hU x).symm
 
+set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.respectTransparency.types false in
 /-- The computed quotient map agrees with Mathlib homology. This is the correctness
 statement reused to obtain functoriality, and to validate certificate-only computations. -/
 lemma mapOfMatrix_naturality :
@@ -319,7 +327,7 @@ lemma mapOfMatrix_naturality :
   change (quotientLinearMap φ) y =
     ((l.toCyclesQuotient hED).comp (k.mapOfMatrix l φ U hU))
       ((k.cyclesQuotientEquiv hBA).symm y)
-  rw [← k.toCyclesQuotient_naturality l φ U hU, LinearMap.comp_apply]
+  rw [← k.toCyclesQuotient_naturality l φ U hU]
   change (quotientLinearMap φ) y = (quotientLinearMap φ)
     ((k.cyclesQuotientEquiv hBA) ((k.cyclesQuotientEquiv hBA).symm y))
   rw [LinearEquiv.apply_symm_apply]

@@ -14,8 +14,8 @@ The project is currently organized into four Lake libraries:
 | Library | Contents |
 | --- | --- |
 | `Util/` | The `Texify` class and the `#texify` command for rendering terms and chain complexes as LaTeX. |
-| `ComputableCochainComplex/` | computable biproducts, zero objects, `CMat_`, and bounded complexes. matrix complexes, cochain maps, and the Mathlib interpretation. |
-| `AInfinity/` | Grading types, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-functors. |
+| `ComputableCochainComplex/` | Computable biproducts, zero objects, `CMat_`, independent bounded and finite free complex data, finite cochains, and cohomology presentations. |
+| `AInfinity/` | Gradings and their homomorphisms, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-functors. |
 | `KLRW/` | KLRW algebras and categories, the braiding functor, examples. |
 
 Supporting files:
@@ -37,6 +37,13 @@ lake env lean Path/To/File.lean   # check a single file
 
 Work is finished only when `lake build` succeeds with no errors and no warnings. The one
 allowed warning is "declaration uses `sorry`", and only where a `sorry` is permitted (see below).
+
+**Lean and Mathlib version.** `lean-toolchain` and `lake-manifest.json` pin a stable Lean and
+Mathlib release; `lakefile.toml` deliberately gives no `rev` for Mathlib. Bumps come from the
+`Update Mathlib` workflow (`.github/workflows/update.yml`, weekly or from the Actions tab),
+which opens one pull request per new stable release, built on the new toolchain. To do the
+same by hand, run `lake update` with the Mathlib `[[require]]` temporarily pinned
+(`rev = "v4.X.0"`), as the workflow does; a bare `lake update` moves Mathlib to `master`.
 
 ## File layout
 
@@ -136,7 +143,7 @@ allowed. Choose names carefully, because they are expensive to change later.
 These are strong defaults. Depart from them only for a concrete reason.
 
 * **Reuse before you define.** Before writing a helper, search the workspace and Mathlib with
-  `rg`, `exact?` and `apply?`. Build on the existing foundations, e.g. `GradingType`
+  `rg`, `exact?` and `apply?`. Build on the existing foundations, e.g. `Grading`
   (`AInfinity/Grading.lean`), `GradedLinearMap` and `GradedMultilinearMap`
   (`AInfinity/GradedLinearAlgebra.lean`), `GradedLinearQuiver`, and the Stasheff sums in
   `AInfinity/Stasheff.lean`. Do not introduce an alternative foundational model unless asked.

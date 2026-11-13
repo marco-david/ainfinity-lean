@@ -17,11 +17,12 @@ and checked in CI, so rerun that command after adding a file.
 | --- | --- |
 | `Util/` | Contains a `Texify` class and the `#texify` command for rendering terms as LaTeX. |
 | `ComputableCochainComplex/` | Explicit biproducts and zero objects, the additive completion `CMat_`, independent finite support and finite free coordinate classes on ordinary complexes, and cohomology presentations and induced maps from caller-supplied effective module algorithms. |
-| `AInfinity/` | Grading indices, the Stasheff identities, A∞-categories, A∞-functors and their composition, and examples. |
+| `AInfinity/` | Gradings and their homomorphisms, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing higher operations, DG and linear categories as A∞-categories, A∞-functors. |
 | `KLRW/` | KLRW algebras and categories: the general quiver-parametrised KLRW algebra and its $$R$$-linear category, and a computable special case with one black strand and $$n$$ red strands. | |
 
-The blueprint sources live in `blueprint/src/` and the API documentation is built from
-`docbuild/`.
+The blueprint sources live in `blueprint/src/`. The API documentation is built on CI by
+`docgen-action`, which generates a `docbuild/` project depending on `doc-gen4` at the tag of
+the current Lean toolchain; the checked-in `docbuild/lakefile.toml` is its local counterpart.
 
 An ordinary `C : CochainComplex (ModuleCat R) ℤ` can carry two independent data classes:
 `BoundedComplex C` supplies a finite support bound, and
@@ -34,9 +35,12 @@ zero ring. Both classes transport independently along Mathlib's shift functor.
 `C.d i j` is the original module differential; `C.dMatrix i j` expresses it in the chosen
 coordinates. `CochainComplex.ofMatrices` accepts matrix input without a support bound, and
 `CochainComplex.homOfMatrices` produces ordinary Mathlib cochain maps. Their category,
-preadditive, and linear structures are reused directly. `KLRWComplexCategory` likewise denotes
-ordinary cochain complexes in the additive KLRW category. Braiding object images supply
+preadditive, and linear structures are reused directly. `KLRW.Sl2.TBraneComplex` likewise denotes
+ordinary cochain complexes in the additive KLRW category. The one-black-strand objects and
+braiding constructions live in `KLRW/OneBlackStrand.lean`. Braiding object images supply
 `BoundedComplex` instances, and the full construction requires these instances on its inputs.
+`CochainComplex.FinCochain` computes finite cochains between bounded inputs, with differential,
+composition, and a linear equivalence to Mathlib's Hom-complex cochains.
 The old bounded-complex bundle and its morphism wrappers have been removed. Render a complex
 with `C.toTex`; cochain maps with finite-support endpoints still support `#texify`.
 KLRW complexes require a module realization with finite coordinates before using the

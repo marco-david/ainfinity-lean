@@ -156,6 +156,8 @@ def finCBicone : {n : ℕ} → (f : Fin n → C) → Bicone f
             simp only [b.ι_π]
             split_ifs <;> rfl }
 
+set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.respectTransparency.types false in
 /-- The computable finite bicone resolves the identity as the sum of its projections. -/
 theorem finCBicone_total {n : ℕ} (f : Fin n → C) :
     ∑ i, (finCBicone f).π i ≫ (finCBicone f).ι i = 𝟙 (finCBicone f).pt := by

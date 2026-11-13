@@ -32,6 +32,10 @@ namespace ComputableCohomology.Examples
 open CategoryTheory
 open scoped Matrix
 
+-- These explicit certificates unfold matrix dimensions and bundled module structures.
+set_option backward.isDefEq.respectTransparency false
+set_option backward.isDefEq.respectTransparency.types false
+
 /-- A two-term complex of free abelian groups, in degrees zero and one, with differential
 multiplication by `r`. The integer coefficient is unrestricted. -/
 def twoTerm (r : ℤ) : CochainComplex (ModuleCat ℤ) ℤ :=
@@ -43,7 +47,7 @@ def twoTerm (r : ℤ) : CochainComplex (ModuleCat ℤ) ℤ :=
       apply Matrix.ext
       intro i j
       exact Fin.elim0 i
-    · simp only [if_neg hn]
+    · simp only [ite_eq_right hn]
       exact Matrix.mul_zero _)
 
 /-- The matrix constructor supplies coordinates independently of the support bound. -/
@@ -58,7 +62,7 @@ instance twoTermBoundedComplex (r : ℤ) : BoundedComplex (twoTerm r) where
   isZero_of_notMem_support n hn := by
     rw [ModuleCat.isZero_iff_subsingleton]
     change Subsingleton (Fin (if n = 0 ∨ n = 1 then 1 else 0) → ℤ)
-    rw [if_neg (by simpa using hn)]
+    rw [ite_eq_right (by simpa using hn)]
     infer_instance
 
 @[simp] lemma twoTerm_dMatrix (r : ℤ) (n : ℤ) :
@@ -112,7 +116,7 @@ def inclusion : twoTerm 2 ⟶ twoTerm 4 :=
       by_cases hn : n = 0
       · subst n
         decide +kernel
-      · simp only [twoTerm_dMatrix, if_neg hn]
+      · simp only [twoTerm_dMatrix, ite_eq_right hn]
         calc
           _ = 0 := Matrix.zero_mul _
           _ = _ := (Matrix.mul_zero _).symm)
@@ -196,18 +200,14 @@ instance unboundedFiniteFreeComplex : FiniteFreeComplex unbounded := by
   exact CochainComplex.ofMatrices_dMatrix _ _ _ n
 
 @[simp] lemma unbounded_incoming (n : ℤ) : unbounded.incoming n = 0 := by
-  have h : unbounded.d (n - 1) n = 0 := by
-    apply ModuleCat.hom_ext
-    simp only [unbounded, CochainComplex.ofMatrices, CochainComplex.of, eqToHom_refl,
-      dite_eq_ite, sub_add_cancel, ↓reduceIte, Matrix.mulVecLin_zero, Category.comp_id,
-      ConcreteCategory.hom_ofHom]
-    rfl
-  simp [CochainComplex.incoming, CochainComplex.dMatrix, h]
+  change unbounded.dMatrix (n - 1) n = 0
+  convert unbounded_dMatrix (n - 1) using 1 <;> congr 1
+  omega
 
 /-- There is no finite support datum for a complex with a nonzero term in every degree. -/
 lemma unbounded_not_boundedComplex : ¬ Nonempty (BoundedComplex unbounded) := by
   rintro ⟨h⟩
-  letI := h
+  let := h
   obtain ⟨n, hn⟩ := Infinite.exists_notMem_finset (BoundedComplex.support unbounded)
   exact not_subsingleton (Fin 1 → ℤ) (ModuleCat.isZero_iff_subsingleton.mp
     (BoundedComplex.isZero_of_notMem_support (C := unbounded) n hn))

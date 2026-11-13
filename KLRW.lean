@@ -1,7 +1,5 @@
-module  -- shake: keep-all
+module  -- shake: keep-all --deprecated_module: ignore
 
-public import KLRW.Braiding
-public import KLRW.Examples
 public import KLRW.KLRWAlgebra
 public import KLRW.KLRWCategory
 public import KLRW.OneBlackStrand

@@ -1,9 +1,10 @@
-module  -- shake: keep-all
+module  -- shake: keep-all --deprecated_module: ignore
 
 public import ComputableCochainComplex.AdditiveCompletion
 public import ComputableCochainComplex.BoundedCochainComplex
 public import ComputableCochainComplex.Cohomology
 public import ComputableCochainComplex.ComputableCategories
 public import ComputableCochainComplex.Examples
+public import ComputableCochainComplex.FinCochain
 public import ComputableCochainComplex.FiniteFreeCochainComplex
 public import ComputableCochainComplex.ModuleAlgorithms

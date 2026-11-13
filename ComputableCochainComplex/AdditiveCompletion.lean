@@ -27,6 +27,16 @@ These constructions support bounded categorical complexes and their module reali
 
 open CategoryTheory
 
+/-
+This file mirrors `CategoryTheory.Mat_`, whose morphisms `M ⟶ N` are a dependent function type
+only after unfolding `Hom`. Since Lean 4.35, unification no longer unfolds such semireducible
+definitions when checking implicit arguments, which breaks most proofs below. Mathlib restores the
+old behaviour declaration by declaration in `Mathlib/CategoryTheory/Preadditive/Mat.lean`; we do
+the same for the whole file, until the matrix API is restated without the identification.
+-/
+set_option backward.isDefEq.respectTransparency false
+set_option backward.isDefEq.respectTransparency.types false
+
 /-- A finite formal sum with a supplied order, so morphisms have executable matrix coordinates. -/
 structure CMat_ (C : Type*) where
   ofList ::
@@ -200,6 +210,7 @@ omit [Category C] [Preadditive C] in
 theorem X_symm_cbiprod_ι_equiv'_inr (i : N.ι) :
     (M.cbiprod N).X (cbiprod_ι_equiv'.symm (.inr i)) = N.X i := by
   unfold X
+  change (M.toList ++ N.toList)[M.toList.length + i.toFin.val] = N.toList[i.toFin.val]
   simpa only [Nat.add_comm] using (List.getElem_append_right' M.toList i.toFin.isLt).symm
 
 /-- The projection from the concatenation onto its left summands. -/
