@@ -16,8 +16,8 @@ and checked in CI, so rerun that command after adding a file.
 | Folder | Contents |
 | --- | --- |
 | `Util/` | Contains a `Texify` class and the `#texify` command for rendering terms as LaTeX. |
-| `ComputableCochainComplex/` | Computable categorical constructions: explicit biproducts and zero objects, the computable additive completion `CMat_`, and bounded cochain complexes. |
-| `AInfinity/` | Gradings and their homomorphisms, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing higher operations, DG and linear categories as A∞-categories, A∞-functors. |
+| `ComputableCochainComplex/` | Computable categorical constructions: explicit biproducts and zero objects, the computable additive completion `CMat_`, bounded cochain complexes with their computable Hom complexes, and the A∞-category of bounded cochain complexes. |
+| `AInfinity/` | Gradings and their homomorphisms, graded linear maps, graded linear quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing higher operations, DG and linear categories as A∞-categories, A∞-functors, A∞-functors with vanishing higher components. |
 | `KLRW/` | KLRW algebras and categories: the general quiver-parametrised KLRW algebra and its $$R$$-linear category, and a computable special case with one black strand and $$n$$ red strands. | |
 
 The blueprint sources live in `blueprint/src/`. The API documentation is built on CI by

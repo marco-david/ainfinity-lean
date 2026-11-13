@@ -113,18 +113,19 @@ status:
     structure and the associativity and unit laws of composition), graded R-linear
     quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing
     higher operations, DG and linear categories as A∞-categories, A∞-functors with the
-    A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
-    category. In progress: the computable additive completion and
-    bounded cochain complexes, and the braiding functor, whose definitions are
-    still partially stubbed with `sorry`. Temporarily removed: the composition of
+    A∞-functor equations, A∞-functors with vanishing higher components, the computable
+    Hom complexes of bounded cochain complexes and the A∞-category they form, and the
+    general KLRW algebra with its R-linear KLRW category, an A∞-category concentrated
+    in degree 0. In progress: the computable additive completion and the braiding
+    functor, whose definitions are still partially stubbed with `sorry`. Temporarily removed: the composition of
     A∞-functors, the identity A∞-functor and the A∞-functor examples. They were written
     for the earlier foundation (grading indices and `GradedObject`s in
     `ModuleCat`) and will be restored once ported. A∞-algebras (blueprint
     chapter 5) are not formalized yet.
   # Counts come from a source scan for `sorry`. They were not checked with
   # `#print axioms`.
-  sorry_count: 22
-  sorry_in_definitions: 19
+  sorry_count: 18
+  sorry_in_definitions: 16
   axioms:
     - "propext"
     - "Classical.choice"
@@ -312,6 +313,15 @@ alignment:
         A field of `AInfinityTheory.AInfinityFunctor`, required in every positive arity n.
         Its two sides are `AInfinityTheory.AInfinityFunctorData.mapCompSum` and
         `AInfinityTheory.AInfinityFunctorData.compMapSum`.
+    - source: "Blueprint, Proposition (A∞-functors with vanishing higher components)"
+      lean: "AInfinityTheory.AInfinityFunctorData.ofArityLeTwo_mapCompSum_eq_compMapSum"
+      module: "AInfinity.FunctorArityLeTwo"
+      status: "proved"
+      note: >-
+        For the functor data `AInfinityTheory.AInfinityFunctorData.ofArityLeTwo` with
+        components in arities 1 and 2, between A∞-category structures built by
+        `AInfinityTheory.AInfinityCategoryStruct.ofArityLeTwo`, the functor equations reduce
+        to four identities in arities 1 to 4.
     - source: "Seidel, composition of A∞-functors"
       lean: ""
       module: ""
@@ -330,6 +340,22 @@ alignment:
       module: "KLRW.KLRWCategory"
       status: "defined"
       note: "Carries `Category`, `Preadditive` and `CategoryTheory.Linear R` instances."
+    - source: "Blueprint, Proposition (The KLRW category is an A∞-category)"
+      lean: "KLRW.KLRWObject.WithRing.aInfinityCategory"
+      module: "KLRW.KLRWCategory"
+      status: "proved"
+      note: >-
+        A linear category concentrated in degree 0, via
+        `AInfinityTheory.AInfinityCategory.ofLinearCategory`; the one-black-strand case is
+        `KLRW.Sl2.TBrane.aInfinityCategory`.
+    - source: "Blueprint, Proposition (Bounded cochain complexes form an A∞-category)"
+      lean: "BoundedCochainComplex.aInfinityCategory"
+      module: "ComputableCochainComplex.AInfinityCategory"
+      status: "proved"
+      note: >-
+        The graded hom spaces are the computable cochains `BoundedCochainComplex.FinCochain`;
+        m₁ is Mathlib's Hom-complex differential δ and m₂(a, b) = (-1)^|b| a ≫ b. The
+        Stasheff identities are transported to Mathlib's `CochainComplex.HomComplex`.
     - source: "Blueprint, Chapter 6 (braiding functor)"
       lean: "KLRW.Sl2.TBrane.BraidingFunctorData"
       module: "KLRW.OneBlackStrand"

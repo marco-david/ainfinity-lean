@@ -100,18 +100,51 @@ where $0 \le i \le m-1$ and $0 \le j \le n-1$.
   $F$ into a fully faithful functor $F:\BK(\C) \to K^\bullet (\C)$.
 \end{definition}
 
-We regard $\BK(\C)$ as an $A_\infty$-category with
+\begin{proposition}[Bounded cochain complexes form an \Ainf{}-category]
+\lean{BoundedCochainComplex.gradedLinearQuiver, BoundedCochainComplex.gradedDifferential, BoundedCochainComplex.composition, BoundedCochainComplex.aInfinityCategory}
+\label{BoundedCochainComplex.aInfinityCategory}
+\leanok
+\uses{AInfinityTheory.AInfinityCategory.ofArityLeTwo}
+Let $\C$ be an $R$-linear category. Regard $\BK(\C)$ as a graded $R$-linear quiver whose morphisms
+of degree $p$ from $A^\bullet$ to $B^\bullet$ are the cochains of degree $p$, that is, families
+of morphisms $f^i \colon A^i \to B^{i+p}$. For $f$ of degree $p$ and $g$ of degree $q$, set
 \begin{itemize}
-  \item $m_1$ the Hom differential: on a degree-$p$ morphism $f$ with components
-  $f^i\colon A^i\to B^{i+p}$ it is $m_1(f)=d_B\circ f-(-1)^{p}f\circ d_A$, i.e.\
-  componentwise $(m_1 f)^i = d_B^{i+p}\circ f^i - (-1)^p f^{i+1}\circ d_A^i$;
-  \item $m_2$ the composition, $m_2(f, g) = g\circ f \in \Hom^{p+q}(A^\bullet, C^\bullet)$
-  for $f \in \Hom^p(A^\bullet, B^\bullet)$ and $g \in \Hom^q(B^\bullet, C^\bullet)$, up to the
-  Koszul sign fixed by the general sign conventions of this blueprint;
-  \item $m_i = 0$ for $i\ge 3$.
+  \item $m_1(f) = \delta f$, the differential of the Hom complex, given componentwise by
+  $(\delta f)^i = d_B^{i+p} \circ f^i - (-1)^p f^{i+1} \circ d_A^i$;
+  \item $m_2(f, g) = (-1)^q\, f g$, where $f g = g \circ f$ is the composite of $f$ followed by $g$;
+  \item $m_n = 0$ for $n \geq 3$.
 \end{itemize}
-The Stasheff identities for this structure reduce to $d^2 = 0$, the Leibniz rule and the
-associativity of composition.
+This is an \Ainf{}-category with grading $\mathbb{Z}$.
+\end{proposition}
+
+\begin{proof}
+\leanok
+By the proposition on vanishing higher operations, it suffices to check the identities in
+arities $1$, $2$ and $3$. They follow from $\delta^2 = 0$, the Leibniz rule
+$\delta(f g) = f\, \delta g + (-1)^q (\delta f) g$ and the associativity of composition.
+\end{proof}
+
+\begin{remark}
+  These are the operations of the DG category of bounded complexes in the convention of
+  Proposition~\ref{AInfinityTheory.DGCategory.aInfinityCategory}: its Leibniz rule
+  $d(f g) = (df) g + (-1)^p f\, dg$ holds for the differential $d f = (-1)^p \delta f$, and then
+  $m_1(f) = (-1)^p\, d f = \delta f$.
+\end{remark}
+
+\begin{proposition}[The KLRW category is an \Ainf{}-category]
+\lean{KLRW.KLRWObject.WithRing.aInfinityCategory, KLRW.Sl2.TBrane.aInfinityCategory}
+\label{KLRW.KLRWObject.WithRing.aInfinityCategory}
+\leanok
+\uses{AInfinityTheory.AInfinityCategory.ofLinearCategory}
+The KLRW category, and its one-black-strand special case, are \Ainf{}-categories with grading
+$\mathbb{Z}$: all morphisms sit in degree $0$, $m_2$ is composition, and $m_n = 0$ for
+$n \neq 2$.
+\end{proposition}
+
+\begin{proof}
+\leanok
+They are $R$-linear categories.
+\end{proof}
 
 \section{Functor data and functor action}
 
@@ -226,7 +259,7 @@ These can be interpreted as follows:
 
 \subsection{Satisfying A-\texorpdfstring{$\infty$}{infinity} axioms}
 
-The category $K^\bullet(\operatorname{Add}(KLRW))$ only has differential $\mu_1$ and composition $\mu_2$. Similarly, the braiding functor has no components higher than $\beta_2$. Therefore the general $[\text{SF}_n]$ axioms for A-$\infty$ functors reduce to a finite list. They are, in particular, the following axioms.
+The category $K^\bullet(\operatorname{Add}(KLRW))$ only has differential $\mu_1$ and composition $\mu_2$. Similarly, the braiding functor has no components higher than $\beta_2$. Therefore the general $[\text{SF}_n]$ axioms for A-$\infty$ functors reduce to a finite list, by Proposition~\ref{AInfinityTheory.AInfinityFunctorData.ofArityLeTwo_mapCompSum_eq_compMapSum} applied with the KLRW category as the source, whose differential vanishes. They are, in particular, the following axioms.
 
 \textbf{[SF\textsubscript{1}].}
 For all $f \in \Hom_{\KLRW}(A, B)$,
