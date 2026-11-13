@@ -20,7 +20,8 @@ Hom-complex.
   degrees, with components accessed by `FinCochain.v` (on the active set) or `FinCochain.getV`
   (extended by zero).
 * `BoundedCochainComplex.FinCochain.δ`: the Hom-complex differential, raising the degree by one.
-* `BoundedCochainComplex.FinCochain.comp`: composition of cochains, adding the degrees.
+* `BoundedCochainComplex.FinCochain.comp`: composition of cochains, adding the degrees, and
+  `BoundedCochainComplex.FinCochain.compBilin`, the same as a bilinear map.
 * `BoundedCochainComplex.FinCochain.ofHom`: the degree-`0` cochain underlying a chain map.
 * `BoundedCochainComplex.FinCochain.toCochainLinearEquiv`: the `R`-linear equivalence with
   Mathlib's `CochainComplex.HomComplex.Cochain` on the underlying complexes, under which `δ`, `comp`
@@ -234,6 +235,17 @@ lemma comp_smul {C : BoundedCochainComplex V} {n₁ n₂ : ℤ}
   funext ⟨p, _⟩
   simp only [comp, Pi.smul_apply, getV_smul, Linear.smul_comp, Linear.comp_smul]
 
+variable (R) in
+/-- The composition of cochains as an `R`-bilinear map. -/
+def compBilin (A B C : BoundedCochainComplex V) (n₁ n₂ : ℤ) :
+    FinCochain A B n₁ →ₗ[R] FinCochain B C n₂ →ₗ[R] FinCochain A C (n₁ + n₂) :=
+  .mk₂ R comp add_comp smul_comp comp_add comp_smul
+
+@[simp]
+lemma compBilin_apply {C : BoundedCochainComplex V} {n₁ n₂ : ℤ} (f : FinCochain A B n₁)
+    (g : FinCochain B C n₂) : compBilin R A B C n₁ n₂ f g = f.comp g :=
+  rfl
+
 /-! ### Comparison with Mathlib's Hom-complex -/
 
 section ToCochain
@@ -349,6 +361,9 @@ lemma toCochain_zsmul (c : ℤ) (z : FinCochain A B n) : (c • z).toCochain = c
 
 @[simp] lemma toCochain_zero : (0 : FinCochain A B n).toCochain = 0 :=
   map_zero (toCochainLinearEquiv ℤ A B n)
+
+lemma toCochain_injective : Function.Injective (toCochain : FinCochain A B n → _) :=
+  (toCochainLinearEquiv ℤ A B n).injective
 
 /-- Associativity of `comp`, transported to Mathlib's cochains: the two triple composites live in
 the degrees `(n₁ + n₂) + n₃` and `n₁ + (n₂ + n₃)`, which differ syntactically. -/
