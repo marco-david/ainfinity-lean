@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2026 Hallvard Hareide. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Hallvard Hareide
+-/
+
 module
 
 public import KLRW.KLRWCategory
@@ -30,7 +36,6 @@ diagrams span the two-sided ideal $AfA$.
 ## TODO
 
 * Formalize the characterizations of violated diagrams above.
-* Formalize divided-power idempotents.
 -/
 
 @[expose] public section
@@ -39,24 +44,8 @@ namespace KLRW
 
 variable {V : Type*} [DecidableEq V] [Fintype V]
 variable {parameters : KLRWStructure V}
-variable (R : Type*) [CommRing R]
+variable {R : Type*} [CommRing R]
 
--- TODO: Move the following to KLRWCategory.lean under section of idempotents.
-/-- The straight-line idempotents are a complete orthogonal family of idempotents, i.e.
-the $e_X$ are pairwise orthogonal and sum to $1$. -/
-lemma completeOrthogonalIdempotents_idem_morph (parameters : KLRWStructure V) :
-    CompleteOrthogonalIdempotents (idem_morph (parameters := parameters) R) where
-  idem := idem_is_idem
-  ortho X Y hXY := by
-    apply rel_eq_same_con_class
-    apply implicit_rel_eq_rel
-    exact KLRWImplicitConRel.bad_comp (.idem Y) (.idem X) hXY.symm
-  complete := by
-    change ∑ i, (KLRWRel R parameters).mk' (FreeAlgebra.ι _ (.idem i)) = 1
-    rw [← map_sum]
-    apply rel_eq_same_con_class
-    apply implicit_rel_eq_rel
-    exact KLRWImplicitConRel.id_sum
 
 /-- An object is *right violated* if its rightmost strand is black. -/
 def IsRightViolated (X : KLRWObject parameters) : Prop :=
@@ -78,11 +67,13 @@ instance : DecidablePred (IsLeftViolated (parameters := parameters)) := fun _ =>
 instance : DecidablePred (IsViolated (parameters := parameters)) := fun X =>
   inferInstanceAs (Decidable (IsRightViolated X ∨ IsLeftViolated X))
 
+variable (R) in
 /-- The idempotent $f = \sum_{X \text{ violated}} e_X$, where $e_X$ is the straight-line
 idempotent `idem_morph R X`. -/
 noncomputable def violatedIdem (parameters : KLRWStructure V) : KLRWAlg R parameters :=
   ∑ X ∈ Finset.univ.filter (IsViolated (parameters := parameters)), idem_morph R X
 
+variable (R) in
 /-- `violatedIdem` is idempotent, being a partial sum of orthogonal idempotents. -/
 lemma isIdempotentElem_violatedIdem (parameters : KLRWStructure V) :
     IsIdempotentElem (violatedIdem R parameters) :=

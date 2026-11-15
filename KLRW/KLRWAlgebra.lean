@@ -436,7 +436,6 @@ noncomputable def idem_morph (R : Type*) [CommRing R] (X : KLRWObject parameters
     KLRWAlg R parameters :=
   (KLRWRel R parameters).mk' (ι (MvPolynomial (Fin 2) R) (.idem X))
 
-
 /- KLRWHom uses the helper function idem_morph to get the set of all equivalence classes of morphisms in KLRAlg that start
    from X and map to Y (KLRW Hom X Y = e_X KLRWAlg e_Y) -/
 
