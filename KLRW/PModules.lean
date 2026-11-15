@@ -11,31 +11,54 @@ public import KLRW.KLRWCategory
 /-!
 # Violated idempotents in the KLRW algebra
 
-For an object $X$, write $e_X$ for the straight-line idempotent `idem_morph R X`. The $e_X$ form a
-complete family of orthogonal idempotents in $A$ = `KLRWAlg R parameters`. An object is
-*violated* if its leftmost or rightmost strand is black, and
+We work inside the KLRW algebra $A$ = `KLRWAlg R parameters`. For an object $X$, write $e_X$ for
+the straight-line idempotent `idem_morph R X`. An object is *violated* if its leftmost or rightmost
+strand is black. The element
 $$f = \sum_{X \text{ violated}} e_X$$
-(`violatedIdem`) is again an idempotent. It is the first ingredient in the construction of the
-module $eA/eAfA$. Here, $e$ is a divided-power idempotent yet to be formalized.
+(`violatedIdem`) is an idempotent. It is the first ingredient in the construction of the
+module $L_λ = eA/eAfA$, where $e$ is a specific idempotent.
+
+## Main definitions
+
+* `KLRW.IsLeftViolated`, `KLRW.IsRightViolated`: an object is left (resp. right) violated if its
+  leftmost (resp. rightmost) strand is black.
+* `KLRW.IsViolated`: an object is violated if it is left or right violated.
+* `KLRW.violatedIdem`: the idempotent $f = \sum_{X \text{ violated}} e_X$.
 
 ## Implementation notes
 
-This implementation is based on Ben Webster's "Knot invariants and higher representation theory",
-Definition 4.3, available at <https://arxiv.org/abs/1309.3796>. There are two main discrepancies.
+This implementation is based on Ben Webster's *Knot invariants and higher representation theory*,
+Definition 4.3. There are two main discrepancies.
 
 Firstly, Webster defines violated to only concern what we call left violated. This is to define the
-cyclotomic quotient (Definition 4.6). This project works inside the full KLRW-algebra $A$.
-For constructions that later require quotienting by right violated diagrams inside the
-cyclotomic quotient, we instead quotient by all violated diagrams.
+cyclotomic quotient $A/AgA$ with $g$ the sum of all idempotents of left violated objects
+(Definition 4.6).
+Following LePage–Shende (Section 2.1), who work with the KLRW category without passing to a
+cyclotomic quotient, this project works inside the full KLRW algebra $A$.
+For the constructions that later require quotienting by right violated diagrams inside the
+cyclotomic quotient (e.g. $L_λ$), we instead quotient by all violated diagrams in $A$. We expect
+that this results in an isomorphic module, but there are some nuances in this translation which are
+yet to be spelled out (see TODO).
 
-Secondly, Webster defines violated to be a property of diagrams/morphisms, whereas we define
-violated objects. A morphism $a$ is violated in Webster's sense iff it factors as
-$a = b \, e_X \, c$ for some left violated object $X$. Consequently, the (left or right) violated
-diagrams span the two-sided ideal $AfA$.
+Secondly, Webster defines violated to be a property of diagrams, whereas we define
+violated objects. A diagram $a$ is violated in Webster's sense iff it factors as
+$a = b \, e_X \, c$ for some left violated object $X$. One can likewise define the notion of
+right violated diagrams, and the diagrams that are left violated or right violated span the
+two-sided ideal $AfA$.
 
 ## TODO
 
 * Formalize the characterizations of violated diagrams above.
+* Prove that our $L_λ$ is isomorphic to Webster's.
+* Spell out nuances of transitioning from $A$-modules to $A/AgA$-modules. For example, the
+  transition from projective $A$-resolutions to projective $A/AgA$ resolutions.
+
+## References
+
+* [B. Webster, *Knot invariants and higher representation theory*, Mem. Amer. Math. Soc. 250
+  (2017), no. 1191](https://arxiv.org/abs/1309.3796)
+* [E. LePage and V. Shende, *Aganagic's invariant is Khovanov homology*
+  (2025)](https://arxiv.org/abs/2505.00327)
 -/
 
 @[expose] public section
