@@ -8,6 +8,9 @@ module
 public import ComputableCochainComplex.Cohomology
 public import ComputableCochainComplex.BoundedCochainComplex
 public import Mathlib.Algebra.BigOperators.Fin
+import ComputableCochainComplex.IntModuleAlgorithms
+meta import ComputableCochainComplex.IntModuleAlgorithms
+meta import Mathlib.Data.Fin.VecNotation
 
 /-!
 # Integral cohomology and a nonzero map on torsion
@@ -23,6 +26,10 @@ lifting backend, and is not imported by the cohomology implementation.
 
 The final example puts `ℤ` in every degree with zero differentials. It has finite free
 coordinates and certified cohomology in every degree, but admits no finite support bound.
+
+The last section evaluates the Smith normal form and the integer backend
+`Int.instEffectiveModuleAlgorithms`. Running code with `#eval` in a module requires the
+`meta import`s above.
 -/
 
 @[expose] public section
@@ -243,5 +250,19 @@ example (n : ℤ) :
   change (Matrix.fromCols (0 : Matrix (Fin 1) (Fin 0) ℤ)
     (0 : Matrix (Fin 1) (Fin 1) ℤ)).submatrix id finSumFinEquiv.symm = 0
   simp
+
+/-! ### Smith normal forms and integer kernels -/
+
+/-- info: !![2, 0, 0; 0, 6, 0; 0, 0, 12] -/
+#guard_msgs in
+#eval (!![2, 4, 4; -6, 6, 12; 10, -4, -16] : Matrix (Fin 3) (Fin 3) ℤ).smithNormalForm.B
+
+-- The Smith normal form `B` together with `U`, `⅟U`, `V` and `⅟V`, where `U * A * V = B`.
+#eval
+  let s := (!![2, 4, 4; -6, 6, 12] : Matrix (Fin 2) (Fin 3) ℤ).smithNormalForm
+  (s.B, s.U, ⅟s.U, s.V, ⅟s.V)
+
+-- The kernel of `[1, 2, 3]` has basis `(-2, 1, 0)` and `(-3, 0, 1)`.
+#eval (EffectiveModuleAlgorithms.syzygies (!![1, 2, 3] : Matrix (Fin 1) (Fin 3) ℤ)).generators
 
 end ComputableCohomology.Examples
