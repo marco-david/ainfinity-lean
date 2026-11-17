@@ -1,6 +1,7 @@
 import AInfinity.AInfinityCategory
 import AInfinity.AInfinityCategoryStruct
 import AInfinity.AInfinityFunctor
+import AInfinity.AInfinityFunctorComposition
 import AInfinity.ArityLeTwo
 import AInfinity.DG
 import AInfinity.GradedLinearAlgebra
