@@ -11,9 +11,9 @@ public import Mathlib.Combinatorics.SimpleGraph.AdjMatrix
 /-!
 # Root and weight lattices
 
-Coordinate vectors for the root lattice and the weight lattice of the simply-laced Lie algebra
-whose Dynkin diagram is `Γ`, written in the basis of simple roots `αᵢ` or of fundamental weights
-`ωᵢ`.
+Coordinate vectors for the root lattice and the weight lattice of the simply-laced Kac–Moody
+algebra whose Dynkin diagram is `Γ`, written in the basis of simple roots `αᵢ` or of fundamental
+weights `ωᵢ`.
 
 ## Main definitions
 
@@ -22,13 +22,34 @@ whose Dynkin diagram is `Γ`, written in the basis of simple roots `αᵢ` or of
   by `k : KLRW.CoordKind`.
 * `KLRW.RootCoords`, `KLRW.WeightCoords`, `KLRW.DominantWeight`: the root lattice, the weight
   lattice and the dominant integral weights.
-* `KLRW.Coords.toWeight`: the Dynkin labels `Cβ` of an element `β` of the root lattice.
+* `KLRW.Coords.map`: apply a function to every coefficient, e.g. inclusion from `ℕ` to `ℤ`.
+* `KLRW.Coords.toWeight`: the additive map sending an element `β` of the root lattice to its
+  Dynkin labels `Cβ`.
 
 ## Implementation notes
 
-`Coords k Γ R` is a structure wrapping a function `V → R`, so that vectors in different bases
-cannot be confused. It coerces to `V → R` through `FunLike`, so the `i`-th coefficient of `x` is
-written `x i`. Its additive structure is transferred from `V → R` along `Coords.equiv`.
+* `Coords k Γ R` is a structure wrapping a function `V → R`, so that vectors in different bases
+  cannot be confused. It coerces to `V → R` through `FunLike`, so the `i`-th coefficient of `x`
+  is written `x i`. Its additive structure is transferred from `V → R` along `Coords.equiv`.
+* As for `Finsupp`, the `coe_*` lemmas such as `coe_add : ⇑(x + y) = ⇑x + ⇑y` are simp lemmas, so
+  proofs never need to unfold how the instances are built. The `*_apply` lemmas for a single
+  coefficient are not simp lemmas, since simp derives them from the `coe_*` lemmas; they are
+  there for `rw`.
+* A weight `λ` is recorded by its Dynkin labels `⟨αᵢ^∨, λ⟩`, i.e. its coordinates in the basis of
+  fundamental weights. When the Cartan matrix `C` is invertible (all diagrams of type A, D and E,
+  and some indefinite ones such as `E₁₀`), `WeightCoords Γ ℤ` is the weight lattice `P` and
+  `toWeight` is injective. When `C` is singular (for instance for the affine trees `D̃ₙ`, `Ẽ₆`,
+  `Ẽ₇`, `Ẽ₈`), Kac's realisation gives weights `n - rank C` further coordinates, which the Dynkin
+  labels forget, and `toWeight` kills the null roots: for `D̃₄`, `δ = 2α_centre + Σ α_leaf` has
+  `Cδ = 0`.
+* `C` is symmetric, so Kac's convention `aᵢⱼ = ⟨αᵢ^∨, αⱼ⟩` and the transposed convention of
+  Bourbaki and Mathlib give the same `toWeight`.
+
+## References
+
+* V. G. Kac, *Infinite dimensional Lie algebras*, 3rd ed., Cambridge University Press, 1990,
+  Chapter 1.
+* N. Bourbaki, *Lie groups and Lie algebras, Chapters 4–6*, Springer, 2002, Chapter VI, §1.
 -/
 
 @[expose] public section
@@ -57,7 +78,8 @@ structure Coords (k : CoordKind) (Γ : SimpleGraph V) (R : Type*) where
 
 /-- `RootCoords Γ ℤ` is the root lattice `Q`; `RootCoords Γ ℕ` is `Q⁺`. -/
 abbrev RootCoords (Γ : SimpleGraph V) (R : Type*) := Coords .root Γ R
-/-- `WeightCoords Γ ℤ` is the weight lattice `P`; `WeightCoords Γ ℕ` is `P⁺`. -/
+/-- `WeightCoords Γ ℤ` is the weight lattice `P`, recorded by Dynkin labels (see the module
+docstring when the Cartan matrix is singular); `WeightCoords Γ ℕ` is `P⁺`. -/
 abbrev WeightCoords (Γ : SimpleGraph V) (R : Type*) := Coords .weight Γ R
 /-- Dominant integral weights of `Γ`. -/
 abbrev DominantWeight (Γ : SimpleGraph V) := WeightCoords Γ ℕ
@@ -70,13 +92,15 @@ instance : FunLike (Coords k Γ R) V R where
   coe := coeff
   coe_injective := fun ⟨_⟩ ⟨_⟩ h => congrArg mk h
 
-@[ext] theorem ext {x y : Coords k Γ R} (h : ∀ i, x i = y i) : x = y :=
+@[ext] lemma ext {x y : Coords k Γ R} (h : ∀ i, x i = y i) : x = y :=
   DFunLike.ext _ _ h
 
-@[simp] theorem coeff_eq_coe (x : Coords k Γ R) : x.coeff = ⇑x := rfl
-@[simp] theorem coe_mk (f : V → R) : ⇑(mk f : Coords k Γ R) = f := rfl
+@[simp] lemma coeff_eq_coe (x : Coords k Γ R) : x.coeff = ⇑x := rfl
+@[simp] lemma coe_mk (f : V → R) : ⇑(mk f : Coords k Γ R) = f := rfl
 
-/-- Forget the basis. -/
+/-- The bijection between coordinate vectors and their coefficient functions `V → R`, which
+forgets the basis. The additive structure of `Coords k Γ R` is transferred from `V → R` along
+it. -/
 def equiv : Coords k Γ R ≃ (V → R) := ⟨coeff, mk, fun _ => rfl, fun _ => rfl⟩
 
 instance [AddCommMonoid R] : AddCommMonoid (Coords k Γ R) := Equiv.addCommMonoid equiv
@@ -84,16 +108,101 @@ instance [AddCommGroup R] : AddCommGroup (Coords k Γ R) := Equiv.addCommGroup e
 instance [Fintype V] [DecidableEq R] : DecidableEq (Coords k Γ R) :=
   equiv.injective.decidableEq
 
-@[simp] theorem add_apply [AddCommMonoid R] (x y : Coords k Γ R) (i : V) :
-    (x + y) i = x i + y i := rfl
+/-! ### Coefficients of sums, differences and multiples
 
-/-- A vector with natural number coefficients, viewed as one with integer coefficients. -/
-def toInt (x : Coords k Γ ℕ) : Coords k Γ ℤ := ⟨fun i => x i⟩
+Each fact comes in two forms: `coe_add` for the coercion on its own, as in
+`Γ.cartanMatrix.mulVec ⇑(x + y)`, and `add_apply` for a single coefficient. Only the `coe_*`
+forms are simp lemmas; simp derives the `*_apply` forms from them. -/
 
-/-- Dynkin labels of an element of the root lattice: `β ↦ Cβ`. -/
-def toWeight [Fintype V] [DecidableEq V] [DecidableRel Γ.Adj]
-    (β : RootCoords Γ ℤ) : WeightCoords Γ ℤ :=
-  ⟨Γ.cartanMatrix.mulVec β⟩
+section Arithmetic
+
+variable [AddCommMonoid R]
+
+@[simp, norm_cast] lemma coe_zero : ⇑(0 : Coords k Γ R) = 0 := rfl
+lemma zero_apply (i : V) : (0 : Coords k Γ R) i = 0 := rfl
+
+@[simp, norm_cast] lemma coe_add (x y : Coords k Γ R) : ⇑(x + y) = ⇑x + ⇑y := rfl
+lemma add_apply (x y : Coords k Γ R) (i : V) : (x + y) i = x i + y i := rfl
+
+@[simp, norm_cast] lemma coe_nsmul (n : ℕ) (x : Coords k Γ R) : ⇑(n • x) = n • ⇑x := rfl
+lemma nsmul_apply (n : ℕ) (x : Coords k Γ R) (i : V) : (n • x) i = n • x i := rfl
+
+@[simp, norm_cast] lemma coe_sum {ι : Type*} (s : Finset ι) (f : ι → Coords k Γ R) :
+    ⇑(∑ j ∈ s, f j) = ∑ j ∈ s, ⇑(f j) :=
+  map_sum (equiv.addEquiv : Coords k Γ R ≃+ (V → R)) f s
+
+lemma sum_apply {ι : Type*} (s : Finset ι) (f : ι → Coords k Γ R) (i : V) :
+    (∑ j ∈ s, f j) i = ∑ j ∈ s, f j i :=
+  (congrFun (coe_sum s f) i).trans (Finset.sum_apply i s _)
+
+end Arithmetic
+
+section ArithmeticGroup
+
+variable [AddCommGroup R]
+
+@[simp, norm_cast] lemma coe_neg (x : Coords k Γ R) : ⇑(-x) = -⇑x := rfl
+lemma neg_apply (x : Coords k Γ R) (i : V) : (-x) i = -x i := rfl
+
+@[simp, norm_cast] lemma coe_sub (x y : Coords k Γ R) : ⇑(x - y) = ⇑x - ⇑y := rfl
+lemma sub_apply (x y : Coords k Γ R) (i : V) : (x - y) i = x i - y i := rfl
+
+@[simp, norm_cast] lemma coe_zsmul (n : ℤ) (x : Coords k Γ R) : ⇑(n • x) = n • ⇑x := rfl
+lemma zsmul_apply (n : ℤ) (x : Coords k Γ R) (i : V) : (n • x) i = n • x i := rfl
+
+end ArithmeticGroup
+
+/-! ### Changing the coefficients -/
+
+section Map
+
+variable {S T : Type*}
+
+/-- Apply `f` to every coefficient, keeping the basis. For instance `x.map (↑)` views an element
+`x` of `Q⁺` (resp. `P⁺`) as an element of the lattice `Q` (resp. `P`). -/
+def map (f : R → S) (x : Coords k Γ R) : Coords k Γ S := ⟨fun i => f (x i)⟩
+
+@[simp] lemma coe_map (f : R → S) (x : Coords k Γ R) : ⇑(x.map f) = f ∘ ⇑x := rfl
+lemma map_apply (f : R → S) (x : Coords k Γ R) (i : V) : x.map f i = f (x i) := rfl
+
+@[simp] lemma map_id (x : Coords k Γ R) : x.map id = x := rfl
+
+@[simp] lemma map_map (f : R → S) (g : S → T) (x : Coords k Γ R) :
+    (x.map f).map g = x.map (g ∘ f) := rfl
+
+/-- Applying a map preserving zero to the coefficients of zero gives zero. -/
+protected lemma map_zero [AddCommMonoid R] [AddCommMonoid S] {f : R → S} (hf : f 0 = 0) :
+    (0 : Coords k Γ R).map f = 0 :=
+  ext fun _ => by simp [hf]
+
+/-- Applying an additive map to the coefficients commutes with addition. -/
+protected lemma map_add [AddCommMonoid R] [AddCommMonoid S] {f : R → S}
+    (hf : ∀ a b, f (a + b) = f a + f b) (x y : Coords k Γ R) :
+    (x + y).map f = x.map f + y.map f :=
+  ext fun i => by simp [hf]
+
+end Map
+
+/-! ### From roots to weights -/
+
+section ToWeight
+
+variable [Fintype V] [DecidableEq V] [DecidableRel Γ.Adj]
+
+/-- The Dynkin labels of an element `β` of the root lattice, i.e. `β` in the basis of fundamental
+weights: `β ↦ Cβ`, where `C` is the Cartan matrix of `Γ`. It is injective exactly when `C` is
+invertible. -/
+def toWeight : RootCoords Γ ℤ →+ WeightCoords Γ ℤ :=
+  AddMonoidHom.mk' (fun β => ⟨Γ.cartanMatrix.mulVec β⟩)
+    fun _ _ => ext fun _ => by simp [Matrix.mulVec_add]
+
+@[simp] lemma coe_toWeight (β : RootCoords Γ ℤ) :
+    ⇑(toWeight β) = Γ.cartanMatrix.mulVec ⇑β := rfl
+
+lemma toWeight_apply (β : RootCoords Γ ℤ) (i : V) :
+    toWeight β i = Γ.cartanMatrix.mulVec (⇑β) i := rfl
+
+end ToWeight
 
 end Coords
 end Lattices
