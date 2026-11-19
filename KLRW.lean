@@ -4,4 +4,5 @@ import KLRW.KLRWAlgebra
 import KLRW.KLRWCategory
 import KLRW.KLRWCubeComplex
 import KLRW.OneBlackStrand
+import KLRW.RootLattice
 import KLRW.UBranes

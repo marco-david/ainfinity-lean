@@ -1,5 +1,6 @@
 module
 public import Mathlib
+public import KLRW.RootLattice
 
 /-!
 # KLRW algebras
@@ -10,8 +11,8 @@ coefficients in a commutative ring `S` and parameters `u ℏ : S`.
 
 ## Main definitions
 
-* `KLRW.KLRWStructure`: a directed graph `Γ` on the labels `V`, together with the number of black
-  and of red strands carrying each label.
+* `KLRW.KLRWStructure`: a tree `Γ` on the labels `V`, together with the number of black and of
+  red strands carrying each label.
 * `KLRW.KLRWObject P`: a sequence of labeled black and red strands with the numbers of strands
   prescribed by `P : KLRWStructure V`.
 * `KLRW.StrandGenerator P`: the dots, crossings and idempotents that generate the algebra.
@@ -40,6 +41,7 @@ coefficients in a commutative ring `S` and parameters `u ℏ : S`.
 -/
 
 @[expose] public section
+
 namespace KLRW
 
 /-! ## KLRW structures and objects -/
@@ -60,18 +62,15 @@ instance : Fintype StrandColor where
 
 variable (V : Type*)
 
-/-- A loopless directed graph with no pair of opposite edges. -/
-structure SimpleDigraph extends Digraph V where
-  /-- No vertex has an edge to itself. -/
-  loopless : ∀ x : V, ¬ Adj x x
-  /-- There is never an edge in both directions between two vertices. -/
-  no_two_way : ∀ x y : V, Adj x y → ¬ Adj y x
 
-/-- The data defining a KLRW algebra: a directed graph `Γ` on the set of labels `V`, and for
-each label the number of black and of red strands carrying it. -/
+/-- The data defining a KLRW algebra: a connected acyclic graph `Γ` on the set of labels `V`
+(the shape of a simply-laced Dynkin diagram), and for each label the number of black and of
+red strands carrying it. -/
 structure KLRWStructure where
   /-- The graph on the labels. -/
-  Γ : SimpleDigraph V
+  Γ : SimpleGraph V
+  /-- `Γ` is connected and acyclic. -/
+  isTree : Γ.IsTree
   /-- The number of black strands with each label. -/
   blackStrands : V → ℕ
   /-- The number of red strands with each label. -/
