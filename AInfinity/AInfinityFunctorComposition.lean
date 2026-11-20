@@ -97,58 +97,40 @@ namespace Composition
 
 variable {n : ℕ} (a : Composition n) (b : Composition a.length)
 
+/-- The blocks of `a.gather b` before the `i`-th one cover the same part of `n` as the blocks of
+`a` before the `b.sizeUpTo i`-th one. -/
+lemma sizeUpTo_gather (i : ℕ) : (a.gather b).sizeUpTo i = a.sizeUpTo (b.sizeUpTo i) := by
+  rcases lt_or_ge i b.length with hi | hi
+  · simpa using (sizeUpTo_sizeUpTo_add a b hi (b.one_le_blocksFun ⟨i, hi⟩)).symm
+  · rw [sizeUpTo_ofLength_le _ _ (by rwa [length_gather]), b.sizeUpTo_ofLength_le _ hi,
+      a.sizeUpTo_length]
+
 /-- The boundaries of the blocks of `a` inside the `j`-th group of `b` are the boundaries of the
 blocks of `a.sigmaCompositionAux b` inside the `j`-th block of `a.gather b`, including the last
 one. -/
 lemma sizeUpTo_sizeUpTo_add_boundary (j : Fin b.length) (q : Fin (b.blocksFun j + 1)) :
-    a.sizeUpTo (b.sizeUpTo j.val + q.val) =
-      (a.gather b).sizeUpTo j.val +
-        (a.sigmaCompositionAux b
-          ⟨j.val, (length_gather a b).symm ▸ j.2⟩).sizeUpTo q.val := by
-  by_cases hq : q.val < b.blocksFun j
-  · simpa using sizeUpTo_sizeUpTo_add a b (i := j.val) (j := q.val) j.2 hq
-  · have hqeq : q.val = b.blocksFun j := by omega
-    rw [hqeq]
-    have hleft :
-        a.sizeUpTo (b.sizeUpTo j.val + b.blocksFun j) =
-          (a.gather b).sizeUpTo (j.val + 1) := by
-      rw [← b.sizeUpTo_succ' j]
-      by_cases hnext : j.val + 1 < b.length
-      · have h :=
-          sizeUpTo_sizeUpTo_add a b (i := j.val + 1) (j := 0) hnext
-            (show 0 < b.blocksFun ⟨j.val + 1, hnext⟩ from
-              lt_of_lt_of_le Nat.zero_lt_one (b.one_le_blocksFun ⟨j.val + 1, hnext⟩))
-        simpa using h
-      · have hend : j.val + 1 = b.length := by omega
-        have hglen : (a.gather b).length = b.length := length_gather a b
-        rw [hend, b.sizeUpTo_length, a.sizeUpTo_length, ← hglen,
-          (a.gather b).sizeUpTo_length]
-    have hsigma :
-        (a.sigmaCompositionAux b ⟨j.val, (length_gather a b).symm ▸ j.2⟩).sizeUpTo
-            (b.blocksFun j) =
-          (a.gather b).blocksFun ⟨j.val, (length_gather a b).symm ▸ j.2⟩ := by
-      rw [← length_sigmaCompositionAux a b j]
-      exact (a.sigmaCompositionAux b ⟨j.val, (length_gather a b).symm ▸ j.2⟩).sizeUpTo_length
-    rw [hsigma, ← (a.gather b).sizeUpTo_succ' ⟨j.val, (length_gather a b).symm ▸ j.2⟩]
-    exact hleft
+    a.sizeUpTo (b.sizeUpTo j + q) =
+      (a.gather b).sizeUpTo j +
+        (a.sigmaCompositionAux b (j.cast (length_gather a b).symm)).sizeUpTo q := by
+  induction q using Fin.lastCases with
+  | last =>
+    rw [Fin.val_last, ← b.sizeUpTo_succ', ← sizeUpTo_gather, sizeUpTo_ofLength_le
+      (a.sigmaCompositionAux b (j.cast _)) _ (length_sigmaCompositionAux a b j).le]
+    exact (a.gather b).sizeUpTo_succ' (j.cast (length_gather a b).symm)
+  | cast q => exact sizeUpTo_sizeUpTo_add a b j.2 q.2
 
 /-- The embedding of a block of `a.sigmaCompositionAux b` into the corresponding block of
 `a.gather b` is the embedding of the corresponding block of `a`. -/
 lemma gather_embedding_sigmaCompositionAux_embedding (j : Fin b.length)
-    {p : Fin (a.sigmaCompositionAux b ⟨j.val, (length_gather a b).symm ▸ j.2⟩).length}
-    {q : Fin (b.blocksFun j)} (hpq : p ≍ q)
-    {r : Fin ((a.sigmaCompositionAux b ⟨j.val, (length_gather a b).symm ▸ j.2⟩).blocksFun p)}
-    {s : Fin (a.blocksFun (b.embedding j q))} (hrs : r ≍ s) :
-    (a.gather b).embedding ⟨j.val, (length_gather a b).symm ▸ j.2⟩
-        ((a.sigmaCompositionAux b ⟨j.val, (length_gather a b).symm ▸ j.2⟩).embedding p r) =
+    (q : Fin (b.blocksFun j)) (s : Fin (a.blocksFun (b.embedding j q))) :
+    (a.gather b).embedding (j.cast (length_gather a b).symm)
+        ((a.sigmaCompositionAux b (j.cast (length_gather a b).symm)).embedding
+          (q.cast (length_sigmaCompositionAux a b j).symm)
+          (s.cast (blocksFun_sigmaCompositionAux a b j q).symm)) =
       a.embedding (b.embedding j q) s := by
-  have hpval : p.val = q.val := (Fin.heq_ext_iff (length_sigmaCompositionAux a b j)).mp hpq
-  obtain rfl : p = ⟨q.val, (length_sigmaCompositionAux a b j).symm ▸ q.2⟩ := Fin.ext hpval
-  have hrsval : r.val = s.val :=
-    (Fin.heq_ext_iff (blocksFun_sigmaCompositionAux a b j q)).mp hrs
   apply Fin.ext
-  have hsize := sizeUpTo_sizeUpTo_add a b (i := j.val) (j := q.val) j.2 q.2
-  simp [coe_embedding, hsize, hrsval, Nat.add_assoc]
+  simpa [coe_embedding, Nat.add_assoc] using
+    congrArg (· + s.val) (sizeUpTo_sizeUpTo_add_boundary a b j q.castSucc).symm
 
 end Composition
 
