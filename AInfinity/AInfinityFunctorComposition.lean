@@ -14,30 +14,31 @@ The composite of A∞-functor data `F` from `Obj` to `Obj'` and `G` from `Obj'` 
 objects and degrees by composition, and its functor component of arity n is
 $$(G \circ F)_n(a_1, \dots, a_n) = \sum_{k \ge 1} \sum_{i_1 + \dots + i_k = n}
   G_k(F_{i_1}(a_1, \dots, a_{i_1}), \dots, F_{i_k}(a_{n-i_k+1}, \dots, a_n)).$$
-Composition of A∞-functor data is associative, and the composite of two A∞-functors satisfies
-the A∞-functor equations.
+The composite of two A∞-functors satisfies the A∞-functor equations.
 
 ## Main definitions
 
 * `MultilinearMap.compComposition`: the composite of a multilinear map in k variables with k
   multilinear maps, one on each block of a composition of `n`.
 * `AInfinityTheory.AInfinityFunctorData.comp`: the composite `G.comp F` of A∞-functor data.
+* `AInfinityTheory.AInfinityFunctorData.mapCompSumBlockMap`,
+  `AInfinityTheory.AInfinityFunctorData.compMapSumBlockMap`: the left-hand and right-hand sides
+  of the functor equation of `G` on the values of the components of `F` on the blocks of a
+  composition of `n`.
 * `AInfinityTheory.AInfinityFunctor.comp`: the composite `G.comp F` of A∞-functors.
 
 ## Main results
 
-* `AInfinityTheory.AInfinityFunctorData.comp_assoc`: composition of A∞-functor data is
-  associative.
 * `AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum`: the composite of two
   A∞-functors satisfies the A∞-functor equations.
 
 ## Implementation notes
 
-Both proofs are work in progress and still contain `sorry`. Associativity reindexes a two-level
-sum over compositions along Mathlib's `Composition.sigmaEquivSigmaPi`, as in the proof of
-associativity of the composition of formal multilinear series
-(`FormalMultilinearSeries.comp_assoc`). The functor equation for `G.comp F` is reduced to the
-functor equations of `F`, applied blockwise, and of `G`, applied to the outputs of `F`.
+The proof is work in progress and still contains `sorry`. The functor equation for `G.comp F` is
+reduced to the functor equations of `F`, applied blockwise, and of `G`, applied to the outputs of
+`F`. The resulting two-level sum over compositions, of the terms `compMapTermBlockMap`, is then
+reindexed along Mathlib's `Composition.sigmaEquivSigmaPi`, as in the proof of associativity of
+the composition of formal multilinear series (`FormalMultilinearSeries.comp_assoc`).
 
 Changes of objects are transported with `homCongr`, as in `AInfinity.AInfinityFunctor`.
 -/
@@ -263,6 +264,73 @@ lemma comp_map_v (j : β) (hj : functorTargetDeg deg = j) :
 
 end GradedLinearQuiver
 
+/-! ### The two sides of the functor equation of `G` on the blocks of `F` -/
+
+section AInfinityCategoryStruct
+
+variable [GradedLinearQuiver β R Obj] [AInfinityCategoryStruct β' R Obj']
+  [AInfinityCategoryStruct β'' R Obj'']
+variable (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj')
+  {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
+  (c : Composition n) (d : β) (hd : operationTargetDeg deg = d)
+
+/-- The term, indexed by p = (r, s, t), of the left-hand side of the functor equation of `G` on
+the values of the components of `F` on the k blocks of a composition `c` of `n`: the component
+of `G` of arity r + 1 + t applied to the first r values of `F`, the operation of arity s on the
+next s values and the last t values, as a morphism from `G (F X₀)` to `G (F Xₙ)`. -/
+def mapCompTermBlockMap (p : StasheffIndex c.length) :
+    (G.obj (F.obj (X 0)) →ᵍ[R] G.obj (F.obj (X (Fin.last n)))) (G.degMap (F.degMap d)) :=
+  homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
+    (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
+    (G.mapCompTerm (F.compositionBlockMap a c) p (F.degMap d)
+      (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd))
+
+/-- The left-hand side of the functor equation of `G` on the values of the components of `F`
+on the blocks of a composition `c` of `n`, as a morphism from `G (F X₀)` to `G (F Xₙ)`.
+Summed over `c`, it is the left-hand side of the functor equation of `G.comp F`. -/
+def mapCompSumBlockMap :
+    (G.obj (F.obj (X 0)) →ᵍ[R] G.obj (F.obj (X (Fin.last n)))) (G.degMap (F.degMap d)) :=
+  homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
+    (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
+    (G.mapCompSum (F.compositionBlockMap a c) (F.degMap d)
+      (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd))
+
+lemma mapCompSumBlockMap_eq_signedStasheffSum :
+    G.mapCompSumBlockMap F a c d hd =
+      signedStasheffSum (fun l ↦ F.degMap (functorTargetDeg fun j ↦ deg (c.embedding l j)))
+        fun p ↦ G.mapCompTermBlockMap F a c d hd p :=
+  map_signedStasheffSum _ _
+
+variable [NeZero n]
+
+/-- The term, indexed by a composition `c'` of k, of the right-hand side of the functor equation
+of `G` on the values of the components of `F` on the k blocks of a composition `c` of `n`:
+the operation of arity m = `c'.length` applied to the values of the components of `G` on the m
+groups of consecutive values of `F` given by `c'`, as a morphism from `G (F X₀)` to `G (F Xₙ)`. -/
+def compMapTermBlockMap (c' : Composition c.length) :
+    (G.obj (F.obj (X 0)) →ᵍ[R] G.obj (F.obj (X (Fin.last n)))) (G.degMap (F.degMap d)) :=
+  homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
+    (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
+    (G.compMapTerm (F.compositionBlockMap a c) c' (F.degMap d)
+      (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd))
+
+/-- The right-hand side of the functor equation of `G` on the values of the components of `F`
+on the blocks of a composition `c` of `n`, as a morphism from `G (F X₀)` to `G (F Xₙ)`.
+Summed over `c`, it is the right-hand side of the functor equation of `G.comp F`. -/
+def compMapSumBlockMap :
+    (G.obj (F.obj (X 0)) →ᵍ[R] G.obj (F.obj (X (Fin.last n)))) (G.degMap (F.degMap d)) :=
+  homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
+    (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
+    (G.compMapSum (F.compositionBlockMap a c) (F.degMap d)
+      (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd))
+
+lemma compMapSumBlockMap_eq_sum_compMapTermBlockMap :
+    G.compMapSumBlockMap F a c d hd =
+      ∑ c' : Composition c.length, G.compMapTermBlockMap F a c d hd c' :=
+  map_sum _ _ _
+
+end AInfinityCategoryStruct
+
 end AInfinityFunctorData
 
 /-! ### The composite of A∞-functors -/
@@ -279,35 +347,30 @@ variable [NeZero n] {X : Fin (n + 1) → Obj} {deg : Fin n → β}
 /-- Applying the functor equations of `F` blockwise: the left-hand side of the functor equation
 for `G.comp F` is the sum, over all compositions `c` of `n`, of the left-hand side of the
 functor equation for `G` on the values of the components of `F` on the blocks of `c`. -/
-lemma mapCompSum_comp_eq_sum_mapCompSum :
+lemma mapCompSum_comp_eq_sum_mapCompSumBlockMap :
     (G.toAInfinityFunctorData.comp F.toAInfinityFunctorData).mapCompSum a d hd =
-      ∑ c : Composition n, homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
-        (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
-        (G.mapCompSum (F.compositionBlockMap a c) (F.degMap d)
-          (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd)) := by
+      ∑ c : Composition n, G.mapCompSumBlockMap F.toAInfinityFunctorData a c d hd := by
   sorry
+
+/-- The functor equation of `G` on the values of the components of `F` on the blocks of a
+composition `c` of `n`, transported to the endpoints `G (F X₀)` and `G (F Xₙ)`. -/
+lemma mapCompSumBlockMap_eq_compMapSumBlockMap (c : Composition n) :
+    G.mapCompSumBlockMap F.toAInfinityFunctorData a c d hd =
+      G.compMapSumBlockMap F.toAInfinityFunctorData a c d hd :=
+  congrArg _ (G.mapCompSum_eq_compMapSum _ _)
 
 /-- Applying the functor equations of `G` to the values of the components of `F` on the blocks
 of every composition of `n`. -/
-lemma sum_mapCompSum_eq_sum_compMapSum :
-    ∑ c : Composition n, homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
-        (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
-        (G.mapCompSum (F.compositionBlockMap a c) (F.degMap d)
-          (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd)) =
-      ∑ c : Composition n, homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
-        (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
-        (G.compMapSum (F.compositionBlockMap a c) (F.degMap d)
-          (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd)) :=
-  Finset.sum_congr rfl fun c _ ↦ by rw [G.mapCompSum_eq_compMapSum]
+lemma sum_mapCompSumBlockMap_eq_sum_compMapSumBlockMap :
+    ∑ c : Composition n, G.mapCompSumBlockMap F.toAInfinityFunctorData a c d hd =
+      ∑ c : Composition n, G.compMapSumBlockMap F.toAInfinityFunctorData a c d hd :=
+  Finset.sum_congr rfl fun c _ ↦ mapCompSumBlockMap_eq_compMapSumBlockMap G F a hd c
 
 /-- Reindexing the resulting two-level sum over compositions along
 `Composition.sigmaEquivSigmaPi` gives the right-hand side of the functor equation for
 `G.comp F`. -/
-lemma sum_compMapSum_eq_compMapSum_comp :
-    ∑ c : Composition n, homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
-        (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
-        (G.compMapSum (F.compositionBlockMap a c) (F.degMap d)
-          (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd)) =
+lemma sum_compMapSumBlockMap_eq_compMapSum_comp :
+    ∑ c : Composition n, G.compMapSumBlockMap F.toAInfinityFunctorData a c d hd =
       (G.toAInfinityFunctorData.comp F.toAInfinityFunctorData).compMapSum a d hd := by
   sorry
 
@@ -315,8 +378,9 @@ lemma sum_compMapSum_eq_compMapSum_comp :
 theorem comp_mapCompSum_eq_compMapSum :
     (G.toAInfinityFunctorData.comp F.toAInfinityFunctorData).mapCompSum a d hd =
       (G.toAInfinityFunctorData.comp F.toAInfinityFunctorData).compMapSum a d hd :=
-  (mapCompSum_comp_eq_sum_mapCompSum G F a hd).trans
-    ((sum_mapCompSum_eq_sum_compMapSum G F a hd).trans (sum_compMapSum_eq_compMapSum_comp G F a hd))
+  (mapCompSum_comp_eq_sum_mapCompSumBlockMap G F a hd).trans
+    ((sum_mapCompSumBlockMap_eq_sum_compMapSumBlockMap G F a hd).trans
+      (sum_compMapSumBlockMap_eq_compMapSum_comp G F a hd))
 
 omit [NeZero n] in
 /-- The composite `G.comp F` of A∞-functors `F` from `Obj` to `Obj'` and `G` from `Obj'` to
