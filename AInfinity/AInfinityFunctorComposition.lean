@@ -81,7 +81,6 @@ theorem compComposition_sum_right (g : MultilinearMap R N P) {α : Fin c.length 
     (f : ∀ l, α l → MultilinearMap R (fun j ↦ M (c.embedding l j)) (N l)) :
     compComposition c g (fun l ↦ ∑ a, f l a) =
       ∑ a : ∀ l, α l, compComposition c g fun l ↦ f l (a l) := by
-  -- classical
   ext x
   simp [MultilinearMap.map_sum]
 
@@ -263,95 +262,6 @@ lemma comp_map_v (j : β) (hj : functorTargetDeg deg = j) :
   rfl
 
 end GradedLinearQuiver
-
-/-! ### Associativity -/
-
-section Associativity
-
-variable [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
-  [GradedLinearQuiver β'' R Obj''] [GradedLinearQuiver β''' R Obj''']
-variable (H : AInfinityFunctorData β'' β''' R Obj'' Obj''')
-  (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj')
-  (X : Fin (n + 1) → Obj) (deg : Fin n → β) [NeZero n] (j : β) (hj : functorTargetDeg deg = j)
-
-/-- The summand of the component of `(H.comp G).comp F` indexed by a composition `a` of `n` and a
-composition `b` of its number of blocks: H applied, along `b`, to the values of G on the outputs
-of F on the blocks of `a`. -/
-def compAssocTermLeft (I : Σ a : Composition n, Composition a.length) :
-    MultilinearMap R (fun i ↦ ComposableHom β R X i (deg i))
-      ((H.obj (G.obj (F.obj (X 0))) →ᵍ[R] H.obj (G.obj (F.obj (X (Fin.last n)))))
-        (H.degMap (G.degMap (F.degMap j)))) :=
-  (homCongr R (congrArg (fun k ↦ H.obj (G.obj (F.obj (X k)))) I.1.boundary_zero)
-    (congrArg (fun k ↦ H.obj (G.obj (F.obj (X k)))) I.1.boundary_last)
-    rfl).toLinearMap.compMultilinearMap
-    (MultilinearMap.compComposition I.1
-      (compMapTermMultilinearMap H G (fun k ↦ F.obj (X (I.1.boundary k))) _ I.2 (F.degMap j)
-        (F.functorTargetDeg_degMap_functorTargetDeg_embedding I.1 j hj))
-      (F.compositionBlockMultilinearMap X deg I.1))
-
-/-- The summand of the component of `H.comp (G.comp F)` indexed by a composition `c` of `n` and a
-composition `d l` of each of its blocks: H applied, along `c`, to the values of `G` along `d l`
-on the outputs of F on the blocks of `d l`. -/
-def compAssocTermRight (I : Σ c : Composition n, ∀ l, Composition (c.blocksFun l)) :
-    MultilinearMap R (fun i ↦ ComposableHom β R X i (deg i))
-      ((H.obj (G.obj (F.obj (X 0))) →ᵍ[R] H.obj (G.obj (F.obj (X (Fin.last n)))))
-        (H.degMap (G.degMap (F.degMap j)))) :=
-  (homCongr R (congrArg (fun k ↦ H.obj (G.obj (F.obj (X k)))) I.1.boundary_zero)
-    (congrArg (fun k ↦ H.obj (G.obj (F.obj (X k)))) I.1.boundary_last)
-    rfl).toLinearMap.compMultilinearMap
-    (MultilinearMap.compComposition I.1
-      ((H.map fun k ↦ G.obj (F.obj (X (I.1.boundary k)))).v _ (G.degMap (F.degMap j))
-        ((G.comp F).functorTargetDeg_degMap_functorTargetDeg_embedding I.1 j hj))
-      fun l ↦ (homCongr R (congrArg (G.comp F).obj (compositionBlockObj_zero X I.1 l))
-        (congrArg (G.comp F).obj (compositionBlockObj_last X I.1 l))
-        rfl).toLinearMap.compMultilinearMap
-        (compMapTermMultilinearMap G F (compositionBlockObj X I.1 l) _ (I.2 l) _ rfl))
-
-/-- Expanding the inner composite `H.comp G` in a term of `(H.comp G).comp F`. -/
-lemma compMapTermMultilinearMap_comp_left (a : Composition n) :
-    compMapTermMultilinearMap (H.comp G) F X deg a j hj =
-      ∑ b : Composition a.length, compAssocTermLeft H G F X deg j hj ⟨a, b⟩ := by
-  sorry
-
-/-- Expanding the inner composite `G.comp F` in every block of a term of `H.comp (G.comp F)`. -/
-lemma compMapTermMultilinearMap_comp_right (c : Composition n) :
-    compMapTermMultilinearMap H (G.comp F) X deg c j hj =
-      ∑ d : ∀ l, Composition (c.blocksFun l),
-        compAssocTermRight H G F X deg j hj ⟨c, d⟩ := by
-  sorry
-
-/-- The summands of the two bracketings agree along `Composition.sigmaEquivSigmaPi`, which
-sends `(a, b)` to `(a.gather b, a.sigmaCompositionAux b)`. -/
-lemma compAssocTermRight_sigmaEquivSigmaPi (I : Σ a : Composition n, Composition a.length) :
-    compAssocTermRight H G F X deg j hj (Composition.sigmaEquivSigmaPi n I) =
-      compAssocTermLeft H G F X deg j hj I := by
-  sorry
-
-omit [NeZero n] in
-/-- The functor components of the two bracketings of a triple composite agree. -/
-lemma comp_assoc_map [NeZero n] :
-    ((H.comp G).comp F).map X = (H.comp (G.comp F)).map X := by
-  refine GradedMultilinearMap.ext fun deg j hj ↦ ?_
-  have hleft := (Fintype.sum_congr _ _ fun a ↦
-    compMapTermMultilinearMap_comp_left H G F X deg j hj a).trans (Fintype.sum_sigma _).symm
-  have hright := (Fintype.sum_congr _ _ fun c ↦
-    compMapTermMultilinearMap_comp_right H G F X deg j hj c).trans (Fintype.sum_sigma _).symm
-  have hmid : ∑ I, compAssocTermLeft H G F X deg j hj I =
-      ∑ I, compAssocTermRight H G F X deg j hj I := by
-    rw [← (Composition.sigmaEquivSigmaPi n).sum_comp]
-    exact Fintype.sum_congr _ _ fun I ↦
-      (compAssocTermRight_sigmaEquivSigmaPi H G F X deg j hj I).symm
-  exact hleft.trans (hmid.trans hright.symm)
-
-omit [NeZero n] in
-/-- Composition of A∞-functor data is associative. -/
-theorem comp_assoc : (H.comp G).comp F = H.comp (G.comp F) := by
-  change AInfinityFunctorData.mk _ _ _ = AInfinityFunctorData.mk _ _ _
-  congr 1
-  funext n _ X
-  exact comp_assoc_map H G F X
-
-end Associativity
 
 end AInfinityFunctorData
 
