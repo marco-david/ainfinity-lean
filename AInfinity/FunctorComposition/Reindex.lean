@@ -6,7 +6,9 @@ Authors: Zhan Shi
 module
 
 public import AInfinity.FunctorComposition.BlockMap
-public import AInfinity.FunctorComposition.Index
+public import AInfinity.FunctorComposition.CompMapIndex
+public import AInfinity.FunctorComposition.CompMapMapIndex
+public import AInfinity.FunctorComposition.MapCompIndex
 
 /-! # Reindexing the functor equation for a composite of A∞-functors
 
@@ -53,7 +55,8 @@ index type `CompMapMapIndex`. In each case, the two descriptions of a term are m
 ## Implementation notes
 
 No proof in this file uses `sorry`, but the reindexing relies on the bijectivity statements and
-sign identities of `AInfinity.FunctorComposition.Index`, which are still stubbed with `sorry`.
+sign identities for the index types `MapCompIndex`, `CompMapIndex` and `CompMapMapIndex`, some of
+which are still stubbed with `sorry`.
 The two descriptions of a term are matched using only the relations recorded in the index types.
 -/
 

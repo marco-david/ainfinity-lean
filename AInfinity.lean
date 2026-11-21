@@ -5,9 +5,12 @@ import AInfinity.ArityLeTwo
 import AInfinity.DG
 import AInfinity.FunctorComposition.Basic
 import AInfinity.FunctorComposition.BlockMap
+import AInfinity.FunctorComposition.CompMapIndex
+import AInfinity.FunctorComposition.CompMapMapIndex
 import AInfinity.FunctorComposition.Congr
 import AInfinity.FunctorComposition.Defs
-import AInfinity.FunctorComposition.Index
+import AInfinity.FunctorComposition.Lemmas
+import AInfinity.FunctorComposition.MapCompIndex
 import AInfinity.FunctorComposition.Reindex
 import AInfinity.GradedLinearAlgebra
 import AInfinity.GradedLinearQuiver
