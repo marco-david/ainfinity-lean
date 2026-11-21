@@ -12,8 +12,10 @@ public import AInfinity.StasheffIndex
 
 This file collects the results shared by the index types `MapCompIndex`, `CompMapIndex` and
 `CompMapMapIndex` of the terms of the functor equation for a composite `G.comp F` of A∞-functors:
-lemmas on lists and compositions, the change of the size of one block of a composition, lemmas on
-two-level compositions, and the Koszul sign `tailSign` of the inputs from a given position on.
+lemmas on lists and compositions, the change of the size of one block of a composition, the
+splitting of one block of a composition, lemmas on two-level compositions, the composition
+`StasheffIndex.outerComposition` along which the blocks fed to an inner operation are gathered,
+and the Koszul sign `tailSign` of the inputs from a given position on.
 
 The lemmas on two-level compositions relate Mathlib's `Composition.sigmaEquivSigmaPi` to the two
 descriptions recorded in `CompMapMapIndex`.
@@ -21,6 +23,10 @@ descriptions recorded in `CompMapMapIndex`.
 ## Main definitions
 
 * `Composition.setBlock`: a composition with the size of one block changed.
+* `Composition.splitBlock`: a composition with one block split into the blocks of a composition
+  of that block.
+* `AInfinityTheory.StasheffIndex.outerComposition`: the composition of the inputs of an index
+  triple into the inputs of its outer operation.
 * `AInfinityTheory.tailSign`: the Koszul sign of the inputs from a given position on.
 -/
 
@@ -105,6 +111,55 @@ lemma ext_of_sizeUpTo {c' : Composition n} (hl : c.length = c'.length)
 
 end Composition
 
+/-! ### Splitting one block of a composition -/
+
+namespace Composition
+
+variable {n : ℕ} (c : Composition n) (j : Fin c.length) (d : Composition (c.blocksFun j))
+
+/-- The composition of `n` obtained from a composition `c` of `n` by splitting its `j`-th block
+into the blocks of a composition `d` of that block. -/
+def splitBlock : Composition n where
+  blocks := c.blocks.take j ++ d.blocks ++ c.blocks.drop (j + 1)
+  blocks_pos h := by
+    simp only [List.mem_append] at h
+    rcases h with (h | h) | h
+    · exact c.blocks_pos (List.mem_of_mem_take h)
+    · exact d.blocks_pos h
+    · exact c.blocks_pos (List.mem_of_mem_drop h)
+  blocks_sum := by
+    have h := List.sum_take_add_sum_drop c.blocks j
+    rw [List.drop_eq_getElem_cons (by simp), List.sum_cons] at h
+    have := d.blocks_sum
+    simp only [blocksFun, List.get_eq_getElem] at this
+    simp only [List.sum_append, c.blocks_sum] at h ⊢
+    omega
+
+lemma length_splitBlock : (c.splitBlock j d).length + 1 = c.length + d.length := by
+  simp only [splitBlock, length, List.length_append, List.length_take, List.length_drop]
+  omega
+
+lemma sizeUpTo_splitBlock_of_le {i : ℕ} (hi : i ≤ j) :
+    (c.splitBlock j d).sizeUpTo i = c.sizeUpTo i := by
+  simp [sizeUpTo, splitBlock, List.take_append, List.take_take, hi]
+
+lemma sizeUpTo_splitBlock_add {u : ℕ} (hu : u ≤ d.length) :
+    (c.splitBlock j d).sizeUpTo (j + u) = c.sizeUpTo j + d.sizeUpTo u := by
+  simp [sizeUpTo, splitBlock, List.take_append, List.take_take, Nat.sub_eq_zero_of_le hu]
+
+lemma sizeUpTo_splitBlock_add_length (v : ℕ) :
+    (c.splitBlock j d).sizeUpTo (j + d.length + v) = c.sizeUpTo (j + 1 + v) := by
+  have key : (c.splitBlock j d).blocks.drop (j + d.length + v) = c.blocks.drop (j + 1 + v) := by
+    simp [splitBlock, List.drop_append, List.drop_drop, add_assoc, List.drop_eq_nil_of_le]
+  have h₁ := List.sum_take_add_sum_drop (c.splitBlock j d).blocks (j + d.length + v)
+  have h₂ := List.sum_take_add_sum_drop c.blocks (j + 1 + v)
+  rw [key, blocks_sum] at h₁
+  rw [blocks_sum] at h₂
+  simp only [sizeUpTo]
+  omega
+
+end Composition
+
 /-! ### Two-level compositions
 
 For a composition `a` of `n` and a composition `b` of `a.length`, the blocks of `a.gather b` are
@@ -172,6 +227,118 @@ lemma val_outerBoundary (i : Fin (p.r + 1 + p.t + 1)) :
       Fin.ext (by simp only [Fin.natAdd_mk]; omega)] at this
     simp only [this]
     omega
+
+/-- The composition of the n inputs into the r + 1 + t inputs of the outer operation: r blocks of
+size 1, the block of size s of the inputs of the inner operation, and t blocks of size 1. Its
+boundaries are the positions `outerBoundary` of the objects of the outer operation. -/
+def outerComposition : Composition n where
+  blocks := List.replicate p.r 1 ++ p.s :: List.replicate p.t 1
+  blocks_pos h := by
+    simp only [List.mem_append, List.mem_replicate, List.mem_cons] at h
+    have := p.one_le_s
+    omega
+  blocks_sum := by
+    simp only [List.sum_append, List.sum_replicate, List.sum_cons, smul_eq_mul, mul_one]
+    have := p.sum_eq
+    omega
+
+@[simp]
+lemma length_outerComposition : p.outerComposition.length = p.r + 1 + p.t := by
+  simp only [outerComposition, Composition.length, List.length_append, List.length_replicate,
+    List.length_cons]
+  omega
+
+lemma sizeUpTo_outerComposition (k : ℕ) :
+    p.outerComposition.sizeUpTo k = min (if k ≤ p.r then k else k + p.s - 1) n := by
+  have := p.sum_eq; have := p.one_le_s
+  simp only [Composition.sizeUpTo, outerComposition, List.take_append, List.take_replicate,
+    List.length_replicate, List.sum_append, List.sum_replicate, smul_eq_mul, mul_one]
+  rcases Nat.lt_or_ge p.r k with h | h
+  · obtain ⟨w, hw⟩ : ∃ w, k - p.r = w + 1 := ⟨k - p.r - 1, by omega⟩
+    simp only [hw, List.take_succ_cons, List.sum_cons, List.take_replicate, List.sum_replicate,
+      smul_eq_mul, mul_one]
+    split_ifs <;> omega
+  · simp only [Nat.sub_eq_zero_of_le h, List.take_zero, List.sum_nil]
+    split_ifs <;> omega
+
+lemma blocksFun_outerComposition_middle :
+    p.outerComposition.blocksFun (p.middleIndex.cast p.length_outerComposition.symm) = p.s := by
+  show (List.replicate p.r 1 ++ p.s :: List.replicate p.t 1)[p.r]'(by simp) = p.s
+  simp [List.getElem_append_right]
+
+section Gather
+
+variable {m : ℕ} (c : Composition m) (q : StasheffIndex c.length)
+
+lemma length_gather_outerComposition :
+    (c.gather q.outerComposition).length = q.r + 1 + q.t := by
+  rw [Composition.length_gather, length_outerComposition]
+
+/-- Gathering the blocks of `c` along the outer operation of `q` merges the s blocks of the
+inputs of the inner operation into one. -/
+lemma sizeUpTo_gather_outerComposition (k : ℕ) :
+    (c.gather q.outerComposition).sizeUpTo k =
+      c.sizeUpTo (if k ≤ q.r then k else k + q.s - 1) := by
+  rw [Composition.sizeUpTo_gather, sizeUpTo_outerComposition]
+  rcases le_total (if k ≤ q.r then k else k + q.s - 1) c.length with h | h
+  · rw [min_eq_left h]
+  · rw [min_eq_right h, c.sizeUpTo_length, c.sizeUpTo_ofLength_le _ h]
+
+/-- The merged block of `c.gather q.outerComposition` consists of s blocks of `c`. -/
+lemma length_sigmaCompositionAux_outerComposition (j : Fin (c.gather q.outerComposition).length)
+    (hj : (j : ℕ) = q.r) : (c.sigmaCompositionAux q.outerComposition j).length = q.s := by
+  obtain rfl : j = (q.middleIndex.cast q.length_outerComposition.symm).cast
+    (c.length_gather _).symm := Fin.ext hj
+  exact (c.length_sigmaCompositionAux _ _).trans q.blocksFun_outerComposition_middle
+
+/-- Inside the merged block of `c.gather q.outerComposition`, the blocks of `c` are those of
+`c.sigmaCompositionAux q.outerComposition`. -/
+lemma sizeUpTo_add_sigmaCompositionAux (j : Fin (c.gather q.outerComposition).length)
+    (hj : (j : ℕ) = q.r) {u : ℕ} (hu : u ≤ q.s) :
+    c.sizeUpTo (q.r + u) = (c.gather q.outerComposition).sizeUpTo q.r +
+      (c.sigmaCompositionAux q.outerComposition j).sizeUpTo u := by
+  obtain rfl : j = (q.middleIndex.cast q.length_outerComposition.symm).cast
+    (c.length_gather _).symm := Fin.ext hj
+  have := q.sum_eq
+  have e := Composition.sizeUpTo_sizeUpTo_add_boundary c q.outerComposition
+    (q.middleIndex.cast q.length_outerComposition.symm)
+    ⟨u, by rw [blocksFun_outerComposition_middle]; omega⟩
+  rw [show ((q.middleIndex.cast q.length_outerComposition.symm : Fin _) : ℕ) = q.r from rfl]
+    at e
+  simpa only [sizeUpTo_outerComposition, le_refl, ↓reduceIte,
+    min_eq_left (by omega : q.r ≤ c.length)] using e
+
+/-- Splitting the merged block of `c.gather q.outerComposition` back into the blocks of `c` gives
+`c`. -/
+lemma splitBlock_gather_outerComposition (j : Fin (c.gather q.outerComposition).length)
+    (hj : (j : ℕ) = q.r) :
+    (c.gather q.outerComposition).splitBlock j (c.sigmaCompositionAux q.outerComposition j) =
+      c := by
+  have hs := length_sigmaCompositionAux_outerComposition c q j hj
+  have hl := (c.gather q.outerComposition).length_splitBlock j
+    (c.sigmaCompositionAux q.outerComposition j)
+  have := q.sum_eq; have := q.one_le_s; have := length_gather_outerComposition c q
+  refine Composition.ext_of_sizeUpTo _ (by omega) fun k ↦ ?_
+  rcases le_or_gt k q.r with h | h
+  · rw [Composition.sizeUpTo_splitBlock_of_le _ _ _ (hj ▸ h), sizeUpTo_gather_outerComposition]
+    simp only [h, ↓reduceIte]
+  rcases le_or_gt k (q.r + q.s) with h' | h'
+  · obtain ⟨u, rfl⟩ := Nat.exists_eq_add_of_le h.le
+    have e := Composition.sizeUpTo_splitBlock_add (c.gather q.outerComposition) j
+      (c.sigmaCompositionAux q.outerComposition j) (u := u) (by omega)
+    rw [hj] at e
+    rw [e, sizeUpTo_add_sigmaCompositionAux c q j hj (by omega)]
+  · obtain ⟨v, rfl⟩ : ∃ v, k = q.r + (c.sigmaCompositionAux q.outerComposition j).length + v :=
+      ⟨k - q.r - q.s, by omega⟩
+    have e := Composition.sizeUpTo_splitBlock_add_length (c.gather q.outerComposition) j
+      (c.sigmaCompositionAux q.outerComposition j) v
+    rw [hj] at e
+    rw [e, sizeUpTo_gather_outerComposition]
+    simp only [show ¬q.r + 1 + v ≤ q.r by omega, ↓reduceIte]
+    congr 1
+    omega
+
+end Gather
 
 end StasheffIndex
 

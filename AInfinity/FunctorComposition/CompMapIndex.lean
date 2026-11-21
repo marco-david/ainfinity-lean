@@ -23,6 +23,11 @@ about it that the reindexing in `AInfinity.FunctorComposition.Reindex` relies on
 ## Main definitions
 
 * `AInfinityTheory.CompMapIndex`: the indices of the terms G_k(F, …, mₛ(F, …, F), …, F).
+* `AInfinityTheory.CompMapIndex.ofSplitBlock`: the index given by the block description and a
+  matching composition with an index triple, when the composition is given by splitting the merged
+  block.
+* `AInfinityTheory.CompMapIndex.ofSigma`: the inverse of `CompMapIndex.toSigma`.
+* `AInfinityTheory.CompMapIndex.ofBlock`: the inverse of `CompMapIndex.toBlock`.
 
 ## Main results
 
@@ -34,7 +39,14 @@ about it that the reindexing in `AInfinity.FunctorComposition.Reindex` relies on
 
 ## Implementation notes
 
-The bijectivity statements and the sign identity are still stubbed with `sorry`.
+`CompMapIndex.ofSplitBlock` reduces the relations between the two descriptions to a single
+equation `composition = outer.splitBlock block inner`, which holds for every index
+(`CompMapIndex.composition_eq_splitBlock`). `CompMapIndex.bijective_toSigma` and
+`CompMapIndex.bijective_toBlock` are proved by the explicit inverses `CompMapIndex.ofSigma` and
+`CompMapIndex.ofBlock`, both built with `CompMapIndex.ofSplitBlock`. In `CompMapIndex.ofSigma`,
+the merged block is obtained with `Composition.gather` along
+`AInfinityTheory.StasheffIndex.outerComposition`. `CompMapIndex.stasheffSign_eq` is still stubbed
+with `sorry`.
 -/
 
 @[expose] public section
@@ -93,31 +105,6 @@ def toBlock (x : CompMapIndex n) :
     Σ c : Composition n, Σ j : Fin c.length, Composition (c.blocksFun j) :=
   ⟨x.outer, x.block, x.inner⟩
 
-lemma injective_toSigma_prod_toBlock :
-    Function.Injective fun x : CompMapIndex n ↦ (x.toSigma, x.toBlock) := by
-  rintro ⟨c, p, o, j, i, _⟩ ⟨c', p', o', j', i', _⟩ h
-  simp only [toSigma, toBlock, Prod.mk.injEq, Sigma.mk.injEq] at h
-  obtain ⟨⟨rfl, hp⟩, rfl, hb⟩ := h
-  obtain ⟨rfl, hi⟩ := Sigma.mk.inj (eq_of_heq hb)
-  cases hp
-  cases hi
-  rfl
-
-/-- The indices of the terms of the left-hand side of the functor equation for `G` on the values
-of `F` form a finite type, through their two descriptions. -/
-instance : Fintype (CompMapIndex n) :=
-  .ofInjective _ injective_toSigma_prod_toBlock
-
-/-- Every pair of a composition c of `n` and an index triple of arity `c.length` describes
-exactly one term. -/
-theorem bijective_toSigma : Function.Bijective (toSigma (n := n)) := by
-  sorry
-
-/-- Every triple of a composition of `n`, one of its blocks and a composition of that block
-describes exactly one term. -/
-theorem bijective_toBlock : Function.Bijective (toBlock (n := n)) := by
-  sorry
-
 variable (x : CompMapIndex n)
 
 /-- The boundaries of `x.outer` are the boundaries of `x.composition` at the positions of the
@@ -158,6 +145,140 @@ lemma sizeUpTo_blocksFun_of_ne (l : Fin (x.stasheff.r + 1 + x.stasheff.t))
     rw [Fin.val_cast, ← h₁, hi]; congr 1; split_ifs <;> omega
   refine ⟨hs, Composition.blocksFun_eq_of_sizeUpTo_eq_add (m := 0) (by simpa using hs) ?_⟩
   rw [zero_add, Fin.val_cast, ← h₂, hi]; congr 1; split_ifs <;> omega
+
+/-! #### Construction from the block description -/
+
+/-- The index of a term described by a composition `o` of `n`, one of its blocks `j`, a
+composition `i` of that block and a matching composition `c` with index triple `p`, when `c` is
+`o` with the block `j` split into the blocks of `i`. -/
+def ofSplitBlock (c : Composition n) (p : StasheffIndex c.length) (o : Composition n)
+    (j : Fin o.length) (i : Composition (o.blocksFun j)) (r_eq : p.r = j)
+    (s_eq : p.s = i.length) (hc : c = o.splitBlock j i) : CompMapIndex n where
+  composition := c
+  stasheff := p
+  outer := o
+  block := j
+  inner := i
+  r_eq := r_eq
+  s_eq := s_eq
+  length_eq := by
+    have h := o.length_splitBlock j i
+    rw [← hc] at h
+    have := p.sum_eq; have := j.2
+    omega
+  sizeUpTo_of_le _ hl := hc ▸ o.sizeUpTo_splitBlock_of_le j i hl
+  sizeUpTo_add _ hu := hc ▸ o.sizeUpTo_splitBlock_add j i hu
+  sizeUpTo_add_length v := hc ▸ o.sizeUpTo_splitBlock_add_length j i v
+
+/-- The composition of `n` into the blocks of inputs of the components of `F` is the composition
+`x.outer` with the merged block split into the blocks of `x.inner`. In particular, every index
+is given by `ofSplitBlock`. -/
+lemma composition_eq_splitBlock : x.composition = x.outer.splitBlock x.block x.inner := by
+  have := x.stasheff.sum_eq; have := x.length_eq; have := x.r_eq; have := x.s_eq
+  have := x.outer.length_splitBlock x.block x.inner
+  refine Composition.ext_of_sizeUpTo _ (by omega) fun k ↦ ?_
+  rcases le_or_gt k x.block with h | h
+  · rw [x.sizeUpTo_of_le k h, x.outer.sizeUpTo_splitBlock_of_le _ _ h]
+  rcases le_or_gt k (x.block + x.inner.length) with h' | h'
+  · obtain ⟨u, rfl⟩ := Nat.exists_eq_add_of_le h.le
+    rw [x.sizeUpTo_add u (by omega), x.outer.sizeUpTo_splitBlock_add _ _ (by omega)]
+  · obtain ⟨v, rfl⟩ := Nat.exists_eq_add_of_le h'.le
+    rw [x.sizeUpTo_add_length v, x.outer.sizeUpTo_splitBlock_add_length]
+
+lemma eq_ofSplitBlock :
+    x = ofSplitBlock x.composition x.stasheff x.outer x.block x.inner x.r_eq x.s_eq
+      x.composition_eq_splitBlock :=
+  rfl
+
+/-! #### The inverse of `toSigma` -/
+
+/-- The composition of `n` into the inputs of the outer component of `G` is obtained from
+`x.composition` by merging the s blocks fed to the inner operation. -/
+lemma outer_eq_gather : x.outer = x.composition.gather x.stasheff.outerComposition := by
+  refine Composition.ext_of_sizeUpTo _
+    (by rw [StasheffIndex.length_gather_outerComposition, x.length_eq]) fun k ↦ ?_
+  rw [← x.sizeUpTo_outerBoundary, StasheffIndex.sizeUpTo_gather_outerComposition]
+
+/-- The inverse of `toSigma`. For a composition c of `n` and an index triple p = (r, s, t) of
+arity `c.length`, the s blocks of `c` fed to the inner operation are merged into the block r of
+the composition of `n` into the inputs of the outer component of `G`. -/
+def ofSigma (σ : Σ c : Composition n, StasheffIndex c.length) : CompMapIndex n :=
+  let j := σ.2.middleIndex.cast (StasheffIndex.length_gather_outerComposition σ.1 σ.2).symm
+  ofSplitBlock σ.1 σ.2 (σ.1.gather σ.2.outerComposition) j
+    (σ.1.sigmaCompositionAux σ.2.outerComposition j) rfl
+    (StasheffIndex.length_sigmaCompositionAux_outerComposition σ.1 σ.2 j rfl).symm
+    (StasheffIndex.splitBlock_gather_outerComposition σ.1 σ.2 j rfl).symm
+
+lemma toSigma_ofSigma (σ : Σ c : Composition n, StasheffIndex c.length) :
+    (ofSigma σ).toSigma = σ :=
+  rfl
+
+lemma ofSigma_toSigma : ofSigma x.toSigma = x := by
+  have ho := x.outer_eq_gather
+  rcases x with ⟨c, p, o, j, i, hr, hs, hl, hle, hadd, hlen⟩
+  dsimp only at ho
+  subst ho
+  obtain rfl : j = p.middleIndex.cast (StasheffIndex.length_gather_outerComposition c p).symm :=
+    Fin.ext hr.symm
+  have hs' := StasheffIndex.length_sigmaCompositionAux_outerComposition c p
+    (p.middleIndex.cast (StasheffIndex.length_gather_outerComposition c p).symm) rfl
+  obtain rfl : i = c.sigmaCompositionAux p.outerComposition
+      (p.middleIndex.cast (StasheffIndex.length_gather_outerComposition c p).symm) := by
+    refine Composition.ext_of_sizeUpTo _ (hs.symm.trans hs'.symm) fun u ↦ ?_
+    rcases le_or_gt u p.s with hu | hu
+    · have h₁ := hadd u (by omega)
+      rw [← hr] at h₁
+      have := StasheffIndex.sizeUpTo_add_sigmaCompositionAux c p
+        (p.middleIndex.cast (StasheffIndex.length_gather_outerComposition c p).symm) rfl hu
+      omega
+    · rw [Composition.sizeUpTo_ofLength_le _ _ (by omega),
+        Composition.sizeUpTo_ofLength_le _ _ (by omega)]
+  rfl
+
+/-- Every pair of a composition c of `n` and an index triple of arity `c.length` describes
+exactly one term, given by `ofSigma`. -/
+theorem bijective_toSigma : Function.Bijective (toSigma (n := n)) :=
+  Function.bijective_iff_has_inverse.2 ⟨ofSigma, ofSigma_toSigma, toSigma_ofSigma⟩
+
+/-- The indices of the terms of the left-hand side of the functor equation for `G` on the values
+of `F` form a finite type, through their description by a composition and an index triple. -/
+instance : Fintype (CompMapIndex n) :=
+  .ofEquiv _ (Equiv.ofBijective _ bijective_toSigma).symm
+
+/-! #### The inverse of `toBlock` -/
+
+/-- The inverse of `toBlock`. For a composition `o` of `n`, a block j of `o` and a composition
+`i` of that block, the block j of `o` is split into the blocks of `i`, and the inner operation is
+applied to the values of `F` on these blocks. -/
+def ofBlock (τ : Σ c : Composition n, Σ j : Fin c.length, Composition (c.blocksFun j)) :
+    CompMapIndex n :=
+  have := τ.1.length_splitBlock τ.2.1 τ.2.2; have := τ.2.1.2
+  ofSplitBlock (τ.1.splitBlock τ.2.1 τ.2.2)
+    ⟨τ.2.1, τ.2.2.length, τ.1.length - 1 - τ.2.1, by omega,
+      τ.2.2.length_pos_of_pos (τ.1.one_le_blocksFun _)⟩
+    τ.1 τ.2.1 τ.2.2 rfl rfl rfl
+
+lemma toBlock_ofBlock
+    (τ : Σ c : Composition n, Σ j : Fin c.length, Composition (c.blocksFun j)) :
+    (ofBlock τ).toBlock = τ :=
+  rfl
+
+lemma ofBlock_toBlock : ofBlock x.toBlock = x := by
+  have hc := x.composition_eq_splitBlock
+  rcases x with ⟨c, p, o, j, i, hr, hs, hl, hle, hadd, hlen⟩
+  dsimp only at hc
+  subst hc
+  obtain rfl : p = (ofBlock ⟨o, j, i⟩).stasheff :=
+    StasheffIndex.ext hr hs (by
+      have := p.sum_eq; have := o.length_splitBlock j i
+      dsimp only [ofBlock, ofSplitBlock]
+      omega)
+  rfl
+
+/-- Every triple of a composition of `n`, one of its blocks and a composition of that block
+describes exactly one term, given by `ofBlock`. -/
+theorem bijective_toBlock : Function.Bijective (toBlock (n := n)) :=
+  Function.bijective_iff_has_inverse.2 ⟨ofBlock, ofBlock_toBlock, toBlock_ofBlock⟩
 
 end CompMapIndex
 
