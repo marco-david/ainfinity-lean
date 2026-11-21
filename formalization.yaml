@@ -120,14 +120,18 @@ status:
     bounded cochain complexes, and the braiding functor, whose definitions are
     still partially stubbed with `sorry`, and the composition of A∞-functors,
     whose associativity and A∞-functor equations are stated but whose proofs still
-    contain `sorry` in the reindexing steps. Temporarily removed: the identity
+    contain `sorry` in the reindexing steps. Both reindexing steps are reduced
+    to purely combinatorial statements (bijectivity of the projections of the
+    index types `MapCompIndex`, `CompMapIndex` and `CompMapMapIndex`, and two
+    Koszul sign identities). Of these, the bijectivity of
+    `MapCompIndex.toSigma` is proved; the others are still stubbed with `sorry`. Temporarily removed: the identity
     A∞-functor and the A∞-functor examples. They were written
     for the earlier foundation (grading indices and `GradedObject`s in
     `ModuleCat`) and will be restored once ported. A∞-algebras (blueprint
     chapter 5) are not formalized yet.
   # Counts come from a source scan for `sorry`. They were not checked with
   # `#print axioms`.
-  sorry_count: 27
+  sorry_count: 32
   sorry_in_definitions: 19
   axioms:
     - "propext"
@@ -317,10 +321,15 @@ alignment:
         Its two sides are `AInfinityTheory.AInfinityFunctorData.mapCompSum` and
         `AInfinityTheory.AInfinityFunctorData.compMapSum`.
     - source: "Seidel, composition of A∞-functors"
-      lean: ""
-      module: ""
-      status: "not-formalized"
-      note: "Formalized on the earlier foundation; temporarily removed pending a port."
+      lean: "AInfinityTheory.AInfinityFunctor.comp"
+      module: "AInfinity.FunctorComposition.Basic"
+      status: "in-progress"
+      note: >-
+        The composite of A∞-functor data is `AInfinityTheory.AInfinityFunctorData.comp`
+        (`AInfinity.FunctorComposition.Defs`). The proof of the A∞-functor equations for
+        the composite, `AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum`,
+        still depends on `sorry` in the combinatorial statements of
+        `AInfinity.FunctorComposition.Index` that its reindexing steps reduce to.
     - source: "Blueprint, Chapter 5 (A∞-algebras)"
       lean: ""
       module: ""

@@ -1,9 +1,14 @@
 import AInfinity.AInfinityCategory
 import AInfinity.AInfinityCategoryStruct
 import AInfinity.AInfinityFunctor
-import AInfinity.AInfinityFunctorComposition
 import AInfinity.ArityLeTwo
 import AInfinity.DG
+import AInfinity.FunctorComposition.Basic
+import AInfinity.FunctorComposition.BlockMap
+import AInfinity.FunctorComposition.Congr
+import AInfinity.FunctorComposition.Defs
+import AInfinity.FunctorComposition.Index
+import AInfinity.FunctorComposition.Reindex
 import AInfinity.GradedLinearAlgebra
 import AInfinity.GradedLinearQuiver
 import AInfinity.Grading
