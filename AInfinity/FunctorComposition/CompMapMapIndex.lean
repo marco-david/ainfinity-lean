@@ -52,7 +52,6 @@ composition c' of `c.length` grouping the values of `F` into the inputs of the c
 In the right-hand side of the functor equation for `G.comp F`, it is indexed by a composition e of
 `n` into the blocks of inputs of the components of `G.comp F` and by the compositions of the
 blocks of `e` into the blocks of c. -/
-@[ext]
 structure CompMapMapIndex (n : ℕ) where
   /-- The composition c of `n` into the blocks of inputs of the components of `F`. -/
   composition : Composition n

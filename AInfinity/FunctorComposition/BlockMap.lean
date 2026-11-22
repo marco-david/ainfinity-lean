@@ -143,14 +143,17 @@ def updateComposableHom (b : ∀ l, ComposableHom β R Y l (δ l)) (j : Fin k) {
   fun l ↦ if h : l = j then homCongr R (by rw [h]) (by rw [h]) (by simp [h]) x
     else homCongr R rfl rfl (by simp [h]) (b l)
 
-lemma updateComposableHom_heq_of_eq (b : ∀ l, ComposableHom β R Y l (δ l)) {j l : Fin k}
-    (h : l = j) {e : β} (x : ComposableHom β R Y j e) : updateComposableHom b j x l ≍ x := by
+lemma homCongr_updateComposableHom_of_eq (b : ∀ l, ComposableHom β R Y l (δ l)) {j l : Fin k}
+    (h : l = j) {e : β} (x : ComposableHom β R Y j e) :
+    homCongr R (congrArg (fun l ↦ Y l.castSucc) h) (congrArg (fun l ↦ Y l.succ) h)
+      (by rw [h, Function.update_self]) (updateComposableHom b j x l) = x := by
   subst h
-  simpa [updateComposableHom] using homCongr_heq _ _ _ _
+  simp [updateComposableHom]
 
-lemma updateComposableHom_heq_of_ne (b : ∀ l, ComposableHom β R Y l (δ l)) {j l : Fin k}
-    (h : l ≠ j) {e : β} (x : ComposableHom β R Y j e) : updateComposableHom b j x l ≍ b l := by
-  simpa [updateComposableHom, h] using homCongr_heq _ _ _ _
+lemma homCongr_updateComposableHom_of_ne (b : ∀ l, ComposableHom β R Y l (δ l)) {j l : Fin k}
+    (h : l ≠ j) {e : β} (x : ComposableHom β R Y j e) :
+    homCongr R rfl rfl (Function.update_of_ne h e δ) (updateComposableHom b j x l) = b l := by
+  simp [updateComposableHom, h]
 
 lemma updateComposableHom_eq_update (b : ∀ l, ComposableHom β R Y l (δ l)) (j : Fin k) {e : β}
     (x : ComposableHom β R Y j e) :

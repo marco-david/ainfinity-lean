@@ -62,7 +62,6 @@ and by a composition c of r + 1 + t into the blocks of inputs of the components 
 also described by the composition c̃ of `n` into the blocks of original inputs consumed by the
 components of `F`, the block j containing mₛ, and the index triple q' of mₛ inside that block.
 -/
-@[ext]
 structure MapCompIndex (n : ℕ) where
   /-- The index triple q = (r, s, t) of the inner operation mₛ among the `n` inputs. -/
   stasheff : StasheffIndex n
@@ -205,12 +204,13 @@ lemma eq_ofSetBlock (x : MapCompIndex n) :
 operation: the relations between `composition` and `outer` determine `outer`, and `inner` is
 then determined by `r_eq` and `s_eq`. -/
 lemma ext_of_block {x₁ x₂ : MapCompIndex n} (hq : x₁.stasheff = x₂.stasheff)
-    (hc : x₁.composition ≍ x₂.composition) (hb : (x₁.block : ℕ) = x₂.block) : x₁ = x₂ := by
+    (hc : x₁.composition.blocks = x₂.composition.blocks) (hb : (x₁.block : ℕ) = x₂.block) :
+    x₁ = x₂ := by
   rcases x₁ with ⟨q, c, o, b, i, hl, hr, hs, hle, hlt⟩
   rcases x₂ with ⟨q', c', o', b', i', hl', hr', hs', hle', hlt'⟩
   dsimp only at hq hc hb
   subst hq
-  cases hc
+  obtain rfl : c = c' := Composition.ext hc
   obtain rfl : o = o' := Composition.ext_of_sizeUpTo _ (hl.symm.trans hl') fun k ↦ by
     rcases le_or_gt k b with h | h
     · rw [← hle k h, hle' k (by omega)]
@@ -253,7 +253,7 @@ lemma val_index : (x.composition.index ⟨x.stasheff.r, by omega⟩ : ℕ) = x.b
     Composition.index_embedding, Fin.val_cast]
 
 lemma ofSigma_toSigma : ofSigma x.toSigma = x :=
-  ext_of_block rfl HEq.rfl x.val_index
+  ext_of_block rfl rfl x.val_index
 
 /-- Every pair of an index triple q = (r, s, t) and a composition of r + 1 + t describes exactly
 one term, given by `ofSigma`. -/

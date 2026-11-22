@@ -63,7 +63,6 @@ two descriptions. In the sum, it is indexed by a composition c of `n` into the b
 of the components of `F` and by the index triple p = (r, s, t) of mₛ among the values of `F`.
 It is also described by the composition c̃ of `n` obtained by merging the s blocks of c fed to
 mₛ, the merged block j, and the composition c'' of that block into the s blocks of c. -/
-@[ext]
 structure CompMapIndex (n : ℕ) where
   /-- The composition c of `n` into the blocks of inputs of the components of `F`. -/
   composition : Composition n
