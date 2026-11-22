@@ -12,6 +12,7 @@ import AInfinity.FunctorComposition.Defs
 import AInfinity.FunctorComposition.Lemmas
 import AInfinity.FunctorComposition.MapCompIndex
 import AInfinity.FunctorComposition.Reindex
+import AInfinity.FunctorComposition.Signs
 import AInfinity.GradedLinearAlgebra
 import AInfinity.GradedLinearQuiver
 import AInfinity.Grading

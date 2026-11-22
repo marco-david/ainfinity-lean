@@ -13,9 +13,8 @@ public import AInfinity.StasheffIndex
 This file collects the results shared by the index types `MapCompIndex`, `CompMapIndex` and
 `CompMapMapIndex` of the terms of the functor equation for a composite `G.comp F` of A∞-functors:
 lemmas on lists and compositions, the change of the size of one block of a composition, the
-splitting of one block of a composition, lemmas on two-level compositions, the composition
-`StasheffIndex.outerComposition` along which the blocks fed to an inner operation are gathered,
-and the Koszul sign `tailSign` of the inputs from a given position on.
+splitting of one block of a composition, lemmas on two-level compositions, and the composition
+`StasheffIndex.outerComposition` along which the blocks fed to an inner operation are gathered.
 
 The lemmas on two-level compositions relate Mathlib's `Composition.sigmaEquivSigmaPi` to the two
 descriptions recorded in `CompMapMapIndex`.
@@ -27,7 +26,6 @@ descriptions recorded in `CompMapMapIndex`.
   of that block.
 * `AInfinityTheory.StasheffIndex.outerComposition`: the composition of the inputs of an index
   triple into the inputs of its outer operation.
-* `AInfinityTheory.tailSign`: the Koszul sign of the inputs from a given position on.
 -/
 
 @[expose] public section
@@ -341,18 +339,5 @@ lemma splitBlock_gather_outerComposition (j : Fin (c.gather q.outerComposition).
 end Gather
 
 end StasheffIndex
-
-/-! ### Koszul signs -/
-
-section Signs
-
-variable {β : Type*} [AddCommGroup β] [Grading β]
-
-/-- The Koszul sign of the inputs from position `N` on: (-1) raised to the sum of the reduced
-degrees ‖a‖ = |a| - 1 of the inputs at positions `i ≥ N`. -/
-def tailSign (deg : Fin n → β) (N : ℕ) : ℤˣ :=
-  ∏ i ∈ Finset.univ.filter (fun i : Fin n ↦ N ≤ (i : ℕ)), (sign (deg i - degOne)).toMul
-
-end Signs
 
 end AInfinityTheory

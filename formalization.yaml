@@ -16,8 +16,7 @@ project:
     higher operations, such as DG categories), and A∞-functors between
     A∞-categories whose gradings may differ, related by a homomorphism of
     gradings. The composition of A∞-functors has been ported from an earlier
-    foundation; its associativity and the A∞-functor equations for the composite
-    are stated, with the combinatorial reindexing steps still stubbed with `sorry`.
+    foundation, and the composite is proved to satisfy the A∞-functor equations.
     The examples, developed on the earlier foundation, are temporarily removed while
     they are ported to the current one.
     A second strand of the project formalizes the KLRW algebra of a loopless
@@ -51,8 +50,7 @@ sources:
       Source for the A∞ constructions: A∞-categories and the Stasheff identities.
       The formalization adapts these definitions to a general grading and to
       diagrammatic argument order; see `fidelity`. A∞-functors, also from this
-      chapter, are formalized; their composition is defined, with its properties
-      still partly stubbed with `sorry` (see `status`).
+      chapter, are formalized, together with their composition.
     author_endorsement: "not-contacted"
   - title: "A∞ Categories in Lean (project blueprint)"
     authors:
@@ -115,25 +113,21 @@ status:
     structure and the associativity and unit laws of composition), graded R-linear
     quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing
     higher operations, DG and linear categories as A∞-categories, A∞-functors with the
-    A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
+    A∞-functor equations, the composition of A∞-functors (the composite satisfies the
+    A∞-functor equations, by a reindexing reduced to the bijectivity of the projections
+    of the index types `MapCompIndex`, `CompMapIndex` and `CompMapMapIndex` and to two
+    Koszul sign identities), and the general KLRW algebra with its R-linear KLRW
     category. In progress: the computable additive completion and
     bounded cochain complexes, and the braiding functor, whose definitions are
-    still partially stubbed with `sorry`, and the composition of A∞-functors,
-    whose associativity and A∞-functor equations are stated but whose proofs still
-    contain `sorry` in the reindexing steps. Both reindexing steps are reduced
-    to purely combinatorial statements (bijectivity of the projections of the
-    index types `MapCompIndex`, `CompMapIndex` and `CompMapMapIndex`, and two
-    Koszul sign identities). Of these, the bijectivity of
-    `MapCompIndex.toSigma`, `MapCompIndex.toBlock`, `CompMapIndex.toSigma`,
-    `CompMapIndex.toBlock`, `CompMapMapIndex.toSigma` and `CompMapMapIndex.toSigmaPi`
-    is proved; the two sign identities are still stubbed with `sorry`. Temporarily removed: the identity
+    still partially stubbed with `sorry`. Not formalized yet: associativity of the
+    composition of A∞-functors. Temporarily removed: the identity
     A∞-functor and the A∞-functor examples. They were written
     for the earlier foundation (grading indices and `GradedObject`s in
     `ModuleCat`) and will be restored once ported. A∞-algebras (blueprint
     chapter 5) are not formalized yet.
   # Counts come from a source scan for `sorry`. They were not checked with
   # `#print axioms`.
-  sorry_count: 26
+  sorry_count: 22
   sorry_in_definitions: 19
   axioms:
     - "propext"
@@ -325,14 +319,14 @@ alignment:
     - source: "Seidel, composition of A∞-functors"
       lean: "AInfinityTheory.AInfinityFunctor.comp"
       module: "AInfinity.FunctorComposition.Basic"
-      status: "in-progress"
+      status: "defined"
       note: >-
         The composite of A∞-functor data is `AInfinityTheory.AInfinityFunctorData.comp`
-        (`AInfinity.FunctorComposition.Defs`). The proof of the A∞-functor equations for
-        the composite, `AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum`,
-        still depends on `sorry` in the combinatorial statements about the index types
-        `MapCompIndex`, `CompMapIndex` and `CompMapMapIndex` that its reindexing steps
-        reduce to.
+        (`AInfinity.FunctorComposition.Defs`). The A∞-functor equations for the composite
+        are `AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum`, proved by
+        reindexing along the index types `MapCompIndex`, `CompMapIndex` and
+        `CompMapMapIndex`, with the Koszul signs compared in
+        `AInfinity.FunctorComposition.Signs`.
     - source: "Blueprint, Chapter 5 (A∞-algebras)"
       lean: ""
       module: ""

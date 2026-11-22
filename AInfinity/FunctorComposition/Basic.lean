@@ -24,10 +24,11 @@ This file proves that it satisfies the A∞-functor equations.
 
 ## Implementation notes
 
-The proof is work in progress: it depends on combinatorial statements about the index types
-`MapCompIndex`, `CompMapIndex` and `CompMapMapIndex`, some of which are still stubbed with
-`sorry`. The functor equation for `G.comp F` is reduced to the functor equations of `F`, applied
-blockwise, and of `G`, applied to the outputs of `F`, in three steps:
+The proof depends on combinatorial statements about the index types `MapCompIndex`,
+`CompMapIndex` and `CompMapMapIndex`, and on the Koszul sign identities in
+`AInfinity.FunctorComposition.Signs`. The functor equation for `G.comp F` is reduced to the
+functor equations of `F`, applied blockwise, and of `G`, applied to the outputs of `F`, in three
+steps:
 
 1. `comp_mapCompSum_eq_sum_mapCompSumBlockMap`: by the reindexing in
    `AInfinity.FunctorComposition.Reindex` and the functor equations of `F`, the left-hand side of

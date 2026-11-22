@@ -33,8 +33,9 @@ about it that the reindexing in `AInfinity.FunctorComposition.Reindex` relies on
 * `AInfinityTheory.MapCompIndex.bijective_toSigma`,
   `AInfinityTheory.MapCompIndex.bijective_toBlock`: the projections onto the two descriptions of
   a term are bijections.
-* `AInfinityTheory.MapCompIndex.stasheffSign_eq`: the Koszul signs of a term in its two
-  descriptions.
+
+The Koszul signs of a term in its two descriptions are compared in
+`AInfinity.FunctorComposition.Signs`.
 
 ## Implementation notes
 
@@ -43,7 +44,6 @@ equation `composition = outer.setBlock …`, which holds for every index
 (`MapCompIndex.composition_eq_setBlock`). `MapCompIndex.bijective_toSigma` and
 `MapCompIndex.bijective_toBlock` are proved by the explicit inverses `MapCompIndex.ofSigma` and
 `MapCompIndex.ofBlock`, both built with `MapCompIndex.ofSetBlock`.
-`MapCompIndex.stasheffSign_eq` is still stubbed with `sorry`.
 -/
 
 @[expose] public section
@@ -301,20 +301,5 @@ theorem bijective_toBlock : Function.Bijective (toBlock (n := n)) :=
   Function.bijective_iff_has_inverse.2 ⟨ofBlock, ofBlock_toBlock, toBlock_ofBlock⟩
 
 end MapCompIndex
-
-section Signs
-
-variable {β : Type*} [AddCommGroup β] [Grading β]
-
-/-- The Koszul sign of a term of the left-hand side of the functor equation for `G.comp F` is the
-Koszul sign of the inner operation inside its block, times the Koszul sign of the inputs after
-that block. -/
-theorem MapCompIndex.stasheffSign_eq (deg : Fin n → β) (x : MapCompIndex n) :
-    stasheffSign deg x.stasheff =
-      stasheffSign (fun i ↦ deg (x.outer.embedding x.block i)) x.inner *
-        tailSign deg (x.outer.sizeUpTo (x.block + 1)) := by
-  sorry
-
-end Signs
 
 end AInfinityTheory

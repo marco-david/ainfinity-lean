@@ -34,8 +34,9 @@ about it that the reindexing in `AInfinity.FunctorComposition.Reindex` relies on
 * `AInfinityTheory.CompMapIndex.bijective_toSigma`,
   `AInfinityTheory.CompMapIndex.bijective_toBlock`: the projections onto the two descriptions of
   a term are bijections.
-* `AInfinityTheory.CompMapIndex.stasheffSign_eq`: the Koszul signs of a term in its two
-  descriptions.
+
+The Koszul signs of a term in its two descriptions are compared in
+`AInfinity.FunctorComposition.Signs`.
 
 ## Implementation notes
 
@@ -45,8 +46,7 @@ equation `composition = outer.splitBlock block inner`, which holds for every ind
 `CompMapIndex.bijective_toBlock` are proved by the explicit inverses `CompMapIndex.ofSigma` and
 `CompMapIndex.ofBlock`, both built with `CompMapIndex.ofSplitBlock`. In `CompMapIndex.ofSigma`,
 the merged block is obtained with `Composition.gather` along
-`AInfinityTheory.StasheffIndex.outerComposition`. `CompMapIndex.stasheffSign_eq` is still stubbed
-with `sorry`.
+`AInfinityTheory.StasheffIndex.outerComposition`.
 -/
 
 @[expose] public section
@@ -280,20 +280,5 @@ theorem bijective_toBlock : Function.Bijective (toBlock (n := n)) :=
   Function.bijective_iff_has_inverse.2 ⟨ofBlock, ofBlock_toBlock, toBlock_ofBlock⟩
 
 end CompMapIndex
-
-section Signs
-
-variable {β : Type*} [AddCommGroup β] [Grading β]
-
-/-- The Koszul sign of a term of the left-hand side of the functor equation for `G` on the
-values of `F` is the Koszul sign of the original inputs after the merged block. -/
-theorem CompMapIndex.stasheffSign_eq {β' : Type*} [AddCommGroup β'] [Grading β'] (φ : β →+ᵍ β')
-    (deg : Fin n → β) (x : CompMapIndex n) :
-    stasheffSign (fun l ↦ φ (functorTargetDeg fun i ↦ deg (x.composition.embedding l i)))
-        x.stasheff =
-      tailSign deg (x.outer.sizeUpTo (x.block + 1)) := by
-  sorry
-
-end Signs
 
 end AInfinityTheory
