@@ -1,0 +1,27 @@
+name: Tag Lean releases
+
+# Creates a git tag named after the toolchain, for example `v4.35.0`, on the first commit of
+# master that switches `lean-toolchain` to it. `update.yml` reads these tags to tell which
+# Mathlib releases are newer than the one in use, so this workflow is what makes the automatic
+# Mathlib updates work.
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - lean-toolchain
+
+permissions:
+  contents: write # push the tag
+
+jobs:
+  lean-release-tag:
+    name: Add Lean release tag
+    runs-on: ubuntu-latest # git only, no Lake
+    steps:
+      - name: Tag the new toolchain
+        uses: leanprover-community/lean-release-tag@ee8ee743e5a36ff0e75ff51035f6a95a9d1bdf59 # main, 2026-02-27
+        with:
+          do-release: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

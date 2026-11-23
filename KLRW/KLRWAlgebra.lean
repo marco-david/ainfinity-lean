@@ -18,7 +18,14 @@ structure SimpleDigraph (V : Type*) extends Digraph V where
 inductive StrandColor where
   | red   : StrandColor
   | black : StrandColor
-  deriving DecidableEq, Fintype
+  deriving DecidableEq
+
+/-- There are exactly two strand colours. (Written out by hand: the `Fintype` deriving handler
+identifies `List.Nodup` with `Multiset.Nodup` by unfolding, which Lean 4.35 no longer does when
+checking implicit arguments, so `deriving Fintype` fails outside Mathlib.) -/
+instance : Fintype StrandColor where
+  elems := {StrandColor.red, StrandColor.black}
+  complete := by intro c; cases c <;> simp
 
 
 /- KLRWStructure holds the parameters for a KLRW Algebra.

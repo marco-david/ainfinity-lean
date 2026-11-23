@@ -2,69 +2,54 @@
 
 \chapter{A-infinity Algebras}
 
+An \Ainf{}-algebra is an \Ainf{}-category with a single object. This chapter is not
+formalized yet. The planned definitions reuse the one-object case of the \Ainf{}-category
+structures and Stasheff sums from the previous chapters.
+
 \begin{definition}[\Ainf{}-algebra structure]
-%\lean{AInfinityAlgebraTheory.AInfinityAlgStruct}
-\label{AInfinityAlgebraTheory.AInfinityAlgStruct}
-%\leanok
-\uses{AInfinityTheory.GradedRModule, AInfinityTheory.operationTargetDeg}
-Let $A$ be a graded $R$-module. An \Ainf{}-algebra structure on $A$ consists of
-multilinear operations
+%\lean{AInfinityTheory.AInfinityAlgebraStruct}
+\label{AInfinityTheory.AInfinityAlgebraStruct}
+\uses{AInfinityTheory.GradedMultilinearMap, AInfinityTheory.operationTargetDeg}
+Let $A$ be a $\beta$-indexed family of $R$-modules. An \Ainf{}-algebra structure on $A$
+consists of, for every positive arity $n \geq 1$, a graded multilinear map
 \[
-  m_n : A(d_0) \otimes \cdots \otimes A(d_{n-1})
-    \to A\!\left(\sum_i d_i + 2 - n\right)
+  m_n : A \otimes \cdots \otimes A \to A
 \]
-for every positive arity $n$ and every choice of input degrees.
+of degree $(2-n) \cdot \mathbf{1}$. For input degrees $(d_0,\dots,d_{n-1})$, its
+component lands in $A(i)$ for any degree $i$ equal to the operation target degree
+$\sum_k d_k + (2-n) \cdot \mathbf{1}$.
 \end{definition}
 
-\begin{definition}[Algebra to precategory]
-%\lean{AInfinityAlgebraTheory.AInfinityAlgStruct.toPreCategory}
-\label{AInfinityAlgebraTheory.AInfinityAlgStruct.toPreCategory}
-%\leanok
-\uses{AInfinityAlgebraTheory.AInfinityAlgStruct, AInfinityTheory.AInfinityCategoryStruct}
-Any \Ainf{}-algebra structure determines a one-object \Ainf{}-precategory, with
-object type \lean{PUnit} and constant hom-module equal to the underlying graded
-module.
+\begin{definition}[Associated \Ainf{}-category structure]
+%\lean{AInfinityTheory.AInfinityAlgebraStruct.toAInfinityCategoryStruct}
+\label{AInfinityTheory.AInfinityAlgebraStruct.toAInfinityCategoryStruct}
+\uses{AInfinityTheory.AInfinityAlgebraStruct, AInfinityTheory.AInfinityCategoryStruct}
+An \Ainf{}-algebra structure on $A$ determines a one-object \Ainf{}-category structure. Its
+object type is $\mathrm{PUnit}$, its graded hom-module is the constant family $A$, and its
+operations $m_n$ are those of the algebra.
 \end{definition}
 
-\begin{definition}[Algebra Stasheff sum]
-%\lean{AInfinityAlgebraTheory.AInfinityAlgStruct.stasheffSum}
-\label{AInfinityAlgebraTheory.AInfinityAlgStruct.stasheffSum}
-%\leanok
-\uses{AInfinityAlgebraTheory.AInfinityAlgStruct, AInfinityAlgebraTheory.AInfinityAlgStruct.toPreCategory}
-The Stasheff sum of an \Ainf{}-algebra is the Stasheff sum of its associated
-one-object \Ainf{}-precategory.
-\end{definition}
-
-\begin{definition}[Algebra Stasheff property]
-%\lean{AInfinityAlgebraTheory.AInfinityAlgStruct.satisfiesStasheff}
-\label{AInfinityAlgebraTheory.AInfinityAlgStruct.satisfiesStasheff}
-%\leanok
-\uses{AInfinityAlgebraTheory.AInfinityAlgStruct.stasheffSum}
-An \Ainf{}-algebra structure satisfies the Stasheff identities when every one of
-its Stasheff sums is zero.
+\begin{definition}[Stasheff sum of an \Ainf{}-algebra structure]
+%\lean{AInfinityTheory.AInfinityAlgebraStruct.stasheffSum}
+\label{AInfinityTheory.AInfinityAlgebraStruct.stasheffSum}
+\uses{AInfinityTheory.AInfinityAlgebraStruct.toAInfinityCategoryStruct, AInfinityTheory.stasheffSum}
+The arity-$n$ Stasheff sum of an \Ainf{}-algebra structure is the indexed Stasheff sum of
+its associated one-object \Ainf{}-category structure, for the unique string of objects.
 \end{definition}
 
 \begin{definition}[\Ainf{}-algebra]
-%\lean{AInfinityAlgebraTheory.AInfinityAlgebra}
-\label{AInfinityAlgebraTheory.AInfinityAlgebra}
-%\leanok
-\uses{AInfinityAlgebraTheory.AInfinityAlgStruct, AInfinityAlgebraTheory.AInfinityAlgStruct.satisfiesStasheff}
-An \Ainf{}-algebra is an \Ainf{}-algebra structure together with a proof of the
-Stasheff identities.
+%\lean{AInfinityTheory.AInfinityAlgebra}
+\label{AInfinityTheory.AInfinityAlgebra}
+\uses{AInfinityTheory.AInfinityAlgebraStruct.stasheffSum}
+An \Ainf{}-algebra is an \Ainf{}-algebra structure that satisfies the Stasheff
+identities: every Stasheff sum vanishes, for every positive arity, choice of input degrees
+and inputs.
 \end{definition}
 
-\begin{lemma}[Stasheff sum vanishes in an \Ainf{}-algebra]
-%\lean{AInfinityAlgebraTheory.AInfinityAlgebra.stasheff_eq_zero}
-\label{AInfinityAlgebraTheory.AInfinityAlgebra.stasheff_eq_zero}
-%\leanok
-\uses{AInfinityAlgebraTheory.AInfinityAlgebra, AInfinityAlgebraTheory.AInfinityAlgStruct.stasheffSum}
-For an \Ainf{}-algebra, every algebraic Stasheff sum is equal to zero.
-\end{lemma}
-
-\begin{definition}[\Ainf{}-algebra to precategory]
-%\lean{AInfinityAlgebraTheory.AInfinityAlgebra.toPreCategory}
-\label{AInfinityAlgebraTheory.AInfinityAlgebra.toPreCategory}
-%\leanok
-\uses{AInfinityAlgebraTheory.AInfinityAlgebra, AInfinityAlgebraTheory.AInfinityAlgStruct.toPreCategory}
-An \Ainf{}-algebra canonically determines a one-object \Ainf{}-precategory.
+\begin{definition}[Associated \Ainf{}-category]
+%\lean{AInfinityTheory.AInfinityAlgebra.toAInfinityCategory}
+\label{AInfinityTheory.AInfinityAlgebra.toAInfinityCategory}
+\uses{AInfinityTheory.AInfinityAlgebra, AInfinityTheory.AInfinityCategory}
+An \Ainf{}-algebra determines a one-object \Ainf{}-category, whose underlying
+\Ainf{}-category structure is the associated one-object structure.
 \end{definition}

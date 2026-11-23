@@ -1,3 +1,4 @@
 import ComputableCochainComplex.AdditiveCompletion
 import ComputableCochainComplex.BoundedCochainComplex
 import ComputableCochainComplex.ComputableCategories
+import ComputableCochainComplex.FinCochain
