@@ -113,12 +113,12 @@ lemma violatedIdem_mul_idem_morph (X : KLRWObject parameters) :
 /-- $f e_X = e_X$ when $X$ is violated. -/
 lemma violatedIdem_mul_idem_morph_of_isViolated {X : KLRWObject parameters}
     (hX : IsViolated X) : violatedIdem R parameters * idem_morph R X = idem_morph R X := by
-  rw [violatedIdem_mul_idem_morph, if_pos hX]
+  rw [violatedIdem_mul_idem_morph, ite_eq_left hX]
 
 /-- $f e_X = 0$ when $X$ is not violated. -/
 lemma violatedIdem_mul_idem_morph_of_not_isViolated {X : KLRWObject parameters}
     (hX : ¬IsViolated X) : violatedIdem R parameters * idem_morph R X = 0 := by
-  rw [violatedIdem_mul_idem_morph, if_neg hX]
+  rw [violatedIdem_mul_idem_morph, ite_eq_right hX]
 
 /-- $e_X f = e_X$ when $X$ is violated. -/
 lemma idem_morph_mul_violatedIdem_of_isViolated {X : KLRWObject parameters}
