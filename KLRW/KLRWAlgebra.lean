@@ -5,6 +5,7 @@ Authors: Lillian Liu, Marco David, Hallvard Hareide
 -/
 module
 public import Mathlib
+public import KLRW.RootLattice
 
 /-!
 # KLRW algebras
@@ -69,22 +70,22 @@ instance : Fintype StrandColor where
 
 variable (V : Type*)
 
-/-- A loopless directed graph with no pair of opposite edges. -/
-structure SimpleDigraph extends Digraph V where
-  /-- No vertex has an edge to itself. -/
-  loopless : ∀ x : V, ¬ Adj x x
-  /-- There is never an edge in both directions between two vertices. -/
-  no_two_way : ∀ x y : V, Adj x y → ¬ Adj y x
-
 /-- The data defining a KLRW algebra: a directed graph `Γ` on the set of labels `V`, and for
 each label the number of black and of red strands carrying it. -/
 structure KLRWStructure where
   /-- The graph on the labels. -/
-  Γ : SimpleDigraph V
+  Γ : SimpleGraph V
+  /-- The graph is acyclic and connected -/
+  isTree : Γ.IsTree
   /-- The number of black strands with each label. -/
   blackStrands : V → ℕ
+  /-- Number of red strands-/
+  numRed : ℕ
   /-- The number of red strands with each label. -/
-  redStrands : V → ℕ
+  redStrands : Fin numRed → DominantWeight Γ
+
+  /- TODO: finalize KLRWStructure by having blackStrands : SimpleRoots → ℕ -/
+  /- have a mapping SimpleRoots → RootCoords so that cartan is applicable.-/
 
 /-- The data carried by a single strand: its label and its color. -/
 structure StrandData where
