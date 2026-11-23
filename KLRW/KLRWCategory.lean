@@ -46,6 +46,24 @@ lemma idem_is_idem (M : KLRWObject parameters) :
   exact KLRWImplicitConRel.idem_left M (.idem M) rfl
 
 
+variable (R) in
+/-- The straight-line idempotents are a complete orthogonal family of idempotents, i.e.
+the $e_X$ are pairwise orthogonal and sum to $1$. -/
+lemma completeOrthogonalIdempotents_idem_morph (parameters : KLRWStructure V) :
+    CompleteOrthogonalIdempotents (idem_morph (parameters := parameters) R) where
+  idem := idem_is_idem
+  ortho X Y hXY := by
+    apply rel_eq_same_con_class
+    apply implicit_rel_eq_rel
+    exact KLRWImplicitConRel.bad_comp (.idem Y) (.idem X) hXY.symm
+  complete := by
+    change ∑ i, (KLRWRel R parameters).mk' (FreeAlgebra.ι _ (.idem i)) = 1
+    rw [← map_sum]
+    apply rel_eq_same_con_class
+    apply implicit_rel_eq_rel
+    exact KLRWImplicitConRel.id_sum
+
+
 /- Shows idem * f = f, so idem acts as the left identity for KLRWHom R X Y. -/
 
 lemma id_mul_left {X Y : KLRWObject parameters} (f : KLRWAlg R parameters)
