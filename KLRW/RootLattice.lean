@@ -25,12 +25,25 @@ weights `ωᵢ`.
 * `KLRW.Coords.map`: apply a function to every coefficient, e.g. inclusion from `ℕ` to `ℤ`.
 * `KLRW.Coords.toWeight`: the additive map sending an element `β` of the root lattice to its
   Dynkin labels `Cβ`.
+* `KLRW.simpleRoot Γ i`, `KLRW.fundWeight Γ i`: the simple root `αᵢ` and the fundamental weight
+  `ωᵢ`, the `i`-th basis vectors of the root and the weight lattice.
+
+## Main results
+
+* `KLRW.simpleRoot_injective`, `KLRW.fundWeight_injective`: distinct vertices give distinct
+  basis vectors.
+* `KLRW.coe_toWeight_simpleRoot`: the Dynkin labels of `αᵢ` are the `i`-th column of the Cartan
+  matrix, i.e. `αᵢ = 2ωᵢ - Σ_{j ∼ i} ωⱼ`.
 
 ## Implementation notes
 
 * `Coords k Γ R` is a structure wrapping a function `V → R`, so that vectors in different bases
   cannot be confused. It coerces to `V → R` through `FunLike`, so the `i`-th coefficient of `x`
   is written `x i`. Its additive structure is transferred from `V → R` along `Coords.equiv`.
+* Simple roots and fundamental weights are indexed by the vertices `i : V` themselves, as
+  Mathlib's `RootPairing.root : ι ↪ M` indexes roots by a plain type. The index type is not
+  wrapped: `simpleRoot Γ i` and `fundWeight Γ i` already live in different types, and the KLRW
+  relations need `Γ.Adj i j` on the indices.
 * As for `Finsupp`, the `coe_*` lemmas such as `coe_add : ⇑(x + y) = ⇑x + ⇑y` are simp lemmas, so
   proofs never need to unfold how the instances are built. The `*_apply` lemmas for a single
   coefficient are not simp lemmas, since simp derives them from the `coe_*` lemmas; they are
@@ -70,6 +83,14 @@ variable {V : Type*}
 def _root_.SimpleGraph.cartanMatrix [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj] :
     Matrix V V ℤ :=
   2 - G.adjMatrix ℤ
+
+/-- The entries of the Cartan matrix: `2` on the diagonal, `-1` between adjacent vertices and `0`
+between distinct non-adjacent vertices. -/
+lemma _root_.SimpleGraph.cartanMatrix_apply [DecidableEq V] (G : SimpleGraph V)
+    [DecidableRel G.Adj] (i j : V) :
+    G.cartanMatrix i j = if i = j then 2 else if G.Adj i j then -1 else 0 := by
+  by_cases h : i = j <;> by_cases hA : G.Adj i j <;>
+    simp_all [SimpleGraph.cartanMatrix, Matrix.ofNat_apply]
 
 /-- Coordinate vectors for `Γ` in the basis selected by `k`. -/
 structure Coords (k : CoordKind) (Γ : SimpleGraph V) (R : Type*) where
@@ -205,6 +226,50 @@ lemma toWeight_apply (β : RootCoords Γ ℤ) (i : V) :
 end ToWeight
 
 end Coords
+
+/-! ### Simple roots and fundamental weights -/
+
+section Basis
+
+variable (Γ : SimpleGraph V) {R : Type*} [DecidableEq V] [Zero R] [One R]
+
+/-- The simple root `αᵢ`: the `i`-th basis vector of the root lattice, with coefficient `1` at `i`
+and `0` elsewhere. Over `ℕ` it is an element of `Q⁺`, over `ℤ` of `Q`. -/
+def simpleRoot (i : V) : RootCoords Γ R := ⟨Pi.single i 1⟩
+
+/-- The fundamental weight `ωᵢ`: the weight with Dynkin labels `1` at `i` and `0` elsewhere.
+Over `ℕ` it is a dominant weight. -/
+def fundWeight (i : V) : WeightCoords Γ R := ⟨Pi.single i 1⟩
+
+@[simp] lemma coe_simpleRoot (i : V) : ⇑(simpleRoot Γ i : RootCoords Γ R) = Pi.single i 1 := rfl
+lemma simpleRoot_apply (i j : V) :
+    (simpleRoot Γ i : RootCoords Γ R) j = Pi.single (M := fun _ => R) i 1 j := rfl
+
+@[simp] lemma coe_fundWeight (i : V) : ⇑(fundWeight Γ i : WeightCoords Γ R) = Pi.single i 1 :=
+  rfl
+lemma fundWeight_apply (i j : V) :
+    (fundWeight Γ i : WeightCoords Γ R) j = Pi.single (M := fun _ => R) i 1 j := rfl
+
+variable [NeZero (1 : R)]
+
+/-- Distinct vertices give distinct simple roots, provided `1 ≠ 0` in `R`. -/
+lemma simpleRoot_injective : Function.Injective (simpleRoot Γ : V → RootCoords Γ R) :=
+  fun i j h => by simpa [Pi.single_apply, eq_comm] using DFunLike.congr_fun h i
+
+/-- Distinct vertices give distinct fundamental weights, provided `1 ≠ 0` in `R`. -/
+lemma fundWeight_injective : Function.Injective (fundWeight Γ : V → WeightCoords Γ R) :=
+  fun i j h => by simpa [Pi.single_apply, eq_comm] using DFunLike.congr_fun h i
+
+end Basis
+
+/-- The Dynkin labels of the simple root `αᵢ` are the `i`-th column of the Cartan matrix, that is
+`αᵢ = 2ωᵢ - Σ_{j ∼ i} ωⱼ` (see `SimpleGraph.cartanMatrix_apply`). In particular `αᵢ` is not
+dominant as soon as `i` has a neighbour. -/
+@[simp] lemma coe_toWeight_simpleRoot [Fintype V] [DecidableEq V] (Γ : SimpleGraph V)
+    [DecidableRel Γ.Adj] (i : V) :
+    ⇑(Coords.toWeight (simpleRoot Γ i)) = Γ.cartanMatrix.col i :=
+  Matrix.mulVec_single_one _ _
+
 end Lattices
 
 end KLRW
