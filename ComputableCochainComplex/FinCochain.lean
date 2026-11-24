@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Jason Dong. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Jason Dong, Marco David
+-/
 module
 
 public import Mathlib
@@ -6,34 +11,49 @@ public import ComputableCochainComplex.BoundedCochainComplex
 /-! # Computable cochains between bounded cochain complexes
 
 For bounded cochain complexes `A` and `B` in `V`, a degree-`n` cochain `A ⟶ B` in the sense of
-`CochainComplex.HomComplex.Cochain` consists of morphisms `A.X p ⟶ B.X (p + n)` for every `p : ℤ`,
-almost all of which are forced to vanish because `A.X p` or `B.X (p + n)` is a zero object.
-`BoundedCochainComplex.FinCochain A B n` records only the components at the finitely many *active*
-degrees `p` with `p ∈ A.support` and `p + n ∈ B.support`, which makes it a computable model of the
-Hom-complex.
+`CochainComplex.HomComplex.Cochain` consists of morphisms `A.X p ⟶ B.X q` for all triplets
+`⟨p, q, hpq⟩` with `hpq : p + n = q`, almost all of which are forced to vanish because `A.X p` or
+`B.X q` is a zero object. `BoundedCochainComplex.FinCochain A B n` records only the components on
+the finitely many *active* triplets, those with `p ∈ A.support` and `q ∈ B.support`, which makes it
+a computable model of the Hom-complex.
+
+The interface follows Mathlib's `CochainComplex.HomComplex`: the components of a cochain are
+`FinCochain.v p q hpq`, cochains are built with `FinCochain.mk`, the differential `δ n m` is
+defined for all degrees `n` and `m`, and the composition `f.comp g h` takes the degree of the
+composite together with an equation `h : n₁ + n₂ = n₁₂`.
 
 ## Main definitions
 
 * `BoundedCochainComplex.activePairs A B n`: the finite set of source degrees `p` at which a
   degree-`n` cochain `A ⟶ B` can be nonzero.
 * `BoundedCochainComplex.FinCochain A B n`: the `R`-module of degree-`n` cochains on the active
-  degrees, with components accessed by `FinCochain.v` (on the active set) or `FinCochain.getV`
-  (extended by zero).
-* `BoundedCochainComplex.FinCochain.δ`: the Hom-complex differential, raising the degree by one.
-* `BoundedCochainComplex.FinCochain.comp`: composition of cochains, adding the degrees, and
+  triplets, with components `FinCochain.v p q hpq`, extended by zero off the active triplets.
+* `BoundedCochainComplex.FinCochain.mk`: the cochain with given components.
+* `BoundedCochainComplex.FinCochain.δ`: the Hom-complex differential `δ n m`, from degree `n` to
+  degree `m`, which vanishes unless `n + 1 = m`.
+* `BoundedCochainComplex.FinCochain.comp`: the composite `f.comp g h` of cochains of degrees `n₁`
+  and `n₂`, of degree `n₁₂` where `h : n₁ + n₂ = n₁₂`, and
   `BoundedCochainComplex.FinCochain.compBilin`, the same as a bilinear map.
 * `BoundedCochainComplex.FinCochain.ofHom`: the degree-`0` cochain underlying a chain map.
 * `BoundedCochainComplex.FinCochain.toCochainLinearEquiv`: the `R`-linear equivalence with
   Mathlib's `CochainComplex.HomComplex.Cochain` on the underlying complexes, under which `δ`, `comp`
   and `ofHom` correspond to `CochainComplex.HomComplex.δ`, `Cochain.comp` and `Cochain.ofHom`.
 
+## Main results
+
+* `BoundedCochainComplex.FinCochain.δ_δ`: the differential squares to zero.
+* `BoundedCochainComplex.FinCochain.δ_comp`: the Leibniz rule for the composition.
+* `BoundedCochainComplex.FinCochain.comp_assoc`: the composition is associative.
+
 ## Implementation notes
 
-`FinCochain A B n` is an abbreviation for a dependent function type on the subtype
-`{p // p ∈ activePairs A B n}`, so that it inherits the pointwise `AddCommGroup` and `Module R`
-structures. The differential and the composition are stated with `eqToHom` casts along the degree
-identities `(p + 1) + n = p + (n + 1)` and `(p + n₁) + n₂ = p + (n₁ + n₂)`; the `toCochain_*`
-lemmas transfer their properties from Mathlib's Hom-complex.
+`FinCochain A B n` is an abbreviation for a dependent function type on the active triplets, so
+that it inherits the pointwise `AddCommGroup` and `Module R` structures. Off the active triplets,
+the source or the target of a component is a zero object, so the components of `FinCochain.mk v`
+are those of `v` on every triplet (`FinCochain.mk_v`). The differential, the composition and
+`ofHom` are defined by Mathlib's formulas, so they correspond to Mathlib's under `toCochain` by
+`mk_v` alone. Their linearity and the identities `δ_δ`, `δ_comp` and `comp_assoc` are transferred
+from Mathlib's Hom-complex along the injective map `toCochain`.
 -/
 
 @[expose] public section
@@ -45,7 +65,7 @@ namespace BoundedCochainComplex
 variable {V : Type*} [Category V] [HasZeroObject V] [Preadditive V]
 
 /-- Outside its support, a bounded cochain complex consists of zero objects. -/
-lemma isZero_X_of_not_mem_support (C : BoundedCochainComplex V) {p : ℤ} (hp : p ∉ C.support) :
+lemma isZero_X_of_notMem_support (C : BoundedCochainComplex V) {p : ℤ} (hp : p ∉ C.support) :
     IsZero (C.X p) :=
   not_not.mp (mt (C.not_isZero_iff_mem_support p).mp hp)
 
@@ -56,23 +76,30 @@ def activePairs (A B : BoundedCochainComplex V) (n : ℤ) : Finset ℤ :=
 
 namespace activePairs
 
-variable {A B : BoundedCochainComplex V} {n : ℤ} {p : ℤ}
+variable {A B : BoundedCochainComplex V} {n p q : ℤ}
 
 @[simp] lemma mem_iff : p ∈ activePairs A B n ↔ p ∈ A.support ∧ p + n ∈ B.support :=
   Finset.mem_filter
 
-lemma mem_left (h : p ∈ activePairs A B n) : p ∈ A.support := (mem_iff.mp h).1
-
-lemma mem_right (h : p ∈ activePairs A B n) : p + n ∈ B.support := (mem_iff.mp h).2
+/-- Two morphisms `A.X p ⟶ B.X q`, where `p + n = q`, agree as soon as they agree when `p` is an
+active degree: otherwise their source or their target is a zero object. -/
+lemma hom_ext (hpq : p + n = q) {f g : A.X p ⟶ B.X q} (h : p ∈ activePairs A B n → f = g) :
+    f = g := by
+  by_cases hp : p ∈ activePairs A B n
+  · exact h hp
+  subst hpq
+  rcases not_and_or.mp (mem_iff.not.mp hp) with hA | hB
+  · exact (A.isZero_X_of_notMem_support hA).eq_of_src f g
+  · exact (B.isZero_X_of_notMem_support hB).eq_of_tgt f g
 
 end activePairs
 
-/-- A computable cochain of degree `n` from `A` to `B`: a morphism `A.X p ⟶ B.X (p + n)` for each
-active source degree `p`, i.e. `p ∈ A.support` with `p + n ∈ B.support`. Outside the active
-degrees either the source or the target is a zero object, so the component is uniquely zero and
+/-- A computable cochain of degree `n` from `A` to `B`: a morphism `A.X p ⟶ B.X q` for each active
+triplet `⟨p, q, hpq⟩`, i.e. with `p + n = q`, `p ∈ A.support` and `q ∈ B.support`. Off the active
+triplets either the source or the target is a zero object, so the component is uniquely zero and
 carries no data. -/
 abbrev FinCochain (A B : BoundedCochainComplex V) (n : ℤ) : Type _ :=
-  ∀ p : {p : ℤ // p ∈ activePairs A B n}, A.X ↑p ⟶ B.X (↑p + n)
+  ∀ T : {T : CochainComplex.HomComplex.Triplet n // T.p ∈ activePairs A B n}, A.X T.1.p ⟶ B.X T.1.q
 
 namespace FinCochain
 
@@ -83,168 +110,73 @@ instance instAddCommGroup : AddCommGroup (FinCochain A B n) := inferInstance
 
 instance instModule : Module R (FinCochain A B n) := inferInstance
 
-/-- The component of a `FinCochain` at an active source degree `p`. -/
-def v (z : FinCochain A B n) {p : ℤ} (hp : p ∈ activePairs A B n) : A.X p ⟶ B.X (p + n) :=
-  z ⟨p, hp⟩
+/-! ### Components -/
 
-@[simp] lemma v_add (z w : FinCochain A B n) {p : ℤ} (hp : p ∈ activePairs A B n) :
-    (z + w).v hp = z.v hp + w.v hp := rfl
+/-- The component of a cochain on the triplet `⟨p, q, hpq⟩`, extended by zero off the active
+triplets. -/
+def v (z : FinCochain A B n) (p q : ℤ) (hpq : p + n = q) : A.X p ⟶ B.X q :=
+  if hp : p ∈ activePairs A B n then z ⟨⟨p, q, hpq⟩, hp⟩ else 0
 
-@[simp] lemma v_zero {p : ℤ} (hp : p ∈ activePairs A B n) :
-    (0 : FinCochain A B n).v hp = 0 := rfl
+lemma v_of_mem (z : FinCochain A B n) {p q : ℤ} (hpq : p + n = q) (hp : p ∈ activePairs A B n) :
+    z.v p q hpq = z ⟨⟨p, q, hpq⟩, hp⟩ :=
+  dite_eq_left hp
 
-@[simp] lemma v_neg (z : FinCochain A B n) {p : ℤ} (hp : p ∈ activePairs A B n) :
-    (-z).v hp = -z.v hp := rfl
+@[ext]
+lemma ext {z w : FinCochain A B n} (h : ∀ p q hpq, z.v p q hpq = w.v p q hpq) : z = w := by
+  funext ⟨⟨p, q, hpq⟩, hp⟩
+  simpa only [v_of_mem _ hpq hp] using h p q hpq
 
-@[simp] lemma v_smul (r : R) (z : FinCochain A B n) {p : ℤ} (hp : p ∈ activePairs A B n) :
-    (r • z).v hp = r • z.v hp := rfl
-
-/-- The component of a `FinCochain` at an arbitrary source degree `p`, extended by zero outside the
-active degrees. -/
-def getV (z : FinCochain A B n) (p : ℤ) : A.X p ⟶ B.X (p + n) :=
-  if hp : p ∈ activePairs A B n then z.v hp else 0
-
-@[simp] lemma getV_of_mem (z : FinCochain A B n) {p : ℤ} (hp : p ∈ activePairs A B n) :
-    z.getV p = z.v hp := dite_eq_left hp
-
-@[simp] lemma getV_of_not_mem (z : FinCochain A B n) {p : ℤ} (hp : p ∉ activePairs A B n) :
-    z.getV p = 0 := dite_eq_right hp
-
-lemma getV_add (z w : FinCochain A B n) (p : ℤ) :
-    (z + w).getV p = z.getV p + w.getV p := by
-  simp only [getV]
-  split_ifs with h <;> simp [v_add]
-
-lemma getV_zero (p : ℤ) : (0 : FinCochain A B n).getV p = 0 := by
-  simp [getV]
-
-lemma getV_smul (r : R) (z : FinCochain A B n) (p : ℤ) :
-    (r • z).getV p = r • z.getV p := by
-  simp only [getV]
-  split_ifs with h <;> simp [v_smul]
-
-/-! ### The differential -/
-
-/-- The Hom-complex differential on `FinCochain`, raising the degree by `1`. It is the formula of
-`CochainComplex.HomComplex.δ` restricted to the active degrees,
-`(δ z).v p = z.getV p ≫ B.d (p + n) (p + (n + 1))
-  + (n + 1).negOnePow • A.d p (p + 1) ≫ z.getV (p + 1)`,
-where an `eqToHom` accounts for `(p + 1) + n = p + (n + 1)`. -/
-def δ (z : FinCochain A B n) : FinCochain A B (n + 1) :=
-  fun ⟨p, _⟩ =>
-    z.getV p ≫ B.d (p + n) (p + (n + 1)) +
-    (n + 1).negOnePow • (A.d p (p + 1) ≫ z.getV (p + 1) ≫
-      eqToHom (congr_arg B.X (show (p + 1) + n = p + (n + 1) from by ring)))
-
-lemma δ_add (z w : FinCochain A B n) : δ (z + w) = δ z + δ w := by
-  funext ⟨p, _⟩
-  simp only [δ, Pi.add_apply, getV_add, Preadditive.add_comp, Preadditive.comp_add, smul_add]
-  abel
-
-lemma δ_smul (r : R) (z : FinCochain A B n) : δ (r • z) = r • δ z := by
-  funext ⟨p, _⟩
-  simp only [δ, Pi.smul_apply, getV_smul, Linear.comp_smul, Linear.smul_comp, smul_add,
-    smul_comm r]
-
-variable (R) in
-/-- The differential as an `R`-linear map. -/
-def δLinear (A B : BoundedCochainComplex V) (n : ℤ) :
-    FinCochain A B n →ₗ[R] FinCochain A B (n + 1) where
-  toFun := δ
-  map_add' := δ_add
-  map_smul' := δ_smul
-
-@[simp] private lemma eqToHom_d_comp {C : BoundedCochainComplex V} {a b c : ℤ} {h : a = b} :
-    eqToHom (congr_arg C.X h) ≫ C.d b c = C.d a c := by subst h; simp
-
-@[simp] private lemma d_comp_eqToHom {C : BoundedCochainComplex V} {a b c : ℤ} {h : b = c} :
-    C.d a b ≫ eqToHom (congr_arg C.X h) = C.d a c := by subst h; simp
-
-/-- The formula for `δ` at an arbitrary degree `p`, with components extended by zero. -/
-lemma getV_δ (z : FinCochain A B n) (p : ℤ) :
-    (δ z).getV p =
-      z.getV p ≫ B.d (p + n) (p + (n + 1)) +
-      (n + 1).negOnePow • (A.d p (p + 1) ≫ z.getV (p + 1) ≫
-        eqToHom (congr_arg B.X (show (p + 1) + n = p + (n + 1) from by ring))) := by
-  by_cases h : p ∈ activePairs A B (n + 1)
-  · simp only [getV_of_mem _ h, v, δ]
-  · rw [getV_of_not_mem _ h]
-    symm
-    by_cases hA : p ∈ A.support
-    · have hB : p + (n + 1) ∉ B.support :=
-        fun hB => h (activePairs.mem_iff.mpr ⟨hA, hB⟩)
-      have hZ := B.isZero_X_of_not_mem_support hB
-      have h1 : B.d (p + n) (p + (n + 1)) = 0 := hZ.eq_of_tgt _ 0
-      have h2 : z.getV (p + 1) ≫
-          eqToHom (congr_arg B.X (show (p + 1) + n = p + (n + 1) from by ring)) = 0 :=
-        hZ.eq_of_tgt _ 0
-      simp [h1, h2]
-    · have hZ := A.isZero_X_of_not_mem_support hA
-      have h1 : z.getV p = 0 := hZ.eq_of_src _ 0
-      have h2 : A.d p (p + 1) = 0 := hZ.eq_of_src _ 0
-      simp [h1, h2]
-
-/-- The differential squares to zero. -/
-lemma δ_δ (z : FinCochain A B n) : δ (δ z) = 0 := by
-  funext ⟨p, _⟩
-  simp only [δ, Pi.zero_apply, getV_δ, Preadditive.add_comp, Preadditive.comp_add,
-    Preadditive.neg_comp, Preadditive.comp_neg,
-    Category.assoc, smul_add, Linear.units_smul_comp, Linear.comp_units_smul,
-    HomologicalComplex.d_comp_d, HomologicalComplex.d_comp_d_assoc,
-    comp_zero, zero_comp, smul_zero, zero_add, Int.negOnePow_succ, Units.neg_smul]
-  rw [eqToHom_d_comp, d_comp_eqToHom]
-  · simp only [Units.smul_def, neg_zero, smul_zero]; abel
-  · ring
-  · ring
-
-/-! ### Chain maps and composition -/
-
-/-- The degree-`0` cochain underlying a morphism of bounded cochain complexes. The `eqToHom`
-accounts for `p = p + 0`. -/
-def ofHom (h : A ⟶ B) : FinCochain A B 0 :=
-  fun ⟨p, _⟩ => h.f p ≫ eqToHom (congr_arg B.X (add_zero p).symm)
-
-/-- Composition of a degree-`n₁` cochain `A ⟶ B` with a degree-`n₂` cochain `B ⟶ C`, a cochain of
-degree `n₁ + n₂`. The `eqToHom` accounts for `(p + n₁) + n₂ = p + (n₁ + n₂)`. -/
-def comp {C : BoundedCochainComplex V} {n₁ n₂ : ℤ}
-    (f : FinCochain A B n₁) (g : FinCochain B C n₂) : FinCochain A C (n₁ + n₂) :=
-  fun ⟨p, _⟩ => f.getV p ≫ g.getV (p + n₁) ≫
-    eqToHom (congr_arg C.X (show (p + n₁) + n₂ = p + (n₁ + n₂) from by ring))
-
-lemma add_comp {C : BoundedCochainComplex V} {n₁ n₂ : ℤ}
-    (f g : FinCochain A B n₁) (h : FinCochain B C n₂) :
-    (f + g).comp h = f.comp h + g.comp h := by
-  funext ⟨p, _⟩
-  simp only [comp, Pi.add_apply, getV_add, Preadditive.add_comp]
-
-lemma comp_add {C : BoundedCochainComplex V} {n₁ n₂ : ℤ}
-    (f : FinCochain A B n₁) (g h : FinCochain B C n₂) :
-    f.comp (g + h) = f.comp g + f.comp h := by
-  funext ⟨p, _⟩
-  simp only [comp, Pi.add_apply, getV_add, Preadditive.add_comp, Preadditive.comp_add]
-
-lemma smul_comp {C : BoundedCochainComplex V} {n₁ n₂ : ℤ}
-    (r : R) (f : FinCochain A B n₁) (g : FinCochain B C n₂) :
-    (r • f).comp g = r • f.comp g := by
-  funext ⟨p, _⟩
-  simp only [comp, Pi.smul_apply, getV_smul, Linear.smul_comp]
-
-lemma comp_smul {C : BoundedCochainComplex V} {n₁ n₂ : ℤ}
-    (r : R) (f : FinCochain A B n₁) (g : FinCochain B C n₂) :
-    f.comp (r • g) = r • f.comp g := by
-  funext ⟨p, _⟩
-  simp only [comp, Pi.smul_apply, getV_smul, Linear.smul_comp, Linear.comp_smul]
-
-variable (R) in
-/-- The composition of cochains as an `R`-bilinear map. -/
-def compBilin (A B C : BoundedCochainComplex V) (n₁ n₂ : ℤ) :
-    FinCochain A B n₁ →ₗ[R] FinCochain B C n₂ →ₗ[R] FinCochain A C (n₁ + n₂) :=
-  .mk₂ R comp add_comp smul_comp comp_add comp_smul
+/-- The cochain with components `v p q hpq` on the active triplets. -/
+def mk (v : ∀ p q : ℤ, p + n = q → (A.X p ⟶ B.X q)) : FinCochain A B n :=
+  fun T => v T.1.p T.1.q T.1.hpq
 
 @[simp]
-lemma compBilin_apply {C : BoundedCochainComplex V} {n₁ n₂ : ℤ} (f : FinCochain A B n₁)
-    (g : FinCochain B C n₂) : compBilin R A B C n₁ n₂ f g = f.comp g :=
-  rfl
+lemma mk_v (v : ∀ p q : ℤ, p + n = q → (A.X p ⟶ B.X q)) (p q : ℤ) (hpq : p + n = q) :
+    (mk v).v p q hpq = v p q hpq :=
+  activePairs.hom_ext hpq (v_of_mem _ hpq)
+
+@[simp]
+lemma zero_v (p q : ℤ) (hpq : p + n = q) : (0 : FinCochain A B n).v p q hpq = 0 :=
+  activePairs.hom_ext hpq fun hp ↦ by rw [v_of_mem _ hpq hp, Pi.zero_apply]
+
+@[simp]
+lemma add_v (z w : FinCochain A B n) (p q : ℤ) (hpq : p + n = q) :
+    (z + w).v p q hpq = z.v p q hpq + w.v p q hpq :=
+  activePairs.hom_ext hpq fun hp ↦ by simp only [v_of_mem _ hpq hp, Pi.add_apply]
+
+@[simp]
+lemma neg_v (z : FinCochain A B n) (p q : ℤ) (hpq : p + n = q) :
+    (-z).v p q hpq = -z.v p q hpq :=
+  activePairs.hom_ext hpq fun hp ↦ by simp only [v_of_mem _ hpq hp, Pi.neg_apply]
+
+@[simp]
+lemma smul_v (r : R) (z : FinCochain A B n) (p q : ℤ) (hpq : p + n = q) :
+    (r • z).v p q hpq = r • z.v p q hpq :=
+  activePairs.hom_ext hpq fun hp ↦ by simp only [v_of_mem _ hpq hp, Pi.smul_apply]
+
+/-! ### The differential, the composition and chain maps
+
+The definitions are Mathlib's formulas for `CochainComplex.HomComplex`, restricted to the active
+triplets. -/
+
+/-- The Hom-complex differential, from degree `n` to degree `m`. As for
+`CochainComplex.HomComplex.δ`, it is defined for all `n` and `m`, and vanishes unless
+`n + 1 = m`; its component on `⟨p, q, hpq⟩` is
+`z.v p (p + n) ≫ B.d (p + n) q + m.negOnePow • A.d p (p + m - n) ≫ z.v (p + m - n) q`. -/
+def δ (n m : ℤ) (z : FinCochain A B n) : FinCochain A B m :=
+  mk fun p q hpq => z.v p (p + n) rfl ≫ B.d (p + n) q +
+    m.negOnePow • A.d p (p + m - n) ≫ z.v (p + m - n) q (by rw [hpq, sub_add_cancel])
+
+/-- The composite of a degree-`n₁` cochain `A ⟶ B` and a degree-`n₂` cochain `B ⟶ C`. As for
+`CochainComplex.HomComplex.Cochain.comp`, the composite has degree `n₁₂`, given together with an
+equation `h : n₁ + n₂ = n₁₂`. -/
+def comp {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ}
+    (f : FinCochain A B n₁) (g : FinCochain B C n₂) (h : n₁ + n₂ = n₁₂) : FinCochain A C n₁₂ :=
+  mk fun p q hpq => f.v p (p + n₁) rfl ≫ g.v (p + n₁) q (by rw [← hpq, ← h, add_assoc])
+
+/-- The degree-`0` cochain underlying a morphism of bounded cochain complexes. -/
+def ofHom (φ : A ⟶ B) : FinCochain A B 0 :=
+  mk fun p q hpq => φ.f p ≫ eqToHom (by rw [← hpq, add_zero])
 
 /-! ### Comparison with Mathlib's Hom-complex -/
 
@@ -252,39 +184,27 @@ section ToCochain
 
 open CochainComplex
 
-/-- The cochain on the underlying complexes determined by a `FinCochain`, extended by zero off the
-active degrees. -/
+/-- The cochain on the underlying complexes with the same components. -/
 noncomputable def toCochain (z : FinCochain A B n) :
     HomComplex.Cochain A.toHomologicalComplex B.toHomologicalComplex n :=
-  HomComplex.Cochain.mk fun p _ hpq => z.getV p ≫ eqToHom (congr_arg B.X hpq)
+  HomComplex.Cochain.mk z.v
 
 @[simp] lemma toCochain_v (z : FinCochain A B n) (p q : ℤ) (hpq : p + n = q) :
-    z.toCochain.v p q hpq = z.getV p ≫ eqToHom (congr_arg B.X hpq) := rfl
+    z.toCochain.v p q hpq = z.v p q hpq := rfl
 
-lemma toCochain_add (z w : FinCochain A B n) : (z + w).toCochain = z.toCochain + w.toCochain := by
-  ext p q hpq
-  simp [getV_add, Preadditive.add_comp]
-
-@[simp] lemma toCochain_smul (r : R) (z : FinCochain A B n) :
-    (r • z).toCochain = r • z.toCochain := by
-  ext p q hpq
-  simp [getV_smul, Linear.smul_comp]
-
-/-- The restriction of a cochain on the underlying complexes to the active degrees. -/
+/-- The restriction of a cochain on the underlying complexes to the active triplets. -/
 noncomputable def ofCochain
     (c : HomComplex.Cochain A.toHomologicalComplex B.toHomologicalComplex n) :
     FinCochain A B n :=
-  fun ⟨p, _⟩ => c.v p (p + n) rfl
+  FinCochain.mk c.v
 
-/-- Off the active degrees, every cochain on the underlying complexes vanishes. -/
-lemma cochain_v_eq_zero_of_not_mem
-    (c : HomComplex.Cochain A.toHomologicalComplex B.toHomologicalComplex n)
-    {p : ℤ} (hp : p ∉ activePairs A B n) (q : ℤ) (hpq : p + n = q) :
-    c.v p q hpq = 0 := by
-  simp only [activePairs.mem_iff, not_and_or] at hp
-  rcases hp with hA | hB
-  · exact (A.isZero_X_of_not_mem_support hA).eq_of_src _ 0
-  · exact (B.isZero_X_of_not_mem_support (hpq ▸ hB)).eq_of_tgt _ 0
+@[simp] lemma toCochain_add (z w : FinCochain A B n) :
+    (z + w).toCochain = z.toCochain + w.toCochain := by
+  ext; simp
+
+@[simp] lemma toCochain_smul (r : R) (z : FinCochain A B n) :
+    (r • z).toCochain = r • z.toCochain := by
+  ext; simp
 
 variable (R) in
 /-- `FinCochain A B n` is `R`-linearly equivalent to Mathlib's cochains of degree `n` between the
@@ -294,85 +214,144 @@ noncomputable def toCochainLinearEquiv (A B : BoundedCochainComplex V) (n : ℤ)
       HomComplex.Cochain A.toHomologicalComplex B.toHomologicalComplex n where
   toFun := toCochain
   map_add' := toCochain_add
-  map_smul' := fun r z => by simp [RingHom.id_apply]
+  map_smul' := toCochain_smul
   invFun := ofCochain
-  left_inv z := by
-    funext ⟨p, hp⟩
-    simp only [ofCochain, toCochain_v, eqToHom_refl, getV_of_mem _ hp, v, Category.comp_id]
-  right_inv c := by
-    ext p q hpq
-    subst hpq
-    simp only [toCochain_v, eqToHom_refl, Category.comp_id, getV, ofCochain, v]
-    split_ifs with h
-    · rfl
-    · exact (cochain_v_eq_zero_of_not_mem c h (p + n) rfl).symm
+  left_inv z := by ext; simp [ofCochain]
+  right_inv c := by ext; simp [ofCochain]
 
-/-- `toCochain` sends `comp` to `Cochain.comp`. -/
-lemma toCochain_comp {C : BoundedCochainComplex V} {n₁ n₂ : ℤ}
-    (f : FinCochain A B n₁) (g : FinCochain B C n₂) :
-    (f.comp g).toCochain = f.toCochain.comp g.toCochain rfl := by
-  ext p q hpq
-  rw [HomComplex.Cochain.comp_v _ _ rfl p (p + n₁) q rfl (by omega)]
-  simp only [toCochain_v, eqToHom_refl, Category.comp_id]
-  by_cases hp : p ∈ activePairs A C (n₁ + n₂)
-  · simp only [getV_of_mem _ hp, comp, v, Category.assoc, eqToHom_trans]
-  · rw [getV_of_not_mem _ hp, zero_comp]
-    simp only [activePairs.mem_iff, not_and_or] at hp
-    rcases hp with hA | hC
-    · simp [getV_of_not_mem f (fun h => hA (activePairs.mem_left h))]
-    · simp [getV_of_not_mem g (fun h =>
-          hC (add_assoc p n₁ n₂ ▸ activePairs.mem_right h))]
+lemma toCochain_injective : Function.Injective (toCochain : FinCochain A B n → _) :=
+  (toCochainLinearEquiv ℤ A B n).injective
 
-/-- `toCochain` sends `δ` to Mathlib's Hom-complex differential. -/
-lemma toCochain_δ (z : FinCochain A B n) :
-    (δ z).toCochain = HomComplex.δ n (n + 1) z.toCochain := by
-  ext p q hpq
-  subst hpq
-  rw [HomComplex.δ_v n (n + 1) rfl z.toCochain p (p + (n + 1)) rfl (p + n) (p + 1) (by ring) rfl]
-  simp only [toCochain_v, getV_δ, eqToHom_refl, Category.comp_id]
-
-/-- `toCochain` sends `ofHom h` to Mathlib's degree-`0` cochain of the underlying chain map. -/
-lemma toCochain_ofHom (h : A ⟶ B) : (ofHom h).toCochain = HomComplex.Cochain.ofHom h.hom := by
-  ext p
-  rw [toCochain_v]
-  by_cases hp : p ∈ activePairs A B 0
-  · rw [getV_of_mem _ hp]
-    simp [ofHom, v, HomComplex.Cochain.ofHom, HomComplex.Cochain.ofHoms]
-  · rw [getV_of_not_mem _ hp, zero_comp]
-    exact (cochain_v_eq_zero_of_not_mem (HomComplex.Cochain.ofHom h.hom) hp p (add_zero p)).symm
-
-/-- A chain map is a cocycle: `δ (ofHom h) = 0`. -/
-lemma δ_ofHom (h : A ⟶ B) : δ (ofHom h) = 0 := by
-  refine ((toCochainLinearEquiv ℤ A B (0 + 1)).map_eq_zero_iff).mp ?_
-  show (δ (ofHom h)).toCochain = 0
-  rw [toCochain_δ, toCochain_ofHom]
-  exact HomComplex.δ_ofHom h.hom
-
-/-- `toCochain` commutes with the action of `ℤˣ`. -/
-lemma toCochain_units_smul (u : ℤˣ) (z : FinCochain A B n) :
-    (u • z).toCochain = u • z.toCochain := by
-  ext p q hpq
-  simp only [toCochain_v, Units.smul_def, getV_smul, Linear.smul_comp]
-  rfl
+@[simp] lemma toCochain_zero : (0 : FinCochain A B n).toCochain = 0 :=
+  map_zero (toCochainLinearEquiv ℤ A B n)
 
 /-- `toCochain` commutes with the action of `ℤ`. -/
 lemma toCochain_zsmul (c : ℤ) (z : FinCochain A B n) : (c • z).toCochain = c • z.toCochain :=
   map_zsmul (toCochainLinearEquiv ℤ A B n) c z
 
-@[simp] lemma toCochain_zero : (0 : FinCochain A B n).toCochain = 0 :=
-  map_zero (toCochainLinearEquiv ℤ A B n)
+/-- `toCochain` commutes with the action of `ℤˣ`. -/
+lemma toCochain_units_smul (u : ℤˣ) (z : FinCochain A B n) :
+    (u • z).toCochain = u • z.toCochain :=
+  toCochain_zsmul (u : ℤ) z
 
-lemma toCochain_injective : Function.Injective (toCochain : FinCochain A B n → _) :=
-  (toCochainLinearEquiv ℤ A B n).injective
+/-- `toCochain` sends `δ` to Mathlib's Hom-complex differential. -/
+lemma toCochain_δ (m : ℤ) (z : FinCochain A B n) :
+    (δ n m z).toCochain = HomComplex.δ n m z.toCochain := by
+  ext; simp [δ, HomComplex.δ]
 
-/-- Associativity of `comp`, transported to Mathlib's cochains: the two triple composites live in
-the degrees `(n₁ + n₂) + n₃` and `n₁ + (n₂ + n₃)`, which differ syntactically. -/
-lemma toCochain_comp_assoc {C D : BoundedCochainComplex V} {n₁ n₂ n₃ : ℤ}
-    (f : FinCochain A B n₁) (g : FinCochain B C n₂) (h : FinCochain C D n₃) :
-    ((f.comp g).comp h).toCochain =
-      f.toCochain.comp (g.toCochain.comp h.toCochain rfl) (add_assoc n₁ n₂ n₃).symm := by
+/-- `toCochain` sends `comp` to `Cochain.comp`. -/
+lemma toCochain_comp {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ}
+    (f : FinCochain A B n₁) (g : FinCochain B C n₂) (h : n₁ + n₂ = n₁₂) :
+    (f.comp g h).toCochain = f.toCochain.comp g.toCochain h := by
+  ext; simp [comp, HomComplex.Cochain.comp]
+
+/-- `toCochain` sends `ofHom φ` to Mathlib's degree-`0` cochain of the underlying chain map. -/
+lemma toCochain_ofHom (φ : A ⟶ B) : (ofHom φ).toCochain = HomComplex.Cochain.ofHom φ.hom := by
+  ext; simp [ofHom, HomComplex.Cochain.ofHom, HomComplex.Cochain.ofHoms]
+
+/-! ### Linearity of the differential and the composition -/
+
+lemma δ_add {m : ℤ} (z w : FinCochain A B n) : δ n m (z + w) = δ n m z + δ n m w :=
+  toCochain_injective (by simp only [toCochain_add, toCochain_δ, HomComplex.δ_add])
+
+lemma δ_smul {m : ℤ} (r : R) (z : FinCochain A B n) : δ n m (r • z) = r • δ n m z :=
+  toCochain_injective (by simp only [toCochain_smul, toCochain_δ, HomComplex.δ_smul])
+
+@[simp]
+lemma δ_units_smul {m : ℤ} (u : ℤˣ) (z : FinCochain A B n) : δ n m (u • z) = u • δ n m z :=
+  toCochain_injective (by
+    simp only [toCochain_units_smul, toCochain_δ, HomComplex.δ_units_smul])
+
+variable (R) in
+/-- The differential as an `R`-linear map. -/
+def δLinear (A B : BoundedCochainComplex V) (n m : ℤ) :
+    FinCochain A B n →ₗ[R] FinCochain A B m where
+  toFun := δ n m
+  map_add' := δ_add
+  map_smul' := δ_smul
+
+protected lemma add_comp {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ}
+    (f g : FinCochain A B n₁) (k : FinCochain B C n₂) (h : n₁ + n₂ = n₁₂) :
+    (f + g).comp k h = f.comp k h + g.comp k h :=
+  toCochain_injective (by simp only [toCochain_add, toCochain_comp, HomComplex.Cochain.add_comp])
+
+protected lemma comp_add {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ}
+    (f : FinCochain A B n₁) (g k : FinCochain B C n₂) (h : n₁ + n₂ = n₁₂) :
+    f.comp (g + k) h = f.comp g h + f.comp k h :=
+  toCochain_injective (by simp only [toCochain_add, toCochain_comp, HomComplex.Cochain.comp_add])
+
+protected lemma smul_comp {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ}
+    (r : R) (f : FinCochain A B n₁) (g : FinCochain B C n₂) (h : n₁ + n₂ = n₁₂) :
+    (r • f).comp g h = r • f.comp g h :=
+  toCochain_injective (by
+    simp only [toCochain_smul, toCochain_comp, HomComplex.Cochain.smul_comp])
+
+protected lemma comp_smul {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ}
+    (r : R) (f : FinCochain A B n₁) (g : FinCochain B C n₂) (h : n₁ + n₂ = n₁₂) :
+    f.comp (r • g) h = r • f.comp g h :=
+  toCochain_injective (by
+    simp only [toCochain_smul, toCochain_comp, HomComplex.Cochain.comp_smul])
+
+@[simp]
+lemma units_smul_comp {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ} (u : ℤˣ)
+    (f : FinCochain A B n₁) (g : FinCochain B C n₂) (h : n₁ + n₂ = n₁₂) :
+    (u • f).comp g h = u • f.comp g h :=
+  toCochain_injective (by
+    simp only [toCochain_units_smul, toCochain_comp, HomComplex.Cochain.units_smul_comp])
+
+@[simp]
+lemma comp_units_smul {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ} (u : ℤˣ)
+    (f : FinCochain A B n₁) (g : FinCochain B C n₂) (h : n₁ + n₂ = n₁₂) :
+    f.comp (u • g) h = u • f.comp g h :=
+  toCochain_injective (by
+    simp only [toCochain_units_smul, toCochain_comp, HomComplex.Cochain.comp_units_smul])
+
+variable (R) in
+/-- The composition of cochains as an `R`-bilinear map. -/
+def compBilin (A B C : BoundedCochainComplex V) (n₁ n₂ n₁₂ : ℤ) (h : n₁ + n₂ = n₁₂) :
+    FinCochain A B n₁ →ₗ[R] FinCochain B C n₂ →ₗ[R] FinCochain A C n₁₂ :=
+  .mk₂ R (fun f g ↦ f.comp g h) (fun _ _ _ ↦ FinCochain.add_comp _ _ _ h)
+    (fun _ _ _ ↦ FinCochain.smul_comp _ _ _ h) (fun _ _ _ ↦ FinCochain.comp_add _ _ _ h)
+    (fun _ _ _ ↦ FinCochain.comp_smul _ _ _ h)
+
+@[simp]
+lemma compBilin_apply {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ} (h : n₁ + n₂ = n₁₂)
+    (f : FinCochain A B n₁) (g : FinCochain B C n₂) :
+    compBilin R A B C n₁ n₂ n₁₂ h f g = f.comp g h :=
+  rfl
+
+/-! ### Identities of the differential and the composition
+
+Each identity is transferred from its counterpart for Mathlib's cochains along the injective map
+`toCochain`. -/
+
+/-- The differential squares to zero. -/
+lemma δ_δ (n₀ n₁ n₂ : ℤ) (z : FinCochain A B n₀) : δ n₁ n₂ (δ n₀ n₁ z) = 0 :=
+  toCochain_injective (by rw [toCochain_δ, toCochain_δ, HomComplex.δ_δ, toCochain_zero])
+
+/-- A chain map is a cocycle. -/
+lemma δ_ofHom {m : ℤ} (φ : A ⟶ B) : δ 0 m (ofHom φ) = 0 :=
+  toCochain_injective (by rw [toCochain_δ, toCochain_ofHom, HomComplex.δ_ofHom, toCochain_zero])
+
+/-- The Leibniz rule: δ(f ≫ g) = f ≫ δg + (-1)^n₂ δf ≫ g, where `g` has degree `n₂`. -/
+lemma δ_comp {C : BoundedCochainComplex V} {n₁ n₂ n₁₂ : ℤ} (f : FinCochain A B n₁)
+    (g : FinCochain B C n₂) (h : n₁ + n₂ = n₁₂) (m₁ m₂ m₁₂ : ℤ) (h₁₂ : n₁₂ + 1 = m₁₂)
+    (h₁ : n₁ + 1 = m₁) (h₂ : n₂ + 1 = m₂) :
+    δ n₁₂ m₁₂ (f.comp g h) =
+      f.comp (δ n₂ m₂ g) (by omega) + n₂.negOnePow • (δ n₁ m₁ f).comp g (by omega) := by
+  apply toCochain_injective
+  simp only [toCochain_add, toCochain_units_smul, toCochain_comp, toCochain_δ]
+  exact HomComplex.δ_comp _ _ h m₁ m₂ m₁₂ h₁₂ h₁ h₂
+
+/-- The composition of cochains is associative. -/
+lemma comp_assoc {C D : BoundedCochainComplex V} {n₁ n₂ n₃ n₁₂ n₂₃ n₁₂₃ : ℤ}
+    (f : FinCochain A B n₁) (g : FinCochain B C n₂) (k : FinCochain C D n₃)
+    (h₁₂ : n₁ + n₂ = n₁₂) (h₂₃ : n₂ + n₃ = n₂₃) (h₁₂₃ : n₁ + n₂ + n₃ = n₁₂₃) :
+    (f.comp g h₁₂).comp k (show n₁₂ + n₃ = n₁₂₃ by omega) =
+      f.comp (g.comp k h₂₃) (show n₁ + n₂₃ = n₁₂₃ by omega) := by
+  apply toCochain_injective
   simp only [toCochain_comp]
-  exact HomComplex.Cochain.comp_assoc f.toCochain g.toCochain h.toCochain rfl rfl rfl
+  exact HomComplex.Cochain.comp_assoc _ _ _ h₁₂ h₂₃ h₁₂₃
 
 end ToCochain
 

@@ -346,8 +346,9 @@ alignment:
       status: "proved"
       note: >-
         The graded hom spaces are the computable cochains `BoundedCochainComplex.FinCochain`;
-        m₁ is Mathlib's Hom-complex differential δ and m₂(a, b) = (-1)^|b| a ≫ b. The
-        Stasheff identities are transported to Mathlib's `CochainComplex.HomComplex`.
+        m₁ is the Hom-complex differential δ and m₂(a, b) = (-1)^|b| a ≫ b. The
+        Stasheff identities follow from δ² = 0, the Leibniz rule and associativity for
+        `FinCochain`, which are transported from Mathlib's `CochainComplex.HomComplex`.
     - source: "Blueprint, Chapter 6 (braiding functor)"
       lean: "KLRW.Sl2.TBrane.BraidingFunctorData"
       module: "KLRW.OneBlackStrand"

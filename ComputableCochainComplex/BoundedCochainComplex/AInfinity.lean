@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2026 Marco David. All rights reserved.
+Copyright (c) 2026 Jason Dong. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Marco David
+Authors: Jason Dong, Marco David
 -/
 module
 
@@ -28,16 +28,17 @@ vanish.
 ## Implementation notes
 
 For cochains a from `X` to `Y` of degree p and b from `Y` to `Z` of degree q, the operations are
-m₁(a) = δa and m₂(a, b) = (-1)^q a ≫ b, where δ and the composition a ≫ b are those of
-Mathlib's `CochainComplex.HomComplex`, written in diagrammatic order. Mathlib's differential
+m₁(a) = δa and m₂(a, b) = (-1)^q a ≫ b, where δ and the composition a ≫ b are
+`FinCochain.δ` and `FinCochain.comp`, which agree with those of Mathlib's
+`CochainComplex.HomComplex`, written in diagrammatic order. Mathlib's differential
 satisfies the Leibniz rule δ(a ≫ b) = a ≫ δb + (-1)^q δa ≫ b, which differs from the Leibniz
 rule d(a ≫ b) = da ≫ b + (-1)^p a ≫ db of `AInfinityTheory.DGCategory` by the sign (-1)^p on
 the differential. With this sign, Seidel's convention m₁(a) = (-1)^p da of
 `AInfinityTheory.DGCategory` becomes m₁ = δ, so the operations above agree with those of the
 DG category of bounded complexes.
 
-The three Stasheff identities that `AInfinityCategory.ofArityLeTwo` asks for are transported along
-the injective map `FinCochain.toCochain` to Mathlib's `δ_δ`, `δ_comp` and `Cochain.comp_assoc`.
+The three Stasheff identities that `AInfinityCategory.ofArityLeTwo` asks for follow from
+`FinCochain.δ_δ`, `FinCochain.δ_comp` and `FinCochain.comp_assoc`, up to the signs above.
 
 We do not obtain this A∞-category from a `AInfinityTheory.DGCategory` structure on bounded
 complexes. That structure is an enrichment in Mathlib's monoidal category of complexes of
@@ -57,7 +58,7 @@ this one.
 
 namespace BoundedCochainComplex
 
-open CategoryTheory Limits AInfinityTheory GradedLinearQuiver CochainComplex
+open CategoryTheory Limits AInfinityTheory GradedLinearQuiver
 
 variable {V : Type*} [Category V] [HasZeroObject V] [Preadditive V]
 variable (R : Type*) [CommRing R] [Linear R V]
@@ -71,40 +72,33 @@ instance gradedLinearQuiver : GradedLinearQuiver ℤ R (BoundedCochainComplex V)
 of degree `1`: the arity-one A∞ operation. -/
 def gradedDifferential (X Y : BoundedCochainComplex V) :
     GradedLinearMap R (X →ᵍ[R, ℤ] Y) (X →ᵍ[R] Y) degOne :=
-  .mk fun p _ h ↦ (homCongr R (rfl : X = X) rfl h).toLinearMap ∘ₗ FinCochain.δLinear R X Y p
+  .mk fun p q _ ↦ FinCochain.δLinear R X Y p q
 
 /-- The composition of bounded cochain complexes with Seidel's sign: cochains a from `X` to `Y`
-of degree `p` and b from `Y` to `Z` of degree `q` are sent to (-1)^q a ≫ b, in degree
-`i = p + q`. This is the arity-two A∞ operation. -/
+of degree `p` and b from `Y` to `Z` of degree `q` are sent to (-1)^q a ≫ b, in degree `i`, where
+`p + q = i`. This is the arity-two A∞ operation. -/
 def composition (X Y Z : BoundedCochainComplex V) (p q i : ℤ) (h : p + q = i) :
     (X →ᵍ[R] Y) p →ₗ[R] (Y →ᵍ[R] Z) q →ₗ[R] (X →ᵍ[R] Z) i :=
-  q.negOnePow •
-    (FinCochain.compBilin R X Y Z p q).compr₂ (homCongr R (rfl : X = X) (rfl : Z = Z) h).toLinearMap
+  q.negOnePow • FinCochain.compBilin R X Y Z p q i h
 
 variable {R}
 
-lemma toCochain_gradedDifferential_v {X Y : BoundedCochainComplex V} {p q : ℤ}
-    (h : p + degOne = q) (a : (X →ᵍ[R] Y) p) :
-    FinCochain.toCochain ((gradedDifferential R X Y).v p q h a) =
-      HomComplex.δ p q (FinCochain.toCochain a) := by
-  subst h
-  exact FinCochain.toCochain_δ a
+@[simp]
+lemma gradedDifferential_v_apply {X Y : BoundedCochainComplex V} {p q : ℤ} (h : p + degOne = q)
+    (a : (X →ᵍ[R] Y) p) : (gradedDifferential R X Y).v p q h a = FinCochain.δ p q a :=
+  rfl
 
-lemma toCochain_composition {X Y Z : BoundedCochainComplex V} {p q i : ℤ} (h : p + q = i)
+@[simp]
+lemma composition_apply {X Y Z : BoundedCochainComplex V} {p q i : ℤ} (h : p + q = i)
     (a : (X →ᵍ[R] Y) p) (b : (Y →ᵍ[R] Z) q) :
-    FinCochain.toCochain (composition R X Y Z p q i h a b) =
-      q.negOnePow • (FinCochain.toCochain a).comp (FinCochain.toCochain b) h := by
-  subst h
-  change FinCochain.toCochain (q.negOnePow • a.comp b) = _
-  rw [FinCochain.toCochain_units_smul, FinCochain.toCochain_comp]
+    composition R X Y Z p q i h a b = q.negOnePow • a.comp b h :=
+  rfl
 
 /-- The differential squares to zero. This is the arity-one Stasheff identity. -/
 lemma gradedDifferential_v_gradedDifferential_v (X Y : BoundedCochainComplex V) {p q r : ℤ}
     (hpq : p + degOne = q) (hqr : q + degOne = r) (a : (X →ᵍ[R] Y) p) :
-    (gradedDifferential R X Y).v q r hqr ((gradedDifferential R X Y).v p q hpq a) = 0 := by
-  apply FinCochain.toCochain_injective
-  rw [toCochain_gradedDifferential_v, toCochain_gradedDifferential_v, HomComplex.δ_δ,
-    FinCochain.toCochain_zero]
+    (gradedDifferential R X Y).v q r hqr ((gradedDifferential R X Y).v p q hpq a) = 0 :=
+  FinCochain.δ_δ p q r a
 
 /-- The differential is a derivation of the signed composition: the arity-two Stasheff
 identity. The degrees are arbitrary, subject to the equations relating them. -/
@@ -115,16 +109,11 @@ lemma composition_leibniz (X Y Z : BoundedCochainComplex V) {p q e p' q' d : ℤ
         composition R X Y Z p' q d h₁ ((gradedDifferential R X Y).v p p' hp a) b +
       composition R X Y Z p q' d h₂ a ((gradedDifferential R Y Z).v q q' hq b) +
       (gradedDifferential R X Z).v e d he (composition R X Y Z p q e h a b) = 0 := by
-  subst h hp hq he
-  apply FinCochain.toCochain_injective
-  -- `simp` does not see through the graded hom spaces, so the transport is done with `rw`
-  rw [FinCochain.toCochain_add, FinCochain.toCochain_add, FinCochain.toCochain_units_smul,
-    toCochain_composition, toCochain_composition, toCochain_gradedDifferential_v,
-    toCochain_gradedDifferential_v, toCochain_gradedDifferential_v, toCochain_composition,
-    FinCochain.toCochain_zero, toMul_sign_sub_degOne, toMul_sign_int, HomComplex.δ_units_smul,
-    HomComplex.δ_comp _ _ _ (p + degOne) (q + degOne) (p + q + degOne) rfl rfl rfl,
-    show (q + degOne).negOnePow = -q.negOnePow from Int.negOnePow_succ q]
-  simp only [smul_add, smul_smul, neg_mul, Int.units_mul_self, Units.neg_smul, one_smul]
+  subst hq
+  simp only [composition_apply, gradedDifferential_v_apply, FinCochain.δ_units_smul,
+    FinCochain.δ_comp a b h p' (q + degOne) d he hp rfl, toMul_sign_sub_degOne, toMul_sign_int,
+    show (q + degOne).negOnePow = -q.negOnePow from Int.negOnePow_succ q, smul_add, smul_smul,
+    neg_mul, Int.units_mul_self, Units.neg_smul, one_smul]
   abel
 
 /-- The signed composition is associative up to the Koszul sign: the arity-three Stasheff
@@ -134,13 +123,10 @@ lemma composition_assoc (W X Y Z : BoundedCochainComplex V) {p q r e e' d : ℤ}
     (b : (X →ᵍ[R] Y) q) (c : (Y →ᵍ[R] Z) r) :
     (sign (r - degOne)).toMul • composition R W Y Z e r d h₁ (composition R W X Y p q e h a b) c +
       composition R W X Z p e' d h₂ a (composition R X Y Z q r e' h' b c) = 0 := by
-  subst h h' h₁
-  apply FinCochain.toCochain_injective
-  rw [FinCochain.toCochain_add, FinCochain.toCochain_units_smul, toCochain_composition,
-    toCochain_composition, toCochain_composition, toCochain_composition,
-    FinCochain.toCochain_zero, toMul_sign_sub_degOne, toMul_sign_int,
-    HomComplex.Cochain.units_smul_comp, HomComplex.Cochain.comp_units_smul,
-    HomComplex.Cochain.comp_assoc _ _ _ rfl rfl rfl, Int.negOnePow_add]
+  subst h'
+  simp only [composition_apply, FinCochain.units_smul_comp, FinCochain.comp_units_smul,
+    FinCochain.comp_assoc a b c h rfl (show p + q + r = d by omega), toMul_sign_sub_degOne,
+    toMul_sign_int, Int.negOnePow_add]
   rcases Int.units_eq_one_or q.negOnePow with hq | hq <;>
     rcases Int.units_eq_one_or r.negOnePow with hr | hr <;> simp [hq, hr]
 
