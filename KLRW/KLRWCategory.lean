@@ -282,15 +282,15 @@ lemma KLRWCat.homOfOps_comp {X Y Z : KLRWCat u ℏ P} (ops₁ ops₂ : List (Str
 multiplication in the algebra does. -/
 instance : Preadditive (KLRWCat u ℏ P) where
   homGroup X Y := inferInstanceAs (AddCommGroup (klrwHom u ℏ X.toKLRWObject Y.toKLRWObject))
-  add_comp f g h := KLRWCat.hom_ext (mul_add h.val f.val g.val)
-  comp_add f g h := KLRWCat.hom_ext (add_mul g.val h.val f.val)
+  add_comp X Y Z f g h := KLRWCat.hom_ext (mul_add h.val f.val g.val)
+  comp_add X Y Z f g h := KLRWCat.hom_ext (add_mul g.val h.val f.val)
 
 /-- The KLRW category is `S`-linear: each hom-space is an `S`-module, and scalars move through
 composition because the algebra is an `S`-algebra. -/
 instance : Linear S (KLRWCat u ℏ P) where
   homModule X Y := inferInstanceAs (Module S (klrwHom u ℏ X.toKLRWObject Y.toKLRWObject))
-  smul_comp r f g := KLRWCat.hom_ext (mul_smul_comm r g.val f.val)
-  comp_smul f r g := KLRWCat.hom_ext (smul_mul_assoc r g.val f.val)
+  smul_comp X Y Z r f g := KLRWCat.hom_ext (mul_smul_comm r g.val f.val)
+  comp_smul X Y Z f r g := KLRWCat.hom_ext (smul_mul_assoc r g.val f.val)
 
 end CategoryInstances
 
