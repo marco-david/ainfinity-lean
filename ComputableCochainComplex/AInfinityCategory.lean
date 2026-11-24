@@ -39,6 +39,14 @@ DG category of bounded complexes.
 The three Stasheff identities that `AInfinityCategory.ofArityLeTwo` asks for are transported along
 the injective map `FinCochain.toCochain` to Mathlib's `δ_δ`, `δ_comp` and `Cochain.comp_assoc`.
 
+We do not obtain this A∞-category from a `AInfinityTheory.DGCategory` structure on bounded
+complexes. That structure is an enrichment in Mathlib's monoidal category of complexes of
+`R`-modules, whose tensor product is built from noncomputably chosen coproducts, so the inherited
+operations would be noncomputable, whereas the operations here compute on `FinCochain`. Moreover
+`AInfinityTheory.DGCategory.aInfinityCategory` is an instance for every DG category, so a DG
+structure on bounded complexes would come with a second A∞ instance, not definitionally equal to
+this one.
+
 ## References
 
 * P. Seidel, *Fukaya categories and Picard–Lefschetz theory*, Zurich Lectures in Advanced
