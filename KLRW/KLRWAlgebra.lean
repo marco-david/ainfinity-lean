@@ -70,22 +70,17 @@ instance : Fintype StrandColor where
 
 variable (V : Type*)
 
-/-- The data defining a KLRW algebra: a directed graph `Γ` on the set of labels `V`, and for
-each label the number of black and of red strands carrying it. -/
-structure KLRWStructure where
+/-- The data defining a KLRW algebra: a directed graph `Γ` on the set of labels `V`. The number of
+black strands labled by each simple root, and `numRed` red strands labled by dominant weights. -/
+structure KLRWStructure (numRed: ℕ) where
   /-- The graph on the labels. -/
   Γ : SimpleGraph V
   /-- The graph is acyclic and connected -/
   isTree : Γ.IsTree
   /-- The number of black strands with each label. -/
-  blackStrands : V → ℕ
-  /-- Number of red strands-/
-  numRed : ℕ
+  blackStrands : RootCoords Γ ℕ
   /-- The number of red strands with each label. -/
   redStrands : Fin numRed → DominantWeight Γ
-
-  /- TODO: finalize KLRWStructure by having blackStrands : SimpleRoots → ℕ -/
-  /- have a mapping SimpleRoots → RootCoords so that cartan is applicable.-/
 
 /-- The data carried by a single strand: its label and its color. -/
 structure StrandData where
