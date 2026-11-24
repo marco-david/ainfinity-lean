@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Lillian Liu. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Lillian Liu, Marco David, Hallvard Hareide
+-/
 module
 public import Mathlib
 
@@ -15,6 +20,8 @@ coefficients in a commutative ring `S` and parameters `u ℏ : S`.
 * `KLRW.KLRWObject P`: a sequence of labeled black and red strands with the numbers of strands
   prescribed by `P : KLRWStructure V`.
 * `KLRW.StrandGenerator P`: the dots, crossings and idempotents that generate the algebra.
+* `KLRW.strandGenSeq S M ops`: the product of the generators described by a list of operations,
+  starting at the object `M`.
 * `KLRW.KLRWImplicitConRel` and `KLRW.KLRWExplicitConRel`: the KLRW relations.
 * `KLRW.KLRWAlg u ℏ P`: the KLRW algebra with coefficients in `S` and parameters `u ℏ : S`.
 * `KLRW.klrwHom u ℏ X Y`: the morphisms from `X` to `Y`, i.e. the elements `e_Y * a * e_X`.
@@ -30,6 +37,8 @@ coefficients in a commutative ring `S` and parameters `u ℏ : S`.
 * The relations drawn in Figure 1 of LePage–Shende (the nontrivial KLRW relations) are
   `KLRWExplicitConRel`, and their docstrings use the same letters (a)–(g). All other relations,
   including the cases where strands pass through each other freely, are `KLRWImplicitConRel`.
+* Scalars in the relations are written with `•`, the simp-normal form for the `S`-module
+  structure (`Algebra.smul_def` converts to `algebraMap S _ r * x` if ever needed).
 * The parameters `u` and `ℏ` are arbitrary elements of `S`. The universal case `S = R[u, ℏ]`
   is `KLRWAlgUniv`.
 
@@ -85,19 +94,22 @@ structure StrandData where
   color : StrandColor
   deriving DecidableEq, Repr
 
+variable {V} in
 /-- There are finitely many kinds of strand: a strand is a label together with a color. -/
-instance {V : Type*} [Fintype V] : Fintype (StrandData V) :=
+instance [Fintype V] : Fintype (StrandData V) :=
   Fintype.ofEquiv (V × StrandColor)
     { toFun := fun p => ⟨p.1, p.2⟩
       invFun := fun s => (s.label, s.color)
       left_inv := fun _ => rfl
       right_inv := fun _ => rfl }
+
 end BasicDefs
 
-variable {V : Type*} [DecidableEq V] [Fintype V]
-variable {P : KLRWStructure V}
+variable {V : Type*} [DecidableEq V]
 
-section KLRWObject
+/-! ### Counting strands
+
+These only need to compare strands, so they come before `[Fintype V]` is introduced. -/
 
 /-- The number of strands in `s` with label `k` and color `c`. -/
 def numColor {m : ℕ} (s : Fin m → StrandData V) (k : V) (c : StrandColor) : ℕ :=
@@ -109,11 +121,14 @@ abbrev numBlack {m : ℕ} (s : Fin m → StrandData V) (k : V) : ℕ := numColor
 /-- The number of red strands in `s` with label `k`. -/
 abbrev numRed {m : ℕ} (s : Fin m → StrandData V) (k : V) : ℕ := numColor s k .red
 
-omit [Fintype V] in
 /-- Rearranging the strands does not change how many have a given label and color. -/
 lemma numColor_comp_perm {m : ℕ} (s : Fin m → StrandData V) (e : Equiv.Perm (Fin m))
     (k : V) (c : StrandColor) : numColor (s ∘ e) k c = numColor s k c :=
   Finset.card_equiv e (by simp)
+
+variable [Fintype V] {P : KLRWStructure V}
+
+/-! ### KLRW objects -/
 
 /-- The total number of strands, black and red, in a KLRW structure. -/
 abbrev KLRWStructure.numStrands (P : KLRWStructure V) : ℕ :=
@@ -134,22 +149,10 @@ structure KLRWObject (P : KLRWStructure V) where
 noncomputable instance : Fintype (KLRWObject P) :=
   Fintype.ofInjective KLRWObject.strandSeq fun _ _ => KLRWObject.ext
 
-/-- The strand at position `i` of `M`. -/
-abbrev KLRWObject.get (M : KLRWObject P) (i : Fin P.numStrands) : StrandData V :=
-  M.strandSeq i
-
-/-- Two KLRW objects are equal if they have the same strand at every position. -/
-lemma KLRWObject.ext_get {X Y : KLRWObject P} (h : ∀ p, X.get p = Y.get p) : X = Y :=
-  KLRWObject.ext (funext h)
-
-end KLRWObject
-
 /-! ## Strand generators
 
 Dots, crossings and idempotents, each attached to the object it starts from. They generate the
 free algebra whose quotient is the KLRW algebra. -/
-
-section StrandGenerators
 
 /-- The generators of the KLRW algebra. Each one records the object it starts from. -/
 inductive StrandGenerator (P : KLRWStructure V) where
@@ -166,8 +169,6 @@ A crossing index `i : Fin (n - 1)` names the gap between strands `adjLeft i` and
 `adjRight i`; `adjSwap i` swaps those two strands. A braid index `i : Fin (n - 2)` names the
 three strands `braidLeft i`, `braidMid i`, `braidRight i` and the two crossings
 `braidCrossLeft i`, `braidCrossRight i` between them. -/
-
-section AdjacentStrands
 
 /-- The left strand of the adjacent pair indexed by `i`. -/
 def adjLeft {n : ℕ} (i : Fin (n - 1)) : Fin n := ⟨i, by omega⟩
@@ -189,7 +190,9 @@ lemma adjLeft_ne_adjRight {n : ℕ} (i : Fin (n - 1)) : adjLeft i ≠ adjRight i
 def adjSwap {n : ℕ} (i : Fin (n - 1)) : Equiv.Perm (Fin n) :=
   Equiv.swap (adjLeft i) (adjRight i)
 
-/-- `adjSwap i` on positions: it exchanges `i` and `i + 1` and fixes every other position. -/
+/-- `adjSwap i` on positions: it exchanges `i` and `i + 1` and fixes every other position.
+(Still used by the crossing-sequence lemmas in `UBranes.lean`; it can be removed once those go
+through `adjSwap_adjLeft`, `adjSwap_adjRight` and `adjSwap_apply_of_ne`.) -/
 lemma adjSwap_val {m : ℕ} (i : Fin (m - 1)) (r : Fin m) :
     (adjSwap i r).val =
       if r.val = i.val then i.val + 1 else if r.val = i.val + 1 then i.val else r.val := by
@@ -245,7 +248,7 @@ def braidCrossRight {n : ℕ} (i : Fin (n - 2)) : Fin (n - 1) := ⟨i + 1, by om
 @[simp] lemma adjRight_braidCrossRight {n : ℕ} (i : Fin (n - 2)) :
     adjRight (braidCrossRight i) = braidRight i := rfl
 
-end AdjacentStrands
+/-! ### Domains and codomains of generators -/
 
 /-- The object a strand generator starts from (the domain of the morphism). -/
 def StrandGenerator.domain : StrandGenerator P → KLRWObject P
@@ -257,12 +260,8 @@ def StrandGenerator.domain : StrandGenerator P → KLRWObject P
 crossing). -/
 def KLRWObject.afterCross (M : KLRWObject P) (i : Fin (P.numStrands - 1)) : KLRWObject P where
   strandSeq := M.strandSeq ∘ adjSwap i
-  corr_num_black v := by
-    rw [M.corr_num_black v]
-    exact (numColor_comp_perm M.strandSeq (adjSwap i) _ _).symm
-  corr_num_red v := by
-    rw [M.corr_num_red v]
-    exact (numColor_comp_perm M.strandSeq (adjSwap i) _ _).symm
+  corr_num_black v := (M.corr_num_black v).trans (numColor_comp_perm _ _ _ _).symm
+  corr_num_red v := (M.corr_num_red v).trans (numColor_comp_perm _ _ _ _).symm
 
 /-- After a crossing at `i`, the strand at position `r` is the one that was at
 `adjSwap i r`. -/
@@ -280,8 +279,6 @@ def StrandGenerator.codomain : StrandGenerator P → KLRWObject P
 abbrev KLRWFreeAlg (S : Type*) [CommRing S] (P : KLRWStructure V) :=
   FreeAlgebra S (StrandGenerator P)
 
-end StrandGenerators
-
 /-! ### Building elements from lists of operations
 
 A `StrandGenOp` is a generator without its starting object. A list of them, read from right to
@@ -292,26 +289,27 @@ section StrandGenOps
 variable {S : Type*} [CommRing S]
 variable (M : KLRWObject P)
 
-/-- A strand operation without a starting object: a crossing, a dot, or the identity. -/
+/-- A strand operation without a starting object: a dot, a crossing, or the identity. The
+constructors are in the same order as those of `StrandGenerator`. -/
 inductive StrandGenOp (P : KLRWStructure V) where
-  /-- Cross two adjacent strands. -/
-  | cross : Fin (P.numStrands - 1) → StrandGenOp P
   /-- Put a dot on a strand. -/
   | dot : Fin P.numStrands → StrandGenOp P
+  /-- Cross two adjacent strands. -/
+  | cross : Fin (P.numStrands - 1) → StrandGenOp P
   /-- Do nothing. -/
   | idem : StrandGenOp P
   deriving Repr
 
 /-- The strand generator that `op` gives when applied to the object `M`. -/
 def StrandGenOp.toGenerator : StrandGenOp P → StrandGenerator P
-  | .cross i => .cross M i
   | .dot i => .dot M i
+  | .cross i => .cross M i
   | .idem => .idem M
 
 /-- The object obtained by applying `op` to `M`. -/
 def StrandGenOp.apply : StrandGenOp P → KLRWObject P
-  | .cross i => M.afterCross i
   | .dot _ => M
+  | .cross i => M.afterCross i
   | .idem => M
 
 /-- The generator produced by `op` ends where `op` sends `M`. -/
@@ -330,7 +328,10 @@ lemma StrandGenOp.domain_toGenerator (op : StrandGenOp P) :
 def strandGenSeqEnd (M : KLRWObject P) (ops : List (StrandGenOp P)) : KLRWObject P :=
   ops.foldr (fun op N => op.apply N) M
 
-/-- The product of the generators described by `ops`, applied right to left starting at `M`. -/
+variable (S) in
+/-- The product of the generators described by `ops`, applied right to left starting at `M`,
+as an element of the free `S`-algebra. `S` is explicit because nothing else in the arguments
+determines it. -/
 def strandGenSeq (M : KLRWObject P) : List (StrandGenOp P) → KLRWFreeAlg S P
   | [] => FreeAlgebra.ι _ (.idem M)
   | op :: ops =>
@@ -338,8 +339,8 @@ def strandGenSeq (M : KLRWObject P) : List (StrandGenOp P) → KLRWFreeAlg S P
 
 /-- `strandGenSeq` of a nonempty list: the first operation, applied after the rest. -/
 lemma strandGenSeq_cons (op : StrandGenOp P) (ops : List (StrandGenOp P)) :
-    strandGenSeq (S := S) M (op :: ops) =
-      FreeAlgebra.ι _ (op.toGenerator (strandGenSeqEnd M ops)) * strandGenSeq M ops := rfl
+    strandGenSeq S M (op :: ops) =
+      FreeAlgebra.ι _ (op.toGenerator (strandGenSeqEnd M ops)) * strandGenSeq S M ops := rfl
 
 /-! #### Simp lemmas for `strandGenSeqEnd` -/
 
@@ -399,35 +400,35 @@ variable {S : Type*} [CommRing S]
 
 /-- The two strands at gap `i` are both black. -/
 def BothBlack (M : KLRWObject P) (i : Fin (P.numStrands - 1)) : Prop :=
-  (M.get (adjLeft i)).color = .black ∧ (M.get (adjRight i)).color = .black
+  (M.strandSeq (adjLeft i)).color = .black ∧ (M.strandSeq (adjRight i)).color = .black
 
 /-- The two strands at gap `i` have the same label. -/
 def SameLabel (M : KLRWObject P) (i : Fin (P.numStrands - 1)) : Prop :=
-  (M.get (adjLeft i)).label = (M.get (adjRight i)).label
+  (M.strandSeq (adjLeft i)).label = (M.strandSeq (adjRight i)).label
 
 /-- Braid correction case: three black strands, the outer two with the same label, and
 `Γ.Adj middle left`. -/
 def BraidNeighborLeft (M : KLRWObject P) (i : Fin (P.numStrands - 2)) : Prop :=
-  (M.get (braidLeft i)).color = .black ∧ (M.get (braidMid i)).color = .black ∧
-  (M.get (braidRight i)).color = .black ∧
-  (M.get (braidLeft i)).label = (M.get (braidRight i)).label ∧
-  P.Γ.Adj (M.get (braidMid i)).label (M.get (braidLeft i)).label
+  (M.strandSeq (braidLeft i)).color = .black ∧ (M.strandSeq (braidMid i)).color = .black ∧
+  (M.strandSeq (braidRight i)).color = .black ∧
+  (M.strandSeq (braidLeft i)).label = (M.strandSeq (braidRight i)).label ∧
+  P.Γ.Adj (M.strandSeq (braidMid i)).label (M.strandSeq (braidLeft i)).label
 
 /-- Braid correction case: three black strands, the outer two with the same label, and
 `Γ.Adj left middle`. -/
 def BraidNeighborRight (M : KLRWObject P) (i : Fin (P.numStrands - 2)) : Prop :=
-  (M.get (braidLeft i)).color = .black ∧ (M.get (braidMid i)).color = .black ∧
-  (M.get (braidRight i)).color = .black ∧
-  (M.get (braidLeft i)).label = (M.get (braidRight i)).label ∧
-  P.Γ.Adj (M.get (braidLeft i)).label (M.get (braidMid i)).label
+  (M.strandSeq (braidLeft i)).color = .black ∧ (M.strandSeq (braidMid i)).color = .black ∧
+  (M.strandSeq (braidRight i)).color = .black ∧
+  (M.strandSeq (braidLeft i)).label = (M.strandSeq (braidRight i)).label ∧
+  P.Γ.Adj (M.strandSeq (braidLeft i)).label (M.strandSeq (braidMid i)).label
 
 /-- Braid correction case: black outer strands with the same label, and a red middle strand
 with that label too. -/
 def BraidRedMiddle (M : KLRWObject P) (i : Fin (P.numStrands - 2)) : Prop :=
-  (M.get (braidLeft i)).color = .black ∧ (M.get (braidMid i)).color = .red ∧
-  (M.get (braidRight i)).color = .black ∧
-  (M.get (braidLeft i)).label = (M.get (braidRight i)).label ∧
-  (M.get (braidMid i)).label = (M.get (braidLeft i)).label
+  (M.strandSeq (braidLeft i)).color = .black ∧ (M.strandSeq (braidMid i)).color = .red ∧
+  (M.strandSeq (braidRight i)).color = .black ∧
+  (M.strandSeq (braidLeft i)).label = (M.strandSeq (braidRight i)).label ∧
+  (M.strandSeq (braidMid i)).label = (M.strandSeq (braidLeft i)).label
 
 /-- The braid at `i` has a correction term. These are exactly the cases of
 `KLRWExplicitConRel.braid_with_neighbor_j_to_i`,
@@ -445,13 +446,13 @@ pass through each other freely. None of them involves the parameters `u` and `�
 inductive KLRWImplicitConRel : KLRWFreeAlg S P → KLRWFreeAlg S P → Prop where
   /-- A dot on a red strand is zero. -/
   | dot_on_red : ∀ (M : KLRWObject P) (i : Fin P.numStrands),
-      (M.get i).color = .red →
-      KLRWImplicitConRel (strandGenSeq M [.dot i]) 0
+      (M.strandSeq i).color = .red →
+      KLRWImplicitConRel (strandGenSeq S M [.dot i]) 0
   /-- A crossing of two red strands is zero. -/
   | cross_two_red : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
-      (M.get (adjLeft i)).color = .red →
-      (M.get (adjRight i)).color = .red →
-      KLRWImplicitConRel (strandGenSeq M [.cross i]) 0
+      (M.strandSeq (adjLeft i)).color = .red →
+      (M.strandSeq (adjRight i)).color = .red →
+      KLRWImplicitConRel (strandGenSeq S M [.cross i]) 0
   /-- A composition with mismatched domain and codomain is zero.
   Here `g * f` means "first `f`, then `g`". -/
   | bad_comp : ∀ (f g : StrandGenerator P),
@@ -467,62 +468,62 @@ inductive KLRWImplicitConRel : KLRWFreeAlg S P → KLRWFreeAlg S P → Prop wher
       KLRWImplicitConRel (ι _ f * ι _ (.idem M)) (ι _ f)
   /-- The identity is the sum of all the idempotents. -/
   | id_sum :
-      KLRWImplicitConRel (Finset.univ.sum (fun M : KLRWObject P => ι _ (.idem M))) 1
+      KLRWImplicitConRel (∑ M : KLRWObject P, ι _ (.idem M)) 1
   /-- Crossings that are far apart commute. -/
   | cross_cross_comm : ∀ (M : KLRWObject P) (i j : Fin (P.numStrands - 1)),
       i.val + 1 < j.val ∨ j.val + 1 < i.val →
       KLRWImplicitConRel
-        (strandGenSeq M [.cross j, .cross i])
-        (strandGenSeq M [.cross i, .cross j])
+        (strandGenSeq S M [.cross j, .cross i])
+        (strandGenSeq S M [.cross i, .cross j])
   /-- Dots commute. -/
   | dot_dot_comm : ∀ (M : KLRWObject P) (i j : Fin P.numStrands),
       KLRWImplicitConRel
-        (strandGenSeq M [.dot j, .dot i])
-        (strandGenSeq M [.dot i, .dot j])
+        (strandGenSeq S M [.dot j, .dot i])
+        (strandGenSeq S M [.dot i, .dot j])
   /-- A dot on a strand not involved in a crossing commutes with that crossing. -/
   | cross_dot_far_comm : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1))
       (j : Fin P.numStrands),
       j ≠ adjLeft i →
       j ≠ adjRight i →
       KLRWImplicitConRel
-        (strandGenSeq M [.dot j, .cross i])
-        (strandGenSeq M [.cross i, .dot j])
+        (strandGenSeq S M [.dot j, .cross i])
+        (strandGenSeq S M [.cross i, .dot j])
   /-- Unless the two strands are black with the same label, a dot slides along its strand
   through a crossing: a dot on the right strand before the crossing equals a dot on the left
   strand after it. -/
   | dot_follows_strand_left : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
       ¬ (BothBlack M i ∧ SameLabel M i) →
       KLRWImplicitConRel
-        (strandGenSeq M [.dot (adjLeft i), .cross i])
-        (strandGenSeq M [.cross i, .dot (adjRight i)])
+        (strandGenSeq S M [.dot (adjLeft i), .cross i])
+        (strandGenSeq S M [.cross i, .dot (adjRight i)])
   /-- Unless the two strands are black with the same label, a dot slides along its strand
   through a crossing: a dot on the left strand before the crossing equals a dot on the right
   strand after it. -/
   | dot_follows_strand_right : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
       ¬ (BothBlack M i ∧ SameLabel M i) →
       KLRWImplicitConRel
-        (strandGenSeq M [.dot (adjRight i), .cross i])
-        (strandGenSeq M [.cross i, .dot (adjLeft i)])
+        (strandGenSeq S M [.dot (adjRight i), .cross i])
+        (strandGenSeq S M [.cross i, .dot (adjLeft i)])
   /-- Two black strands with different, non-adjacent labels crossing twice is the identity. -/
   | bigon_not_adjacent : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
-      (M.get (adjLeft i)).color = .black →
-      (M.get (adjRight i)).color = .black →
-      (M.get (adjLeft i)).label ≠ (M.get (adjRight i)).label →
-      ¬ P.Γ.Adj (M.get (adjLeft i)).label (M.get (adjRight i)).label →
-      ¬ P.Γ.Adj (M.get (adjRight i)).label (M.get (adjLeft i)).label →
-      KLRWImplicitConRel (strandGenSeq M [.cross i, .cross i]) (ι _ (.idem M))
+      (M.strandSeq (adjLeft i)).color = .black →
+      (M.strandSeq (adjRight i)).color = .black →
+      (M.strandSeq (adjLeft i)).label ≠ (M.strandSeq (adjRight i)).label →
+      ¬ P.Γ.Adj (M.strandSeq (adjLeft i)).label (M.strandSeq (adjRight i)).label →
+      ¬ P.Γ.Adj (M.strandSeq (adjRight i)).label (M.strandSeq (adjLeft i)).label →
+      KLRWImplicitConRel (strandGenSeq S M [.cross i, .cross i]) (ι _ (.idem M))
   /-- A black and a red strand with different labels crossing twice is the identity. -/
   | bigon_black_red_diff : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
-      (M.get (adjLeft i)).color ≠ (M.get (adjRight i)).color →
-      (M.get (adjLeft i)).label ≠ (M.get (adjRight i)).label →
-      KLRWImplicitConRel (strandGenSeq M [.cross i, .cross i]) (ι _ (.idem M))
+      (M.strandSeq (adjLeft i)).color ≠ (M.strandSeq (adjRight i)).color →
+      (M.strandSeq (adjLeft i)).label ≠ (M.strandSeq (adjRight i)).label →
+      KLRWImplicitConRel (strandGenSeq S M [.cross i, .cross i]) (ι _ (.idem M))
   /-- Without a correction term, the two sides of a braid are equal. -/
   | braid : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 2)),
       ¬ BraidHasCorrection M i →
       KLRWImplicitConRel
-        (strandGenSeq M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
+        (strandGenSeq S M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
           .cross (braidCrossLeft i)])
-        (strandGenSeq M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
+        (strandGenSeq S M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
           .cross (braidCrossRight i)])
 
 /-! ### Explicit relations -/
@@ -532,86 +533,84 @@ there. They involve the parameters `u ℏ : S`. -/
 inductive KLRWExplicitConRel (u ℏ : S) : KLRWFreeAlg S P → KLRWFreeAlg S P → Prop where
   /-- (a) Two black strands with the same label crossing twice is zero. -/
   | bigon : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
-      BothBlack M i ∧ SameLabel M i →
-      KLRWExplicitConRel u ℏ (strandGenSeq M [.cross i, .cross i]) 0
+      BothBlack M i → SameLabel M i →
+      KLRWExplicitConRel u ℏ (strandGenSeq S M [.cross i, .cross i]) 0
   /-- (b) Bigon of black strands with `Γ.Adj left right`. -/
   | bigon_for_j_to_i : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
       BothBlack M i →
-      P.Γ.Adj (M.get (adjLeft i)).label (M.get (adjRight i)).label →
+      P.Γ.Adj (M.strandSeq (adjLeft i)).label (M.strandSeq (adjRight i)).label →
       KLRWExplicitConRel u ℏ
-        (strandGenSeq M [.cross i, .cross i])
-        (algebraMap S _ u *
-          (strandGenSeq M [.dot (adjRight i)] - strandGenSeq M [.dot (adjLeft i)]))
+        (strandGenSeq S M [.cross i, .cross i])
+        (u • (strandGenSeq S M [.dot (adjRight i)] - strandGenSeq S M [.dot (adjLeft i)]))
   /-- (b) Bigon of black strands with `Γ.Adj right left`. -/
   | bigon_for_i_to_j : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
       BothBlack M i →
-      P.Γ.Adj (M.get (adjRight i)).label (M.get (adjLeft i)).label →
+      P.Γ.Adj (M.strandSeq (adjRight i)).label (M.strandSeq (adjLeft i)).label →
       KLRWExplicitConRel u ℏ
-        (strandGenSeq M [.cross i, .cross i])
-        (algebraMap S _ u *
-          (strandGenSeq M [.dot (adjLeft i)] - strandGenSeq M [.dot (adjRight i)]))
+        (strandGenSeq S M [.cross i, .cross i])
+        (u • (strandGenSeq S M [.dot (adjLeft i)] - strandGenSeq S M [.dot (adjRight i)]))
   /-- (c) Bigon with a red strand on the left, both strands with the same label. -/
   | bigon_with_red_left : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
       SameLabel M i →
-      (M.get (adjLeft i)).color = .red →
-      (M.get (adjRight i)).color = .black →
+      (M.strandSeq (adjLeft i)).color = .red →
+      (M.strandSeq (adjRight i)).color = .black →
       KLRWExplicitConRel u ℏ
-        (strandGenSeq M [.cross i, .cross i])
-        (algebraMap S _ u * strandGenSeq M [.dot (adjRight i)])
+        (strandGenSeq S M [.cross i, .cross i])
+        (u • strandGenSeq S M [.dot (adjRight i)])
   /-- (c) Bigon with a red strand on the right, both strands with the same label. -/
   | bigon_with_red_right : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
       SameLabel M i →
-      (M.get (adjLeft i)).color = .black →
-      (M.get (adjRight i)).color = .red →
+      (M.strandSeq (adjLeft i)).color = .black →
+      (M.strandSeq (adjRight i)).color = .red →
       KLRWExplicitConRel u ℏ
-        (strandGenSeq M [.cross i, .cross i])
-        (algebraMap S _ u * strandGenSeq M [.dot (adjLeft i)])
+        (strandGenSeq S M [.cross i, .cross i])
+        (u • strandGenSeq S M [.dot (adjLeft i)])
   /-- (d) Braid with a neighboring label: outer strands `(i)`, middle strand `(j)`, with the arrow
   `(j) → (i)` (`Γ.Adj middle left`). -/
   | braid_with_neighbor_j_to_i : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 2)),
       BraidNeighborLeft M i →
       KLRWExplicitConRel u ℏ
-        (strandGenSeq M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
+        (strandGenSeq S M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
             .cross (braidCrossLeft i)] -
-          strandGenSeq M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
+          strandGenSeq S M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
             .cross (braidCrossRight i)])
-        (algebraMap S _ (u * ℏ) * ι _ (.idem M))
+        ((u * ℏ) • ι _ (.idem M))
   /-- (d) Braid with a neighboring label, with the arrow reversed: `(i) → (j)`
   (`Γ.Adj left middle`). As in the caption of Figure 1, the right-hand side gets an extra
   sign. -/
   | braid_with_neighbor_i_to_j : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 2)),
       BraidNeighborRight M i →
       KLRWExplicitConRel u ℏ
-        (strandGenSeq M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
+        (strandGenSeq S M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
             .cross (braidCrossLeft i)] -
-          strandGenSeq M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
+          strandGenSeq S M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
             .cross (braidCrossRight i)])
-        (algebraMap S _ (-(u * ℏ)) * ι _ (.idem M))
+        ((-(u * ℏ)) • ι _ (.idem M))
   /-- (e) Braid around a red middle strand with the same label as the outer strands. -/
   | braid_with_red : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 2)),
       BraidRedMiddle M i →
       KLRWExplicitConRel u ℏ
-        (strandGenSeq M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
+        (strandGenSeq S M [.cross (braidCrossLeft i), .cross (braidCrossRight i),
             .cross (braidCrossLeft i)] -
-          strandGenSeq M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
+          strandGenSeq S M [.cross (braidCrossRight i), .cross (braidCrossLeft i),
             .cross (braidCrossRight i)])
-        (algebraMap S _ (u * ℏ) * ι _ (.idem M))
+        ((u * ℏ) • ι _ (.idem M))
   /-- (f) A dot passing a crossing of two black strands with the same label
   (the same diagrams as `KLRWImplicitConRel.dot_follows_strand_left`). -/
   | dot_pass_cross_left : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
-      BothBlack M i ∧ SameLabel M i →
+      BothBlack M i → SameLabel M i →
       KLRWExplicitConRel u ℏ
-        (strandGenSeq M [.dot (adjLeft i), .cross i] -
-          strandGenSeq M [.cross i, .dot (adjRight i)])
-        (algebraMap S _ ℏ * ι _ (.idem M))
+        (strandGenSeq S M [.dot (adjLeft i), .cross i] -
+          strandGenSeq S M [.cross i, .dot (adjRight i)])
+        (ℏ • ι _ (.idem M))
   /-- (g) A dot passing a crossing of two black strands with the same label
   (the same diagrams as `KLRWImplicitConRel.dot_follows_strand_right`). -/
   | dot_pass_cross_right : ∀ (M : KLRWObject P) (i : Fin (P.numStrands - 1)),
-      BothBlack M i ∧ SameLabel M i →
+      BothBlack M i → SameLabel M i →
       KLRWExplicitConRel u ℏ
-        (strandGenSeq M [.cross i, .dot (adjLeft i)] -
-          strandGenSeq M [.dot (adjRight i), .cross i])
-        (algebraMap S _ ℏ * ι _ (.idem M))
+        (strandGenSeq S M [.cross i, .dot (adjLeft i)] -
+          strandGenSeq S M [.dot (adjRight i), .cross i])
+        (ℏ • ι _ (.idem M))
 
 end Relations
 
@@ -642,8 +641,9 @@ end Algebra
 
 /-! ### The universal KLRW algebra
 
-Taking `S = R[u, ℏ]` with `u = X 0` and `ℏ = X 1` recovers the construction with formal
-parameters; every other choice of `u` and `ℏ` is a specialization of this one. -/
+Taking `S = R[u, ℏ]` with `u = X 0` and `ℏ = X 1` gives the construction with formal
+parameters. Every other choice of `u` and `ℏ` should be a specialization of this one; that is
+not proved here yet (see issue #75). -/
 
 section Universal
 
@@ -653,11 +653,11 @@ variable (R : Type*) [CommRing R]
 noncomputable abbrev univU : MvPolynomial (Fin 2) R := MvPolynomial.X 0
 
 /-- The parameter `ℏ` in the universal coefficient ring `R[u, ℏ]`. -/
-noncomputable abbrev univℏ : MvPolynomial (Fin 2) R := MvPolynomial.X 1
+noncomputable abbrev univHbar : MvPolynomial (Fin 2) R := MvPolynomial.X 1
 
 /-- The universal KLRW algebra over `R`, with coefficients in `R[u, ℏ]`. -/
 abbrev KLRWAlgUniv (P : KLRWStructure V) :=
-  KLRWAlg (univU R) (univℏ R) P
+  KLRWAlg (univU R) (univHbar R) P
 
 end Universal
 end KLRW
