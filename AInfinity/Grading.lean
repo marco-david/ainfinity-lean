@@ -127,8 +127,9 @@ end Grading
 
 /-! ### Koszul signs in the standard gradings -/
 
+/-- In the grading `ℤ`, `sign` is Mathlib's `Int.negOnePow`. -/
 @[simp]
-public lemma sign_int (n : ℤ) : sign n = Int.negOnePow n := rfl
+public lemma sign_int (n : ℤ) : sign n = Additive.ofMul n.negOnePow := rfl
 
 /-- In the parity grading, `sign` is Mathlib's power operation on `ℤˣ` by `ZMod 2`. -/
 public lemma sign_zmod_two (p : ZMod 2) : sign p = (-1 : ℤˣ) ^ p := rfl

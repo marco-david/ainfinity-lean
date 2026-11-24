@@ -110,11 +110,8 @@ lemma composition_leibniz (X Y Z : BoundedCochainComplex V) {p q e p' q' d : ℤ
       composition R X Y Z p q' d h₂ a ((gradedDifferential R Y Z).v q q' hq b) +
       (gradedDifferential R X Z).v e d he (composition R X Y Z p q e h a b) = 0 := by
   subst hq
-  simp only [composition_apply, gradedDifferential_v_apply, FinCochain.δ_units_smul,
-    FinCochain.δ_comp a b h p' (q + degOne) d he hp rfl, toMul_sign_sub_degOne, toMul_sign_int,
-    show (q + degOne).negOnePow = -q.negOnePow from Int.negOnePow_succ q, smul_add, smul_smul,
-    neg_mul, Int.units_mul_self, Units.neg_smul, one_smul]
-  abel
+  simp [FinCochain.δ_comp a b h p' (q + degOne) d he hp rfl, Int.negOnePow_sub,
+    Int.negOnePow_succ, smul_smul]
 
 /-- The signed composition is associative up to the Koszul sign: the arity-three Stasheff
 identity. The degrees are arbitrary, subject to the equations relating them. -/
@@ -124,11 +121,8 @@ lemma composition_assoc (W X Y Z : BoundedCochainComplex V) {p q r e e' d : ℤ}
     (sign (r - degOne)).toMul • composition R W Y Z e r d h₁ (composition R W X Y p q e h a b) c +
       composition R W X Z p e' d h₂ a (composition R X Y Z q r e' h' b c) = 0 := by
   subst h'
-  simp only [composition_apply, FinCochain.units_smul_comp, FinCochain.comp_units_smul,
-    FinCochain.comp_assoc a b c h rfl (show p + q + r = d by omega), toMul_sign_sub_degOne,
-    toMul_sign_int, Int.negOnePow_add]
-  rcases Int.units_eq_one_or q.negOnePow with hq | hq <;>
-    rcases Int.units_eq_one_or r.negOnePow with hr | hr <;> simp [hq, hr]
+  simp [FinCochain.comp_assoc a b c h rfl (show p + q + r = d by omega), Int.negOnePow_add,
+    Int.negOnePow_sub, smul_smul]
 
 /-- Bounded cochain complexes form an A∞-category with grading `ℤ`: m₁ is the differential δ of
 the hom complexes, m₂ is the signed composition (-1)^q a ≫ b, and the higher compositions mₙ for
