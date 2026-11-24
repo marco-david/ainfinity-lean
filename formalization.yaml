@@ -346,8 +346,7 @@ alignment:
       status: "proved"
       note: >-
         A linear category concentrated in degree 0, via
-        `AInfinityTheory.AInfinityCategory.ofLinearCategory`; the one-black-strand case is
-        `KLRW.Sl2.TBrane.aInfinityCategory`.
+        `AInfinityTheory.AInfinityCategory.ofLinearCategory`.
     - source: "Blueprint, Proposition (Bounded cochain complexes form an A∞-category)"
       lean: "BoundedCochainComplex.aInfinityCategory"
       module: "ComputableCochainComplex.AInfinityCategory"
