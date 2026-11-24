@@ -1,8 +1,42 @@
+/-
+Copyright (c) 2026 Niels Voss. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Niels Voss, Marco David
+-/
 module
 
 public import Mathlib
 public import ComputableCochainComplex.ComputableCategories
 public import Util.Texify
+
+/-! # The computable additive completion `CMat_`
+
+Mathlib's additive completion `CategoryTheory.Mat_ C` of a preadditive category `C` indexes the
+summands of an object by an arbitrary finite type, and its biproducts are only available through
+the noncomputable `HasFiniteBiproducts` API. `CMat_ C` is a computable variant: an object is a
+list of objects of `C`, a morphism is a matrix of morphisms of `C`, and composition is matrix
+multiplication. Its API mirrors that of `Mat_`, and the two are equivalent categories.
+
+## Main definitions
+
+* `CMat_ C`: the additive completion, whose objects are lists of objects of `C`, with summands
+  indexed by `CMat_.ι` and given by `CMat_.X`. It is a preadditive category, and an `R`-linear
+  one when `C` is `R`-linear.
+* `CMat_.cbiprod`: the biproduct of two objects, given by concatenating their lists. The
+  `ComputableBinaryBiproduct (CMat_ C)` instance uses the same object, but its structure maps are
+  still `sorry`. The empty list is an explicit zero object.
+* `CMat_.toMat_ C`: the functor `CMat_ C ⥤ Mat_ C`, an equivalence of categories.
+* `CMat_.embedding C`: the fully faithful additive functor `C ⥤ CMat_ C` sending an object to the
+  one-element list.
+* `CMat_.extend F`: the extension of an additive functor `F : C ⥤ D` to `CMat_ C`, when `D` has
+  computable biproducts and an explicit zero object (its action on morphisms is still `sorry`),
+  with the special cases `CMat_.bind` and `CMat_.mapCMat_`.
+* `Texify` instances that print an object as a direct sum and a morphism as a matrix.
+
+## Notation
+
+* `[X₁, …, Xₙ]ₘ` for `CMat_.ofList [X₁, …, Xₙ]`.
+-/
 
 @[expose] public section
 

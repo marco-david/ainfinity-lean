@@ -1,11 +1,12 @@
+/-
+Copyright (c) 2026 Jason Dong. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Jason Dong, Niels Voss, Hallvard Hareide, Marco David
+-/
 module
 
 public import Mathlib
 public import ComputableCochainComplex.AdditiveCompletion
-
-@[expose] public section
-
-open CategoryTheory Limits
 
 /-!
 # Bounded Cochain Complexes
@@ -14,6 +15,9 @@ A computable version of `CochainComplex` backed by an explicit `Finset ℤ`
 of cohomological degrees in the support, analogous to `CMat_` vs `Mat_`.
 -/
 
+@[expose] public section
+
+open CategoryTheory Limits
 
 structure BoundedCochainComplex (V : Type*) [Category V] [HasZeroObject V] [Preadditive V]
     extends CochainComplex V ℤ where
