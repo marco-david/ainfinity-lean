@@ -342,7 +342,7 @@ alignment:
       note: "Carries `Category`, `Preadditive` and `CategoryTheory.Linear R` instances."
     - source: "Blueprint, Proposition (Bounded cochain complexes form an A∞-category)"
       lean: "BoundedCochainComplex.aInfinityCategory"
-      module: "ComputableCochainComplex.AInfinityCategory"
+      module: "ComputableCochainComplex.BoundedCochainComplex.AInfinity"
       status: "proved"
       note: >-
         The graded hom spaces are the computable cochains `BoundedCochainComplex.FinCochain`;
