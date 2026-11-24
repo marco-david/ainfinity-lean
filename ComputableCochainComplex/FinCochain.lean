@@ -83,8 +83,8 @@ variable {A B : BoundedCochainComplex V} {n p q : ℤ}
 
 /-- Two morphisms `A.X p ⟶ B.X q`, where `p + n = q`, agree as soon as they agree when `p` is an
 active degree: otherwise their source or their target is a zero object. -/
-lemma hom_ext (hpq : p + n = q) {f g : A.X p ⟶ B.X q} (h : p ∈ activePairs A B n → f = g) :
-    f = g := by
+lemma hom_ext_of_mem (hpq : p + n = q) {f g : A.X p ⟶ B.X q}
+    (h : p ∈ activePairs A B n → f = g) : f = g := by
   by_cases hp : p ∈ activePairs A B n
   · exact h hp
   subst hpq
@@ -133,26 +133,26 @@ def mk (v : ∀ p q : ℤ, p + n = q → (A.X p ⟶ B.X q)) : FinCochain A B n :
 @[simp]
 lemma mk_v (v : ∀ p q : ℤ, p + n = q → (A.X p ⟶ B.X q)) (p q : ℤ) (hpq : p + n = q) :
     (mk v).v p q hpq = v p q hpq :=
-  activePairs.hom_ext hpq (v_of_mem _ hpq)
+  activePairs.hom_ext_of_mem hpq (v_of_mem _ hpq)
 
 @[simp]
 lemma zero_v (p q : ℤ) (hpq : p + n = q) : (0 : FinCochain A B n).v p q hpq = 0 :=
-  activePairs.hom_ext hpq fun hp ↦ by rw [v_of_mem _ hpq hp, Pi.zero_apply]
+  activePairs.hom_ext_of_mem hpq fun hp ↦ by rw [v_of_mem _ hpq hp, Pi.zero_apply]
 
 @[simp]
 lemma add_v (z w : FinCochain A B n) (p q : ℤ) (hpq : p + n = q) :
     (z + w).v p q hpq = z.v p q hpq + w.v p q hpq :=
-  activePairs.hom_ext hpq fun hp ↦ by simp only [v_of_mem _ hpq hp, Pi.add_apply]
+  activePairs.hom_ext_of_mem hpq fun hp ↦ by simp only [v_of_mem _ hpq hp, Pi.add_apply]
 
 @[simp]
 lemma neg_v (z : FinCochain A B n) (p q : ℤ) (hpq : p + n = q) :
     (-z).v p q hpq = -z.v p q hpq :=
-  activePairs.hom_ext hpq fun hp ↦ by simp only [v_of_mem _ hpq hp, Pi.neg_apply]
+  activePairs.hom_ext_of_mem hpq fun hp ↦ by simp only [v_of_mem _ hpq hp, Pi.neg_apply]
 
 @[simp]
 lemma smul_v (r : R) (z : FinCochain A B n) (p q : ℤ) (hpq : p + n = q) :
     (r • z).v p q hpq = r • z.v p q hpq :=
-  activePairs.hom_ext hpq fun hp ↦ by simp only [v_of_mem _ hpq hp, Pi.smul_apply]
+  activePairs.hom_ext_of_mem hpq fun hp ↦ by simp only [v_of_mem _ hpq hp, Pi.smul_apply]
 
 /-! ### The differential, the composition and chain maps
 

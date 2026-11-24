@@ -88,11 +88,6 @@ public lemma sign_zsmul_degOne (n : ℤ) :
     sign (n • degOne : β) = Additive.ofMul n.negOnePow := by
   rw [map_zsmul, Grading.sign_degOne, ← ofMul_zpow, Int.negOnePow_def]
 
-/-- Lowering a degree by one flips its Koszul sign, since the differential has odd degree. For
-an input a of degree b, this computes the sign (-1)^‖a‖ of its reduced degree ‖a‖ = b - 1. -/
-public lemma toMul_sign_sub_degOne (b : β) : (sign (b - degOne)).toMul = -(sign b).toMul := by
-  rw [map_sub, toMul_sub, Grading.sign_degOne, toMul_ofMul, div_neg, div_one]
-
 end Grading
 
 namespace Grading
@@ -133,9 +128,6 @@ public lemma sign_int (n : ℤ) : sign n = Additive.ofMul n.negOnePow := rfl
 
 /-- In the parity grading, `sign` is Mathlib's power operation on `ℤˣ` by `ZMod 2`. -/
 public lemma sign_zmod_two (p : ZMod 2) : sign p = Additive.ofMul ((-1 : ℤˣ) ^ p) := rfl
-
-/-- `sign_int` read in `ℤˣ`, the form that Mathlib's lemmas about `Int.negOnePow` match. -/
-public lemma toMul_sign_int (n : ℤ) : (sign n).toMul = n.negOnePow := rfl
 
 /-! ### Homomorphisms of gradings -/
 

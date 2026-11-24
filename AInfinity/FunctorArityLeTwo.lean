@@ -63,9 +63,9 @@ as a hypothesis, including those that follow from the others, so that their stat
 proofs.
 
 To build an `AInfinityFunctor` between A∞-categories whose instances are definitionally of this
-form, such as `AInfinityCategory.ofLinearCategory` and `DGCategory.aInfinityCategory`, use
-`ofArityLeTwo` as the functor data and `ofArityLeTwo_mapCompSum_eq_compMapSum` as the proof of the
-functor equations.
+form, such as `BoundedCochainComplex.aInfinityCategory`, `DGCategory.aInfinityCategory` and
+`AInfinityCategory.ofLinearCategory`, use `ofArityLeTwo` as the functor data and
+`ofArityLeTwo_mapCompSum_eq_compMapSum` as the proof of the functor equations.
 -/
 
 @[expose] public section
@@ -115,8 +115,7 @@ lemma mapCompTerm_eq_zero_of_inner_map_eq_zero (p : StasheffIndex n)
 vanishes. -/
 lemma compMapTerm_eq_zero_of_map_eq_zero [NeZero n] (c : Composition n)
     (hm : AInfinityCategoryStruct.m (β := β') (R := R) (fun k ↦ F.obj (X (c.boundary k))) = 0)
-    (d : β)
-    (hd : operationTargetDeg deg = d) :
+    (d : β) (hd : operationTargetDeg deg = d) :
     F.compMapTerm a c d hd = 0 := by
   rw [compMapTerm, hm, GradedMultilinearMap.zero_v, zero_apply, map_zero]
 
@@ -270,6 +269,25 @@ lemma mapCompSum_eq_zero_of_four_le {n : ℕ} (hn : 4 ≤ n) {X : Fin (n + 1) �
       simp only [Set.mem_insert_iff, Set.mem_singleton_iff]
       omega) d hd
 
+/-- A composition into one or two blocks, each of size one or two, is `[1]`, `[2]`, `[1, 1]`,
+`[1, 2]`, `[2, 1]` or `[2, 2]`. -/
+private lemma blocks_eq_of_arity_le_two {n : ℕ} (c : Composition n)
+    (h : ¬(c.length ∉ ({1, 2} : Set ℕ) ∨ ∃ l, c.blocksFun l ∉ ({1, 2} : Set ℕ))) :
+    c.blocks = [1] ∨ c.blocks = [2] ∨ c.blocks = [1, 1] ∨ c.blocks = [1, 2] ∨
+      c.blocks = [2, 1] ∨ c.blocks = [2, 2] := by
+  revert h
+  obtain ⟨blocks, -, -⟩ := c
+  intro h
+  push Not at h
+  rcases blocks with _ | ⟨x, _ | ⟨y, _ | ⟨z, l⟩⟩⟩
+  · simp [Composition.length] at h
+  · have hx : x = 1 ∨ x = 2 := h.2 ⟨0, by simp [Composition.length]⟩
+    rcases hx with rfl | rfl <;> simp
+  · have hx : x = 1 ∨ x = 2 := h.2 ⟨0, by simp [Composition.length]⟩
+    have hy : y = 1 ∨ y = 2 := h.2 ⟨1, by simp [Composition.length]⟩
+    rcases hx with rfl | rfl <;> rcases hy with rfl | rfl <;> simp
+  · simp [Composition.length] at h
+
 include hm' hF in
 /-- In arity 3, only the two terms m'₂(φ₂(a₁, a₂), φ₁(a₃)) and m'₂(φ₁(a₁), φ₂(a₂, a₃)) of the
 right-hand side of the functor equation survive, indexed by the compositions (2, 1) and
@@ -280,20 +298,10 @@ lemma compMapSum_arity_three_of_arity_notMem {X : Fin (3 + 1) → Obj} {deg : Fi
       F.compMapTerm a ⟨[2, 1], by simp, rfl⟩ d hd +
         F.compMapTerm a ⟨[1, 2], by simp, rfl⟩ d hd := by
   refine Fintype.sum_eq_add _ _ (by decide) fun c ⟨h₁, h₂⟩ ↦
-    F.compMapTerm_eq_zero_of_arity_notMem a {1, 2} {1, 2} hm' hF c ?_ d hd
-  obtain ⟨blocks, hpos, hsum⟩ := c
-  rcases blocks with _ | ⟨x, _ | ⟨y, _ | ⟨z, l⟩⟩⟩
-  · simp at hsum
-  · simp only [List.sum_cons, List.sum_nil, add_zero] at hsum
-    refine Or.inr ⟨⟨0, by simp [Composition.length]⟩, ?_⟩
-    show ¬(x = 1 ∨ x = 2)
-    omega
-  · by_contra! h
-    have hx : x = 1 ∨ x = 2 := h.2 ⟨0, by simp [Composition.length]⟩
-    have hy : y = 1 ∨ y = 2 := h.2 ⟨1, by simp [Composition.length]⟩
-    simp only [List.sum_cons, List.sum_nil] at hsum
-    rcases hx with rfl | rfl <;> rcases hy with rfl | rfl <;> first | omega | simp_all
-  · exact Or.inl (by simp [Composition.length])
+    F.compMapTerm_eq_zero_of_arity_notMem a {1, 2} {1, 2} hm' hF c (by_contra fun h ↦ ?_) d hd
+  have := c.blocks_sum
+  rcases blocks_eq_of_arity_le_two c h with h | h | h | h | h | h <;>
+    simp_all [Composition.ext_iff]
 
 include hm' hF in
 /-- In arity 4, only the term m'₂(φ₂(a₁, a₂), φ₂(a₃, a₄)) of the right-hand side of the functor
@@ -302,20 +310,10 @@ lemma compMapSum_arity_four_of_arity_notMem {X : Fin (4 + 1) → Obj} {deg : Fin
     (a : ∀ i : Fin 4, ComposableHom β R X i (deg i)) (d : β) (hd : operationTargetDeg deg = d) :
     F.compMapSum a d hd = F.compMapTerm a ⟨[2, 2], by simp, rfl⟩ d hd := by
   refine Fintype.sum_eq_single _ fun c hc ↦
-    F.compMapTerm_eq_zero_of_arity_notMem a {1, 2} {1, 2} hm' hF c ?_ d hd
-  obtain ⟨blocks, hpos, hsum⟩ := c
-  rcases blocks with _ | ⟨x, _ | ⟨y, _ | ⟨z, l⟩⟩⟩
-  · simp at hsum
-  · simp only [List.sum_cons, List.sum_nil, add_zero] at hsum
-    refine Or.inr ⟨⟨0, by simp [Composition.length]⟩, ?_⟩
-    show ¬(x = 1 ∨ x = 2)
-    omega
-  · by_contra! h
-    have hx : x = 1 ∨ x = 2 := h.2 ⟨0, by simp [Composition.length]⟩
-    have hy : y = 1 ∨ y = 2 := h.2 ⟨1, by simp [Composition.length]⟩
-    simp only [List.sum_cons, List.sum_nil] at hsum
-    rcases hx with rfl | rfl <;> rcases hy with rfl | rfl <;> first | omega | simp_all
-  · exact Or.inl (by simp [Composition.length])
+    F.compMapTerm_eq_zero_of_arity_notMem a {1, 2} {1, 2} hm' hF c (by_contra fun h ↦ ?_) d hd
+  have := c.blocks_sum
+  rcases blocks_eq_of_arity_le_two c h with h | h | h | h | h | h <;>
+    simp_all [Composition.ext_iff]
 
 include hm' hF in
 /-- In arity n ≥ 5, every term of the right-hand side of the functor equation involves a functor
@@ -325,21 +323,9 @@ lemma compMapSum_eq_zero_of_five_le {n : ℕ} [NeZero n] (hn : 5 ≤ n) {X : Fin
     (hd : operationTargetDeg deg = d) :
     F.compMapSum a d hd = 0 := by
   refine Finset.sum_eq_zero fun c _ ↦
-    F.compMapTerm_eq_zero_of_arity_notMem a {1, 2} {1, 2} hm' hF c ?_ d hd
-  obtain ⟨blocks, hpos, hsum⟩ := c
-  rcases blocks with _ | ⟨x, _ | ⟨y, _ | ⟨z, l⟩⟩⟩
-  · simp at hsum
-    omega
-  · simp only [List.sum_cons, List.sum_nil, add_zero] at hsum
-    refine Or.inr ⟨⟨0, by simp [Composition.length]⟩, ?_⟩
-    show ¬(x = 1 ∨ x = 2)
-    omega
-  · by_contra! h
-    have hx : x = 1 ∨ x = 2 := h.2 ⟨0, by simp [Composition.length]⟩
-    have hy : y = 1 ∨ y = 2 := h.2 ⟨1, by simp [Composition.length]⟩
-    simp only [List.sum_cons, List.sum_nil] at hsum
-    omega
-  · exact Or.inl (by simp [Composition.length])
+    F.compMapTerm_eq_zero_of_arity_notMem a {1, 2} {1, 2} hm' hF c (by_contra fun h ↦ ?_) d hd
+  have := c.blocks_sum
+  rcases blocks_eq_of_arity_le_two c h with h | h | h | h | h | h <;> simp [h] at this <;> omega
 
 end Vanishing
 
