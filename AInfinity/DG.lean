@@ -308,12 +308,12 @@ noncomputable instance aInfinityCategory : AInfinityCategory ℤ R C :=
     (fun X Y _ _ _ _ _ a ↦ differential_differential X Y _ _ _ a)
     (fun X Y Z _ _ _ _ _ _ h hp hq he a b ↦ by
       simp only [gradedDifferential_v]
-      rw [differential_composition X Y Z h hp hq he, toMul_sign_sub_degOne_int,
+      rw [differential_composition X Y Z h hp hq he, toMul_sign_sub_degOne, toMul_sign_int,
         Units.neg_smul]
       abel)
     (fun W X Y Z _ _ _ _ _ _ h h' h₁ a b c ↦ by
-      rw [composition_composition W X Y Z h h' h₁, toMul_sign_sub_degOne_int, Units.neg_smul,
-        smul_smul, Int.units_mul_self, one_smul, neg_add_cancel])
+      rw [composition_composition W X Y Z h h' h₁, toMul_sign_sub_degOne, toMul_sign_int,
+        Units.neg_smul, smul_smul, Int.units_mul_self, one_smul, neg_add_cancel])
 
 end DGCategory
 

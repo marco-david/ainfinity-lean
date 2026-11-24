@@ -113,7 +113,7 @@ lemma composition_leibniz (X Y Z : BoundedCochainComplex V) {p q e p' q' d : ℤ
   rw [FinCochain.toCochain_add, FinCochain.toCochain_add, FinCochain.toCochain_units_smul,
     toCochain_composition, toCochain_composition, toCochain_gradedDifferential_v,
     toCochain_gradedDifferential_v, toCochain_gradedDifferential_v, toCochain_composition,
-    FinCochain.toCochain_zero, toMul_sign_sub_degOne_int, HomComplex.δ_units_smul,
+    FinCochain.toCochain_zero, toMul_sign_sub_degOne, toMul_sign_int, HomComplex.δ_units_smul,
     HomComplex.δ_comp _ _ _ (p + degOne) (q + degOne) (p + q + degOne) rfl rfl rfl,
     show (q + degOne).negOnePow = -q.negOnePow from Int.negOnePow_succ q]
   simp only [smul_add, smul_smul, neg_mul, Int.units_mul_self, Units.neg_smul, one_smul]
@@ -130,9 +130,9 @@ lemma composition_assoc (W X Y Z : BoundedCochainComplex V) {p q r e e' d : ℤ}
   apply FinCochain.toCochain_injective
   rw [FinCochain.toCochain_add, FinCochain.toCochain_units_smul, toCochain_composition,
     toCochain_composition, toCochain_composition, toCochain_composition,
-    FinCochain.toCochain_zero, toMul_sign_sub_degOne_int, HomComplex.Cochain.units_smul_comp,
-    HomComplex.Cochain.comp_units_smul, HomComplex.Cochain.comp_assoc _ _ _ rfl rfl rfl,
-    Int.negOnePow_add]
+    FinCochain.toCochain_zero, toMul_sign_sub_degOne, toMul_sign_int,
+    HomComplex.Cochain.units_smul_comp, HomComplex.Cochain.comp_units_smul,
+    HomComplex.Cochain.comp_assoc _ _ _ rfl rfl rfl, Int.negOnePow_add]
   rcases Int.units_eq_one_or q.negOnePow with hq | hq <;>
     rcases Int.units_eq_one_or r.negOnePow with hr | hr <;> simp [hq, hr]
 
