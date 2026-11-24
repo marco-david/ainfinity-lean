@@ -2,7 +2,9 @@ import AInfinity.AInfinityCategory
 import AInfinity.AInfinityCategoryStruct
 import AInfinity.AInfinityFunctor
 import AInfinity.ArityLeTwo
+import AInfinity.ComposableMultilinearMap
 import AInfinity.DG
+import AInfinity.FunctorComposition.Assoc
 import AInfinity.FunctorComposition.Basic
 import AInfinity.FunctorComposition.BlockMap
 import AInfinity.FunctorComposition.CompMapIndex

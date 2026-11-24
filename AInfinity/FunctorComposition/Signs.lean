@@ -26,7 +26,7 @@ in their two descriptions by `MapCompIndex` and `CompMapIndex`.
   sign of the inputs after its inner operation.
 * `AInfinityTheory.tailSign_sizeUpTo_add`: splitting the inputs from a position inside a block of
   a composition into those inside the block and those after it.
-* `AInfinityTheory.tailSign_functorTargetDeg_embedding`: the reduced degree of a value of an
+* `AInfinityTheory.tailSign_targetDeg_embedding`: the reduced degree of a value of an
   A∞-functor is the sum of the reduced degrees of its inputs, so the Koszul sign of the values
   of `F` on the blocks of a composition is the Koszul sign of the original inputs.
 * `AInfinityTheory.MapCompIndex.stasheffSign_eq`,
@@ -99,19 +99,19 @@ theorem tailSign_sizeUpTo_add (deg : Fin n → β) (c : Composition n) (j : Fin 
 
 /-- The reduced degree ‖φₖ(a₁, …, aₖ)‖ of a value of an A∞-functor is the sum of the reduced
 degrees ‖aᵢ‖ of its inputs, since φₖ has degree 1 - k. -/
-lemma toMul_sign_functorTargetDeg_sub_degOne {k : ℕ} (d : Fin k → β) :
-    (sign (functorTargetDeg d - degOne)).toMul = ∏ i, (sign (d i - degOne)).toMul := by
+lemma toMul_sign_targetDeg_sub_degOne {k : ℕ} (d : Fin k → β) :
+    (sign (targetDeg 1 d - degOne)).toMul = ∏ i, (sign (d i - degOne)).toMul := by
   rw [← toMul_sum, ← map_sum]
   congr 2
-  simp only [functorTargetDeg, Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ,
+  simp only [targetDeg, Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ,
     Fintype.card_fin]
   module
 
 /-- The Koszul sign of the values of an A∞-functor on the blocks of a composition `c`, from the
 block `k` on, is the Koszul sign of the original inputs from the boundary of the block `k` on. -/
-theorem tailSign_functorTargetDeg_embedding {β' : Type*} [AddCommGroup β'] [Grading β']
+theorem tailSign_targetDeg_embedding {β' : Type*} [AddCommGroup β'] [Grading β']
     (φ : β →+ᵍ β') (deg : Fin n → β) (c : Composition n) (k : ℕ) :
-    tailSign (fun l ↦ φ (functorTargetDeg fun i ↦ deg (c.embedding l i))) k =
+    tailSign (fun l ↦ φ (targetDeg 1 fun i ↦ deg (c.embedding l i))) k =
       tailSign deg (c.sizeUpTo k) := by
   rw [tailSign_eq_prod_ite, tailSign_eq_prod_ite, ← c.blocksFinEquiv.prod_comp,
     Fintype.prod_sigma]
@@ -119,7 +119,7 @@ theorem tailSign_functorTargetDeg_embedding {β' : Type*} [AddCommGroup β'] [Gr
   simp only [Composition.blocksFinEquiv, Equiv.coe_fn_mk, c.sizeUpTo_le_embedding_iff]
   split_ifs
   · rw [← GradingHom.map_degOne φ, ← map_sub, GradingHom.map_sign,
-      toMul_sign_functorTargetDeg_sub_degOne]
+      toMul_sign_targetDeg_sub_degOne]
   · simp
 
 /-- The Koszul sign of a term of the left-hand side of the functor equation for `G.comp F` is the
@@ -137,10 +137,10 @@ theorem MapCompIndex.stasheffSign_eq (deg : Fin n → β) (x : MapCompIndex n) :
 values of `F` is the Koszul sign of the original inputs after the merged block. -/
 theorem CompMapIndex.stasheffSign_eq {β' : Type*} [AddCommGroup β'] [Grading β'] (φ : β →+ᵍ β')
     (deg : Fin n → β) (x : CompMapIndex n) :
-    stasheffSign (fun l ↦ φ (functorTargetDeg fun i ↦ deg (x.composition.embedding l i)))
+    stasheffSign (fun l ↦ φ (targetDeg 1 fun i ↦ deg (x.composition.embedding l i)))
         x.stasheff =
       tailSign deg (x.outer.sizeUpTo (x.block + 1)) := by
-  rw [stasheffSign_eq_tailSign, tailSign_functorTargetDeg_embedding, x.r_eq, x.s_eq,
+  rw [stasheffSign_eq_tailSign, tailSign_targetDeg_embedding, x.r_eq, x.s_eq,
     ← x.sizeUpTo_add_length 0, add_zero]
 
 end AInfinityTheory

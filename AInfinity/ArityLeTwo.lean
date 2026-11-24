@@ -91,7 +91,7 @@ lemma m_eq_zero {k : ℕ} [NeZero k] (hk : k ∉ ({1, 2} : Set ℕ)) (X : Fin (k
 include differential_differential in
 /-- The arity-one Stasheff identity holds as soon as the differential squares to zero. -/
 lemma stasheffSum_eq_zero_of_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 → β}
-    (a : ∀ i : Fin 1, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin 1, ComposableHom β R X i (deg i)) {d : β} (hd : targetDeg 3 deg = d) :
     letI := ofArityLeTwo f g
     stasheffSum a d hd = 0 := by
   let := ofArityLeTwo f g
@@ -101,7 +101,7 @@ lemma stasheffSum_eq_zero_of_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 �
 include leibniz in
 /-- The arity-two Stasheff identity holds as soon as the Leibniz rule does. -/
 lemma stasheffSum_eq_zero_of_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 → β}
-    (a : ∀ i : Fin 2, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin 2, ComposableHom β R X i (deg i)) {d : β} (hd : targetDeg 3 deg = d) :
     letI := ofArityLeTwo f g
     stasheffSum a d hd = 0 := by
   let := ofArityLeTwo f g
@@ -112,7 +112,7 @@ include assoc in
 /-- The arity-three Stasheff identity holds as soon as the composition is associative up to
 the Koszul sign: the four terms involving an operation of arity 3 vanish. -/
 lemma stasheffSum_eq_zero_of_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 → β}
-    (a : ∀ i : Fin 3, ComposableHom β R X i (deg i)) {d : β} (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin 3, ComposableHom β R X i (deg i)) {d : β} (hd : targetDeg 3 deg = d) :
     letI := ofArityLeTwo f g
     stasheffSum a d hd = 0 := by
   let := ofArityLeTwo f g
@@ -129,7 +129,7 @@ lemma stasheffSum_eq_zero_of_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 
 operation of arity at least 3, which vanishes. -/
 lemma stasheffSum_eq_zero_of_four_le {n : ℕ} (hn : 4 ≤ n) {X : Fin (n + 1) → Obj}
     {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) {d : β}
-    (hd : stasheffTargetDeg deg = d) :
+    (hd : targetDeg 3 deg = d) :
     letI := ofArityLeTwo f g
     stasheffSum a d hd = 0 :=
   letI := ofArityLeTwo f g

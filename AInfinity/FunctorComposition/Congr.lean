@@ -22,11 +22,11 @@ descriptions of a term of the functor equation for a composite of A∞-functors.
 * `AInfinityTheory.GradedLinearQuiver.homCongr_eq_trans`,
   `AInfinityTheory.GradedLinearQuiver.homCongr_eq_symm`: transitivity and symmetry of equality
   after transport.
-* `AInfinityTheory.AInfinityCategoryStruct.m_v_congr`: congruence for the operations `m`.
-* `AInfinityTheory.AInfinityFunctorData.map_v_congr`: congruence for the components of
-  A∞-functor data.
-* `AInfinityTheory.AInfinityFunctorData.compositionBlockMap_congr`: congruence for the values of
-  the components of A∞-functor data on the blocks of compositions.
+* `AInfinityTheory.AInfinityCategoryStruct.m_v_congr`: congruence for the operations `m`, the
+  case of `ComposableMultilinearMap.map_v_congr` for
+  `AInfinityCategoryStruct.toComposableMultilinearMap`.
+* `AInfinityTheory.ComposableMultilinearMap.compositionBlockMap_congr`: congruence for the values
+  of the components of A∞-functor data on the blocks of compositions.
 
 ## Implementation notes
 
@@ -90,24 +90,6 @@ lemma homCongr_congrArg {ι : Sort*} {A B : ι → Obj} {δ : ι → β} (f : �
   rfl
 
 end GradedLinearQuiver
-
-section Degrees
-
-variable {β : Type*} [AddCommGroup β] [Grading β]
-
-lemma functorTargetDeg_congr {k k' : ℕ} (e : k = k') {δ : Fin k → β} {δ' : Fin k' → β}
-    (h : ∀ i, δ i = δ' (i.cast e)) : functorTargetDeg δ = functorTargetDeg δ' := by
-  subst e
-  obtain rfl : δ = δ' := funext h
-  rfl
-
-lemma operationTargetDeg_congr {k k' : ℕ} (e : k = k') {δ : Fin k → β} {δ' : Fin k' → β}
-    (h : ∀ i, δ i = δ' (i.cast e)) : operationTargetDeg δ = operationTargetDeg δ' := by
-  subst e
-  obtain rfl : δ = δ' := funext h
-  rfl
-
-end Degrees
 
 /-- If two compositions have a block in the same position and of the same size, the inputs in
 these blocks agree. -/
@@ -213,20 +195,15 @@ inputs. -/
 lemma AInfinityCategoryStruct.m_v_congr {k k' : ℕ} [NeZero k] [NeZero k'] (e : k = k')
     {Y : Fin (k + 1) → Obj} {Y' : Fin (k' + 1) → Obj} (hY : ∀ i, Y i = Y' (i.cast (by rw [e])))
     {δ : Fin k → β} {δ' : Fin k' → β} (hδ : ∀ i, δ i = δ' (i.cast e)) {j j' : β}
-    (hj : operationTargetDeg δ = j) (hj' : operationTargetDeg δ' = j')
+    (hj : targetDeg 2 δ = j) (hj' : targetDeg 2 δ' = j')
     {b : ∀ i, ComposableHom β R Y i (δ i)} {b' : ∀ i, ComposableHom β R Y' i (δ' i)}
     (hb : ∀ i, homCongr R (hY i.castSucc) (hY i.succ) (hδ i) (b i) = b' (i.cast e)) :
     homCongr R ((hY 0).trans (congrArg Y' (Fin.cast_zero _)))
       ((hY _).trans (congrArg Y' Fin.cast_last))
-      (hj.symm.trans ((operationTargetDeg_congr e hδ).trans hj'))
+      (hj.symm.trans ((targetDeg_congr 2 e hδ).trans hj'))
       ((AInfinityCategoryStruct.m Y).v δ j hj b) =
-        (AInfinityCategoryStruct.m Y').v δ' j' hj' b' := by
-  subst e
-  obtain rfl : Y = Y' := funext hY
-  obtain rfl : δ = δ' := funext hδ
-  obtain rfl : b = b' := funext hb
-  subst hj hj'
-  rfl
+        (AInfinityCategoryStruct.m Y').v δ' j' hj' b' :=
+  (toComposableMultilinearMap β R Obj).map_v_congr e hY hδ hj hj' hb
 
 /-- Two inner outputs of Stasheff terms agree as soon as their arities, objects, degrees and
 inputs do. -/
@@ -239,7 +216,7 @@ lemma stasheffInner_congr {n' : ℕ} {X' : Fin (n' + 1) → Obj} {deg' : Fin n' 
     (hd : stasheffInnerDeg deg p = d) (hd' : stasheffInnerDeg deg' p' = d') :
     homCongr R ((hX 0).trans (congrArg (stasheffObjIn X' p') (Fin.cast_zero _)))
       ((hX _).trans (congrArg (stasheffObjIn X' p') Fin.cast_last))
-      (hd.symm.trans ((operationTargetDeg_congr e hdeg).trans hd'))
+      (hd.symm.trans ((targetDeg_congr 2 e hdeg).trans hd'))
       (stasheffInner a p d hd) = stasheffInner a' p' d' hd' :=
   AInfinityCategoryStruct.m_v_congr e hX hdeg hd hd' ha
 
@@ -261,7 +238,7 @@ lemma homCongr_stasheffInputsOut_of_eq (i : Fin (p.r + 1 + p.t)) (h : (i : ℕ) 
 
 end Positions
 
-namespace AInfinityFunctorData
+namespace ComposableMultilinearMap
 
 variable {β β' β'' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
   [AddCommGroup β''] [Grading β''] {R : Type*} [Semiring R] {Obj Obj' Obj'' : Type*}
@@ -270,25 +247,6 @@ section Congruence
 
 variable [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
   (F : AInfinityFunctorData β β' R Obj Obj')
-
-/-- Congruence for the components of A∞-functor data along an equality of arities, object
-strings, degrees and inputs. -/
-lemma map_v_congr {k k' : ℕ} [NeZero k] [NeZero k'] (e : k = k') {Y : Fin (k + 1) → Obj}
-    {Y' : Fin (k' + 1) → Obj} (hY : ∀ i, Y i = Y' (i.cast (by rw [e]))) {δ : Fin k → β}
-    {δ' : Fin k' → β} (hδ : ∀ i, δ i = δ' (i.cast e)) {j j' : β}
-    (hj : functorTargetDeg δ = j) (hj' : functorTargetDeg δ' = j')
-    {b : ∀ i, ComposableHom β R Y i (δ i)} {b' : ∀ i, ComposableHom β R Y' i (δ' i)}
-    (hb : ∀ i, homCongr R (hY i.castSucc) (hY i.succ) (hδ i) (b i) = b' (i.cast e)) :
-    homCongr R (congrArg F.obj ((hY 0).trans (congrArg Y' (Fin.cast_zero _))))
-      (congrArg F.obj ((hY _).trans (congrArg Y' Fin.cast_last)))
-      (congrArg F.degMap (hj.symm.trans ((functorTargetDeg_congr e hδ).trans hj')))
-      ((F.map Y).v δ j hj b) = (F.map Y').v δ' j' hj' b' := by
-  subst e
-  obtain rfl : Y = Y' := funext hY
-  obtain rfl : δ = δ' := funext hδ
-  obtain rfl : b = b' := funext hb
-  subst hj hj'
-  rfl
 
 /-- The values of `F` on two blocks of compositions, possibly of different composable strings,
 agree as soon as the blocks have the same size, objects, degrees and inputs. -/
@@ -302,7 +260,7 @@ lemma compositionBlockMap_congr {n₁ n₂ : ℕ} {X₁ : Fin (n₁ + 1) → Obj
       a₂ (c₂.embedding l₂ (i.cast e))) :
     homCongr R (congrArg F.obj (by simpa using hX 0))
       (congrArg F.obj (by simpa using hX (Fin.last _)))
-      (congrArg F.degMap (functorTargetDeg_congr e hdeg))
+      (congrArg F.degMap (targetDeg_congr 1 e hdeg))
       (F.compositionBlockMap a₁ c₁ l₁) = F.compositionBlockMap a₂ c₂ l₂ := by
   rw [compositionBlockMap, compositionBlockMap, homCongr_homCongr]
   exact homCongr_eq_homCongr_of_eq (F.map_v_congr e hX hdeg rfl rfl ha)
@@ -317,7 +275,7 @@ lemma compositionBlockMap_congr_of_sizeUpTo_eq {c₁ c₂ : Composition n} {l₁
     homCongr R (congrArg (fun k ↦ F.obj (X k)) (Fin.ext (by simp [Composition.boundary, hs])))
       (congrArg (fun k ↦ F.obj (X k))
         (Fin.ext (by simp [Composition.boundary, Composition.sizeUpTo_succ', hs, e])))
-      (congrArg F.degMap (functorTargetDeg_congr e fun i ↦
+      (congrArg F.degMap (targetDeg_congr 1 e fun i ↦
         congrArg deg (Composition.embedding_eq_of_sizeUpTo_eq hs e i)))
       (F.compositionBlockMap a c₁ l₁) = F.compositionBlockMap a c₂ l₂ :=
   F.compositionBlockMap_congr a a e (fun i ↦ congrArg X (Fin.ext (by simp [hs])))
@@ -334,7 +292,7 @@ lemma compositionBlockMap_congr_compositionBlockMap_embedding {c₁ c : Composit
         (Fin.ext (by simp [Composition.boundary, hs])))
       (congrArg (fun k ↦ F.obj (X k)) (Fin.ext (by
         simp [Composition.boundary, Composition.sizeUpTo_succ', hs, e, add_assoc])))
-      (congrArg F.degMap (functorTargetDeg_congr e fun i ↦
+      (congrArg F.degMap (targetDeg_congr 1 e fun i ↦
         congrArg deg (Composition.embedding_eq_embedding_embedding hs e i)))
       (F.compositionBlockMap a c₁ l₁) =
       F.compositionBlockMap (X := compositionBlockObj X c j) (fun i ↦ a (c.embedding j i)) c₂ l₂ :=
@@ -345,6 +303,6 @@ lemma compositionBlockMap_congr_compositionBlockMap_embedding {c₁ c : Composit
 
 end Congruence
 
-end AInfinityFunctorData
+end ComposableMultilinearMap
 
 end AInfinityTheory

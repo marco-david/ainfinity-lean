@@ -7,23 +7,25 @@ module
 
 public import AInfinity.FunctorComposition.Lemmas
 
-/-! # The index type of the right-hand side of the functor equation for a composite
+/-! # The index type of a threefold composite
 
-The right-hand side of the functor equation for a composite `G.comp F` of A∞-functors and the
-sum, over all compositions, of the right-hand sides of the functor equations for `G` on the values
-of `F` are sums of terms
-$$m''_k(G(F(\dots), \dots, F(\dots)), \dots, G(F(\dots), \dots, F(\dots))).$$
-In the second sum, such a term is described by a composition c of `n` and a composition of
-`c.length`. In the first, it is described by a composition of `n` and a composition of each of its
-blocks. This file records both descriptions in the index type `CompMapMapIndex`, related only by
-equalities of natural numbers, and states the combinatorial facts about it that the reindexing in
-`AInfinity.FunctorComposition.Reindex` relies on. Mathlib's `Composition.sigmaEquivSigmaPi`
-matches the two descriptions; the lemmas on two-level compositions in
-`AInfinity.FunctorComposition.Lemmas` relate it to `CompMapMapIndex`.
+For a composable multilinear map `H` and A∞-functor data `G` and `F`, the composites
+`(H.comp G).comp F` and `H.comp (G.comp F)` are sums of terms
+$$H_k(G(F(\dots), \dots, F(\dots)), \dots, G(F(\dots), \dots, F(\dots))).$$
+In `(H.comp G).comp F`, such a term is described by a composition c of `n` and a composition of
+`c.length`. In `H.comp (G.comp F)`, it is described by a composition of `n` and a composition of
+each of its blocks. This file records both descriptions in the index type `CompMapMapIndex`,
+related only by equalities of natural numbers, and states the combinatorial facts about it that
+the proof of associativity in `AInfinity.FunctorComposition.Assoc` relies on. For the operations
+`m''` of an A∞-category in place of `H`, the two composites are the sum of the right-hand sides of
+the functor equations for `G` on the values of `F` and the right-hand side of the functor
+equation for `G.comp F`. Mathlib's `Composition.sigmaEquivSigmaPi` matches the two descriptions;
+the lemmas on two-level compositions in `AInfinity.FunctorComposition.Lemmas` relate it to
+`CompMapMapIndex`.
 
 ## Main definitions
 
-* `AInfinityTheory.CompMapMapIndex`: the indices of the terms m''(G(F, …, F), …, G(F, …, F)).
+* `AInfinityTheory.CompMapMapIndex`: the indices of the terms H(G(F, …, F), …, G(F, …, F)).
 * `AInfinityTheory.CompMapMapIndex.ofGather`: the index given by both descriptions, when the
   second is the image of the first under `Composition.sigmaEquivSigmaPi`.
 * `AInfinityTheory.CompMapMapIndex.ofSigma`: the inverse of `CompMapMapIndex.toSigma`.
@@ -53,14 +55,12 @@ namespace AInfinityTheory
 
 variable {n : ℕ}
 
-/-- The indices of a term m''(G(F(…), …, F(…)), …, G(F(…), …, F(…))) of the right-hand side of
-the functor equation for a composite `G.comp F`, in its two descriptions. In the sum, over all
-compositions, of the right-hand sides of the functor equations for `G` on the values of `F`, it is
-indexed by a composition c of `n` into the blocks of inputs of the components of `F` and by a
+/-- The indices of a term H(G(F(…), …, F(…)), …, G(F(…), …, F(…))) of the composites
+`(H.comp G).comp F` and `H.comp (G.comp F)`, in its two descriptions. In `(H.comp G).comp F`, it
+is indexed by a composition c of `n` into the blocks of inputs of the components of `F` and by a
 composition c' of `c.length` grouping the values of `F` into the inputs of the components of `G`.
-In the right-hand side of the functor equation for `G.comp F`, it is indexed by a composition e of
-`n` into the blocks of inputs of the components of `G.comp F` and by the compositions of the
-blocks of `e` into the blocks of c. -/
+In `H.comp (G.comp F)`, it is indexed by a composition e of `n` into the blocks of inputs of the
+components of `G.comp F` and by the compositions of the blocks of `e` into the blocks of c. -/
 structure CompMapMapIndex (n : ℕ) where
   /-- The composition c of `n` into the blocks of inputs of the components of `F`. -/
   composition : Composition n
@@ -86,14 +86,13 @@ structure CompMapMapIndex (n : ℕ) where
 
 namespace CompMapMapIndex
 
-/-- The description of a term of the right-hand side of the functor equation for `G.comp F` by
-which it appears in the sum of the right-hand sides of the functor equations for `G` on the values
-of `F`: a composition c of `n` and a composition of `c.length`. -/
+/-- The description of a term by which it appears in `(H.comp G).comp F`: a composition c of `n`
+and a composition of `c.length`. -/
 def toSigma (x : CompMapMapIndex n) : Σ c : Composition n, Composition c.length :=
   ⟨x.composition, x.grouping⟩
 
-/-- The description of a term of the right-hand side of the functor equation for `G.comp F` by
-which it appears in that sum: a composition of `n` and a composition of each of its blocks. -/
+/-- The description of a term by which it appears in `H.comp (G.comp F)`: a composition of `n`
+and a composition of each of its blocks. -/
 def toSigmaPi (x : CompMapMapIndex n) :
     Σ e : Composition n, ∀ l : Fin e.length, Composition (e.blocksFun l) :=
   ⟨x.outer, x.inner⟩
@@ -202,8 +201,8 @@ term, given by `ofSigma`. -/
 theorem bijective_toSigma : Function.Bijective (toSigma (n := n)) :=
   Function.bijective_iff_has_inverse.2 ⟨ofSigma, ofSigma_toSigma, toSigma_ofSigma⟩
 
-/-- The indices of the terms of the right-hand side of the functor equation for `G.comp F` form a
-finite type, through their description by a composition and a composition of its length. -/
+/-- The indices of the terms of a threefold composite form a finite type, through their
+description by a composition and a composition of its length. -/
 instance : Fintype (CompMapMapIndex n) :=
   .ofEquiv _ (Equiv.ofBijective _ bijective_toSigma).symm
 

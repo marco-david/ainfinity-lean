@@ -19,17 +19,17 @@ This file defines the terms of both sides, transported to the endpoints `G (F X�
 
 ## Main definitions
 
-* `AInfinityTheory.AInfinityFunctorData.mapCompSumBlockMap`,
-  `AInfinityTheory.AInfinityFunctorData.compMapSumBlockMap`: the left-hand and right-hand sides
+* `AInfinityTheory.ComposableMultilinearMap.mapCompSumBlockMap`,
+  `AInfinityTheory.ComposableMultilinearMap.compMapSumBlockMap`: the left-hand and right-hand sides
   of the functor equation of `G` on the values of the components of `F` on the blocks of a
   composition of `n`.
 * `AInfinityTheory.updateComposableHom`: a composable string with one morphism replaced by a
   morphism of another degree.
-* `AInfinityTheory.AInfinityFunctorData.compMapBlockUpdate`: the component of `G` applied to the
+* `AInfinityTheory.ComposableMultilinearMap.compMapBlockUpdate`: the component of `G` applied to the
   values of `F` on the blocks of a composition, with one of them replaced, as a linear map in the
   replacing morphism.
-* `AInfinityTheory.AInfinityFunctorData.compositionBlockMapCompTerm`,
-  `AInfinityTheory.AInfinityFunctorData.compositionBlockCompMapTerm`: the terms of the two sides
+* `AInfinityTheory.ComposableMultilinearMap.compositionBlockMapCompTerm`,
+  `AInfinityTheory.ComposableMultilinearMap.compositionBlockCompMapTerm`: the terms of the two sides
   of the functor equation of `F` on one block of a composition.
 -/
 
@@ -47,15 +47,15 @@ section Degrees
 
 variable {β : Type*} [AddCommGroup β] [Grading β]
 
-lemma functorTargetDeg_update {k : ℕ} (δ : Fin k → β) (j : Fin k) (e : β) :
-    functorTargetDeg (Function.update δ j e) = functorTargetDeg δ - δ j + e := by
-  simp only [functorTargetDeg, Finset.sum_update_of_mem (Finset.mem_univ j),
+lemma targetDeg_update (s : ℤ) {k : ℕ} (δ : Fin k → β) (j : Fin k) (e : β) :
+    targetDeg s (Function.update δ j e) = targetDeg s δ - δ j + e := by
+  simp only [targetDeg, Finset.sum_update_of_mem (Finset.mem_univ j),
     Finset.sdiff_singleton_eq_erase, Finset.sum_erase_eq_sub (Finset.mem_univ j)]
   abel
 
 end Degrees
 
-namespace AInfinityFunctorData
+namespace ComposableMultilinearMap
 
 variable {β β' β'' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
   [AddCommGroup β''] [Grading β''] {R : Type*} [Semiring R] {Obj Obj' Obj'' : Type*}
@@ -68,7 +68,7 @@ variable [GradedLinearQuiver β R Obj] [AInfinityCategoryStruct β' R Obj']
   [AInfinityCategoryStruct β'' R Obj'']
 variable (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj')
   {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
-  (c : Composition n) (d : β) (hd : operationTargetDeg deg = d)
+  (c : Composition n) (d : β) (hd : targetDeg 2 deg = d)
 
 /-- The term, indexed by p = (r, s, t), of the left-hand side of the functor equation of `G` on
 the values of the components of `F` on the k blocks of a composition `c` of `n`: the component
@@ -79,7 +79,7 @@ def mapCompTermBlockMap (p : StasheffIndex c.length) :
   homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
     (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
     (G.mapCompTerm (F.compositionBlockMap a c) p (F.degMap d)
-      (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd))
+      (F.targetDeg_degMap_targetDeg_embedding c d hd))
 
 /-- The left-hand side of the functor equation of `G` on the values of the components of `F`
 on the blocks of a composition `c` of `n`, as a morphism from `G (F X₀)` to `G (F Xₙ)`.
@@ -89,45 +89,30 @@ def mapCompSumBlockMap :
   homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
     (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
     (G.mapCompSum (F.compositionBlockMap a c) (F.degMap d)
-      (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd))
+      (F.targetDeg_degMap_targetDeg_embedding c d hd))
 
 lemma mapCompSumBlockMap_eq_signedStasheffSum :
     G.mapCompSumBlockMap F a c d hd =
-      signedStasheffSum (fun l ↦ F.degMap (functorTargetDeg fun j ↦ deg (c.embedding l j)))
+      signedStasheffSum (fun l ↦ F.degMap (targetDeg 1 fun j ↦ deg (c.embedding l j)))
         fun p ↦ G.mapCompTermBlockMap F a c d hd p :=
   map_signedStasheffSum _ _
 
 variable [NeZero n]
 
-/-- The term, indexed by a composition `c'` of k, of the right-hand side of the functor equation
-of `G` on the values of the components of `F` on the k blocks of a composition `c` of `n`:
-the operation of arity m = `c'.length` applied to the values of the components of `G` on the m
-groups of consecutive values of `F` given by `c'`, as a morphism from `G (F X₀)` to `G (F Xₙ)`. -/
-def compMapTermBlockMap (c' : Composition c.length) :
-    (G.obj (F.obj (X 0)) →ᵍ[R] G.obj (F.obj (X (Fin.last n)))) (G.degMap (F.degMap d)) :=
-  homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
-    (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
-    (G.compMapTerm (F.compositionBlockMap a c) c' (F.degMap d)
-      (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd))
-
 /-- The right-hand side of the functor equation of `G` on the values of the components of `F`
 on the blocks of a composition `c` of `n`, as a morphism from `G (F X₀)` to `G (F Xₙ)`.
-Summed over `c`, it is the right-hand side of the functor equation of `G.comp F`. -/
+Summed over `c`, it is the right-hand side of the functor equation of `G.comp F`
+(`ComposableMultilinearMap.sum_compMapSumBlockMap_eq_comp_compMapSum`). -/
 def compMapSumBlockMap :
     (G.obj (F.obj (X 0)) →ᵍ[R] G.obj (F.obj (X (Fin.last n)))) (G.degMap (F.degMap d)) :=
   homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
     (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
     (G.compMapSum (F.compositionBlockMap a c) (F.degMap d)
-      (F.operationTargetDeg_degMap_functorTargetDeg_embedding c d hd))
-
-lemma compMapSumBlockMap_eq_sum_compMapTermBlockMap :
-    G.compMapSumBlockMap F a c d hd =
-      ∑ c' : Composition c.length, G.compMapTermBlockMap F a c d hd c' :=
-  map_sum _ _ _
+      (F.targetDeg_degMap_targetDeg_embedding c d hd))
 
 end AInfinityCategoryStruct
 
-end AInfinityFunctorData
+end ComposableMultilinearMap
 
 /-! ### The component of `G` with one value of `F` replaced -/
 
@@ -183,7 +168,7 @@ lemma updateLinearMap_apply (b : ∀ l, ComposableHom β R Y l (δ l)) (j : Fin 
 
 end Update
 
-namespace AInfinityFunctorData
+namespace ComposableMultilinearMap
 
 variable {β β' β'' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
   [AddCommGroup β''] [Grading β''] {R : Type*} [Semiring R] {Obj Obj' Obj'' : Type*}
@@ -194,16 +179,16 @@ variable [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
   [GradedLinearQuiver β'' R Obj'']
 variable (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj')
   {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
-  (c : Composition n) (j : Fin c.length) (d : β) (hd : operationTargetDeg deg = d)
+  (c : Composition n) (j : Fin c.length) (d : β) (hd : targetDeg 2 deg = d)
 
 include hd in
-lemma functorTargetDeg_update_operationTargetDeg :
-    functorTargetDeg (Function.update
-      (fun l ↦ F.degMap (functorTargetDeg fun i ↦ deg (c.embedding l i))) j
-      (F.degMap (operationTargetDeg fun i ↦ deg (c.embedding j i)))) = F.degMap d := by
-  rw [functorTargetDeg_update, F.functorTargetDeg_degMap_functorTargetDeg_embedding c _ rfl, ← hd,
-    operationTargetDeg_eq_functorTargetDeg_add_degOne,
-    operationTargetDeg_eq_functorTargetDeg_add_degOne]
+lemma targetDeg_update_targetDeg :
+    targetDeg 1 (Function.update
+      (fun l ↦ F.degMap (targetDeg 1 fun i ↦ deg (c.embedding l i))) j
+      (F.degMap (targetDeg 2 fun i ↦ deg (c.embedding j i)))) = F.degMap d := by
+  rw [targetDeg_update, F.targetDeg_degMap_targetDeg_embedding c _ rfl, ← hd,
+    targetDeg_eq_targetDeg_add_degOne (s := 2) (t := 1) (by norm_num),
+    targetDeg_eq_targetDeg_add_degOne (s := 2) (t := 1) (by norm_num)]
   simp only [map_add, GradingHom.map_degOne]
   abel
 
@@ -215,22 +200,22 @@ of one degree higher, transported to the hom space from `G (F X₀)` to `G (F X�
 map in `x`. -/
 def compMapBlockUpdate :
     ComposableHom β' R (fun k ↦ F.obj (X (c.boundary k))) j
-        (F.degMap (operationTargetDeg fun i ↦ deg (c.embedding j i))) →ₗ[R]
+        (F.degMap (targetDeg 2 fun i ↦ deg (c.embedding j i))) →ₗ[R]
       (G.obj (F.obj (X 0)) →ᵍ[R] G.obj (F.obj (X (Fin.last n)))) (G.degMap (F.degMap d)) :=
   (homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
     (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl).toLinearMap ∘ₗ
     updateLinearMap (F.compositionBlockMap a c) j
       ((G.map fun k ↦ F.obj (X (c.boundary k))).v _ (F.degMap d)
-        (functorTargetDeg_update_operationTargetDeg F c j d hd))
+        (targetDeg_update_targetDeg F c j d hd))
 
 lemma compMapBlockUpdate_apply
     (x : ComposableHom β' R (fun k ↦ F.obj (X (c.boundary k))) j
-      (F.degMap (operationTargetDeg fun i ↦ deg (c.embedding j i)))) :
+      (F.degMap (targetDeg 2 fun i ↦ deg (c.embedding j i)))) :
     G.compMapBlockUpdate F a c j d hd x =
       homCongr R (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_zero)
         (congrArg (fun k ↦ G.obj (F.obj (X k))) c.boundary_last) rfl
         ((G.map fun k ↦ F.obj (X (c.boundary k))).v _ (F.degMap d)
-          (functorTargetDeg_update_operationTargetDeg F c j d hd)
+          (targetDeg_update_targetDeg F c j d hd)
           (updateComposableHom (F.compositionBlockMap a c) j x)) := by
   simp [compMapBlockUpdate]
 
@@ -247,7 +232,7 @@ block of a composition `c`, as the `j`-th input of an outer operation on the obj
 `F (X (c.boundary k))`. -/
 def compositionBlockMapCompTerm (p : StasheffIndex (c.blocksFun j)) :
     ComposableHom β' R (fun k ↦ F.obj (X (c.boundary k))) j
-      (F.degMap (operationTargetDeg fun i ↦ deg (c.embedding j i))) :=
+      (F.degMap (targetDeg 2 fun i ↦ deg (c.embedding j i))) :=
   homCongr R (congrArg F.obj (compositionBlockObj_zero X c j))
     (congrArg F.obj (compositionBlockObj_last X c j)) rfl
     (F.mapCompTerm (fun i ↦ a (c.embedding j i)) p _ rfl)
@@ -257,13 +242,13 @@ on the `j`-th block of a composition `c`, as the `j`-th input of an outer operat
 objects `F (X (c.boundary k))`. -/
 def compositionBlockCompMapTerm (c' : Composition (c.blocksFun j)) :
     ComposableHom β' R (fun k ↦ F.obj (X (c.boundary k))) j
-      (F.degMap (operationTargetDeg fun i ↦ deg (c.embedding j i))) :=
+      (F.degMap (targetDeg 2 fun i ↦ deg (c.embedding j i))) :=
   homCongr R (congrArg F.obj (compositionBlockObj_zero X c j))
     (congrArg F.obj (compositionBlockObj_last X c j)) rfl
     (F.compMapTerm (fun i ↦ a (c.embedding j i)) c' _ rfl)
 
 end BlockTerms
 
-end AInfinityFunctorData
+end ComposableMultilinearMap
 
 end AInfinityTheory

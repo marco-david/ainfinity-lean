@@ -44,7 +44,7 @@ class AInfinityCategory extends AInfinityCategoryStruct β R Obj where
   Stasheff sum of any composable string of morphisms vanishes. -/
   stasheffSum_eq_zero {n : ℕ} [NeZero n] {X : Fin (n + 1) → Obj} {deg : Fin n → β}
     (a : ∀ i : Fin n, GradedLinearQuiver.ComposableHom β R X i (deg i)) {d : β}
-    (hd : stasheffTargetDeg deg = d) :
+    (hd : targetDeg 3 deg = d) :
     stasheffSum a d hd = 0
 
 end
