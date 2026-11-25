@@ -2,7 +2,9 @@ name: Build Lean Docs and Blueprint
 
 # Builds the website (homepage, blueprint, API documentation) and publishes it to GitHub Pages.
 #
-# The two jobs are split so that a green pull request predicts a green `master`:
+# The two jobs are split so that a green pull request predicts a green `master`. GitHub lists
+# them by their names, "Build docs, blueprint and homepage" and "Deploy to GitHub Pages (master
+# only)"; a branch rule that requires the first one has to use that name.
 #
 #   * `site` builds and uploads the website. It runs the same steps on every event, so what it
 #     checks on a pull request is what it checks again after the merge. Keep it that way: do
@@ -48,6 +50,7 @@ concurrency:
 
 jobs:
   site:
+    name: Build docs, blueprint and homepage
     # Pinned to ubuntu-24.04 rather than ubuntu-latest. Since 2026-10-19 `ubuntu-latest` is
     # being migrated to the ubuntu-26.04 image (kernel 7.0), on which regenerating the Mathlib
     # API docs from scratch (every run that finds no docs cache) fails deterministically with
@@ -131,6 +134,8 @@ jobs:
           path: site/_site
 
   deploy:
+    # A pull request lists this job as "Skipped"; the name says why.
+    name: Deploy to GitHub Pages (master only)
     needs: site
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest # no Lake
