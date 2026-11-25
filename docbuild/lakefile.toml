@@ -1,5 +1,5 @@
-# Local counterpart of the project that the `docgen-action` step of
-# `.github/workflows/docs_blueprint.yml` generates on CI to build the API documentation; CI
+# Local counterpart of the project that the build script of `docgen-action`, run by
+# `.github/workflows/docs_blueprint.yml`, generates on CI to build the API documentation; CI
 # rewrites this file, so it only matters for building the docs locally:
 #
 #   cd docbuild && lake update ainfinity && lake build Util:docs ComputableCochainComplex:docs AInfinity:docs KLRW:docs
