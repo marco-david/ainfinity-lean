@@ -95,27 +95,63 @@ The source and target of an \Ainf{}-functor may be graded by different
 gradings $\beta$ and $\beta'$; the functor then carries a homomorphism of
 gradings $\beta \to \beta'$ along which degrees are translated.
 
+\begin{definition}[Composable multilinear map]
+\lean{AInfinityTheory.ComposableMultilinearMap, AInfinityTheory.AInfinityCategoryStruct.toComposableMultilinearMap}
+\label{AInfinityTheory.ComposableMultilinearMap}
+\leanok
+\uses{AInfinityTheory.GradedLinearQuiver, AInfinityTheory.GradingHom, AInfinityTheory.GradedMultilinearMap}
+Let $s$ be an integer. A composable multilinear map $\Phi$ of degree $s$ from a graded $R$-linear
+quiver graded by $\beta$ to one graded by $\beta'$ consists of a map $\Phi$ on objects, a
+homomorphism of gradings $\beta \to \beta'$, and, for every positive arity $n$ and every string
+of objects $X_0,\dots,X_n$, a graded multilinear map
+\[
+  \Phi_n : \Hom(X_0,X_1) \otimes \cdots \otimes \Hom(X_{n-1},X_n) \to \Hom(\Phi X_0, \Phi X_n)
+\]
+of degree $(s-n) \cdot \mathbf{1}$, where a degree $b \in \beta$ on the left corresponds to its
+image in $\beta'$ on the right. No relations are imposed. In reduced degrees, every $\Phi_n$ has
+degree $s - 1$.
+
+The operations $m_n$ of an \Ainf{}-category structure, of degree $(2-n) \cdot \mathbf{1}$, form a
+composable multilinear map of degree $2$ from the category to itself, acting as the identity on
+objects and degrees.
+\end{definition}
+
 \begin{definition}[\Ainf{}-functor data]
 \lean{AInfinityTheory.AInfinityFunctorData}
 \label{AInfinityTheory.AInfinityFunctorData}
 \leanok
-\uses{AInfinityTheory.GradedLinearQuiver, AInfinityTheory.GradingHom, AInfinityTheory.GradedMultilinearMap}
+\uses{AInfinityTheory.ComposableMultilinearMap}
 The data of an \Ainf{}-functor $F$ from a graded $R$-linear quiver graded by
-$\beta$ to one graded by $\beta'$ consists of a map $F$ on objects, a homomorphism
-of gradings $\beta \to \beta'$, and, for every positive arity $n$ and every
-string of objects $X_0,\dots,X_n$, a graded multilinear map
+$\beta$ to one graded by $\beta'$ is a composable multilinear map of degree $1$: a map $F$ on
+objects, a homomorphism of gradings $\beta \to \beta'$, and, for every positive arity $n$ and
+every string of objects $X_0,\dots,X_n$, a graded multilinear map
 \[
   \varphi_n : \Hom(X_0,X_1) \otimes \cdots \otimes \Hom(X_{n-1},X_n) \to \Hom(FX_0, FX_n)
 \]
-of degree $(1-n) \cdot \mathbf{1}$, where a degree $b \in \beta$ on the left
-corresponds to its image in $\beta'$ on the right. No relations are imposed.
+of degree $(1-n) \cdot \mathbf{1}$. No relations are imposed.
+\end{definition}
+
+\begin{definition}[Composition with \Ainf{}-functor data]
+\lean{AInfinityTheory.ComposableMultilinearMap.comp}
+\label{AInfinityTheory.ComposableMultilinearMap.comp}
+\leanok
+\uses{AInfinityTheory.ComposableMultilinearMap, AInfinityTheory.AInfinityFunctorData}
+Let $\Phi$ be a composable multilinear map of degree $s$ and $F$ be \Ainf{}-functor data such
+that the target of $F$ is the source of $\Phi$. The composite $\Phi \circ F$ is the composable
+multilinear map of degree $s$ that acts on objects and degrees by composition, with components
+\[
+  (\Phi \circ F)_n(a_1,\dots,a_n) = \sum_{i_1 + \cdots + i_k = n}
+  \Phi_k\bigl(F_{i_1}(a_1,\dots,a_{i_1}),\dots,F_{i_k}(a_{n-i_k+1},\dots,a_n)\bigr),
+\]
+summed over all compositions of $n$ into positive parts. For \Ainf{}-functor data $\Phi = G$, it
+is the composite $G \circ F$ of \Ainf{}-functor data.
 \end{definition}
 
 \begin{definition}[\Ainf{}-functor equations]
-\lean{AInfinityTheory.AInfinityFunctorData.mapCompSum, AInfinityTheory.AInfinityFunctorData.compMapSum, AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum}
+\lean{AInfinityTheory.ComposableMultilinearMap.mapCompSum, AInfinityTheory.ComposableMultilinearMap.compMapSum, AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum, AInfinityTheory.ComposableMultilinearMap.compMapSum_eq_comp_map_v}
 \label{AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum}
 \leanok
-\uses{AInfinityTheory.AInfinityFunctorData, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.signedStasheffSum, AInfinityTheory.operationTargetDeg}
+\uses{AInfinityTheory.AInfinityFunctorData, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.signedStasheffSum, AInfinityTheory.targetDeg, AInfinityTheory.ComposableMultilinearMap.comp}
 Fix \Ainf{}-category structures with operations $m$ on the source and $m'$ on the target. For composable
 inputs $a_1,\dots,a_n$, the left-hand side of the arity-$n$ functor equation is
 the signed Stasheff sum
@@ -128,7 +164,8 @@ of $n$ into positive parts, of
 \[
   m'_k\bigl(\varphi_{i_1}(a_1,\dots,a_{i_1}),\dots,\varphi_{i_k}(a_{n-i_k+1},\dots,a_n)\bigr).
 \]
-There is no sign on the right-hand side, since in reduced degrees every
+This is the value of the composite $m' \circ F$ of the operations $m'$, as a composable
+multilinear map, with $F$. There is no sign on the right-hand side, since in reduced degrees every
 $\varphi_i$ has degree $0$. Both sides lie in $\Hom(FX_0,FX_n)$, in the image under
 the grading homomorphism of the degree of $m_n(a_1,\dots,a_n)$. The functor data satisfies the
 \Ainf{}-functor equations if the two sides agree in every positive arity, for
@@ -144,3 +181,42 @@ An \Ainf{}-functor between \Ainf{}-categories is \Ainf{}-functor data that
 satisfies the \Ainf{}-functor equations for the structure maps of the two
 categories.
 \end{definition}
+
+\begin{theorem}[Associativity of the composition]
+\lean{AInfinityTheory.ComposableMultilinearMap.comp_assoc}
+\label{AInfinityTheory.ComposableMultilinearMap.comp_assoc}
+\leanok
+\uses{AInfinityTheory.ComposableMultilinearMap.comp}
+Let $H$ be a composable multilinear map and $G$ and $F$ be \Ainf{}-functor data, composable in
+this order. Then $(H \circ G) \circ F = H \circ (G \circ F)$.
+\end{theorem}
+
+\begin{proof}
+\leanok
+Both sides are sums of terms
+$H_k\bigl(G(F(\dots),\dots,F(\dots)),\dots,G(F(\dots),\dots,F(\dots))\bigr)$. On the left, such a
+term is indexed by a composition $c$ of $n$ and a composition of the number of blocks of $c$; on
+the right, by a composition of $n$ and a composition of each of its blocks. These index sets are
+in bijection, as for the composition of formal multilinear series, and the terms they index
+agree.
+\end{proof}
+
+\begin{theorem}[Composition of \Ainf{}-functors]
+\lean{AInfinityTheory.AInfinityFunctor.comp, AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum, AInfinityTheory.AInfinityFunctor.comp_assoc}
+\label{AInfinityTheory.AInfinityFunctor.comp}
+\leanok
+\uses{AInfinityTheory.AInfinityFunctor, AInfinityTheory.ComposableMultilinearMap.comp_assoc}
+The composite $G \circ F$ of \Ainf{}-functors satisfies the \Ainf{}-functor equations, so it is an
+\Ainf{}-functor. The composition of \Ainf{}-functors is associative.
+\end{theorem}
+
+\begin{proof}
+\leanok
+The left-hand side of the functor equation for $G \circ F$ is regrouped, using the functor
+equations of $F$ on each block, into the sum over all compositions $c$ of $n$ of the left-hand
+sides of the functor equations for $G$ on the values of $F$ on the blocks of $c$. By the functor
+equations of $G$, this is the sum of the corresponding right-hand sides, that is, the value of
+$(m'' \circ G) \circ F$. By associativity, it equals $m'' \circ (G \circ F)$, the right-hand side
+of the functor equation for $G \circ F$. Associativity of the composition of \Ainf{}-functors is
+the case where $H$ is an \Ainf{}-functor.
+\end{proof}

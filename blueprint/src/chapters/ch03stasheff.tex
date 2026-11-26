@@ -2,30 +2,20 @@
 
 \chapter{Stasheff Data}
 
-\begin{definition}[Operation target degree]
-\lean{AInfinityTheory.operationTargetDeg}
-\label{AInfinityTheory.operationTargetDeg}
+\begin{definition}[Target degree]
+\lean{AInfinityTheory.targetDeg}
+\label{AInfinityTheory.targetDeg}
 \leanok
 \uses{AInfinityTheory.Grading}
-Given input degrees $(d_0,\dots,d_{n-1})$ in a grading $\beta$, the
-output degree of the $n$-ary operation is
+Let $s$ be an integer. Given input degrees $(d_0,\dots,d_{n-1})$ in a grading $\beta$, the
+output degree of an $n$-ary map of degree $(s-n) \cdot \mathbf{1}$ is
 \[
-  \sum_i d_i + (2-n) \cdot \mathbf{1},
+  \sum_i d_i + (s-n) \cdot \mathbf{1},
 \]
-where the final summand is the $(2-n)$-fold multiple of the degree one
-$\mathbf{1} \in \beta$.
-\end{definition}
-
-\begin{definition}[Stasheff target degree]
-\lean{AInfinityTheory.stasheffTargetDeg}
-\label{AInfinityTheory.stasheffTargetDeg}
-\leanok
-\uses{AInfinityTheory.Grading}
-The common degree of the arity-$n$ Stasheff identity is
-\[
-  \sum_i d_i + (3-n) \cdot \mathbf{1}
-\]
-in the grading.
+where the final summand is the $(s-n)$-fold multiple of the degree one
+$\mathbf{1} \in \beta$. For $s = 2$ it is the output degree of the $n$-ary operation, for
+$s = 3$ the common degree of the arity-$n$ Stasheff identity, and for $s = 1$ the output degree
+of the arity-$n$ component of an \Ainf{}-functor.
 \end{definition}
 
 \begin{definition}[Composable hom space]
@@ -42,7 +32,7 @@ whose degree-$b$ piece is $\Hom(X_i, X_{i+1})_b$.
 \lean{AInfinityTheory.AInfinityOperation}
 \label{AInfinityTheory.AInfinityOperation}
 \leanok
-\uses{AInfinityTheory.operationTargetDeg, AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.GradedMultilinearMap}
+\uses{AInfinityTheory.targetDeg, AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.GradedMultilinearMap}
 An $n$-ary \Ainf{}-operation on a string of objects $X_0,\dots,X_n$ of a graded
 quiver $\Hom$ is a graded multilinear map
 \[
@@ -69,7 +59,7 @@ nonempty interval of inputs fed to the inner operation.
 \lean{AInfinityTheory.stasheffTerm}
 \label{AInfinityTheory.stasheffTerm}
 \leanok
-\uses{AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.StasheffIndex, AInfinityTheory.stasheffTargetDeg}
+\uses{AInfinityTheory.GradedLinearQuiver.ComposableHom, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.StasheffIndex, AInfinityTheory.targetDeg}
 Fix an \Ainf{}-category structure with operations $m$. For a Stasheff index $(r,s,t)$ of arity $n$, the
 indexed Stasheff term is obtained by first applying the inner $s$-ary operation in
 positions $r,\dots,r+s-1$ and then applying the outer $(r+1+t)$-ary operation to
@@ -112,7 +102,7 @@ with the Stasheff sign of each index. Both the Stasheff identities and the
 \lean{AInfinityTheory.stasheffSum}
 \label{AInfinityTheory.stasheffSum}
 \leanok
-\uses{AInfinityTheory.stasheffTerm, AInfinityTheory.signedStasheffSum, AInfinityTheory.stasheffTargetDeg}
+\uses{AInfinityTheory.stasheffTerm, AInfinityTheory.signedStasheffSum, AInfinityTheory.targetDeg}
 The arity-$n$ Stasheff sum is the signed Stasheff sum of the indexed Stasheff terms
 over all Stasheff indices of arity $n$, that is, of all valid composites of an inner
 operation followed by an outer operation. It lies in $\Hom(X_0,X_n)$ in any degree

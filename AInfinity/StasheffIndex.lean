@@ -20,8 +20,9 @@ operations, their degrees, and the Koszul sign of the summand.
 
 ## Main definitions
 
-* `AInfinityTheory.operationTargetDeg`, `AInfinityTheory.stasheffTargetDeg`: the degrees of
-  mₙ(a₁, …, aₙ) and of the arity-n Stasheff identity.
+* `AInfinityTheory.targetDeg`: the degree (∑ᵢ degᵢ) + (s - n) · 1 of the output of an n-ary
+  map of degree (s - n) · 1. The degrees of mₙ(a₁, …, aₙ) and of the arity-n Stasheff identity
+  are `targetDeg 2` and `targetDeg 3`.
 * `AInfinityTheory.StasheffIndex`: the index triples (r, s, t) with r + s + t = n and
   1 ≤ s.
 * `AInfinityTheory.StasheffIndex.leftIndex`, `AInfinityTheory.StasheffIndex.innerIndex`,
@@ -55,24 +56,35 @@ universe v w
 
 variable {n : ℕ}
 
-section Degrees
+section TargetDeg
 
-variable {β : Type v} [AddCommGroup β] [Grading β] (deg : Fin n → β)
+variable {β : Type v} [AddCommGroup β] [Grading β]
 
-/-- The degree of mₙ(a₁, …, aₙ) for inputs aᵢ of degrees `deg i`, where mₙ itself
-has degree 2 - n. -/
-abbrev operationTargetDeg : β :=
-  (∑ i, deg i) + (2 - n : ℤ) • degOne
+/-- The degree (∑ᵢ degᵢ) + (s - n) · 1 of Φₙ(a₁, …, aₙ), for an n-ary map Φₙ of degree
+(s - n) · 1 on inputs aᵢ of degrees `deg i`. The components of A∞-functors have `s = 1`, the
+operations mₙ of A∞-categories have `s = 2`, and the arity-n Stasheff identity, a sum of
+composites of two operations, has `s = 3`. -/
+abbrev targetDeg (s : ℤ) (deg : Fin n → β) : β :=
+  (∑ i, deg i) + (s - n : ℤ) • degOne
 
-/-- The degree of the arity-n Stasheff identity on inputs of degrees `deg`. -/
-abbrev stasheffTargetDeg : β :=
-  (∑ i, deg i) + (3 - n : ℤ) • degOne
+lemma targetDeg_congr (s : ℤ) {k k' : ℕ} (e : k = k') {δ : Fin k → β} {δ' : Fin k' → β}
+    (h : ∀ i, δ i = δ' (i.cast e)) : targetDeg s δ = targetDeg s δ' := by
+  subst e
+  obtain rfl : δ = δ' := funext h
+  rfl
 
-lemma stasheffTargetDeg_eq_operationTargetDeg_add_degOne :
-    stasheffTargetDeg deg = operationTargetDeg deg + degOne := by
+/-- Raising `s` by one raises the target degree by the degree one. -/
+lemma targetDeg_eq_targetDeg_add_degOne {s t : ℤ} (h : s = t + 1) (deg : Fin n → β) :
+    targetDeg s deg = targetDeg t deg + degOne := by
+  subst h
   module
 
-end Degrees
+/-- Homomorphisms of gradings preserve target degrees. -/
+lemma targetDeg_map {β' : Type*} [AddCommGroup β'] [Grading β'] (f : β →+ᵍ β') (s : ℤ)
+    (deg : Fin n → β) : targetDeg s (fun i ↦ f (deg i)) = f (targetDeg s deg) := by
+  simp only [targetDeg, map_add, map_sum, map_zsmul, GradingHom.map_degOne]
+
+end TargetDeg
 
 /-- An index triple (r, s, t) of the arity-n Stasheff identity: r + s + t = n and
 1 ≤ s. -/
@@ -352,7 +364,7 @@ def stasheffDegIn : Fin p.s → β :=
 
 /-- The degree of the output of the inner operation mₛ of the (r, s, t) summand. -/
 def stasheffInnerDeg : β :=
-  operationTargetDeg (stasheffDegIn deg p)
+  targetDeg 2 (stasheffDegIn deg p)
 
 /-- The input degrees of the outer operation of the (r, s, t) summand: the degrees of the
 first r inputs, then the degree of the inner output, then the degrees of the last t inputs. -/
@@ -376,9 +388,9 @@ lemma stasheffDegOut_right (k : Fin p.t) :
 
 /-- The outer operation has the Stasheff target degree. -/
 lemma stasheffDegOut_sum :
-    operationTargetDeg (stasheffDegOut deg p) = stasheffTargetDeg deg := by
+    targetDeg 2 (stasheffDegOut deg p) = targetDeg 3 deg := by
   have h : (n : ℤ) = p.r + p.s + p.t := by exact_mod_cast p.sum_eq.symm
-  simp only [operationTargetDeg, stasheffTargetDeg, Fin.sum_univ_add, stasheffDegOut_left,
+  simp only [targetDeg, Fin.sum_univ_add, stasheffDegOut_left,
     stasheffDegOut_middle, stasheffDegOut_right, Fin.sum_univ_castSucc, stasheffInnerDeg,
     stasheffDegIn, ← p.sum_leftIndex_add_sum_innerIndex_add_sum_rightIndex deg]
   rw [h]

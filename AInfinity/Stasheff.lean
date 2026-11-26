@@ -120,14 +120,14 @@ lemma stasheffInputsOut_middle_eq_zero_of_inner_eq_zero
 
 /-- The outer value of the (r, s, t) summand: the operation of arity r + 1 + t applied to
 `stasheffInputsOut a p`, in any degree `d` equal to its degree. -/
-def stasheffOuter (d : β) (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
+def stasheffOuter (d : β) (hd : targetDeg 2 (stasheffDegOut deg p) = d) :
     (stasheffObjOut X p 0 →ᵍ[R] stasheffObjOut X p (Fin.last (p.r + 1 + p.t))) d :=
   (m (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd (stasheffInputsOut a p)
 
 /-- The (r, s, t) summand of the Stasheff sum, without its Koszul sign: the outer value
 `stasheffOuter`, transported to the hom space from `X 0` to `X (Fin.last n)`, in any degree `d`
 equal to the Stasheff target degree. -/
-def stasheffTerm (d : β) (hd : stasheffTargetDeg deg = d) : (X 0 →ᵍ[R] X (Fin.last n)) d :=
+def stasheffTerm (d : β) (hd : targetDeg 3 deg = d) : (X 0 →ᵍ[R] X (Fin.last n)) d :=
   homCongr R (stasheffObjOut_zero X p) (stasheffObjOut_last X p) rfl
     (stasheffOuter a p d ((stasheffDegOut_sum deg p).trans hd))
 
@@ -139,32 +139,32 @@ lemma stasheffInner_eq_zero_of_map_eq_zero
 
 lemma stasheffOuter_eq_zero_of_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd = 0)
-    (d : β) (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
+    (d : β) (hd : targetDeg 2 (stasheffDegOut deg p) = d) :
     stasheffOuter a p d hd = 0 := by
   rw [stasheffOuter, hm, zero_apply]
 
 lemma stasheffOuter_eq_zero_of_inner_eq_zero
     (hinner : ∀ d hd, stasheffInner a p d hd = 0)
-    (d : β) (hd : operationTargetDeg (stasheffDegOut deg p) = d) :
+    (d : β) (hd : targetDeg 2 (stasheffDegOut deg p) = d) :
     stasheffOuter a p d hd = 0 :=
   MultilinearMap.map_coord_zero ((m (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd)
     p.middleIndex (stasheffInputsOut_middle_eq_zero_of_inner_eq_zero a p hinner)
 
-lemma stasheffTerm_eq_zero_iff_outer_eq_zero (d : β) (hd : stasheffTargetDeg deg = d) :
+lemma stasheffTerm_eq_zero_iff_outer_eq_zero (d : β) (hd : targetDeg 3 deg = d) :
     stasheffTerm a p d hd = 0 ↔
       stasheffOuter a p d ((stasheffDegOut_sum deg p).trans hd) = 0 :=
   (homCongr R (stasheffObjOut_zero X p) (stasheffObjOut_last X p) rfl).map_eq_zero_iff
 
 lemma stasheffTerm_eq_zero_of_outer_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd = 0)
-    (d : β) (hd : stasheffTargetDeg deg = d) :
+    (d : β) (hd : targetDeg 3 deg = d) :
     stasheffTerm a p d hd = 0 :=
   (stasheffTerm_eq_zero_iff_outer_eq_zero a p d hd).2
     (stasheffOuter_eq_zero_of_map_eq_zero a p hm _ _)
 
 lemma stasheffTerm_eq_zero_of_inner_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd = 0)
-    (d : β) (hd : stasheffTargetDeg deg = d) :
+    (d : β) (hd : targetDeg 3 deg = d) :
     stasheffTerm a p d hd = 0 :=
   (stasheffTerm_eq_zero_iff_outer_eq_zero a p d hd).2
     (stasheffOuter_eq_zero_of_inner_eq_zero a p
@@ -172,7 +172,7 @@ lemma stasheffTerm_eq_zero_of_inner_map_eq_zero
 
 /-- The full Stasheff sum in arity n, with Koszul signs, in any degree `d` equal to the
 Stasheff target degree. -/
-def stasheffSum (d : β) (hd : stasheffTargetDeg deg = d) : (X 0 →ᵍ[R] X (Fin.last n)) d :=
+def stasheffSum (d : β) (hd : targetDeg 3 deg = d) : (X 0 →ᵍ[R] X (Fin.last n)) d :=
   signedStasheffSum deg fun q => stasheffTerm a q d hd
 
 /-- If `m` vanishes in every arity outside `S`, a Stasheff term vanishes unless both its
@@ -181,7 +181,7 @@ lemma stasheffTerm_eq_zero_of_arity_notMem (S : Set ℕ)
     (hm : ∀ (k : ℕ) [NeZero k], k ∉ S → ∀ X : Fin (k + 1) → Obj, m (β := β) (R := R) X = 0)
     {n : ℕ} {X : Fin (n + 1) → Obj} {deg : Fin n → β}
     (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (p : StasheffIndex n)
-    (hS : p.s ∉ S ∨ p.r + 1 + p.t ∉ S) (d : β) (hd : stasheffTargetDeg deg = d) :
+    (hS : p.s ∉ S ∨ p.r + 1 + p.t ∉ S) (d : β) (hd : targetDeg 3 deg = d) :
     stasheffTerm a p d hd = 0 := by
   rcases hS with hS | hS
   · exact stasheffTerm_eq_zero_of_inner_map_eq_zero a p
@@ -195,13 +195,13 @@ lemma stasheffSum_eq_zero_of_arity_notMem (S : Set ℕ)
     (hm : ∀ (k : ℕ) [NeZero k], k ∉ S → ∀ X : Fin (k + 1) → Obj, m (β := β) (R := R) X = 0)
     {n : ℕ} {X : Fin (n + 1) → Obj} {deg : Fin n → β}
     (hS : ∀ p : StasheffIndex n, p.s ∉ S ∨ p.r + 1 + p.t ∉ S)
-    (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (d : β) (hd : targetDeg 3 deg = d) :
     stasheffSum a d hd = 0 :=
   signedStasheffSum_eq_zero fun p => stasheffTerm_eq_zero_of_arity_notMem S hm a p (hS p) d hd
 
 /-- In arity 1, the Stasheff sum is the single term m₁(m₁(a₁)). -/
 lemma stasheffSum_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 → β}
-    (a : ∀ i : Fin 1, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin 1, ComposableHom β R X i (deg i)) (d : β) (hd : targetDeg 3 deg = d) :
     stasheffSum a d hd = stasheffTerm a ⟨0, 1, 0, rfl, le_rfl⟩ d hd := by
   rw [stasheffSum, signedStasheffSum, StasheffIndex.univ_one, Finset.sum_singleton]
   exact one_smul _ _
@@ -210,7 +210,7 @@ lemma stasheffSum_arity_one {X : Fin (1 + 1) → Obj} {deg : Fin 1 → β}
 m₂(a₁, m₁(a₂)) and m₁(m₂(a₁, a₂)), with the Koszul sign (-1)^‖a₂‖ on the
 first. -/
 lemma stasheffSum_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 → β}
-    (a : ∀ i : Fin 2, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin 2, ComposableHom β R X i (deg i)) (d : β) (hd : targetDeg 3 deg = d) :
     stasheffSum a d hd =
       (sign (deg 1 - degOne)).toMul • stasheffTerm a ⟨0, 1, 1, rfl, le_rfl⟩ d hd +
         stasheffTerm a ⟨1, 1, 0, rfl, le_rfl⟩ d hd +
@@ -223,7 +223,7 @@ lemma stasheffSum_arity_two {X : Fin (2 + 1) → Obj} {deg : Fin 2 → β}
 /-- In arity 3, the Stasheff sum has six terms, one for each index triple (r, s, t), with
 the Koszul signs given by `stasheffSign`. -/
 lemma stasheffSum_arity_three {X : Fin (3 + 1) → Obj} {deg : Fin 3 → β}
-    (a : ∀ i : Fin 3, ComposableHom β R X i (deg i)) (d : β) (hd : stasheffTargetDeg deg = d) :
+    (a : ∀ i : Fin 3, ComposableHom β R X i (deg i)) (d : β) (hd : targetDeg 3 deg = d) :
     stasheffSum a d hd =
       ((sign (deg 1 - degOne)).toMul * (sign (deg 2 - degOne)).toMul) •
           stasheffTerm a ⟨0, 1, 2, rfl, le_rfl⟩ d hd +

@@ -15,9 +15,11 @@ project:
     identities with Koszul signs, R-linear A∞-categories (including those with vanishing
     higher operations, such as DG categories), and A∞-functors between
     A∞-categories whose gradings may differ, related by a homomorphism of
-    gradings. The composition of A∞-functors and the examples were developed
-    on an earlier foundation. They are temporarily removed while they are ported
-    to the current one.
+    gradings. The composition of A∞-functors has been ported from an earlier
+    foundation, and the composite is proved to satisfy the A∞-functor equations; the
+    composition is proved associative.
+    The examples, developed on the earlier foundation, are temporarily removed while
+    they are ported to the current one.
     A second strand of the project formalizes the KLRW algebra of a loopless
     quiver with prescribed black and red strands, and its R-linear KLRW category,
     and builds computable categorical infrastructure (explicit biproducts, the
@@ -49,8 +51,7 @@ sources:
       Source for the A∞ constructions: A∞-categories and the Stasheff identities.
       The formalization adapts these definitions to a general grading and to
       diagrammatic argument order; see `fidelity`. A∞-functors, also from this
-      chapter, are formalized; their composition is not in the current code (see
-      `status`).
+      chapter, are formalized, together with their composition.
     author_endorsement: "not-contacted"
   - title: "A∞ Categories in Lean (project blueprint)"
     authors:
@@ -112,12 +113,17 @@ status:
     and their homomorphisms, graded linear and multilinear maps (with their module
     structure and the associativity and unit laws of composition), graded R-linear
     quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing
-    higher operations, DG and linear categories as A∞-categories, A∞-functors with the
-    A∞-functor equations, and the general KLRW algebra with its R-linear KLRW
+    higher operations, DG and linear categories as A∞-categories, composable
+    multilinear maps (a common type for A∞-functor data and the operations of an
+    A∞-category), A∞-functors with the A∞-functor equations, the composition of
+    A∞-functors (the composite satisfies the A∞-functor equations, by a reindexing
+    reduced to the bijectivity of the projections of the index types `MapCompIndex`,
+    `CompMapIndex` and `CompMapMapIndex` and to two Koszul sign identities; the
+    composition is associative), and the general KLRW algebra with its R-linear KLRW
     category. In progress: the computable additive completion and
     bounded cochain complexes, and the braiding functor, whose definitions are
-    still partially stubbed with `sorry`. Temporarily removed: the composition of
-    A∞-functors, the identity A∞-functor and the A∞-functor examples. They were written
+    still partially stubbed with `sorry`. Temporarily removed: the identity
+    A∞-functor and the A∞-functor examples. They were written
     for the earlier foundation (grading indices and `GradedObject`s in
     `ModuleCat`) and will be restored once ported. A∞-algebras (blueprint
     chapter 5) are not formalized yet.
@@ -231,12 +237,8 @@ alignment:
       lean: "AInfinityTheory.GradedLinearQuiver"
       module: "AInfinity.GradedLinearQuiver"
       status: "defined"
-    - source: "Blueprint, Definition (Operation target degree)"
-      lean: "AInfinityTheory.operationTargetDeg"
-      module: "AInfinity.StasheffIndex"
-      status: "defined"
-    - source: "Blueprint, Definition (Stasheff target degree)"
-      lean: "AInfinityTheory.stasheffTargetDeg"
+    - source: "Blueprint, Definition (Target degree)"
+      lean: "AInfinityTheory.targetDeg"
       module: "AInfinity.StasheffIndex"
       status: "defined"
     - source: "Blueprint, Definition (Composable hom space)"
@@ -301,7 +303,8 @@ alignment:
       module: "AInfinity.AInfinityFunctor"
       status: "defined"
       note: >-
-        Together with `AInfinityTheory.AInfinityFunctorData`; the functor equations are
+        Together with `AInfinityTheory.AInfinityFunctorData`, which is a
+        `AInfinityTheory.ComposableMultilinearMap` with `s = 1`; the functor equations are
         the field `AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum`. Source and
         target may have different gradings, related by a `GradingHom`.
     - source: "Blueprint, Definition (A∞-functor equations); Seidel, (1.6)"
@@ -310,13 +313,31 @@ alignment:
       status: "defined"
       note: >-
         A field of `AInfinityTheory.AInfinityFunctor`, required in every positive arity n.
-        Its two sides are `AInfinityTheory.AInfinityFunctorData.mapCompSum` and
-        `AInfinityTheory.AInfinityFunctorData.compMapSum`.
+        Its two sides are `AInfinityTheory.ComposableMultilinearMap.mapCompSum` and
+        `AInfinityTheory.ComposableMultilinearMap.compMapSum`. The right-hand side is the
+        value of the composite of the operations of the target with the functor data
+        (`AInfinityTheory.ComposableMultilinearMap.compMapSum_eq_comp_map_v`).
     - source: "Seidel, composition of A∞-functors"
-      lean: ""
-      module: ""
-      status: "not-formalized"
-      note: "Formalized on the earlier foundation; temporarily removed pending a port."
+      lean: "AInfinityTheory.AInfinityFunctor.comp"
+      module: "AInfinity.FunctorComposition.Basic"
+      status: "defined"
+      note: >-
+        The composite of a composable multilinear map with A∞-functor data is
+        `AInfinityTheory.ComposableMultilinearMap.comp`
+        (`AInfinity.FunctorComposition.Defs`). The A∞-functor equations for the composite
+        are `AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum`, proved by
+        reindexing along the index types `MapCompIndex` and `CompMapIndex`, with the
+        Koszul signs compared in `AInfinity.FunctorComposition.Signs`, and by the
+        associativity `AInfinityTheory.ComposableMultilinearMap.comp_assoc` for the
+        operations of the target.
+    - source: "Seidel, composition of A∞-functors (associativity)"
+      lean: "AInfinityTheory.AInfinityFunctor.comp_assoc"
+      module: "AInfinity.FunctorComposition.Basic"
+      status: "proved"
+      note: >-
+        A case of `AInfinityTheory.ComposableMultilinearMap.comp_assoc`
+        (`AInfinity.FunctorComposition.Assoc`), proved by reindexing along the index type
+        `CompMapMapIndex`.
     - source: "Blueprint, Chapter 5 (A∞-algebras)"
       lean: ""
       module: ""
