@@ -66,7 +66,8 @@ together.
 In (L), the marked block of the composition of `c.length` corresponds to a marked block of
 `c.gather c'`. In (R), the marked block of `c` corresponds, under `Composition.blocksFinEquiv`, to
 a marked block of `c.gather c'` and a marked block of the composition of that block; the Koszul
-sign splits accordingly (`tailSign_sizeUpTo_embedding_succ`).
+sign splits accordingly (`tailSign_sizeUpTo_embedding_succ`, in
+`AInfinity.FunctorComposition.Signs`).
 -/
 
 @[expose] public section
@@ -234,6 +235,13 @@ lemma blockwiseTerm_congr [NeZero n] (Φ : ComposableMultilinearMap R h χ s) (e
   subst hP hQ
   rfl
 
+lemma blockCompTerm_congr (E : ComposableMultilinearMap R g ψ t) (e : Composition n)
+    (l : Fin e.length) (τ : Composition (e.blocksFun l))
+    {P P' : Fin τ.length → Σ u : ℤ, ComposableMultilinearMap R f φ u} (hP : P = P') (d : β'')
+    (hd : _) : E.blockCompTerm a e l τ P d hd = E.blockCompTerm a e l τ P' d (hP ▸ hd) := by
+  subst hP
+  rfl
+
 /-- The value of E ∘ F on a block of a composition `e` of `n`, as a sum over the compositions of
 that block. -/
 lemma blockMap_comp (E : ComposableMultilinearMap R g ψ t) (F : ComposableMultilinearMap R f φ 1)
@@ -354,8 +362,8 @@ lemma pick_comp (b : Bool) :
   cases b <;> rfl
 
 omit [GradedLinearQuiver β''' R Obj'''] in
-lemma pick_comp_fst (b : Bool) : (pick (G.comp F) (E.comp F) b).1 = (pick G E b).1 := by
-  cases b <;> rfl
+lemma pick_comp_fst (b : Bool) : (pick (G.comp F) (E.comp F) b).1 = (pick G E b).1 :=
+  congrArg Sigma.fst (pick_comp G E F b)
 
 variable [NeZero n] {X : Fin (n + 1) → Obj} {deg : Fin n → β}
   (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
@@ -412,13 +420,6 @@ section MarkedRight
 variable (Φ : ComposableMultilinearMap R h χ s) (G : ComposableMultilinearMap R g ψ 1)
   (F : ComposableMultilinearMap R f φ 1) (D : ComposableMultilinearMap R f φ 2)
   {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
-
-lemma blockCompTerm_congr (E : ComposableMultilinearMap R g ψ t) (e : Composition n)
-    (l : Fin e.length) (τ : Composition (e.blocksFun l))
-    {P P' : Fin τ.length → Σ u : ℤ, ComposableMultilinearMap R f φ u} (hP : P = P') (d : β'')
-    (hd : _) : E.blockCompTerm a e l τ P d hd = E.blockCompTerm a e l τ P' d (hP ▸ hd) := by
-  subst hP
-  rfl
 
 variable (e : Composition n)
 
@@ -532,32 +533,6 @@ lemma compTerm_pick_compMarked (d : β''') (hd : _) :
             (fun _ ↦ ⟨1, G⟩) _ (markedBlock_deg G F D e m τ q) d hd :=
   (compTerm_pick_compMarked_eq_sum Φ G F D a e (fun l ↦ decide (l = m)) d hd).trans
     (Finset.sum_congr rfl fun τ _ ↦ applyBlocks_markedBlockTerm Φ G F D a e m τ d hd)
-
-end MarkedRight
-
-omit [Grading β] in
-/-- The Koszul sign of the inputs after a block of `c`, inside a group of blocks given by `c'`,
-is the Koszul sign of the inputs after the group times the Koszul sign of the inputs of the group
-after the block. -/
-lemma tailSign_sizeUpTo_embedding_succ [Grading β] (deg : Fin n → β) (c : Composition n)
-    (c' : Composition c.length) (i : Fin c'.length) (j : Fin (c'.blocksFun i)) :
-    tailSign deg (c.sizeUpTo ((c'.embedding i j : ℕ) + 1)) =
-      tailSign deg ((c.gather c').sizeUpTo ((i : ℕ) + 1)) *
-        tailSign (fun k ↦ deg ((c.gather c').embedding (i.cast (c.length_gather c').symm) k))
-          ((c.sigmaCompositionAux c' (i.cast (c.length_gather c').symm)).sizeUpTo
-            ((j : ℕ) + 1)) := by
-  have h₁ := tailSign_sizeUpTo_add deg (c.gather c') (i.cast (c.length_gather c').symm)
-    ((c.sigmaCompositionAux c' (i.cast (c.length_gather c').symm)).sizeUpTo_le (j + 1))
-  have h₂ := c.sizeUpTo_sizeUpTo_add_boundary c' i j.succ
-  rw [Fin.val_succ] at h₂
-  rw [Composition.coe_embedding, add_assoc, h₂, mul_comm]
-  exact h₁
-
-section MarkedRight
-
-variable (Φ : ComposableMultilinearMap R h χ s) (G : ComposableMultilinearMap R g ψ 1)
-  (F : ComposableMultilinearMap R f φ 1) (D : ComposableMultilinearMap R f φ 2) [NeZero n]
-  {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
 
 /-- The terms of (Φ ∘ G) ∘ (F | D) and of Φ ∘ (G ∘ F | G ∘ (F | D)) are the same, reindexed along
 `Composition.sigmaEquivSigmaPi` and `Composition.blocksFinEquiv`. -/

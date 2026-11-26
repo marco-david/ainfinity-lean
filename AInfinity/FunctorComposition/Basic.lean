@@ -5,20 +5,24 @@ Authors: Annie Yao, Marco David, Zhan Shi
 -/
 module
 
-public import AInfinity.FunctorComposition.StasheffSum
+public import AInfinity.FunctorComposition.FunctorEquation
 
 /-! # Composition of A∞-functors
 
-The composite `G.comp F` of A∞-functors `F` from `Obj` to `Obj'` and `G` from `Obj'` to `Obj''` is
-the composite of the underlying A∞-functor data. This file proves that it satisfies the
+The composite `G.comp F` of A∞-functor data `F` from `Obj` to `Obj'` and `G` from `Obj'` to
+`Obj''` composes the maps on objects, the homomorphisms of gradings, and the components as
+composable multilinear maps. This file proves that the composite of two A∞-functors satisfies the
 A∞-functor equations, and that the composition of A∞-functors is associative.
 
 ## Main definitions
 
+* `AInfinityTheory.AInfinityFunctorData.comp`: the composite `G.comp F` of A∞-functor data.
 * `AInfinityTheory.AInfinityFunctor.comp`: the composite `G.comp F` of A∞-functors.
 
 ## Main results
 
+* `AInfinityTheory.AInfinityFunctorData.comp_assoc`: the composition of A∞-functor data is
+  associative.
 * `AInfinityTheory.AInfinityFunctor.compMarked_id_eq_comp`: the A∞-functor equations of `F`, as
   the equality F ∘ (𝟙 | m) = m' ∘ F of composable multilinear maps.
 * `AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum`: the composite of two
@@ -45,15 +49,64 @@ namespace AInfinityTheory
 
 open GradedLinearQuiver
 
-variable {n : ℕ}
+variable {n : ℕ} {β β' β'' β''' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β']
+  [Grading β'] [AddCommGroup β''] [Grading β''] [AddCommGroup β'''] [Grading β''']
+  {R : Type*} [Semiring R] {Obj Obj' Obj'' Obj''' : Type*}
 
-/-! ### The functor equations as equalities of composable multilinear maps -/
+/-! ### The composite of A∞-functor data -/
+
+namespace AInfinityFunctorData
+
+variable [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
+  [GradedLinearQuiver β'' R Obj''] [GradedLinearQuiver β''' R Obj''']
+
+/-- The composite `G.comp F` of A∞-functor data `F` from `Obj` to `Obj'` and `G` from `Obj'` to
+`Obj''`, written in Mathlib's order: it acts on objects by `G.obj ∘ F.obj`, translates degrees
+along `G.degMap.comp F.degMap`, and its components are those of the composite of the components
+of `G` and of `F` as composable multilinear maps. -/
+protected def comp (G : AInfinityFunctorData β' β'' R Obj' Obj'')
+    (F : AInfinityFunctorData β β' R Obj Obj') : AInfinityFunctorData β β'' R Obj Obj'' where
+  obj X := G.obj (F.obj X)
+  degMap := G.degMap.comp F.degMap
+  map X := (G.toComposableMultilinearMap.comp F.toComposableMultilinearMap).map X
+
+@[simp]
+lemma comp_obj (G : AInfinityFunctorData β' β'' R Obj' Obj'')
+    (F : AInfinityFunctorData β β' R Obj Obj') (X : Obj) : (G.comp F).obj X = G.obj (F.obj X) :=
+  rfl
+
+@[simp]
+lemma comp_degMap (G : AInfinityFunctorData β' β'' R Obj' Obj'')
+    (F : AInfinityFunctorData β β' R Obj Obj') : (G.comp F).degMap = G.degMap.comp F.degMap :=
+  rfl
+
+@[simp]
+lemma comp_toComposableMultilinearMap (G : AInfinityFunctorData β' β'' R Obj' Obj'')
+    (F : AInfinityFunctorData β β' R Obj Obj') :
+    (G.comp F).toComposableMultilinearMap =
+      G.toComposableMultilinearMap.comp F.toComposableMultilinearMap :=
+  rfl
+
+/-- The composition of A∞-functor data is associative. -/
+theorem comp_assoc (H : AInfinityFunctorData β'' β''' R Obj'' Obj''')
+    (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj') :
+    (H.comp G).comp F = H.comp (G.comp F) :=
+  congrArg (fun Ψ : ComposableMultilinearMap R (fun X ↦ H.obj (G.obj (F.obj X)))
+      ((H.degMap.comp G.degMap).comp F.degMap) 1 ↦
+    ({ obj := fun X ↦ H.obj (G.obj (F.obj X))
+       degMap := (H.degMap.comp G.degMap).comp F.degMap
+       map := fun X ↦ Ψ.map X } : AInfinityFunctorData β β''' R Obj Obj'''))
+    (ComposableMultilinearMap.comp_assoc H.toComposableMultilinearMap
+      G.toComposableMultilinearMap F.toComposableMultilinearMap)
+
+end AInfinityFunctorData
 
 namespace AInfinityFunctor
 
-variable {β β' β'' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
-  [AddCommGroup β''] [Grading β''] {R : Type*} [Semiring R] {Obj Obj' Obj'' : Type*}
-  [AInfinityCategory β R Obj] [AInfinityCategory β' R Obj'] [AInfinityCategory β'' R Obj'']
+variable [AInfinityCategory β R Obj] [AInfinityCategory β' R Obj'] [AInfinityCategory β'' R Obj'']
+  [AInfinityCategory β''' R Obj''']
+
+/-! ### The functor equations as equalities of composable multilinear maps -/
 
 /-- The A∞-functor equations of `F`, as an equality of composable multilinear maps:
 F ∘ (𝟙 | m) = m' ∘ F. -/
@@ -66,6 +119,8 @@ theorem compMarked_id_eq_comp (F : AInfinityFunctor β β' R Obj Obj') :
   exact (F.toAInfinityFunctorData.mapCompSum_eq_compMarked_map_v a j hj).symm.trans
     ((F.mapCompSum_eq_compMapSum a hj).trans
       (F.toAInfinityFunctorData.compMapSum_eq_comp_map_v a j hj))
+
+section Comp
 
 variable (G : AInfinityFunctor β' β'' R Obj' Obj'') (F : AInfinityFunctor β β' R Obj Obj')
 
@@ -88,11 +143,10 @@ theorem comp_compMarked_id_eq_comp :
   rw [ComposableMultilinearMap.id_comp, G.compMarked_id_eq_comp] at h₂
   exact h₁.trans (h₂.symm.trans (ComposableMultilinearMap.comp_assoc _ _ _))
 
-variable {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
-  [NeZero n] {d : β} (hd : targetDeg 2 deg = d)
-
 /-- The composite of two A∞-functors satisfies the A∞-functor equations. -/
-theorem comp_mapCompSum_eq_compMapSum :
+theorem comp_mapCompSum_eq_compMapSum {X : Fin (n + 1) → Obj} {deg : Fin n → β}
+    (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) [NeZero n] {d : β}
+    (hd : targetDeg 2 deg = d) :
     (G.toAInfinityFunctorData.comp F.toAInfinityFunctorData).mapCompSum a d hd =
       (G.toAInfinityFunctorData.comp F.toAInfinityFunctorData).compMapSum a d hd := by
   rw [AInfinityFunctorData.mapCompSum_eq_compMarked_map_v,
@@ -102,7 +156,6 @@ theorem comp_mapCompSum_eq_compMapSum :
 
 /-! ### The composite of A∞-functors -/
 
-omit [NeZero n] in
 /-- The composite `G.comp F` of A∞-functors `F` from `Obj` to `Obj'` and `G` from `Obj'` to
 `Obj''`, written in Mathlib's order: the composite of the underlying A∞-functor data, which
 satisfies the A∞-functor equations by `comp_mapCompSum_eq_compMapSum`. -/
@@ -110,31 +163,14 @@ protected def comp : AInfinityFunctor β β'' R Obj Obj'' where
   toAInfinityFunctorData := G.toAInfinityFunctorData.comp F.toAInfinityFunctorData
   mapCompSum_eq_compMapSum a _ hd := comp_mapCompSum_eq_compMapSum G F a hd
 
-omit [NeZero n] in
 @[simp]
 lemma comp_toAInfinityFunctorData :
     (G.comp F).toAInfinityFunctorData = G.toAInfinityFunctorData.comp F.toAInfinityFunctorData :=
   rfl
 
-end AInfinityFunctor
+end Comp
 
 /-! ### Associativity -/
-
-namespace AInfinityFunctor
-
-variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
-  {R : Type*} [Semiring R] {Obj Obj' : Type*} [AInfinityCategory β R Obj]
-  [AInfinityCategory β' R Obj']
-
-/-- An A∞-functor is determined by its A∞-functor data, since the functor equations are a
-proposition. -/
-lemma toAInfinityFunctorData_injective :
-    Function.Injective (toAInfinityFunctorData : AInfinityFunctor β β' R Obj Obj' → _) := by
-  rintro ⟨F, hF⟩ ⟨G, hG⟩ rfl
-  rfl
-
-variable {β'' β''' : Type*} [AddCommGroup β''] [Grading β''] [AddCommGroup β'''] [Grading β''']
-  {Obj'' Obj''' : Type*} [AInfinityCategory β'' R Obj''] [AInfinityCategory β''' R Obj''']
 
 /-- The composition of A∞-functors is associative. -/
 theorem comp_assoc (H : AInfinityFunctor β'' β''' R Obj'' Obj''')

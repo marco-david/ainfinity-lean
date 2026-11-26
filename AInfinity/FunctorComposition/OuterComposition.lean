@@ -16,7 +16,7 @@ r blocks of size one, the block of size s of the inputs of the inner operation, 
 size one. Marking the middle block identifies the index triples with the compositions with a marked
 block all of whose other blocks have size one. This is how the left-hand side of the A∞-functor
 equation, a sum over index triples, is matched with a composite of composable multilinear maps in
-`AInfinity.FunctorComposition.StasheffSum`.
+`AInfinity.FunctorComposition.FunctorEquation`.
 
 ## Main definitions
 

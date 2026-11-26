@@ -135,13 +135,6 @@ lemma of_homCongr {X X' Y Y' : Obj} {d d' : β} (hX : X = X') (hY : Y = Y') (hd 
 lemma of_inj {X Y : Obj} {d : β} {x y : (X →ᵍ[R] Y) d} : of x = of y ↔ x = y :=
   ⟨fun h ↦ by cases h; rfl, congrArg of⟩
 
-/-- An equality in the type of all morphisms gives the equality with a transport, for any proofs
-of the equalities of the sources, targets and degrees. -/
-lemma homCongr_eq_of_of_eq {X X' Y Y' : Obj} {d d' : β} {x : (X →ᵍ[R] Y) d}
-    {y : (X' →ᵍ[R] Y') d'} (h : of x = of y) (hX : X = X') (hY : Y = Y') (hd : d = d') :
-    homCongr R hX hY hd x = y :=
-  of_inj.1 ((of_homCongr hX hY hd x).trans h)
-
 /-- A composable string of at least one morphism determines its objects. -/
 lemma obj_eq_of_of_eq {k : ℕ} [NeZero k] {Y Y' : Fin (k + 1) → Obj} {δ δ' : Fin k → β}
     {b : ∀ i, ComposableHom β R Y i (δ i)} {b' : ∀ i, ComposableHom β R Y' i (δ' i)}

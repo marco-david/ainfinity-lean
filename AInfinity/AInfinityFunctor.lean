@@ -57,7 +57,7 @@ right-hand side are Mathlib's `Composition n`. Changes of objects are transporte
 `mapCompSum` and `compMapSum` are named in order of application: a functor component applied
 to a composition, and a composition of functor components. As composable multilinear maps, the
 two sides are the composites F ∘ (𝟙 | m) and m' ∘ F, see
-`AInfinity.FunctorComposition.StasheffSum`.
+`AInfinity.FunctorComposition.FunctorEquation`.
 
 ## References
 
@@ -253,5 +253,20 @@ structure AInfinityFunctor (β β' : Type*) [AddCommGroup β] [Grading β]
     (hd : targetDeg 2 deg = d) :
     toAInfinityFunctorData.mapCompSum a d hd =
       toAInfinityFunctorData.compMapSum a d hd
+
+namespace AInfinityFunctor
+
+variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
+  {R : Type*} [Semiring R] {Obj Obj' : Type*} [AInfinityCategory β R Obj]
+  [AInfinityCategory β' R Obj']
+
+/-- An A∞-functor is determined by its A∞-functor data, since the functor equations are a
+proposition. -/
+lemma toAInfinityFunctorData_injective :
+    Function.Injective (toAInfinityFunctorData : AInfinityFunctor β β' R Obj Obj' → _) := by
+  rintro ⟨F, hF⟩ ⟨G, hG⟩ rfl
+  rfl
+
+end AInfinityFunctor
 
 end AInfinityTheory

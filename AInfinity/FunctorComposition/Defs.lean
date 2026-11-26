@@ -30,7 +30,7 @@ in Φ and in `D`. On bar constructions, `D` determines a coderivation along the 
 
 For the operations m' of an A∞-category, m' ∘ F is the right-hand side of the A∞-functor equation
 of `F`. Its left-hand side is F ∘ (𝟙 | m), for the identity 𝟙 and the operations m of the source
-(see `AInfinity.FunctorComposition.StasheffSum`). The rules relating the two composites are in
+(see `AInfinity.FunctorComposition.FunctorEquation`). The rules relating the two composites are in
 `AInfinity.FunctorComposition.Assoc`.
 
 ## Main definitions

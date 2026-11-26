@@ -5,6 +5,7 @@ Authors: Zhan Shi
 -/
 module
 
+public import AInfinity.CompositionGather
 public import AInfinity.FunctorComposition.OuterComposition
 
 /-! # Koszul signs in the functor equation of a composite
@@ -24,6 +25,8 @@ terms of the composite Φ ∘ (F | D) of `AInfinity.FunctorComposition.Defs`.
   sign of the inputs after its inner operation.
 * `AInfinityTheory.tailSign_sizeUpTo_add`: splitting the inputs from a position inside a block of
   a composition into those inside the block and those after it.
+* `AInfinityTheory.tailSign_sizeUpTo_embedding_succ`: the same splitting for a two-level
+  composition, into the inputs after a group of blocks and those of the group after a block.
 * `AInfinityTheory.tailSign_targetDeg_embedding`: the reduced degree of a value of an
   A∞-functor is the sum of the reduced degrees of its inputs, so the Koszul sign of the values
   of `F` on the blocks of a composition is the Koszul sign of the original inputs.
@@ -79,6 +82,23 @@ theorem tailSign_sizeUpTo_add (deg : Fin n → β) (c : Composition n) (j : Fin 
       omega
   · congr 1
     exact Finset.filter_congr fun i _ ↦ ⟨fun h ↦ by omega, fun h ↦ by omega⟩
+
+/-- The Koszul sign of the inputs after a block of `c`, inside a group of blocks given by `c'`,
+is the Koszul sign of the inputs after the group times the Koszul sign of the inputs of the group
+after the block. -/
+theorem tailSign_sizeUpTo_embedding_succ (deg : Fin n → β) (c : Composition n)
+    (c' : Composition c.length) (i : Fin c'.length) (j : Fin (c'.blocksFun i)) :
+    tailSign deg (c.sizeUpTo ((c'.embedding i j : ℕ) + 1)) =
+      tailSign deg ((c.gather c').sizeUpTo ((i : ℕ) + 1)) *
+        tailSign (fun k ↦ deg ((c.gather c').embedding (i.cast (c.length_gather c').symm) k))
+          ((c.sigmaCompositionAux c' (i.cast (c.length_gather c').symm)).sizeUpTo
+            ((j : ℕ) + 1)) := by
+  have h₁ := tailSign_sizeUpTo_add deg (c.gather c') (i.cast (c.length_gather c').symm)
+    ((c.sigmaCompositionAux c' (i.cast (c.length_gather c').symm)).sizeUpTo_le (j + 1))
+  have h₂ := c.sizeUpTo_sizeUpTo_add_boundary c' i j.succ
+  rw [Fin.val_succ] at h₂
+  rw [Composition.coe_embedding, add_assoc, h₂, mul_comm]
+  exact h₁
 
 /-- The reduced degree ‖φₖ(a₁, …, aₖ)‖ of a value of an A∞-functor is the sum of the reduced
 degrees ‖aᵢ‖ of its inputs, since φₖ has degree 1 - k. -/

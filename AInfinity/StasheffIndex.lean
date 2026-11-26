@@ -67,12 +67,6 @@ composites of two operations, has `s = 3`. -/
 abbrev targetDeg (s : ℤ) (deg : Fin n → β) : β :=
   (∑ i, deg i) + (s - n : ℤ) • degOne
 
-lemma targetDeg_congr (s : ℤ) {k k' : ℕ} (e : k = k') {δ : Fin k → β} {δ' : Fin k' → β}
-    (h : ∀ i, δ i = δ' (i.cast e)) : targetDeg s δ = targetDeg s δ' := by
-  subst e
-  obtain rfl : δ = δ' := funext h
-  rfl
-
 /-- Raising `s` by one raises the target degree by the degree one. -/
 lemma targetDeg_eq_targetDeg_add_degOne {s t : ℤ} (h : s = t + 1) (deg : Fin n → β) :
     targetDeg s deg = targetDeg t deg + degOne := by

@@ -18,19 +18,15 @@ equation of `F` with composites of composable multilinear maps:
 * the left-hand side, a signed sum over the index triples (r, s, t) of the Stasheff identities,
   is the value of F ∘ (𝟙 | m), for the identity 𝟙 and the operations m of the source.
 
-So the A∞-functor equation reads F ∘ (𝟙 | m) = m' ∘ F. The file also defines the composite of
-A∞-functor data.
+So the A∞-functor equation reads F ∘ (𝟙 | m) = m' ∘ F.
 
 ## Main definitions
 
 * `AInfinityTheory.AInfinityFunctorData.toComposableMultilinearMap`: the components of A∞-functor
   data, as a composable multilinear map.
-* `AInfinityTheory.AInfinityFunctorData.comp`: the composite of A∞-functor data.
 
 ## Main results
 
-* `AInfinityTheory.AInfinityFunctorData.comp_assoc`: the composition of A∞-functor data is
-  associative.
 * `AInfinityTheory.AInfinityFunctorData.compMapSum_eq_comp_map_v`: the right-hand side of the
   functor equation is the value of m' ∘ F.
 * `AInfinityTheory.AInfinityFunctorData.mapCompSum_eq_compMarked_map_v`: the left-hand side of
@@ -90,16 +86,14 @@ end ComposableMultilinearMap
 
 namespace AInfinityFunctorData
 
-variable {β β' β'' β''' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
-  [AddCommGroup β''] [Grading β''] [AddCommGroup β'''] [Grading β'''] {R : Type*} [Semiring R]
-  {Obj Obj' Obj'' Obj''' : Type*}
+variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
+  {R : Type*} [Semiring R] {Obj Obj' : Type*}
 
 /-! ### A∞-functor data as composable multilinear maps -/
 
 section GradedLinearQuiver
 
 variable [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
-  [GradedLinearQuiver β'' R Obj''] [GradedLinearQuiver β''' R Obj''']
 
 /-- The components of A∞-functor data `F`, as a composable multilinear map with `s = 1` over
 `F.obj` and `F.degMap`. -/
@@ -111,45 +105,6 @@ def toComposableMultilinearMap (F : AInfinityFunctorData β β' R Obj Obj') :
 lemma toComposableMultilinearMap_map (F : AInfinityFunctorData β β' R Obj Obj') [NeZero n]
     (X : Fin (n + 1) → Obj) : F.toComposableMultilinearMap.map X = F.map X :=
   rfl
-
-/-- The composite `G.comp F` of A∞-functor data `F` from `Obj` to `Obj'` and `G` from `Obj'` to
-`Obj''`, written in Mathlib's order: it acts on objects by `G.obj ∘ F.obj`, translates degrees
-along `G.degMap.comp F.degMap`, and its components are those of the composite of the components
-of `G` and of `F` as composable multilinear maps. -/
-protected def comp (G : AInfinityFunctorData β' β'' R Obj' Obj'')
-    (F : AInfinityFunctorData β β' R Obj Obj') : AInfinityFunctorData β β'' R Obj Obj'' where
-  obj X := G.obj (F.obj X)
-  degMap := G.degMap.comp F.degMap
-  map X := (G.toComposableMultilinearMap.comp F.toComposableMultilinearMap).map X
-
-@[simp]
-lemma comp_obj (G : AInfinityFunctorData β' β'' R Obj' Obj'')
-    (F : AInfinityFunctorData β β' R Obj Obj') (X : Obj) : (G.comp F).obj X = G.obj (F.obj X) :=
-  rfl
-
-@[simp]
-lemma comp_degMap (G : AInfinityFunctorData β' β'' R Obj' Obj'')
-    (F : AInfinityFunctorData β β' R Obj Obj') : (G.comp F).degMap = G.degMap.comp F.degMap :=
-  rfl
-
-@[simp]
-lemma comp_toComposableMultilinearMap (G : AInfinityFunctorData β' β'' R Obj' Obj'')
-    (F : AInfinityFunctorData β β' R Obj Obj') :
-    (G.comp F).toComposableMultilinearMap =
-      G.toComposableMultilinearMap.comp F.toComposableMultilinearMap :=
-  rfl
-
-/-- The composition of A∞-functor data is associative. -/
-theorem comp_assoc (H : AInfinityFunctorData β'' β''' R Obj'' Obj''')
-    (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj') :
-    (H.comp G).comp F = H.comp (G.comp F) :=
-  congrArg (fun Ψ : ComposableMultilinearMap R (fun X ↦ H.obj (G.obj (F.obj X)))
-      ((H.degMap.comp G.degMap).comp F.degMap) 1 ↦
-    ({ obj := fun X ↦ H.obj (G.obj (F.obj X))
-       degMap := (H.degMap.comp G.degMap).comp F.degMap
-       map := fun X ↦ Ψ.map X } : AInfinityFunctorData β β''' R Obj Obj'''))
-    (ComposableMultilinearMap.comp_assoc H.toComposableMultilinearMap
-      G.toComposableMultilinearMap F.toComposableMultilinearMap)
 
 end GradedLinearQuiver
 
