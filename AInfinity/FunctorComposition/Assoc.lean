@@ -407,18 +407,6 @@ end MarkedLeft
 
 /-! ### Composing a composite with a marked map on the right -/
 
-/-- A multilinear map is additive in each variable: if the `i`-th input is a signed sum, the value
-is the signed sum of the values with the `i`-th input replaced by each summand. -/
-lemma _root_.MultilinearMap.map_eq_sum_units_smul_update {R ι κ N : Type*} [Semiring R]
-    [DecidableEq ι] [Fintype κ] {M : ι → Type*} [∀ i, AddCommGroup (M i)] [∀ i, Module R (M i)]
-    [AddCommGroup N] [Module R N] (F : MultilinearMap R M N) (w : ∀ i, M i) (i : ι) (c : κ → ℤˣ)
-    (y : κ → M i) (hw : w i = ∑ q, c q • y q) :
-    F w = ∑ q, c q • F (Function.update w i (y q)) := by
-  calc F w = F.toLinearMap w i (∑ q, c q • y q) := by
-        rw [← hw, MultilinearMap.toLinearMap_apply, Function.update_eq_self]
-    _ = ∑ q, c q • F (Function.update w i (y q)) := by
-        simp only [map_sum, Units.smul_def, map_zsmul, MultilinearMap.toLinearMap_apply]
-
 section MarkedRight
 
 variable (Φ : ComposableMultilinearMap R h χ s) (G : ComposableMultilinearMap R g ψ 1)

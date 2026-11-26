@@ -35,8 +35,6 @@ of `F`. Its left-hand side is F ∘ (𝟙 | m), for the identity 𝟙 and the op
 
 ## Main definitions
 
-* `MultilinearMap.compComposition`: the composite of a multilinear map in k variables with k
-  multilinear maps, one on each block of a composition of `n`.
 * `AInfinityTheory.ComposableMultilinearMap.blockMap`: the value of a composable multilinear map
   on a block of a composition.
 * `AInfinityTheory.ComposableMultilinearMap.applyBlocks`: a composable multilinear map applied to
@@ -78,30 +76,6 @@ proof of `s + 1 = u`, so that a composite G ∘ (F | D), of degree `1 + 1`, is a
 @[expose] public section
 
 noncomputable section
-
-/-! ### Multilinear maps composed along a composition -/
-
-namespace MultilinearMap
-
-variable {R : Type*} [Semiring R] {n : ℕ} (c : Composition n)
-variable {M : Fin n → Type*} {N : Fin c.length → Type*} {P : Type*}
-variable [∀ i, AddCommMonoid (M i)] [∀ l, AddCommMonoid (N l)] [AddCommMonoid P]
-variable [∀ i, Module R (M i)] [∀ l, Module R (N l)] [Module R P]
-
-/-- The composite of a multilinear map `g` in k variables with k multilinear maps `f l`, one on
-each block of a composition `c` of `n` into k blocks: the multilinear map in n variables
-`x ↦ g (f 0 (x on block 0), …, f (k - 1) (x on block k - 1))`. -/
-def compComposition (g : MultilinearMap R N P)
-    (f : ∀ l, MultilinearMap R (fun j ↦ M (c.embedding l j)) (N l)) : MultilinearMap R M P :=
-  (domDomCongrLinearEquiv' R ℕ M P c.blocksFinEquiv.symm).symm (g.compMultilinearMap f)
-
-@[simp]
-theorem compComposition_apply (g : MultilinearMap R N P)
-    (f : ∀ l, MultilinearMap R (fun j ↦ M (c.embedding l j)) (N l)) (x : ∀ i, M i) :
-    compComposition c g f x = g fun l ↦ f l fun j ↦ x (c.embedding l j) :=
-  rfl
-
-end MultilinearMap
 
 namespace AInfinityTheory
 
