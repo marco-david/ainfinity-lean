@@ -48,8 +48,9 @@ weights, and $C$ for the Cartan matrix. In the terms of Lusztig (see References)
 * `RootCoords Γ ℤ` is $ℤ[I]$ and `RootCoords Γ ℕ` is $ℕ[I]$ (§1.2.1);
   `simpleRoot Γ i` is $i$.
 * `WeightCoords Γ ℤ` is $X = \mathrm{Hom}(ℤ[I], ℤ)$ of the simply connected
-  root datum (§2.2.2): `x i` is $⟨i, x⟩$, `fundamentalWeight Γ i` is the dual basis
-  vector, and `DominantWeight Γ` is $X^+$ (§3.5.5).
+  root datum (§2.2.2): for a weight `x : WeightCoords Γ ℤ`, the coefficient `x i` is
+  $⟨i, x⟩$, `fundamentalWeight Γ i` is the dual basis vector, and `DominantWeight Γ` is
+  $X^+$ (§3.5.5).
 * `toWeight` is the map $ℤ[I] → X$ induced by $i ↦ i'$ (§2.2.1).
 
 ## Implementation notes
