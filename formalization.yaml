@@ -336,7 +336,7 @@ alignment:
         `AInfinityTheory.ComposableMultilinearMap.compMarked_comp` and
         `AInfinityTheory.ComposableMultilinearMap.comp_compMarked`
         (`AInfinity.FunctorComposition.Assoc`) and the unit laws of the identity
-        (`AInfinity.FunctorComposition.Unit`).
+        (`AInfinity.ComposableMultilinearMap`).
     - source: "Seidel, composition of A∞-functors (associativity)"
       lean: "AInfinityTheory.AInfinityFunctor.comp_assoc"
       module: "AInfinity.FunctorComposition.Basic"

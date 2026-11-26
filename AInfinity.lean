@@ -12,7 +12,6 @@ import AInfinity.FunctorComposition.Defs
 import AInfinity.FunctorComposition.FunctorEquation
 import AInfinity.FunctorComposition.OuterComposition
 import AInfinity.FunctorComposition.Signs
-import AInfinity.FunctorComposition.Unit
 import AInfinity.GradedLinearAlgebra
 import AInfinity.GradedLinearQuiver
 import AInfinity.Grading

@@ -33,7 +33,7 @@ A∞-functor equations, and that the composition of A∞-functors is associative
 
 With the operations m, m' and m'' of the three A∞-categories, the A∞-functor equations of the
 composite follow from those of `F` and of `G` by the rules (R), (L) and (AS) of
-`AInfinity.FunctorComposition.Assoc` and the unit laws of `AInfinity.FunctorComposition.Unit`:
+`AInfinity.FunctorComposition.Assoc` and the unit laws of `AInfinity.ComposableMultilinearMap`:
 $$(G \circ F) \circ (\mathbb 1 \mid m) = G \circ (F \mid F \circ (\mathbb 1 \mid m))
   = G \circ (F \mid m' \circ F) = (G \circ (\mathbb 1 \mid m')) \circ F
   = (m'' \circ G) \circ F = m'' \circ (G \circ F).$$

@@ -7,7 +7,6 @@ module
 
 public import AInfinity.AInfinityFunctor
 public import AInfinity.FunctorComposition.Assoc
-public import AInfinity.FunctorComposition.Unit
 
 /-! # The two sides of the A∞-functor equation as composites
 

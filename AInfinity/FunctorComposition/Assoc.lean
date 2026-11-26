@@ -30,7 +30,7 @@ a term is described either by a composition c of `n` and a composition of `c.len
 
 Two cases are used in `AInfinity.FunctorComposition.Basic`: for A∞-functor data Φ, (AS) is the
 associativity of the composition of A∞-functors; and (AS), (L) and (R), together with the unit
-laws of `AInfinity.FunctorComposition.Unit`, show that the composite of two A∞-functors satisfies
+laws of `AInfinity.ComposableMultilinearMap`, show that the composite of two A∞-functors satisfies
 the A∞-functor equations.
 
 ## Main definitions
