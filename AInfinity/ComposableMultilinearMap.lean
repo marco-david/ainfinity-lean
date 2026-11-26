@@ -112,6 +112,18 @@ lemma map_v_congr (Φ : ComposableMultilinearMap β β' R Obj Obj' s) {k k' : �
   subst hj hj'
   rfl
 
+/-- Congruence for the components of a composable multilinear map in the type of all morphisms:
+only the arities and the inputs are compared. The object strings and the degrees are determined
+by the inputs. -/
+theorem total_map_congr (Φ : ComposableMultilinearMap β β' R Obj Obj' s) {k k' : ℕ} [NeZero k]
+    [NeZero k'] (e : k = k') {Y : Fin (k + 1) → Obj} {Y' : Fin (k' + 1) → Obj} {δ : Fin k → β}
+    {δ' : Fin k' → β} {j j' : β} (hj : targetDeg s δ = j) (hj' : targetDeg s δ' = j')
+    {b : ∀ i, ComposableHom β R Y i (δ i)} {b' : ∀ i, ComposableHom β R Y' i (δ' i)}
+    (hb : ∀ i, Total.of (b i) = Total.of (b' (i.cast e))) :
+    Total.of ((Φ.map Y).v δ j hj b) = Total.of ((Φ.map Y').v δ' j' hj' b') := by
+  subst hj hj'
+  exact Total.congr_composable (fun k _ Y δ b ↦ Total.of ((Φ.map Y).v δ _ rfl b)) e hb
+
 end ComposableMultilinearMap
 
 /-! ### The operations of an A∞-category structure -/
