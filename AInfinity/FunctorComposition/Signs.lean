@@ -5,7 +5,7 @@ Authors: Zhan Shi
 -/
 module
 
-public import AInfinity.FunctorComposition.Lemmas
+public import AInfinity.FunctorComposition.OuterComposition
 
 /-! # Koszul signs in the functor equation of a composite
 
@@ -32,18 +32,6 @@ terms of the composite Φ ∘ (F | D) of `AInfinity.FunctorComposition.Defs`.
 @[expose] public section
 
 noncomputable section
-
-/-- The `i`-th input of the block `l` lies at or after the start of the block `k` exactly when
-`k ≤ l`. -/
-lemma Composition.sizeUpTo_le_embedding_iff {n : ℕ} (c : Composition n) (k : ℕ)
-    (l : Fin c.length) (i : Fin (c.blocksFun l)) :
-    c.sizeUpTo k ≤ c.embedding l i ↔ k ≤ l := by
-  have := c.sizeUpTo_succ' l; have := i.2
-  rw [c.coe_embedding]
-  refine ⟨fun h ↦ ?_, fun h ↦ (c.monotone_sizeUpTo h).trans (Nat.le_add_right _ _)⟩
-  by_contra! hl
-  have := c.monotone_sizeUpTo (show (l : ℕ) + 1 ≤ k by omega)
-  omega
 
 namespace AInfinityTheory
 

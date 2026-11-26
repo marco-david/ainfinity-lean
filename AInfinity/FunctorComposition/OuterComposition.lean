@@ -5,18 +5,18 @@ Authors: Zhan Shi
 -/
 module
 
-public import Mathlib.Analysis.Analytic.Composition
+public import AInfinity.Composition
 public import AInfinity.StasheffIndex
 
-/-! # Auxiliary results on compositions for the composition of A∞-functors
+/-! # The outer composition of an index triple
 
-This file collects the combinatorial results on Mathlib's `Composition` used in the proof that the
-composite of A∞-functors is an A∞-functor: lemmas on two-level compositions, and the composition
-`StasheffIndex.outerComposition` of the inputs of an index triple of the Stasheff identities into
-the inputs of its outer operation.
-
-The lemmas on two-level compositions describe the blocks of the two components `Composition.gather`
-and `Composition.sigmaCompositionAux` of Mathlib's `Composition.sigmaEquivSigmaPi`.
+An index triple (r, s, t) of the arity-n Stasheff identities determines a composition of `n`, the
+composition `StasheffIndex.outerComposition` of the inputs into the inputs of the outer operation:
+r blocks of size one, the block of size s of the inputs of the inner operation, and t blocks of
+size one. Marking the middle block identifies the index triples with the compositions with a marked
+block all of whose other blocks have size one. This is how the left-hand side of the A∞-functor
+equation, a sum over index triples, is matched with a composite of composable multilinear maps in
+`AInfinity.FunctorComposition.StasheffSum`.
 
 ## Main definitions
 
@@ -35,112 +35,6 @@ and `Composition.sigmaCompositionAux` of Mathlib's `Composition.sigmaEquivSigmaP
 @[expose] public section
 
 noncomputable section
-
-/-- Two blocks whose boundaries differ by the same offset `m` have the same size. -/
-lemma Composition.blocksFun_eq_of_sizeUpTo_eq_add {n₁ n₂ : ℕ} {c₁ : Composition n₁}
-    {c₂ : Composition n₂} {l₁ : Fin c₁.length} {l₂ : Fin c₂.length} {m : ℕ}
-    (h : c₁.sizeUpTo l₁ = m + c₂.sizeUpTo l₂)
-    (h' : c₁.sizeUpTo (l₁ + 1) = m + c₂.sizeUpTo (l₂ + 1)) :
-    c₁.blocksFun l₁ = c₂.blocksFun l₂ := by
-  have := c₁.sizeUpTo_succ' l₁
-  have := c₂.sizeUpTo_succ' l₂
-  omega
-
-namespace Composition
-
-variable {n : ℕ} (c : Composition n)
-
-/-- A composition is determined by its number of blocks and the positions of its blocks. -/
-lemma ext_of_sizeUpTo {c' : Composition n} (hl : c.length = c'.length)
-    (h : ∀ i, c.sizeUpTo i = c'.sizeUpTo i) : c = c' :=
-  Composition.ext (List.ext_getElem hl fun i h₁ h₂ ↦
-    blocksFun_eq_of_sizeUpTo_eq_add (l₁ := ⟨i, h₁⟩) (l₂ := ⟨i, h₂⟩) (m := 0)
-      (by simpa using h i) (by simpa using h (i + 1)))
-
-/-- A composition with a marked block is determined by the composition and the position of the
-marked block. -/
-lemma sigma_fin_ext {c₁ c₂ : Composition n} {m₁ : Fin c₁.length} {m₂ : Fin c₂.length}
-    (hc : c₁ = c₂) (hm : (m₁ : ℕ) = m₂) :
-    (⟨c₁, m₁⟩ : Σ c : Composition n, Fin c.length) = ⟨c₂, m₂⟩ := by
-  subst hc
-  exact congrArg _ (Fin.ext hm)
-
-/-- The positions of the blocks of a composition all of whose blocks other than `m` have size
-one. -/
-lemma sizeUpTo_of_blocksFun_eq_one (m : Fin c.length) (h : ∀ l, l ≠ m → c.blocksFun l = 1)
-    (k : ℕ) (hk : k ≤ c.length) :
-    c.sizeUpTo k = if k ≤ m then k else k + c.blocksFun m - 1 := by
-  induction k with
-  | zero => simp
-  | succ k ih =>
-    have h₁ : c.sizeUpTo (k + 1) = c.sizeUpTo k + c.blocksFun ⟨k, hk⟩ := c.sizeUpTo_succ' ⟨k, hk⟩
-    have ih := ih (Nat.le_of_succ_le hk)
-    have hpos := c.one_le_blocksFun m
-    rcases lt_trichotomy k m with hlt | heq | hgt
-    · have := h ⟨k, hk⟩ (Fin.ne_of_val_ne hlt.ne)
-      split_ifs at ih ⊢ <;> omega
-    · have : c.blocksFun ⟨k, hk⟩ = c.blocksFun m := congrArg c.blocksFun (Fin.ext heq)
-      split_ifs at ih ⊢ <;> omega
-    · have := h ⟨k, hk⟩ (Fin.ne_of_val_ne hgt.ne')
-      split_ifs at ih ⊢ <;> omega
-
-/-- The number of blocks of a composition all of whose blocks other than `m` have size one. -/
-lemma length_add_blocksFun_of_blocksFun_eq_one (m : Fin c.length)
-    (h : ∀ l, l ≠ m → c.blocksFun l = 1) : c.length + c.blocksFun m = n + 1 := by
-  have hlen := c.sizeUpTo_of_blocksFun_eq_one m h c.length le_rfl
-  have := m.2
-  have := c.one_le_blocksFun m
-  rw [c.sizeUpTo_length] at hlen
-  split_ifs at hlen <;> omega
-
-end Composition
-
-/-! ### Two-level compositions
-
-For a composition `a` of `n` and a composition `b` of `a.length`, the blocks of `a.gather b` are
-the groups of consecutive blocks of `a` given by `b`, and `a.sigmaCompositionAux b` records how
-each of them splits into blocks of `a`. -/
-
-namespace Composition
-
-variable {n : ℕ} (a : Composition n) (b : Composition a.length)
-
-/-- The blocks of `a.gather b` before the `i`-th one cover the same part of `n` as the blocks of
-`a` before the `b.sizeUpTo i`-th one. -/
-lemma sizeUpTo_gather (i : ℕ) : (a.gather b).sizeUpTo i = a.sizeUpTo (b.sizeUpTo i) := by
-  rcases lt_or_ge i b.length with hi | hi
-  · simpa using (sizeUpTo_sizeUpTo_add a b hi (b.one_le_blocksFun ⟨i, hi⟩)).symm
-  · rw [sizeUpTo_ofLength_le _ _ (by rwa [length_gather]), b.sizeUpTo_ofLength_le _ hi,
-      a.sizeUpTo_length]
-
-/-- The boundaries of the blocks of `a` inside the `j`-th group of `b` are the boundaries of the
-blocks of `a.sigmaCompositionAux b` inside the `j`-th block of `a.gather b`, including the last
-one. -/
-lemma sizeUpTo_sizeUpTo_add_boundary (j : Fin b.length) (q : Fin (b.blocksFun j + 1)) :
-    a.sizeUpTo (b.sizeUpTo j + q) =
-      (a.gather b).sizeUpTo j +
-        (a.sigmaCompositionAux b (j.cast (length_gather a b).symm)).sizeUpTo q := by
-  induction q using Fin.lastCases with
-  | last =>
-    rw [Fin.val_last, ← b.sizeUpTo_succ', ← sizeUpTo_gather, sizeUpTo_ofLength_le
-      (a.sigmaCompositionAux b (j.cast _)) _ (length_sigmaCompositionAux a b j).le]
-    exact (a.gather b).sizeUpTo_succ' (j.cast (length_gather a b).symm)
-  | cast q => exact sizeUpTo_sizeUpTo_add a b j.2 q.2
-
-/-- The embedding of a block of `a.sigmaCompositionAux b` into the corresponding block of
-`a.gather b` is the embedding of the corresponding block of `a`. -/
-lemma gather_embedding_sigmaCompositionAux_embedding (j : Fin b.length)
-    (q : Fin (b.blocksFun j)) (s : Fin (a.blocksFun (b.embedding j q))) :
-    (a.gather b).embedding (j.cast (length_gather a b).symm)
-        ((a.sigmaCompositionAux b (j.cast (length_gather a b).symm)).embedding
-          (q.cast (length_sigmaCompositionAux a b j).symm)
-          (s.cast (blocksFun_sigmaCompositionAux a b j q).symm)) =
-      a.embedding (b.embedding j q) s := by
-  apply Fin.ext
-  simpa [coe_embedding, Nat.add_assoc] using
-    congrArg (· + s.val) (sizeUpTo_sizeUpTo_add_boundary a b j q.castSucc).symm
-
-end Composition
 
 namespace AInfinityTheory
 

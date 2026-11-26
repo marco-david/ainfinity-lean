@@ -6,7 +6,7 @@ Authors: Annie Yao, Marco David, Jason Dong, Zhan Shi
 module
 
 public import AInfinity.AInfinityCategory
-public import Mathlib.Combinatorics.Enumerative.Composition
+public import AInfinity.Composition
 
 /-! # A∞-functors
 
@@ -109,21 +109,10 @@ A composition c = (i₁, …, iₖ) of `n` cuts a composable string of `n` input
 blocks: the `l`-th block has size iₗ, which is `c.blocksFun l`, and starts at
 position `c.sizeUpTo l`. In the right-hand side of the functor equation, the functor component
 of arity iₗ is applied to the `l`-th block and the outer operation m'ₖ to the resulting k
-values, so both the sizes of the blocks and their number must be positive. The lemmas and
-instances on `Composition` below are stated without reference to functors. -/
+values, so both the sizes of the blocks and their number must be positive. The lemmas on
+`Composition` used here are in `AInfinity.Composition`. -/
 
 variable {Obj : Type*} (X : Fin (n + 1) → Obj) (c : Composition n) (l : Fin c.length)
-
-lemma _root_.Composition.sizeUpTo_add_blocksFun_le : c.sizeUpTo l + c.blocksFun l ≤ n :=
-  (c.sizeUpTo_succ' l).symm.trans_le (c.sizeUpTo_le _)
-
-/-- Every block of a composition is nonempty. -/
-instance _root_.Composition.neZero_blocksFun : NeZero (c.blocksFun l) :=
-  NeZero.of_pos (c.one_le_blocksFun l)
-
-/-- A composition of a positive integer has at least one block. -/
-instance _root_.Composition.neZero_length [NeZero n] : NeZero c.length :=
-  NeZero.of_pos (c.length_pos_of_pos (NeZero.pos n))
 
 /-- The object string of the `l`-th block of a composition `c` of `n`: its `i`-th object is
 `X (c.sizeUpTo l + i)`, for `i ≤ c.blocksFun l`. -/

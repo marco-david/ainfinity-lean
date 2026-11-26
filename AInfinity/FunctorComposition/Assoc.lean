@@ -5,6 +5,7 @@ Authors: Zhan Shi, Marco David
 -/
 module
 
+public import AInfinity.CompositionGather
 public import AInfinity.FunctorComposition.Defs
 
 /-! # Associativity of the composition of composable multilinear maps
@@ -545,28 +546,6 @@ lemma compTerm_pick_compMarked (d : β''') (hd : _) :
     (Finset.sum_congr rfl fun τ _ ↦ applyBlocks_markedBlockTerm Φ G F D a e m τ d hd)
 
 end MarkedRight
-
-/-- A block of `c` inside a group of blocks given by `c'` is determined by the group and its
-position in the group, also after the identification of the groups with the blocks of
-`c.gather c'` and of the blocks in a group with the blocks of `c.sigmaCompositionAux c'`. -/
-lemma _root_.Composition.embedding_cast_eq_embedding_iff (c : Composition n)
-    (c' : Composition c.length) (i : Fin c'.length) (j : Fin (c'.blocksFun i))
-    (l : Fin (c.gather c').length) (q : Fin (c.sigmaCompositionAux c' l).length) :
-    c'.embedding (l.cast (c.length_gather c'))
-        (q.cast (c.length_sigmaCompositionAux c' (l.cast (c.length_gather c')))) =
-        c'.embedding i j ↔
-      (⟨l, q⟩ : Σ l : Fin (c.gather c').length, Fin (c.sigmaCompositionAux c' l).length) =
-        ⟨i.cast (c.length_gather c').symm, j.cast (c.length_sigmaCompositionAux c' i).symm⟩ := by
-  constructor
-  · intro hE
-    have hS := c'.blocksFinEquiv.injective (a₁ := ⟨_, _⟩) (a₂ := ⟨i, j⟩) hE
-    obtain ⟨rfl, hq⟩ := Sigma.mk.inj_iff.1 hS
-    obtain rfl := eq_of_heq hq
-    rfl
-  · intro hS
-    obtain ⟨rfl, hq⟩ := Sigma.mk.inj_iff.1 hS
-    obtain rfl := eq_of_heq hq
-    rfl
 
 omit [Grading β] in
 /-- The Koszul sign of the inputs after a block of `c`, inside a group of blocks given by `c'`,

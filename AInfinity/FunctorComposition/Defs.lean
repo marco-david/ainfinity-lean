@@ -5,6 +5,7 @@ Authors: Annie Yao, Marco David, Zhan Shi
 -/
 module
 
+public import Mathlib.Algebra.Module.BigOperators
 public import AInfinity.AInfinityFunctor
 public import AInfinity.ComposableMultilinearMap
 public import AInfinity.FunctorComposition.Signs
@@ -115,16 +116,6 @@ section Degrees
 variable {β β' β'' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
   [AddCommGroup β''] [Grading β''] (φ : β →+ᵍ β') (ψ : β' →+ᵍ β'') (deg : Fin n → β)
 
-omit [Grading β] in
-/-- The degrees of the maps on the blocks of a composition and of the outer map add up. -/
-lemma sum_sub_blocksFun_add (s : ℤ) (c : Composition n) (σ : Fin c.length → ℤ) :
-    (∑ l, (σ l - (c.blocksFun l : ℤ))) + (s - c.length) = s + ∑ l, (σ l - 1) - n := by
-  have := congrArg (Nat.cast (R := ℤ)) c.sum_blocksFun
-  push_cast at this
-  simp only [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
-    nsmul_eq_mul, mul_one, this]
-  ring
-
 /-- Applying maps of degrees (σ₁ - i₁) · 1, …, (σₖ - iₖ) · 1 to the blocks of a composition
 c = (i₁, …, iₖ) of `n`, and then a map of degree (s - k) · 1 to their values, has the degree of
 a map of degree (s + ∑ₗ (σₗ - 1) - n) · 1. -/
@@ -132,7 +123,7 @@ lemma targetDeg_targetDeg_embedding_of_sum (s : ℤ) (c : Composition n) (σ : F
     targetDeg s (fun l ↦ targetDeg (σ l) fun j ↦ deg (c.embedding l j)) =
       targetDeg (s + ∑ l, (σ l - 1)) deg := by
   simp only [targetDeg, Finset.sum_add_distrib, c.sum_sum_apply_embedding, add_assoc,
-    ← Finset.sum_smul, ← add_smul, sum_sub_blocksFun_add s c σ]
+    ← Finset.sum_smul, ← add_smul, c.sum_sub_blocksFun_add s σ]
 
 /-- `targetDeg_targetDeg_embedding_of_sum` translated along homomorphisms of gradings. -/
 lemma degMap_targetDeg_degMap_targetDeg_embedding {s u : ℤ} (c : Composition n)

@@ -3,11 +3,13 @@ import AInfinity.AInfinityCategoryStruct
 import AInfinity.AInfinityFunctor
 import AInfinity.ArityLeTwo
 import AInfinity.ComposableMultilinearMap
+import AInfinity.Composition
+import AInfinity.CompositionGather
 import AInfinity.DG
 import AInfinity.FunctorComposition.Assoc
 import AInfinity.FunctorComposition.Basic
 import AInfinity.FunctorComposition.Defs
-import AInfinity.FunctorComposition.Lemmas
+import AInfinity.FunctorComposition.OuterComposition
 import AInfinity.FunctorComposition.Signs
 import AInfinity.FunctorComposition.StasheffSum
 import AInfinity.FunctorComposition.Unit
