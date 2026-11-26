@@ -10,14 +10,14 @@ public import AInfinity.StasheffIndex
 
 /-! # Auxiliary results for the index types of the functor equation of a composite
 
-This file collects the results shared by the index types `MapCompIndex`, `CompMapIndex` and
-`CompMapMapIndex` of the terms of the functor equation for a composite `G.comp F` of A∞-functors:
+This file collects the results shared by the index types `MapCompIndex` and `CompMapIndex` of
+the terms of the functor equation for a composite `G.comp F` of A∞-functors:
 lemmas on lists and compositions, the change of the size of one block of a composition, the
 splitting of one block of a composition, lemmas on two-level compositions, and the composition
 `StasheffIndex.outerComposition` along which the blocks fed to an inner operation are gathered.
 
-The lemmas on two-level compositions relate Mathlib's `Composition.sigmaEquivSigmaPi` to the two
-descriptions recorded in `CompMapMapIndex`.
+The lemmas on two-level compositions describe the blocks of the two components `Composition.gather`
+and `Composition.sigmaCompositionAux` of Mathlib's `Composition.sigmaEquivSigmaPi`.
 
 ## Main definitions
 

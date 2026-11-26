@@ -27,8 +27,8 @@ A∞-functors is associative.
 
 ## Implementation notes
 
-The proof depends on combinatorial statements about the index types `MapCompIndex`,
-`CompMapIndex` and `CompMapMapIndex`, and on the Koszul sign identities in
+The proof depends on combinatorial statements about the index types `MapCompIndex` and
+`CompMapIndex`, and on the Koszul sign identities in
 `AInfinity.FunctorComposition.Signs`. The functor equation for `G.comp F` is reduced to the
 functor equations of `F`, applied blockwise, and of `G`, applied to the outputs of `F`, in three
 steps:
@@ -45,7 +45,7 @@ steps:
    sides are values of composites of the operations m'' of the target, as a composable
    multilinear map, with A∞-functor data: the first of `(m''.comp G).comp F` and the second of
    `m''.comp (G.comp F)`. So this step is the associativity `ComposableMultilinearMap.comp_assoc`,
-   proved in `AInfinity.FunctorComposition.Assoc` through the index type `CompMapMapIndex`. The
+   proved in `AInfinity.FunctorComposition.Assoc` along `Composition.sigmaEquivSigmaPi`. The
    same statement, for an A∞-functor in place of m'', gives `AInfinityFunctor.comp_assoc`.
 -/
 

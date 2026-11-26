@@ -117,8 +117,8 @@ status:
     multilinear maps (a common type for A∞-functor data and the operations of an
     A∞-category), A∞-functors with the A∞-functor equations, the composition of
     A∞-functors (the composite satisfies the A∞-functor equations, by a reindexing
-    reduced to the bijectivity of the projections of the index types `MapCompIndex`,
-    `CompMapIndex` and `CompMapMapIndex` and to two Koszul sign identities; the
+    reduced to the bijectivity of the projections of the index types `MapCompIndex`
+    and `CompMapIndex` and to two Koszul sign identities; the
     composition is associative), and the general KLRW algebra with its R-linear KLRW
     category. In progress: the computable additive completion and
     bounded cochain complexes, and the braiding functor, whose definitions are
@@ -336,8 +336,8 @@ alignment:
       status: "proved"
       note: >-
         A case of `AInfinityTheory.ComposableMultilinearMap.comp_assoc`
-        (`AInfinity.FunctorComposition.Assoc`), proved by reindexing along the index type
-        `CompMapMapIndex`.
+        (`AInfinity.FunctorComposition.Assoc`), proved by reindexing along Mathlib's
+        `Composition.sigmaEquivSigmaPi`.
     - source: "Blueprint, Chapter 5 (A∞-algebras)"
       lean: ""
       module: ""
