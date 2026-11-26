@@ -21,6 +21,11 @@ The index triples (r, s, t), the object strings `stasheffObjIn`/`stasheffObjOut`
 degrees `stasheffDegIn`/`stasheffDegOut` of the inner and outer operations, and the Koszul signs
 are in `AInfinity.StasheffIndex`.
 
+The inputs of the outer operation are transported to its hom spaces with `homCongr`. They are
+described in the type of all morphisms `GradedLinearQuiver.Total`, where these transports are
+invisible (`total_stasheffInputsOut_left`, `total_stasheffInputsOut_middle`,
+`total_stasheffInputsOut_right`).
+
 ## Main definitions
 
 * `AInfinityTheory.stasheffInputsIn`, `AInfinityTheory.stasheffInputsOut`: the inputs of the
@@ -82,41 +87,32 @@ corresponding objects of the outer operation. -/
 def stasheffInputsOut :
     ∀ i : Fin (p.r + 1 + p.t), ComposableHom β R (stasheffObjOut X p) i (stasheffDegOut deg p i) :=
   Fin.addCases
-    (Fin.snoc
-      (fun j ↦ homCongr R (stasheffObjOut_left_castSucc X p j).symm
-        (stasheffObjOut_left_succ X p j).symm (stasheffDegOut_left deg p j).symm
-        (a (p.leftIndex j)))
-      (homCongr R (stasheffObjOut_middle_castSucc X p).symm (stasheffObjOut_middle_succ X p).symm
-        rfl (stasheffInner a p _ (stasheffDegOut_middle deg p).symm)))
-    fun k ↦ homCongr R (stasheffObjOut_right_castSucc X p k).symm
-      (stasheffObjOut_right_succ X p k).symm (stasheffDegOut_right deg p k).symm
-      (a (p.rightIndex k))
+    (Fin.snoc (fun j ↦ homCongr R (by simp) (by simp) (by simp) (a (p.leftIndex j)))
+      (homCongr R (by simp) (by simp) (by simp) (stasheffInner a p _ rfl)))
+    fun k ↦ homCongr R (by simp) (by simp) (by simp) (a (p.rightIndex k))
 
+/-- Before the inner output, the inputs of the outer operation are the original inputs. -/
 @[simp]
-lemma stasheffInputsOut_left (j : Fin p.r) :
-    stasheffInputsOut a p (j.castSucc.castAdd p.t) =
-      homCongr R (stasheffObjOut_left_castSucc X p j).symm (stasheffObjOut_left_succ X p j).symm
-        (stasheffDegOut_left deg p j).symm (a (p.leftIndex j)) := by
+lemma total_stasheffInputsOut_left (j : Fin p.r) :
+    Total.of (stasheffInputsOut a p (j.castSucc.castAdd p.t)) = Total.of (a (p.leftIndex j)) := by
   simp [stasheffInputsOut]
 
+/-- After the inner output, the inputs of the outer operation are the original inputs. -/
 @[simp]
-lemma stasheffInputsOut_right (k : Fin p.t) :
-    stasheffInputsOut a p (k.natAdd (p.r + 1)) =
-      homCongr R (stasheffObjOut_right_castSucc X p k).symm (stasheffObjOut_right_succ X p k).symm
-        (stasheffDegOut_right deg p k).symm (a (p.rightIndex k)) := by
+lemma total_stasheffInputsOut_right (k : Fin p.t) :
+    Total.of (stasheffInputsOut a p (k.natAdd (p.r + 1))) = Total.of (a (p.rightIndex k)) := by
   simp [stasheffInputsOut]
 
-@[simp]
-lemma stasheffInputsOut_middle :
-    stasheffInputsOut a p p.middleIndex =
-      homCongr R (stasheffObjOut_middle_castSucc X p).symm (stasheffObjOut_middle_succ X p).symm
-        rfl (stasheffInner a p _ (stasheffDegOut_middle deg p).symm) := by
+/-- The middle input of the outer operation is the inner output. -/
+lemma total_stasheffInputsOut_middle (d : β) (hd : stasheffInnerDeg deg p = d) :
+    Total.of (stasheffInputsOut a p p.middleIndex) = Total.of (stasheffInner a p d hd) := by
+  subst hd
   simp [stasheffInputsOut]
 
 lemma stasheffInputsOut_middle_eq_zero_of_inner_eq_zero
     (hinner : ∀ d hd, stasheffInner a p d hd = 0) :
     stasheffInputsOut a p p.middleIndex = 0 := by
-  rw [stasheffInputsOut_middle, hinner, map_zero]
+  simp [stasheffInputsOut, hinner]
 
 /-- The outer value of the (r, s, t) summand: the operation of arity r + 1 + t applied to
 `stasheffInputsOut a p`, in any degree `d` equal to its degree. -/
@@ -128,8 +124,7 @@ def stasheffOuter (d : β) (hd : targetDeg 2 (stasheffDegOut deg p) = d) :
 `stasheffOuter`, transported to the hom space from `X 0` to `X (Fin.last n)`, in any degree `d`
 equal to the Stasheff target degree. -/
 def stasheffTerm (d : β) (hd : targetDeg 3 deg = d) : (X 0 →ᵍ[R] X (Fin.last n)) d :=
-  homCongr R (stasheffObjOut_zero X p) (stasheffObjOut_last X p) rfl
-    (stasheffOuter a p d ((stasheffDegOut_sum deg p).trans hd))
+  homCongr R (by simp) (by simp) rfl (stasheffOuter a p d ((stasheffDegOut_sum deg p).trans hd))
 
 lemma stasheffInner_eq_zero_of_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjIn X p)).v (stasheffDegIn deg p) d hd = 0)
@@ -153,7 +148,7 @@ lemma stasheffOuter_eq_zero_of_inner_eq_zero
 lemma stasheffTerm_eq_zero_iff_outer_eq_zero (d : β) (hd : targetDeg 3 deg = d) :
     stasheffTerm a p d hd = 0 ↔
       stasheffOuter a p d ((stasheffDegOut_sum deg p).trans hd) = 0 :=
-  (homCongr R (stasheffObjOut_zero X p) (stasheffObjOut_last X p) rfl).map_eq_zero_iff
+  (homCongr R _ _ rfl).map_eq_zero_iff
 
 lemma stasheffTerm_eq_zero_of_outer_map_eq_zero
     (hm : ∀ d hd, (m (R := R) (stasheffObjOut X p)).v (stasheffDegOut deg p) d hd = 0)

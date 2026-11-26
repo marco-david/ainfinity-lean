@@ -160,16 +160,16 @@ lemma total_mapCompTerm (d : β) (hd : targetDeg 2 deg = d) (d' : β') (hd' : _)
   | left i =>
     induction i using Fin.lastCases with
     | last =>
-      rw [stasheffInputsOut_middle, Total.of_homCongr]
-      exact (total_pick_blockMap_outerComposition_middle a p _ _).symm
+      exact (total_stasheffInputsOut_middle a p _ rfl).trans
+        (total_pick_blockMap_outerComposition_middle a p _ rfl).symm
     | cast j =>
-      rw [stasheffInputsOut_left, Total.of_homCongr]
+      rw [total_stasheffInputsOut_left]
       refine (total_pick_blockMap_outerComposition_of_ne a p _ (Nat.ne_of_lt j.2) _ ?_).symm
       have := j.2
       change (j : ℕ) = if (j : ℕ) ≤ p.r then (j : ℕ) else j + p.s - 1
       split_ifs <;> omega
   | right k =>
-    rw [stasheffInputsOut_right, Total.of_homCongr]
+    rw [total_stasheffInputsOut_right]
     refine (total_pick_blockMap_outerComposition_of_ne a p _
       (by change p.r + 1 + (k : ℕ) ≠ p.r; omega) _ ?_).symm
     change p.r + p.s + (k : ℕ) =

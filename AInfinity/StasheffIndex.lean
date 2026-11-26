@@ -283,7 +283,7 @@ lemma outerBoundary_middle_succ :
 input. -/
 @[simp]
 lemma outerBoundary_right_castSucc (k : Fin p.t) :
-    p.outerBoundary (k.natAdd (p.r + 1)).castSucc = (p.rightIndex k).castSucc :=
+    p.outerBoundary (k.castSucc.natAdd (p.r + 1)) = (p.rightIndex k).castSucc :=
   Fin.ext (p.val_outerBoundary_natAdd k.castSucc)
 
 /-- After the inner output, the target of an outer input is the target of the original
@@ -358,7 +358,7 @@ lemma stasheffObjOut_middle_succ :
 input. -/
 @[simp]
 lemma stasheffObjOut_right_castSucc (k : Fin p.t) :
-    stasheffObjOut X p (k.natAdd (p.r + 1)).castSucc = X (p.rightIndex k).castSucc :=
+    stasheffObjOut X p (k.castSucc.natAdd (p.r + 1)) = X (p.rightIndex k).castSucc :=
   congrArg X (p.outerBoundary_right_castSucc k)
 
 /-- After the inner output, the target of an outer input is the target of the original

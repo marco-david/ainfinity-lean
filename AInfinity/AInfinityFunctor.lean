@@ -130,8 +130,7 @@ mₛ(…) and the last t inputs, in degree `F.degMap d` for any `d` equal to the
 mₙ(a₁, …, aₙ). -/
 def mapCompTerm (p : StasheffIndex n) (d : β) (hd : targetDeg 2 deg = d) :
     (F.obj (X 0) →ᵍ[R] F.obj (X (Fin.last n))) (F.degMap d) :=
-  homCongr R (congrArg F.obj (stasheffObjOut_zero X p))
-    (congrArg F.obj (stasheffObjOut_last X p)) rfl
+  homCongr R (by simp) (by simp) rfl
     ((F.toComposableMultilinearMap.map (stasheffObjOut X p)).v (stasheffDegOut deg p) d
       ((targetDeg_stasheffDegOut deg p).trans hd) (stasheffInputsOut a p))
 
