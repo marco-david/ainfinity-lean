@@ -1,5 +1,29 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
 name: Build Lean Docs and Blueprint
+
+# Builds the website (homepage, blueprint, API documentation) and publishes it to GitHub Pages.
+#
+# The two jobs are split so that a green pull request predicts a green `master`. GitHub lists
+# them by their names, "Build docs, blueprint and homepage" and "Deploy to GitHub Pages (master
+# only)"; a branch rule that requires the first one has to use that name.
+#
+#   * `site` builds and uploads the website. It runs the same steps on every event, so what it
+#     checks on a pull request is what it checks again after the merge. Keep it that way: do
+#     not make any of its steps depend on `github.event_name` or `github.ref`.
+#   * `deploy` publishes the uploaded website. It is the one step that cannot run on a pull
+#     request, so it is a job of its own, runs for `master` only, and makes a second attempt:
+#     its failures so far came from GitHub, not from the code (a deployment stuck in
+#     `syncing_files`; the artifact not yet listed a moment after its upload). If it fails
+#     nevertheless, choose "Re-run failed jobs", which publishes the existing artifact within a
+#     minute. "Re-run all jobs" uploads a second `github-pages` artifact, and `deploy-pages`
+#     rejects a run that has two.
+#
+# Generating the API documentation of the dependencies (Mathlib and the others) takes between
+# one and two hours, so it is cached under a key derived from `lake-manifest.json`. A pull
+# request can read the cache of `master` but not that of another pull request, and GitHub
+# deletes a cache that nothing has read for 7 days. The `schedule` trigger therefore runs the
+# workflow on `master` twice a week, which reads the cache or, when it is gone, generates it
+# again before a pull request has to. Only a pull request that changes `lake-manifest.json`
+# (a Mathlib update) generates everything itself.
 
 on:
   push:
@@ -8,30 +32,31 @@ on:
   pull_request:
     branches:
       - master
-  # Allows you to run this workflow manually from the Actions tab
+  schedule:
+    - cron: "41 3 * * 1,4" # Mondays and Thursdays, 03:41 UTC
+  # Allows you to run this workflow manually from the Actions tab. On `master` this also
+  # publishes the website; on any other branch it only builds it.
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Runs for `master` queue up and are never cancelled, so that the website is always published
+# in the order of the commits. A pull request has a queue of its own, in which a new commit
+# cancels the run of the previous one.
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: docs-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Build job
-  build:
+  site:
+    name: Build docs, blueprint and homepage
     # Pinned to ubuntu-24.04 rather than ubuntu-latest. Since 2026-10-19 `ubuntu-latest` is
     # being migrated to the ubuntu-26.04 image (kernel 7.0), on which regenerating the Mathlib
-    # API docs from scratch (every push to master whose docs cache has expired) fails
-    # deterministically with `resource exhausted (error code: 12, cannot allocate memory)`
-    # while Lake forks helper processes, even though the runner still has ~14 GB free and
-    # extra swap does not help. The same build passes on ubuntu-24.04.
+    # API docs from scratch (every run that finds no docs cache) fails deterministically with
+    # `resource exhausted (error code: 12, cannot allocate memory)` while Lake forks helper
+    # processes, even though the runner still has ~14 GB free and extra swap does not help.
+    # The same build passes on ubuntu-24.04.
     # See https://github.com/actions/runner-images/issues/14748.
     runs-on: ubuntu-24.04
     steps:
@@ -46,11 +71,87 @@ jobs:
           build: true
           lint: false
           mk_all-check: true
-      - name: Generate documentation assets
-        # Pinned to upstream `main` (2026-10-05); it includes the fixes for
-        # https://github.com/leanprover-community/docgen-action/issues/28 that the
-        # dwrensha fork used to carry, and also validates the Jekyll homepage on pull requests.
+
+      # docgen-action is used twice, around the API documentation: here for the blueprint, and
+      # below for the homepage. With `api-docs: false` and `deploy: false` it has no step left
+      # that depends on the event. Both uses are pinned to upstream `main` (2026-10-05); keep
+      # them and the checkout of its scripts below at the same commit.
+      - name: Build the blueprint and check that its Lean declarations exist
         uses: leanprover-community/docgen-action@dacc1acc2a3f532cc577266979ba9c36c7593f7c # main, 2026-10-05
         with:
           blueprint: true
-          homepage: "site"
+          homepage: site
+          api-docs: false
+          build-page: false
+          deploy: false
+
+      # docgen-action itself builds the API documentation on `push` events only. A pull request
+      # would then pass without ever running doc-gen4, and `master` would be the first to find
+      # out when it fails. The next five steps are that part of the action, run on every event
+      # with the action's own scripts. Unlike the action, they save the cache as soon as the
+      # documentation is built, so that a failure further down does not discard two hours of
+      # work. Should docgen-action gain an input to build the API documentation on pull
+      # requests, these steps can go back to being a single use of it.
+      - name: Check out the scripts of docgen-action
+        uses: actions/checkout@v4
+        with:
+          repository: leanprover-community/docgen-action
+          ref: dacc1acc2a3f532cc577266979ba9c36c7593f7c # main, 2026-10-05
+          path: .docgen-action
+          persist-credentials: false
+      - name: Parse the project metadata
+        id: metadata
+        run: node .docgen-action/dist/index.js
+      - name: Restore the API documentation of the dependencies
+        id: docs-cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ steps.metadata.outputs.cached_docbuild_dependencies }}
+          key: Docs-${{ hashFiles('lake-manifest.json', 'references.bib') }}
+      - name: Build the API documentation
+        run: .docgen-action/scripts/build_docs.sh
+        env:
+          NAME: ${{ steps.metadata.outputs.name }}
+          DOCS_FACETS: ${{ steps.metadata.outputs.docs_facets }}
+          HOMEPAGE: site
+          REFERENCES: references.bib
+      - name: Save the API documentation of the dependencies
+        if: steps.docs-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ steps.metadata.outputs.cached_docbuild_dependencies }}
+          key: ${{ steps.docs-cache.outputs.cache-primary-key }}
+
+      - name: Build the homepage with Jekyll
+        uses: leanprover-community/docgen-action@dacc1acc2a3f532cc577266979ba9c36c7593f7c # main, 2026-10-05
+        with:
+          homepage: site
+          api-docs: false
+          deploy: false
+      - name: Upload the website (homepage, blueprint and API documentation)
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site/_site
+
+  deploy:
+    # A pull request lists this job as "Skipped"; the name says why.
+    name: Deploy to GitHub Pages (master only)
+    needs: site
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest # no Lake
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        continue-on-error: true
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+      - name: Wait before the second attempt
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 60
+      - name: Deploy to GitHub Pages (second attempt)
+        if: steps.deploy.outcome == 'failure'
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
