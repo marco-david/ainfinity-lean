@@ -68,7 +68,7 @@ protected def comp (G : AInfinityFunctorData β' β'' R Obj' Obj'')
     (F : AInfinityFunctorData β β' R Obj Obj') : AInfinityFunctorData β β'' R Obj Obj'' where
   obj X := G.obj (F.obj X)
   degMap := G.degMap.comp F.degMap
-  map X := (G.toComposableMultilinearMap.comp F.toComposableMultilinearMap).map X
+  toComposableMultilinearMap := G.toComposableMultilinearMap.comp F.toComposableMultilinearMap
 
 @[simp]
 lemma comp_obj (G : AInfinityFunctorData β' β'' R Obj' Obj'')
@@ -91,13 +91,7 @@ lemma comp_toComposableMultilinearMap (G : AInfinityFunctorData β' β'' R Obj' 
 theorem comp_assoc (H : AInfinityFunctorData β'' β''' R Obj'' Obj''')
     (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj') :
     (H.comp G).comp F = H.comp (G.comp F) :=
-  congrArg (fun Ψ : ComposableMultilinearMap R (fun X ↦ H.obj (G.obj (F.obj X)))
-      ((H.degMap.comp G.degMap).comp F.degMap) 1 ↦
-    ({ obj := fun X ↦ H.obj (G.obj (F.obj X))
-       degMap := (H.degMap.comp G.degMap).comp F.degMap
-       map := fun X ↦ Ψ.map X } : AInfinityFunctorData β β''' R Obj Obj'''))
-    (ComposableMultilinearMap.comp_assoc H.toComposableMultilinearMap
-      G.toComposableMultilinearMap F.toComposableMultilinearMap)
+  congrArg (mk _ _) (ComposableMultilinearMap.comp_assoc _ _ _)
 
 end AInfinityFunctorData
 

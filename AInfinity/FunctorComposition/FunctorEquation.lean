@@ -5,6 +5,7 @@ Authors: Marco David
 -/
 module
 
+public import AInfinity.AInfinityFunctor
 public import AInfinity.FunctorComposition.Assoc
 public import AInfinity.FunctorComposition.Unit
 
@@ -19,11 +20,6 @@ equation of `F` with composites of composable multilinear maps:
   is the value of F ∘ (𝟙 | m), for the identity 𝟙 and the operations m of the source.
 
 So the A∞-functor equation reads F ∘ (𝟙 | m) = m' ∘ F.
-
-## Main definitions
-
-* `AInfinityTheory.AInfinityFunctorData.toComposableMultilinearMap`: the components of A∞-functor
-  data, as a composable multilinear map.
 
 ## Main results
 
@@ -89,25 +85,6 @@ namespace AInfinityFunctorData
 variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
   {R : Type*} [Semiring R] {Obj Obj' : Type*}
 
-/-! ### A∞-functor data as composable multilinear maps -/
-
-section GradedLinearQuiver
-
-variable [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
-
-/-- The components of A∞-functor data `F`, as a composable multilinear map with `s = 1` over
-`F.obj` and `F.degMap`. -/
-def toComposableMultilinearMap (F : AInfinityFunctorData β β' R Obj Obj') :
-    ComposableMultilinearMap R F.obj F.degMap 1 where
-  map X := F.map X
-
-@[simp]
-lemma toComposableMultilinearMap_map (F : AInfinityFunctorData β β' R Obj Obj') [NeZero n]
-    (X : Fin (n + 1) → Obj) : F.toComposableMultilinearMap.map X = F.map X :=
-  rfl
-
-end GradedLinearQuiver
-
 section AInfinityCategoryStruct
 
 variable [AInfinityCategoryStruct β R Obj] [AInfinityCategoryStruct β' R Obj']
@@ -120,26 +97,13 @@ section CompMap
 
 variable [NeZero n]
 
-/-- A term of the right-hand side of the functor equation of `F` is a term of the composite
-m' ∘ F of the operations of the target with `F`. -/
-lemma total_compMapTerm (c : Composition n) (d : β) (hd : targetDeg 2 deg = d) (d' : β')
-    (hd' : _) :
-    Total.of (F.compMapTerm a c d hd) =
-      Total.of ((AInfinityCategoryStruct.toComposableMultilinearMap β' R Obj').compTerm a c
-        (fun _ ↦ ⟨1, F.toComposableMultilinearMap⟩) d' hd') := by
-  simp only [compMapTerm, ComposableMultilinearMap.compTerm,
-    ComposableMultilinearMap.applyBlocks, Total.of_homCongr]
-  exact (AInfinityCategoryStruct.toComposableMultilinearMap β' R Obj').total_map_congr rfl _ _
-    fun l ↦ rfl
-
 /-- The right-hand side of the functor equation of `F` is the value of the composite m' ∘ F of
 the operations of the target with `F`. -/
 theorem compMapSum_eq_comp_map_v (d : β) (hd : targetDeg 2 deg = d) :
     F.compMapSum a d hd =
       (((AInfinityCategoryStruct.toComposableMultilinearMap β' R Obj').comp
-        F.toComposableMultilinearMap).map X).v deg d hd a := by
-  rw [ComposableMultilinearMap.comp_map_v_apply]
-  exact Finset.sum_congr rfl fun c _ ↦ Total.of_inj.1 (F.total_compMapTerm a c d hd _ _)
+        F.toComposableMultilinearMap).map X).v deg d hd a :=
+  (ComposableMultilinearMap.comp_map_v_apply _ _ a hd).symm
 
 end CompMap
 

@@ -327,8 +327,8 @@ alignment:
       status: "defined"
       note: >-
         The composites Φ ∘ F and Φ ∘ (F | D) of composable multilinear maps are
-        `AInfinityTheory.ComposableMultilinearMap.comp` and
-        `AInfinityTheory.ComposableMultilinearMap.compMarked`
+        `AInfinityTheory.ComposableMultilinearMap.comp` (`AInfinity.ComposableMultilinearMap`)
+        and `AInfinityTheory.ComposableMultilinearMap.compMarked`
         (`AInfinity.FunctorComposition.Defs`). The A∞-functor equations for the composite
         are `AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum`, proved from
         those of the two functors by the rules

@@ -5,13 +5,13 @@ Authors: Marco David
 -/
 module
 
-public import AInfinity.FunctorComposition.Defs
+public import AInfinity.ComposableMultilinearMap
 
 /-! # The identity is a unit for the composition of composable multilinear maps
 
 The identity composable multilinear map 𝟙 has the identity as its unary component, and its other
-components vanish. This file proves that it is a unit for the composition of
-`AInfinity.FunctorComposition.Defs`.
+components vanish. This file proves that it is a unit for the composition
+`ComposableMultilinearMap.comp`.
 
 ## Main results
 

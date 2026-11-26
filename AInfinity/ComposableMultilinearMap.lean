@@ -5,7 +5,9 @@ Authors: Zhan Shi, Marco David
 -/
 module
 
+public import Mathlib.Algebra.Module.BigOperators
 public import AInfinity.AInfinityCategoryStruct
+public import AInfinity.Composition
 
 /-! # Composable multilinear maps
 
@@ -42,12 +44,26 @@ be fed to the same outer map, see `AInfinityTheory.ComposableMultilinearMap.comp
   is the identity and its other components vanish.
 * `AInfinityTheory.AInfinityCategoryStruct.toComposableMultilinearMap`: the operations mₙ of an
   A∞-category structure, as a composable multilinear map with `s = 2`.
+* `AInfinityTheory.compositionBlockObj`: the object string of a block of a composition.
+* `AInfinityTheory.ComposableMultilinearMap.blockMap`: the value of a composable multilinear map
+  on a block of a composition.
+* `AInfinityTheory.ComposableMultilinearMap.applyBlocks`: a composable multilinear map applied to
+  a composable string of morphisms along a composition.
+* `AInfinityTheory.ComposableMultilinearMap.compTerm`: the term Φₖ(P₁(…), …, Pₖ(…)) of a
+  composite, for a composition into k blocks and a choice `P` of a map for each block.
+* `AInfinityTheory.ComposableMultilinearMap.comp`: the composite Φ ∘ F, with components
+  $$(\Phi \circ F)_n(a_1, \dots, a_n) = \sum_{k \ge 1} \sum_{i_1 + \dots + i_k = n}
+    \Phi_k(F_{i_1}(a_1, \dots, a_{i_1}), \dots, F_{i_k}(a_{n-i_k+1}, \dots, a_n)).$$
+  It is linear in Φ, and polynomial in `F`: its term Φₖ(F, …, F) is k-linear. For the operations
+  m' of an A∞-category, m' ∘ F is the right-hand side of the A∞-functor equation of `F`.
 
 ## Main results
 
 * `AInfinityTheory.ComposableMultilinearMap.total_map_congr`: congruence for the components of a
   composable multilinear map in the type of all morphisms. Only the arities and the inputs are
   compared.
+* `AInfinityTheory.ComposableMultilinearMap.comp_map_v_apply`: the value of Φ ∘ F, as a sum of
+  terms.
 
 ## Implementation notes
 
@@ -62,6 +78,17 @@ Composites of maps on objects are written `fun X ↦ g (f X)` and the identity `
 they reduce when applied. The laws `GradingHom.comp_id`, `GradingHom.id_comp` and
 `GradingHom.comp_assoc` hold by `rfl`, so composable multilinear maps over both sides of these
 laws have the same type.
+
+A term of a composite is described by a composition `c` of `n` and a choice
+`P : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u` of a composable multilinear map,
+together with its degree, for each block of `c`. For Φ ∘ F the choice is constant; the marked
+composite Φ ∘ (F | D) of `AInfinity.FunctorComposition.Defs` chooses `D` on one block.
+
+Terms are defined in any degree `d` equal to their degree, with a proof of the equality as an
+argument, as for `stasheffTerm`. Every definition that transports along equalities of objects or
+degrees is stated so that the endpoints of `homCongr` are syntactically those of its type. Then
+`simp` removes the transport from under `GradedLinearQuiver.Total.of`, and two descriptions of a
+term are compared with `ComposableMultilinearMap.total_map_congr`.
 -/
 
 @[expose] public section
@@ -203,5 +230,204 @@ lemma toComposableMultilinearMap_map {n : ℕ} [NeZero n] (X : Fin (n + 1) → O
   rfl
 
 end AInfinityCategoryStruct
+
+/-! ### Blocks of a composition
+
+A composition c = (i₁, …, iₖ) of `n` cuts a composable string of `n` inputs into k
+blocks: the `l`-th block has size iₗ, which is `c.blocksFun l`, and starts at
+position `c.sizeUpTo l`. In a composite Φ ∘ F, the component of `F` of arity iₗ is applied to the
+`l`-th block and the component of Φ of arity k to the resulting k values, so both the sizes of the
+blocks and their number must be positive. The lemmas on `Composition` used here are in
+`AInfinity.Composition`. -/
+
+section CompositionBlock
+
+variable {Obj : Type*} (X : Fin (n + 1) → Obj) (c : Composition n) (l : Fin c.length)
+
+/-- The object string of the `l`-th block of a composition `c` of `n`: its `i`-th object is
+`X (c.sizeUpTo l + i)`, for `i ≤ c.blocksFun l`. -/
+def compositionBlockObj : Fin (c.blocksFun l + 1) → Obj :=
+  fun i ↦ X ((i.natAdd (c.sizeUpTo l)).castLE (Nat.succ_le_succ (c.sizeUpTo_add_blocksFun_le l)))
+
+@[simp]
+lemma compositionBlockObj_zero :
+    compositionBlockObj X c l 0 = X (c.boundary l.castSucc) := by
+  unfold compositionBlockObj
+  congr 1
+
+@[simp]
+lemma compositionBlockObj_last :
+    compositionBlockObj X c l (Fin.last (c.blocksFun l)) = X (c.boundary l.succ) := by
+  unfold compositionBlockObj Composition.boundary
+  congr 1
+  ext
+  simp [Composition.sizeUpTo_succ']
+
+end CompositionBlock
+
+/-! ### Degrees -/
+
+section Degrees
+
+variable {β β' β'' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
+  [AddCommGroup β''] [Grading β''] (φ : β →+ᵍ β') (ψ : β' →+ᵍ β'') (deg : Fin n → β)
+
+/-- Applying maps of degrees (σ₁ - i₁) · 1, …, (σₖ - iₖ) · 1 to the blocks of a composition
+c = (i₁, …, iₖ) of `n`, and then a map of degree (s - k) · 1 to their values, has the degree of
+a map of degree (s + ∑ₗ (σₗ - 1) - n) · 1. -/
+lemma targetDeg_targetDeg_embedding_of_sum (s : ℤ) (c : Composition n) (σ : Fin c.length → ℤ) :
+    targetDeg s (fun l ↦ targetDeg (σ l) fun j ↦ deg (c.embedding l j)) =
+      targetDeg (s + ∑ l, (σ l - 1)) deg := by
+  simp only [targetDeg, Finset.sum_add_distrib, c.sum_sum_apply_embedding, add_assoc,
+    ← Finset.sum_smul, ← add_smul, c.sum_sub_blocksFun_add s σ]
+
+/-- `targetDeg_targetDeg_embedding_of_sum` translated along homomorphisms of gradings. -/
+lemma degMap_targetDeg_degMap_targetDeg_embedding {s u : ℤ} (c : Composition n)
+    (σ : Fin c.length → ℤ) (hσ : s + ∑ l, (σ l - 1) = u) {j : β} (hj : targetDeg u deg = j) :
+    ψ (targetDeg s fun l ↦ φ (targetDeg (σ l) fun i ↦ deg (c.embedding l i))) = (ψ.comp φ) j :=
+  congrArg ψ ((targetDeg_map φ s _).trans (congrArg φ
+    ((targetDeg_targetDeg_embedding_of_sum deg s c σ).trans (hσ ▸ hj))))
+
+end Degrees
+
+namespace ComposableMultilinearMap
+
+variable {β β' β'' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
+  [AddCommGroup β''] [Grading β''] {R : Type*} [Semiring R] {Obj Obj' Obj'' : Type*}
+  [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj'] [GradedLinearQuiver β'' R Obj'']
+  {f : Obj → Obj'} {φ : β →+ᵍ β'} {g : Obj' → Obj''} {ψ : β' →+ᵍ β''} {s t u : ℤ}
+
+/-! ### The value of a composable multilinear map on a block of a composition -/
+
+section Block
+
+variable (D : ComposableMultilinearMap R f φ t) (X : Fin (n + 1) → Obj) (deg : Fin n → β)
+  (c : Composition n) (l : Fin c.length)
+
+/-- The component of arity iₗ of `D` on the `l`-th block of a composition c = (i₁, …, iₖ) of `n`,
+as a multilinear map into the hom space of the `l`-th input of an outer map of arity k.
+Evaluated on composable inputs, it is `blockMap`. -/
+def blockMultilinearMap :
+    MultilinearMap R (fun j ↦ ComposableHom β R X (c.embedding l j) (deg (c.embedding l j)))
+      (ComposableHom β' R (fun k ↦ f (X (c.boundary k))) l
+        (φ (targetDeg t fun j ↦ deg (c.embedding l j)))) :=
+  (homCongr R (congrArg f (compositionBlockObj_zero X c l))
+    (congrArg f (compositionBlockObj_last X c l)) rfl).toLinearMap.compMultilinearMap
+    ((D.map (compositionBlockObj X c l)).v (fun j ↦ deg (c.embedding l j)) _ rfl)
+
+variable {X deg}
+
+/-- The value of the component of arity iₗ of `D` on the `l`-th block of a composition
+c = (i₁, …, iₖ) of `n`, as the `l`-th input of an outer map of arity k. -/
+def blockMap (D : ComposableMultilinearMap R f φ t)
+    (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (c : Composition n) (l : Fin c.length) :
+    ComposableHom β' R (fun k ↦ f (X (c.boundary k))) l
+      (φ (targetDeg t fun j ↦ deg (c.embedding l j))) :=
+  homCongr R (congrArg f (compositionBlockObj_zero X c l))
+    (congrArg f (compositionBlockObj_last X c l)) rfl
+    ((D.map (compositionBlockObj X c l)).v (fun j ↦ deg (c.embedding l j)) _ rfl
+      fun j ↦ a (c.embedding l j))
+
+@[simp]
+lemma blockMultilinearMap_apply (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) :
+    D.blockMultilinearMap X deg c l (fun j ↦ a (c.embedding l j)) = D.blockMap a c l :=
+  rfl
+
+end Block
+
+/-! ### A composable multilinear map applied along a composition -/
+
+section ApplyBlocks
+
+variable (Φ : ComposableMultilinearMap R g ψ s) (f) (X : Fin (n + 1) → Obj) [NeZero n]
+  (c : Composition n)
+
+/-- The component of arity k of Φ applied to a composable string `B` of k morphisms between the
+objects `f (X (c.boundary k))`, for a composition `c` of `n` into k blocks: a morphism from
+`g (f X₀)` to `g (f Xₙ)`, in any degree `d` equal to its degree. -/
+def applyBlocks {ε : Fin c.length → β'}
+    (B : ∀ l, ComposableHom β' R (fun k ↦ f (X (c.boundary k))) l (ε l)) (d : β'')
+    (hd : ψ (targetDeg s ε) = d) : (g (f (X 0)) →ᵍ[R] g (f (X (Fin.last n)))) d :=
+  homCongr R (congrArg (fun k ↦ g (f (X k))) c.boundary_zero)
+    (congrArg (fun k ↦ g (f (X k))) c.boundary_last) hd
+    ((Φ.map fun k ↦ f (X (c.boundary k))).v ε _ rfl B)
+
+end ApplyBlocks
+
+section CompTerm
+
+variable (Φ : ComposableMultilinearMap R g ψ s) [NeZero n] (X : Fin (n + 1) → Obj)
+  (deg : Fin n → β) (c : Composition n)
+  (P : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u) (d : β'')
+  (hd : ψ (targetDeg s fun l ↦ φ (targetDeg (P l).1 fun j ↦ deg (c.embedding l j))) = d)
+
+/-- The term indexed by a composition c = (i₁, …, iₖ) of `n` of a composite: the multilinear map
+(a₁, …, aₙ) ↦ Φₖ(P₁(a₁, …, a_{i₁}), …, Pₖ(a_{n-iₖ+1}, …, aₙ)),
+for a choice `P` of a composable multilinear map for each block of `c`. -/
+def compTermMultilinearMap :
+    MultilinearMap R (fun i ↦ ComposableHom β R X i (deg i))
+      ((g (f (X 0)) →ᵍ[R] g (f (X (Fin.last n)))) d) :=
+  (homCongr R (congrArg (fun k ↦ g (f (X k))) c.boundary_zero)
+    (congrArg (fun k ↦ g (f (X k))) c.boundary_last) hd).toLinearMap.compMultilinearMap
+    (MultilinearMap.compComposition c
+      ((Φ.map fun k ↦ f (X (c.boundary k))).v
+        (fun l ↦ φ (targetDeg (P l).1 fun j ↦ deg (c.embedding l j))) _ rfl)
+      fun l ↦ (P l).2.blockMultilinearMap X deg c l)
+
+variable {X deg}
+
+/-- The value Φₖ(P₁(a₁, …, a_{i₁}), …, Pₖ(a_{n-iₖ+1}, …, aₙ)) of the term indexed by a
+composition c = (i₁, …, iₖ) of `n` of a composite, for a choice `P` of a composable multilinear
+map for each block of `c`. -/
+def compTerm (Φ : ComposableMultilinearMap R g ψ s)
+    (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (c : Composition n)
+    (P : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u) (d : β'')
+    (hd : ψ (targetDeg s fun l ↦ φ (targetDeg (P l).1 fun j ↦ deg (c.embedding l j))) = d) :
+    (g (f (X 0)) →ᵍ[R] g (f (X (Fin.last n)))) d :=
+  Φ.applyBlocks f X c (fun l ↦ (P l).2.blockMap a c l) d hd
+
+@[simp]
+lemma compTermMultilinearMap_apply (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) :
+    Φ.compTermMultilinearMap X deg c P d hd a = Φ.compTerm a c P d hd :=
+  rfl
+
+end CompTerm
+
+/-! ### The composite Φ ∘ F -/
+
+section Comp
+
+variable (Φ : ComposableMultilinearMap R g ψ s) (F : ComposableMultilinearMap R f φ 1)
+
+omit [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj'] in
+/-- A term of Φ ∘ F has the degree of Φ. -/
+lemma comp_deg (φ : β →+ᵍ β') (ψ : β' →+ᵍ β'') (deg : Fin n → β) (c : Composition n) {j : β}
+    (hj : targetDeg s deg = j) :
+    ψ (targetDeg s fun l ↦ φ (targetDeg 1 fun i ↦ deg (c.embedding l i))) = (ψ.comp φ) j :=
+  degMap_targetDeg_degMap_targetDeg_embedding φ ψ deg c _ (by simp) hj
+
+/-- The composite Φ ∘ F of a composable multilinear map Φ with a composable multilinear map `F`
+with `s = 1`, written in Mathlib's order. Its component of arity n is the sum, over all
+compositions i₁ + ⋯ + iₖ = n, of Φₖ applied to the values of F_{i₁}, …, F_{iₖ}. It has the same
+degree `s` as Φ, and is linear in Φ only. -/
+protected def comp : ComposableMultilinearMap R (fun X ↦ g (f X)) (ψ.comp φ) s where
+  map X := .mk fun deg j hj ↦ ∑ c : Composition _,
+    Φ.compTermMultilinearMap X deg c (fun _ ↦ ⟨1, F⟩) ((ψ.comp φ) j) (comp_deg φ ψ deg c hj)
+
+variable {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
+  [NeZero n] {j : β}
+
+/-- The value of the component of arity n of Φ ∘ F: the sum, over all compositions `c` of `n`, of
+Φ applied to the values of `F` on the blocks of `c`. -/
+lemma comp_map_v_apply (hj : targetDeg s deg = j) :
+    ((Φ.comp F).map X).v deg j hj a =
+      ∑ c : Composition n, Φ.compTerm a c (fun _ ↦ ⟨1, F⟩) ((ψ.comp φ) j)
+        (comp_deg φ ψ deg c hj) :=
+  sum_apply Finset.univ (fun c ↦ Φ.compTermMultilinearMap X deg c (fun _ ↦ ⟨1, F⟩)
+    ((ψ.comp φ) j) (comp_deg φ ψ deg c hj)) a
+
+end Comp
+
+end ComposableMultilinearMap
 
 end AInfinityTheory

@@ -10,8 +10,9 @@ public import AInfinity.FunctorComposition.Defs
 
 /-! # Associativity of the composition of composable multilinear maps
 
-This file proves the three rules relating the composites Φ ∘ F and Φ ∘ (F | D) of
-`AInfinity.FunctorComposition.Defs`, for an arbitrary composable multilinear map Φ:
+This file proves the three rules relating the composites Φ ∘ F (`ComposableMultilinearMap.comp`)
+and Φ ∘ (F | D) (`ComposableMultilinearMap.compMarked`), for an arbitrary composable multilinear
+map Φ:
 
 * (AS) `(Φ ∘ G) ∘ F = Φ ∘ (G ∘ F)` (`ComposableMultilinearMap.comp_assoc`);
 * (L) `(Φ ∘ (G | E)) ∘ F = Φ ∘ (G ∘ F | E ∘ F)` (`ComposableMultilinearMap.compMarked_comp`);

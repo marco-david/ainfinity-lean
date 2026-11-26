@@ -6,7 +6,7 @@ Authors: Annie Yao, Marco David, Jason Dong, Zhan Shi
 module
 
 public import AInfinity.AInfinityCategory
-public import AInfinity.Composition
+public import AInfinity.ComposableMultilinearMap
 
 /-! # A∞-functors
 
@@ -31,7 +31,8 @@ and the Koszul signs.
 ## Main definitions
 
 * `AInfinityTheory.AInfinityFunctorData β β' R Obj Obj'`: a map on objects, a grading
-  homomorphism and functor components φₙ, not yet subject to any relations.
+  homomorphism and functor components φₙ, a composable multilinear map with `s = 1`, not yet
+  subject to any relations.
 * `AInfinityTheory.AInfinityFunctorData.mapCompSum`: the left-hand side of the arity-n
   functor equation.
 * `AInfinityTheory.AInfinityFunctorData.compMapSum`: the right-hand side of the arity-n
@@ -52,7 +53,9 @@ Both sides of the functor equation are stated pointwise on composable inputs
 a₁, …, aₙ of degrees `deg`, in degree `degMap d` for any `d` equal to the degree
 `targetDeg 2 deg` of mₙ(a₁, …, aₙ), as for `stasheffSum`. The left-hand side is
 a `signedStasheffSum`, like the Stasheff sum. The decompositions i₁ + ⋯ + iₖ = n on the
-right-hand side are Mathlib's `Composition n`. Changes of objects are transported with `homCongr`.
+right-hand side are Mathlib's `Composition n`, and its terms are the terms
+`ComposableMultilinearMap.compTerm` of the composite m' ∘ F. Changes of objects are transported
+with `homCongr`.
 
 `mapCompSum` and `compMapSum` are named in order of application: a functor component applied
 to a composition, and a composition of functor components. As composable multilinear maps, the
@@ -89,51 +92,7 @@ lemma targetDeg_stasheffDegOut (p : StasheffIndex n) :
   rw [← targetDeg_eq_targetDeg_add_degOne (s := 2) (t := 1) (by norm_num), stasheffDegOut_sum,
     targetDeg_eq_targetDeg_add_degOne (s := 3) (t := 2) (by norm_num)]
 
-/-- Applying the functor components of arities i₁, …, iₖ to the blocks of a composition
-c = (i₁, …, iₖ) of `n`, and then a composable multilinear map Φ of arity k to their values, has
-the degree of Φₙ(a₁, …, aₙ). -/
-lemma targetDeg_targetDeg_embedding (s : ℤ) (c : Composition n) :
-    targetDeg s (fun l ↦ targetDeg 1 fun j ↦ deg (c.embedding l j)) = targetDeg s deg := by
-  simp only [targetDeg, Finset.sum_add_distrib,
-    c.sum_sum_apply_embedding, add_assoc, ← GradingHom.ofInt_apply, ← map_sum, ← map_add,
-    Finset.sum_sub_distrib, ← Nat.cast_sum]
-  simp
-
 end Degrees
-
-section CompositionBlock
-
-/-! ### Blocks of a composition
-
-A composition c = (i₁, …, iₖ) of `n` cuts a composable string of `n` inputs into k
-blocks: the `l`-th block has size iₗ, which is `c.blocksFun l`, and starts at
-position `c.sizeUpTo l`. In the right-hand side of the functor equation, the functor component
-of arity iₗ is applied to the `l`-th block and the outer operation m'ₖ to the resulting k
-values, so both the sizes of the blocks and their number must be positive. The lemmas on
-`Composition` used here are in `AInfinity.Composition`. -/
-
-variable {Obj : Type*} (X : Fin (n + 1) → Obj) (c : Composition n) (l : Fin c.length)
-
-/-- The object string of the `l`-th block of a composition `c` of `n`: its `i`-th object is
-`X (c.sizeUpTo l + i)`, for `i ≤ c.blocksFun l`. -/
-def compositionBlockObj : Fin (c.blocksFun l + 1) → Obj :=
-  fun i ↦ X ((i.natAdd (c.sizeUpTo l)).castLE (Nat.succ_le_succ (c.sizeUpTo_add_blocksFun_le l)))
-
-@[simp]
-lemma compositionBlockObj_zero :
-    compositionBlockObj X c l 0 = X (c.boundary l.castSucc) := by
-  unfold compositionBlockObj
-  congr 1
-
-@[simp]
-lemma compositionBlockObj_last :
-    compositionBlockObj X c l (Fin.last (c.blocksFun l)) = X (c.boundary l.succ) := by
-  unfold compositionBlockObj Composition.boundary
-  congr 1
-  ext
-  simp [Composition.sizeUpTo_succ']
-
-end CompositionBlock
 
 /-- The data of an A∞-functor between graded `R`-linear quivers: a map on objects, a
 homomorphism of gradings and, for each n ≥ 1, a functor component φₙ of degree
@@ -147,46 +106,14 @@ structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
   /-- The homomorphism of gradings translating source degrees into target degrees. -/
   degMap : β →+ᵍ β'
   /-- The action of the functor on hom spaces, i.e. the functor components φₙ, of
-  degree 1 - n, landing in the hom spaces of the target in the translated degrees. -/
-  map {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) :
-    GradedMultilinearMap R (ComposableHom β R X)
-      (fun b : β ↦ (obj (X 0) →ᵍ[R] obj (X (Fin.last n))) (degMap b))
-      (((1 : ℤ) - n) • degOne)
+  degree 1 - n, landing in the hom spaces of the target in the translated degrees: a composable
+  multilinear map with `s = 1` over `obj` and `degMap`. -/
+  toComposableMultilinearMap : ComposableMultilinearMap R obj degMap 1
 
 namespace AInfinityFunctorData
 
 variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β']
   [Grading β'] {R : Type*} [Semiring R] {Obj Obj' : Type*}
-
-section GradedLinearQuiver
-
-variable [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
-variable (F : AInfinityFunctorData β β' R Obj Obj')
-variable {X : Fin (n + 1) → Obj} {deg : Fin n → β}
-variable (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
-
-/-- `targetDeg_targetDeg_embedding` translated along `degMap`: applying the functor
-components of `F` to the blocks of a composition of `n`, and then a composable multilinear map Φ
-of the target to their values, gives degree `F.degMap d`, where `d` is the degree of
-Φₙ(a₁, …, aₙ). -/
-lemma targetDeg_degMap_targetDeg_embedding {s : ℤ} (c : Composition n) (d : β)
-    (hd : targetDeg s deg = d) :
-    targetDeg s (fun l ↦ F.degMap (targetDeg 1 fun j ↦ deg (c.embedding l j))) =
-      F.degMap d :=
-  (targetDeg_map F.degMap s _).trans
-    (congrArg F.degMap ((targetDeg_targetDeg_embedding deg s c).trans hd))
-
-/-- The value of the functor component of arity iₗ on the `l`-th block of a composition
-c = (i₁, …, iₖ) of `n`, as the `l`-th input of the outer operation m'ₖ. -/
-def compositionBlockMap (c : Composition n) (l : Fin c.length) :
-    ComposableHom β' R (fun k ↦ F.obj (X (c.boundary k))) l
-      (F.degMap (targetDeg 1 fun j ↦ deg (c.embedding l j))) :=
-  homCongr R (congrArg F.obj (compositionBlockObj_zero X c l))
-    (congrArg F.obj (compositionBlockObj_last X c l)) rfl
-    ((F.map (compositionBlockObj X c l)).v (fun j ↦ deg (c.embedding l j)) _ rfl
-      fun j ↦ a (c.embedding l j))
-
-end GradedLinearQuiver
 
 section AInfinityCategoryStruct
 
@@ -205,7 +132,7 @@ def mapCompTerm (p : StasheffIndex n) (d : β) (hd : targetDeg 2 deg = d) :
     (F.obj (X 0) →ᵍ[R] F.obj (X (Fin.last n))) (F.degMap d) :=
   homCongr R (congrArg F.obj (stasheffObjOut_zero X p))
     (congrArg F.obj (stasheffObjOut_last X p)) rfl
-    ((F.map (stasheffObjOut X p)).v (stasheffDegOut deg p) d
+    ((F.toComposableMultilinearMap.map (stasheffObjOut X p)).v (stasheffDegOut deg p) d
       ((targetDeg_stasheffDegOut deg p).trans hd) (stasheffInputsOut a p))
 
 /-- The left-hand side of the arity-n functor equation, with the Koszul signs of the Stasheff
@@ -219,15 +146,12 @@ def mapCompSum (d : β) (hd : targetDeg 2 deg = d) :
 /-- The term of the right-hand side of the functor equation indexed by a composition
 c = (i₁, …, iₖ) of `n`: the operation m'ₖ of the target applied to the values of the functor
 components on the k blocks of c, in degree `F.degMap d` for any `d` equal to the degree of
-mₙ(a₁, …, aₙ). -/
+mₙ(a₁, …, aₙ). It is the term of the composite m' ∘ F indexed by c. -/
 def compMapTerm [NeZero n] (c : Composition n) (d : β) (hd : targetDeg 2 deg = d) :
     (F.obj (X 0) →ᵍ[R] F.obj (X (Fin.last n))) (F.degMap d) :=
-  homCongr R (congrArg (fun k ↦ F.obj (X k)) c.boundary_zero)
-    (congrArg (fun k ↦ F.obj (X k)) c.boundary_last) rfl
-    ((AInfinityCategoryStruct.m (fun k ↦ F.obj (X (c.boundary k)))).v
-      (fun l ↦ F.degMap (targetDeg 1 fun j ↦ deg (c.embedding l j))) (F.degMap d)
-      (F.targetDeg_degMap_targetDeg_embedding c d hd)
-      (F.compositionBlockMap a c))
+  (AInfinityCategoryStruct.toComposableMultilinearMap β' R Obj').compTerm a c
+    (fun _ ↦ ⟨1, F.toComposableMultilinearMap⟩) (F.degMap d)
+    (ComposableMultilinearMap.comp_deg F.degMap (GradingHom.id β') deg c hd)
 
 /-- The right-hand side of the arity-n functor equation, summed over all compositions of
 `n`, in degree `F.degMap d` for any `d` equal to the degree of mₙ(a₁, …, aₙ). -/
