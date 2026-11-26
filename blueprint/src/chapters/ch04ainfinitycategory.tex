@@ -96,34 +96,36 @@ gradings $\beta$ and $\beta'$; the functor then carries a homomorphism of
 gradings $\beta \to \beta'$ along which degrees are translated.
 
 \begin{definition}[Composable multilinear map]
-\lean{AInfinityTheory.ComposableMultilinearMap, AInfinityTheory.AInfinityCategoryStruct.toComposableMultilinearMap}
+\lean{AInfinityTheory.ComposableMultilinearMap, AInfinityTheory.AInfinityCategoryStruct.toComposableMultilinearMap, AInfinityTheory.ComposableMultilinearMap.id}
 \label{AInfinityTheory.ComposableMultilinearMap}
 \leanok
 \uses{AInfinityTheory.GradedLinearQuiver, AInfinityTheory.GradingHom, AInfinityTheory.GradedMultilinearMap}
-Let $s$ be an integer. A composable multilinear map $\Phi$ of degree $s$ from a graded $R$-linear
-quiver graded by $\beta$ to one graded by $\beta'$ consists of a map $\Phi$ on objects, a
-homomorphism of gradings $\beta \to \beta'$, and, for every positive arity $n$ and every string
-of objects $X_0,\dots,X_n$, a graded multilinear map
+Let $s$ be an integer. Fix graded $R$-linear quivers graded by $\beta$ and by $\beta'$, a map $f$
+between their objects, and a homomorphism of gradings $\beta \to \beta'$. A composable multilinear
+map $\Phi$ of degree $s$ over $f$ consists of, for every positive arity $n$ and every string of
+objects $X_0,\dots,X_n$, a graded multilinear map
 \[
-  \Phi_n : \Hom(X_0,X_1) \otimes \cdots \otimes \Hom(X_{n-1},X_n) \to \Hom(\Phi X_0, \Phi X_n)
+  \Phi_n : \Hom(X_0,X_1) \otimes \cdots \otimes \Hom(X_{n-1},X_n) \to \Hom(f X_0, f X_n)
 \]
 of degree $(s-n) \cdot \mathbf{1}$, where a degree $b \in \beta$ on the left corresponds to its
 image in $\beta'$ on the right. No relations are imposed. In reduced degrees, every $\Phi_n$ has
 degree $s - 1$.
 
 The operations $m_n$ of an \Ainf{}-category structure, of degree $(2-n) \cdot \mathbf{1}$, form a
-composable multilinear map of degree $2$ from the category to itself, acting as the identity on
-objects and degrees.
+composable multilinear map of degree $2$ over the identity. The identity $\mathbb{1}$ is the
+composable multilinear map of degree $1$ over the identity whose unary component is the identity
+and whose other components vanish.
 \end{definition}
 
 \begin{definition}[\Ainf{}-functor data]
-\lean{AInfinityTheory.AInfinityFunctorData}
+\lean{AInfinityTheory.AInfinityFunctorData, AInfinityTheory.AInfinityFunctorData.toComposableMultilinearMap}
 \label{AInfinityTheory.AInfinityFunctorData}
 \leanok
 \uses{AInfinityTheory.ComposableMultilinearMap}
 The data of an \Ainf{}-functor $F$ from a graded $R$-linear quiver graded by
-$\beta$ to one graded by $\beta'$ is a composable multilinear map of degree $1$: a map $F$ on
-objects, a homomorphism of gradings $\beta \to \beta'$, and, for every positive arity $n$ and
+$\beta$ to one graded by $\beta'$ is a map $F$ on
+objects, a homomorphism of gradings $\beta \to \beta'$, and a composable multilinear map of
+degree $1$ over them: for every positive arity $n$ and
 every string of objects $X_0,\dots,X_n$, a graded multilinear map
 \[
   \varphi_n : \Hom(X_0,X_1) \otimes \cdots \otimes \Hom(X_{n-1},X_n) \to \Hom(FX_0, FX_n)
@@ -131,24 +133,34 @@ every string of objects $X_0,\dots,X_n$, a graded multilinear map
 of degree $(1-n) \cdot \mathbf{1}$. No relations are imposed.
 \end{definition}
 
-\begin{definition}[Composition with \Ainf{}-functor data]
-\lean{AInfinityTheory.ComposableMultilinearMap.comp}
+\begin{definition}[Composition of composable multilinear maps]
+\lean{AInfinityTheory.ComposableMultilinearMap.comp, AInfinityTheory.ComposableMultilinearMap.compMarked, AInfinityTheory.AInfinityFunctorData.comp}
 \label{AInfinityTheory.ComposableMultilinearMap.comp}
 \leanok
 \uses{AInfinityTheory.ComposableMultilinearMap, AInfinityTheory.AInfinityFunctorData}
-Let $\Phi$ be a composable multilinear map of degree $s$ and $F$ be \Ainf{}-functor data such
-that the target of $F$ is the source of $\Phi$. The composite $\Phi \circ F$ is the composable
-multilinear map of degree $s$ that acts on objects and degrees by composition, with components
+Let $\Phi$ be a composable multilinear map of degree $s$ over $g$, and let $F$, of degree $1$,
+and $D$, of degree $2$, be composable multilinear maps over the same map $f$, such that the target
+of $f$ is the source of $g$. The composite $\Phi \circ F$ is the composable
+multilinear map of degree $s$ over $g \circ f$ with components
 \[
   (\Phi \circ F)_n(a_1,\dots,a_n) = \sum_{i_1 + \cdots + i_k = n}
   \Phi_k\bigl(F_{i_1}(a_1,\dots,a_{i_1}),\dots,F_{i_k}(a_{n-i_k+1},\dots,a_n)\bigr),
 \]
-summed over all compositions of $n$ into positive parts. For \Ainf{}-functor data $\Phi = G$, it
-is the composite $G \circ F$ of \Ainf{}-functor data.
+summed over all compositions of $n$ into positive parts. The composite $\Phi \circ (F \mid D)$ is
+the composable multilinear map of degree $s + 1$ over $g \circ f$ with components
+\[
+  (\Phi \circ (F \mid D))_n(a_1,\dots,a_n) = \sum_{i_1 + \cdots + i_k = n}\ \sum_{j = 1}^{k}
+  (-1)^{\|a_{i_1 + \cdots + i_j + 1}\| + \cdots + \|a_n\|}\,
+  \Phi_k\bigl(F_{i_1}(\dots),\dots,D_{i_j}(\dots),\dots,F_{i_k}(\dots)\bigr),
+\]
+in which the $j$-th input of $\Phi_k$ is the value of $D$, instead of $F$, on the $j$-th block.
+The composite $\Phi \circ F$ is linear in $\Phi$ and polynomial in $F$, and
+$\Phi \circ (F \mid D)$ is its derivative at $F$ in the direction $D$. The composite $G \circ F$
+of \Ainf{}-functor data has the composite of the components of $G$ and of $F$ as its components.
 \end{definition}
 
 \begin{definition}[\Ainf{}-functor equations]
-\lean{AInfinityTheory.ComposableMultilinearMap.mapCompSum, AInfinityTheory.ComposableMultilinearMap.compMapSum, AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum, AInfinityTheory.ComposableMultilinearMap.compMapSum_eq_comp_map_v}
+\lean{AInfinityTheory.AInfinityFunctorData.mapCompSum, AInfinityTheory.AInfinityFunctorData.compMapSum, AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum, AInfinityTheory.AInfinityFunctorData.compMapSum_eq_comp_map_v, AInfinityTheory.AInfinityFunctorData.mapCompSum_eq_compMarked_map_v, AInfinityTheory.AInfinityFunctor.compMarked_id_eq_comp}
 \label{AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum}
 \leanok
 \uses{AInfinityTheory.AInfinityFunctorData, AInfinityTheory.AInfinityCategoryStruct, AInfinityTheory.signedStasheffSum, AInfinityTheory.targetDeg, AInfinityTheory.ComposableMultilinearMap.comp}
@@ -164,8 +176,11 @@ of $n$ into positive parts, of
 \[
   m'_k\bigl(\varphi_{i_1}(a_1,\dots,a_{i_1}),\dots,\varphi_{i_k}(a_{n-i_k+1},\dots,a_n)\bigr).
 \]
-This is the value of the composite $m' \circ F$ of the operations $m'$, as a composable
-multilinear map, with $F$. There is no sign on the right-hand side, since in reduced degrees every
+The right-hand side is the value of the composite $m' \circ F$, and the left-hand side is the
+value of the composite $F \circ (\mathbb{1} \mid m)$: its terms vanish unless all blocks other
+than the marked one have size one. So the functor equations read
+$F \circ (\mathbb{1} \mid m) = m' \circ F$. There is no sign on the right-hand side, since in
+reduced degrees every
 $\varphi_i$ has degree $0$. Both sides lie in $\Hom(FX_0,FX_n)$, in the image under
 the grading homomorphism of the degree of $m_n(a_1,\dots,a_n)$. The functor data satisfies the
 \Ainf{}-functor equations if the two sides agree in every positive arity, for
@@ -182,23 +197,34 @@ satisfies the \Ainf{}-functor equations for the structure maps of the two
 categories.
 \end{definition}
 
-\begin{theorem}[Associativity of the composition]
-\lean{AInfinityTheory.ComposableMultilinearMap.comp_assoc}
+\begin{theorem}[Associativity and unit laws of the composition]
+\lean{AInfinityTheory.ComposableMultilinearMap.comp_assoc, AInfinityTheory.ComposableMultilinearMap.compMarked_comp, AInfinityTheory.ComposableMultilinearMap.comp_compMarked, AInfinityTheory.ComposableMultilinearMap.comp_id, AInfinityTheory.ComposableMultilinearMap.id_comp}
 \label{AInfinityTheory.ComposableMultilinearMap.comp_assoc}
 \leanok
 \uses{AInfinityTheory.ComposableMultilinearMap.comp}
-Let $H$ be a composable multilinear map and $G$ and $F$ be \Ainf{}-functor data, composable in
-this order. Then $(H \circ G) \circ F = H \circ (G \circ F)$.
+Let $\Phi$ be a composable multilinear map, let $G$ and $F$ have degree $1$ and $E$ and $D$ have
+degree $2$, with $E$ over the same map as $G$ and $D$ over the same map as $F$, composable in
+this order. Then
+\begin{align*}
+  (\Phi \circ G) \circ F &= \Phi \circ (G \circ F), \\
+  (\Phi \circ (G \mid E)) \circ F &= \Phi \circ (G \circ F \mid E \circ F), \\
+  (\Phi \circ G) \circ (F \mid D) &= \Phi \circ (G \circ F \mid G \circ (F \mid D)),
+\end{align*}
+and $\Phi \circ \mathbb{1} = \Phi$ and $\mathbb{1} \circ F = F$.
 \end{theorem}
 
 \begin{proof}
 \leanok
-Both sides are sums of terms
-$H_k\bigl(G(F(\dots),\dots,F(\dots)),\dots,G(F(\dots),\dots,F(\dots))\bigr)$. On the left, such a
+Both sides of each of the three rules are sums of terms
+$\Phi_k\bigl(Q(P(\dots),\dots,P(\dots)),\dots,Q(P(\dots),\dots,P(\dots))\bigr)$, in which each $Q$
+is $G$ or $E$ and each $P$ is $F$ or $D$. On the left, such a
 term is indexed by a composition $c$ of $n$ and a composition of the number of blocks of $c$; on
 the right, by a composition of $n$ and a composition of each of its blocks. These index sets are
 in bijection, as for the composition of formal multilinear series, and the terms they index
-agree.
+agree. The second and the third rule are the derivatives of the first in $G$ and in $F$; in them
+the bijection carries the marked block along, and the Koszul signs agree. For the unit laws, only
+the composition into blocks of size one, respectively the composition with a single block,
+contributes.
 \end{proof}
 
 \begin{theorem}[Composition of \Ainf{}-functors]
@@ -212,11 +238,17 @@ The composite $G \circ F$ of \Ainf{}-functors satisfies the \Ainf{}-functor equa
 
 \begin{proof}
 \leanok
-The left-hand side of the functor equation for $G \circ F$ is regrouped, using the functor
-equations of $F$ on each block, into the sum over all compositions $c$ of $n$ of the left-hand
-sides of the functor equations for $G$ on the values of $F$ on the blocks of $c$. By the functor
-equations of $G$, this is the sum of the corresponding right-hand sides, that is, the value of
-$(m'' \circ G) \circ F$. By associativity, it equals $m'' \circ (G \circ F)$, the right-hand side
-of the functor equation for $G \circ F$. Associativity of the composition of \Ainf{}-functors is
-the case where $H$ is an \Ainf{}-functor.
+With the operations $m$, $m'$ and $m''$ of the three categories,
+\begin{align*}
+  (G \circ F) \circ (\mathbb{1} \mid m)
+  &= G \circ (F \mid F \circ (\mathbb{1} \mid m))
+  = G \circ (F \mid m' \circ F) \\
+  &= (G \circ (\mathbb{1} \mid m')) \circ F
+  = (m'' \circ G) \circ F
+  = m'' \circ (G \circ F).
+\end{align*}
+The first equality is the third rule and a unit law, the second the functor equations of $F$, the
+third the second rule and a unit law, the fourth the functor equations of $G$, and the last the
+associativity. Associativity of the composition of \Ainf{}-functors is
+the case of the first rule where $\Phi$ is an \Ainf{}-functor.
 \end{proof}

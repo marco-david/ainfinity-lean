@@ -114,11 +114,12 @@ status:
     structure and the associativity and unit laws of composition), graded R-linear
     quivers, the Stasheff identities, A∞-categories, A∞-categories with vanishing
     higher operations, DG and linear categories as A∞-categories, composable
-    multilinear maps (a common type for A∞-functor data and the operations of an
-    A∞-category), A∞-functors with the A∞-functor equations, the composition of
-    A∞-functors (the composite satisfies the A∞-functor equations, by a reindexing
-    reduced to the bijectivity of the projections of the index types `MapCompIndex`
-    and `CompMapIndex` and to two Koszul sign identities; the
+    multilinear maps over a map on objects (a common type for the components of
+    A∞-functors, the operations of an A∞-category and both sides of the A∞-functor
+    equations), their composites Φ ∘ F and Φ ∘ (F | D) with the associativity rule
+    and its two derivatives, A∞-functors with the A∞-functor equations, the
+    composition of A∞-functors (the composite satisfies the A∞-functor equations, by
+    these three rules and the unit laws of the identity; the
     composition is associative), and the general KLRW algebra with its R-linear KLRW
     category. In progress: the computable additive completion and
     bounded cochain complexes, and the braiding functor, whose definitions are
@@ -303,7 +304,7 @@ alignment:
       module: "AInfinity.AInfinityFunctor"
       status: "defined"
       note: >-
-        Together with `AInfinityTheory.AInfinityFunctorData`, which is a
+        Together with `AInfinityTheory.AInfinityFunctorData`, whose components form a
         `AInfinityTheory.ComposableMultilinearMap` with `s = 1`; the functor equations are
         the field `AInfinityTheory.AInfinityFunctor.mapCompSum_eq_compMapSum`. Source and
         target may have different gradings, related by a `GradingHom`.
@@ -313,23 +314,29 @@ alignment:
       status: "defined"
       note: >-
         A field of `AInfinityTheory.AInfinityFunctor`, required in every positive arity n.
-        Its two sides are `AInfinityTheory.ComposableMultilinearMap.mapCompSum` and
-        `AInfinityTheory.ComposableMultilinearMap.compMapSum`. The right-hand side is the
-        value of the composite of the operations of the target with the functor data
-        (`AInfinityTheory.ComposableMultilinearMap.compMapSum_eq_comp_map_v`).
+        Its two sides are `AInfinityTheory.AInfinityFunctorData.mapCompSum` and
+        `AInfinityTheory.AInfinityFunctorData.compMapSum`. As composable multilinear maps
+        they are the composites F ∘ (𝟙 | m) and m' ∘ F
+        (`AInfinityTheory.AInfinityFunctorData.mapCompSum_eq_compMarked_map_v`,
+        `AInfinityTheory.AInfinityFunctorData.compMapSum_eq_comp_map_v`), so the equations
+        read F ∘ (𝟙 | m) = m' ∘ F
+        (`AInfinityTheory.AInfinityFunctor.compMarked_id_eq_comp`).
     - source: "Seidel, composition of A∞-functors"
       lean: "AInfinityTheory.AInfinityFunctor.comp"
       module: "AInfinity.FunctorComposition.Basic"
       status: "defined"
       note: >-
-        The composite of a composable multilinear map with A∞-functor data is
-        `AInfinityTheory.ComposableMultilinearMap.comp`
+        The composites Φ ∘ F and Φ ∘ (F | D) of composable multilinear maps are
+        `AInfinityTheory.ComposableMultilinearMap.comp` and
+        `AInfinityTheory.ComposableMultilinearMap.compMarked`
         (`AInfinity.FunctorComposition.Defs`). The A∞-functor equations for the composite
-        are `AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum`, proved by
-        reindexing along the index types `MapCompIndex` and `CompMapIndex`, with the
-        Koszul signs compared in `AInfinity.FunctorComposition.Signs`, and by the
-        associativity `AInfinityTheory.ComposableMultilinearMap.comp_assoc` for the
-        operations of the target.
+        are `AInfinityTheory.AInfinityFunctor.comp_mapCompSum_eq_compMapSum`, proved from
+        those of the two functors by the rules
+        `AInfinityTheory.ComposableMultilinearMap.comp_assoc`,
+        `AInfinityTheory.ComposableMultilinearMap.compMarked_comp` and
+        `AInfinityTheory.ComposableMultilinearMap.comp_compMarked`
+        (`AInfinity.FunctorComposition.Assoc`) and the unit laws of the identity
+        (`AInfinity.FunctorComposition.Unit`).
     - source: "Seidel, composition of A∞-functors (associativity)"
       lean: "AInfinityTheory.AInfinityFunctor.comp_assoc"
       module: "AInfinity.FunctorComposition.Basic"

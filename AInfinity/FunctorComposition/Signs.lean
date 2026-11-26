@@ -5,16 +5,14 @@ Authors: Zhan Shi
 -/
 module
 
-public import AInfinity.FunctorComposition.CompMapIndex
-public import AInfinity.FunctorComposition.MapCompIndex
+public import AInfinity.FunctorComposition.Lemmas
 
 /-! # Koszul signs in the functor equation of a composite
 
 The Koszul sign `stasheffSign` of an index triple q = (r, s, t) is the sign of the inputs after
 the inner operation. This file introduces the Koszul sign `tailSign deg N` of the inputs from
-position `N` on, so that `stasheffSign deg q = tailSign deg (q.r + q.s)`, and uses it to compare
-the Koszul signs of the terms of the functor equation for a composite `G.comp F` of A∞-functors
-in their two descriptions by `MapCompIndex` and `CompMapIndex`.
+position `N` on, so that `stasheffSign deg q = tailSign deg (q.r + q.s)`. It is the sign of the
+terms of the composite Φ ∘ (F | D) of `AInfinity.FunctorComposition.Defs`.
 
 ## Main definitions
 
@@ -29,9 +27,6 @@ in their two descriptions by `MapCompIndex` and `CompMapIndex`.
 * `AInfinityTheory.tailSign_targetDeg_embedding`: the reduced degree of a value of an
   A∞-functor is the sum of the reduced degrees of its inputs, so the Koszul sign of the values
   of `F` on the blocks of a composition is the Koszul sign of the original inputs.
-* `AInfinityTheory.MapCompIndex.stasheffSign_eq`,
-  `AInfinityTheory.CompMapIndex.stasheffSign_eq`: the Koszul signs of a term of the functor
-  equation for `G.comp F` in its two descriptions.
 -/
 
 @[expose] public section
@@ -121,26 +116,5 @@ theorem tailSign_targetDeg_embedding {β' : Type*} [AddCommGroup β'] [Grading �
   · rw [← GradingHom.map_degOne φ, ← map_sub, GradingHom.map_sign,
       toMul_sign_targetDeg_sub_degOne]
   · simp
-
-/-- The Koszul sign of a term of the left-hand side of the functor equation for `G.comp F` is the
-Koszul sign of the inner operation inside its block, times the Koszul sign of the inputs after
-that block. -/
-theorem MapCompIndex.stasheffSign_eq (deg : Fin n → β) (x : MapCompIndex n) :
-    stasheffSign deg x.stasheff =
-      stasheffSign (fun i ↦ deg (x.outer.embedding x.block i)) x.inner *
-        tailSign deg (x.outer.sizeUpTo (x.block + 1)) := by
-  have := x.inner.sum_eq
-  rw [stasheffSign_eq_tailSign, stasheffSign_eq_tailSign, x.r_eq, x.s_eq, add_assoc,
-    tailSign_sizeUpTo_add _ _ _ (by omega)]
-
-/-- The Koszul sign of a term of the left-hand side of the functor equation for `G` on the
-values of `F` is the Koszul sign of the original inputs after the merged block. -/
-theorem CompMapIndex.stasheffSign_eq {β' : Type*} [AddCommGroup β'] [Grading β'] (φ : β →+ᵍ β')
-    (deg : Fin n → β) (x : CompMapIndex n) :
-    stasheffSign (fun l ↦ φ (targetDeg 1 fun i ↦ deg (x.composition.embedding l i)))
-        x.stasheff =
-      tailSign deg (x.outer.sizeUpTo (x.block + 1)) := by
-  rw [stasheffSign_eq_tailSign, tailSign_targetDeg_embedding, x.r_eq, x.s_eq,
-    ← x.sizeUpTo_add_length 0, add_zero]
 
 end AInfinityTheory

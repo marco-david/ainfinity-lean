@@ -20,6 +20,10 @@ underlying data of an A∞-category, before any compositions are chosen.
   `i`-th morphism of a composable string of objects.
 * `AInfinityTheory.GradedLinearQuiver.homCongr`: transport between graded hom spaces along
   equalities of the source, target and degree.
+* `AInfinityTheory.GradedLinearQuiver.Total`: the type of all morphisms, in which a morphism is
+  bundled with its source, target and degree. Morphisms in hom spaces that are only
+  propositionally equal are compared there, without transports
+  (`GradedLinearQuiver.Total.of_homCongr`, `GradedLinearQuiver.Total.congr_composable`).
 
 ## Notation
 

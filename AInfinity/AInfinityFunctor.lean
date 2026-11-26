@@ -6,7 +6,6 @@ Authors: Annie Yao, Marco David, Jason Dong, Zhan Shi
 module
 
 public import AInfinity.AInfinityCategory
-public import AInfinity.ComposableMultilinearMap
 public import Mathlib.Combinatorics.Enumerative.Composition
 
 /-! # A∞-functors
@@ -32,11 +31,10 @@ and the Koszul signs.
 ## Main definitions
 
 * `AInfinityTheory.AInfinityFunctorData β β' R Obj Obj'`: a map on objects, a grading
-  homomorphism and functor components φₙ, not yet subject to any relations. This is a
-  `ComposableMultilinearMap` with `s = 1`.
-* `AInfinityTheory.ComposableMultilinearMap.mapCompSum`: the left-hand side of the arity-n
+  homomorphism and functor components φₙ, not yet subject to any relations.
+* `AInfinityTheory.AInfinityFunctorData.mapCompSum`: the left-hand side of the arity-n
   functor equation.
-* `AInfinityTheory.ComposableMultilinearMap.compMapSum`: the right-hand side of the arity-n
+* `AInfinityTheory.AInfinityFunctorData.compMapSum`: the right-hand side of the arity-n
   functor equation.
 * `AInfinityTheory.AInfinityFunctor β β' R Obj Obj'`: an A∞-functor between
   A∞-categories.
@@ -57,13 +55,9 @@ a `signedStasheffSum`, like the Stasheff sum. The decompositions i₁ + ⋯ + i�
 right-hand side are Mathlib's `Composition n`. Changes of objects are transported with `homCongr`.
 
 `mapCompSum` and `compMapSum` are named in order of application: a functor component applied
-to a composition, and a composition of functor components. The right-hand side `compMapSum` is
-the value of the composite of the operations of the target, as a composable multilinear map, with
-the functor data (`ComposableMultilinearMap.compMapSum_eq_comp_map_v`).
-
-The declarations about A∞-functor data live in the namespace `ComposableMultilinearMap`, so that
-dot notation applies to A∞-functor data, to A∞-functors and to composites of A∞-functor data
-alike.
+to a composition, and a composition of functor components. As composable multilinear maps, the
+two sides are the composites F ∘ (𝟙 | m) and m' ∘ F, see
+`AInfinity.FunctorComposition.StasheffSum`.
 
 ## References
 
@@ -154,14 +148,23 @@ end CompositionBlock
 
 /-- The data of an A∞-functor between graded `R`-linear quivers: a map on objects, a
 homomorphism of gradings and, for each n ≥ 1, a functor component φₙ of degree
-1 - n, landing in the hom spaces of the target in the translated degrees. This is a composable
-multilinear map with `s = 1`, i.e. of reduced degree zero. No relations are imposed. -/
-abbrev AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
+1 - n, landing in the hom spaces of the target in the translated degrees.
+No relations are imposed. -/
+structure AInfinityFunctorData (β β' : Type*) [AddCommGroup β] [Grading β]
     [AddCommGroup β'] [Grading β'] (R : Type*) [Semiring R] (Obj Obj' : Type*)
-    [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj'] :=
-  ComposableMultilinearMap β β' R Obj Obj' 1
+    [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj'] where
+  /-- The action of the functor on objects. -/
+  obj : Obj → Obj'
+  /-- The homomorphism of gradings translating source degrees into target degrees. -/
+  degMap : β →+ᵍ β'
+  /-- The action of the functor on hom spaces, i.e. the functor components φₙ, of
+  degree 1 - n, landing in the hom spaces of the target in the translated degrees. -/
+  map {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) :
+    GradedMultilinearMap R (ComposableHom β R X)
+      (fun b : β ↦ (obj (X 0) →ᵍ[R] obj (X (Fin.last n))) (degMap b))
+      (((1 : ℤ) - n) • degOne)
 
-namespace ComposableMultilinearMap
+namespace AInfinityFunctorData
 
 variable {β β' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β']
   [Grading β'] {R : Type*} [Semiring R] {Obj Obj' : Type*}
@@ -245,14 +248,14 @@ def compMapSum [NeZero n] (d : β) (hd : targetDeg 2 deg = d) :
 
 end AInfinityCategoryStruct
 
-end ComposableMultilinearMap
+end AInfinityFunctorData
 
 /-- An A∞-functor between A∞-categories: A∞-functor data satisfying the
 functor equations. -/
 structure AInfinityFunctor (β β' : Type*) [AddCommGroup β] [Grading β]
     [AddCommGroup β'] [Grading β'] (R : Type*) [Semiring R] (Obj Obj' : Type*)
     [AInfinityCategory β R Obj] [AInfinityCategory β' R Obj']
-    extends toAInfinityFunctorData : AInfinityFunctorData β β' R Obj Obj' where
+    extends AInfinityFunctorData β β' R Obj Obj' where
   /-- The functor components satisfy the functor equations: in every arity `n ≥ 1`, the
   left-hand side and the right-hand side of the functor equation agree on every composable
   string of inputs. -/

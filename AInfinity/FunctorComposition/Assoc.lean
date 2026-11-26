@@ -1,69 +1,71 @@
 /-
 Copyright (c) 2026 Zhan Shi. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Zhan Shi
+Authors: Zhan Shi, Marco David
 -/
 module
 
-public import AInfinity.FunctorComposition.BlockMap
-public import AInfinity.FunctorComposition.Lemmas
+public import AInfinity.FunctorComposition.Defs
 
-/-! # Associativity of the composition with A∞-functor data
+/-! # Associativity of the composition of composable multilinear maps
 
-Let `H` be a composable multilinear map and `G` and `F` be A∞-functor data. This file proves that
-`(H.comp G).comp F = H.comp (G.comp F)`. The two sides are sums of terms
-$$H_k(G(F(\dots), \dots, F(\dots)), \dots, G(F(\dots), \dots, F(\dots))).$$
-In `(H.comp G).comp F`, such a term is described by a composition c of `n` and a composition of
-`c.length`; in `H.comp (G.comp F)`, it is described by a composition of `n` and a composition of
-each of its blocks. Mathlib's `Composition.sigmaEquivSigmaPi` matches the two descriptions, and
-the two descriptions of a term are compared here.
+This file proves the three rules relating the composites Φ ∘ F and Φ ∘ (F | D) of
+`AInfinity.FunctorComposition.Defs`, for an arbitrary composable multilinear map Φ:
 
-Two cases of this statement are used elsewhere:
+* (AS) `(Φ ∘ G) ∘ F = Φ ∘ (G ∘ F)` (`ComposableMultilinearMap.comp_assoc`);
+* (L) `(Φ ∘ (G | E)) ∘ F = Φ ∘ (G ∘ F | E ∘ F)` (`ComposableMultilinearMap.compMarked_comp`);
+* (R) `(Φ ∘ G) ∘ (F | D) = Φ ∘ (G ∘ F | G ∘ (F | D))`
+  (`ComposableMultilinearMap.comp_compMarked`).
 
-* for A∞-functor data `H`, it is the associativity of the composition of A∞-functor data, and
-  gives the associativity of the composition of A∞-functors, `AInfinityFunctor.comp_assoc`;
-* for the operations `m''` of an A∞-category structure, it says that the sum, over all
-  compositions of `n`, of the right-hand sides of the functor equations for `G` on the values of
-  `F` is the right-hand side of the functor equation for `G.comp F`
-  (`ComposableMultilinearMap.sum_compMapSumBlockMap_eq_comp_compMapSum`). This is the third step
-  of the proof that the composite of A∞-functors is an A∞-functor.
+The rules (L) and (R) are the derivatives of (AS) in its middle and in its inner argument: they
+are the coefficients of ε in (AS) for G + εE and for F + εD. All three are sums of one identity
+between terms
+$$\Phi_k(Q_1(P(\dots), \dots, P(\dots)), \dots, Q_k(P(\dots), \dots, P(\dots)))$$
+with three levels, for arbitrary choices `Q` and `P` of the middle and of the innermost maps. Such
+a term is described either by a composition c of `n` and a composition of `c.length`
+(`groupedTerm`), or by a composition of `n` and a composition of each of its blocks
+(`blockwiseTerm`). Mathlib's `Composition.sigmaEquivSigmaPi` matches the two descriptions.
+
+Two cases are used in `AInfinity.FunctorComposition.Basic`: for A∞-functor data Φ, (AS) is the
+associativity of the composition of A∞-functors; and (AS), (L) and (R), together with the unit
+laws of `AInfinity.FunctorComposition.Unit`, show that the composite of two A∞-functors satisfies
+the A∞-functor equations.
 
 ## Main definitions
 
-* `AInfinityTheory.ComposableMultilinearMap.compositionBlockCompTerm`: the summand, indexed by a
-  composition of a block, of the value of the composite component (G ∘ F) on that block.
-* `AInfinityTheory.ComposableMultilinearMap.compCompMapTerm`: the summand of `H.comp (G.comp F)`
-  indexed by a composition of `n` and compositions of its blocks.
-* `AInfinityTheory.ComposableMultilinearMap.compMapTermBlockMap`: the summand of
-  `(H.comp G).comp F` indexed by a composition c of `n` and a composition of `c.length`.
+* `AInfinityTheory.ComposableMultilinearMap.blockCompTerm`: a term E(P, …, P) on a block of a
+  composition.
+* `AInfinityTheory.ComposableMultilinearMap.groupedTerm`,
+  `AInfinityTheory.ComposableMultilinearMap.blockwiseTerm`: the two descriptions of a term with
+  three levels.
 
 ## Main results
 
-* `AInfinityTheory.ComposableMultilinearMap.compMapTermBlockMap_eq_compCompMapTerm`: the two
-  descriptions of a term agree.
-* `AInfinityTheory.ComposableMultilinearMap.comp_assoc`: the composition with A∞-functor data is
-  associative.
-* `AInfinityTheory.ComposableMultilinearMap.sum_compMapSumBlockMap_eq_comp_compMapSum`: the sum of
-  the right-hand sides of the functor equations for `G` on the values of `F` is the right-hand
-  side of the functor equation for `G.comp F`.
+* `AInfinityTheory.ComposableMultilinearMap.groupedTerm_eq_blockwiseTerm`: the two descriptions
+  of a term agree.
+* `AInfinityTheory.ComposableMultilinearMap.comp_assoc`,
+  `AInfinityTheory.ComposableMultilinearMap.compMarked_comp`,
+  `AInfinityTheory.ComposableMultilinearMap.comp_compMarked`: the rules (AS), (L) and (R).
 
 ## Implementation notes
 
-The sum is reindexed along Mathlib's `Composition.sigmaEquivSigmaPi`, as in the proof of
-associativity of the composition of formal multilinear series
-(`FormalMultilinearSeries.comp_assoc`).
-
 The two descriptions of a term are compared in the type `GradedLinearQuiver.Total` of all
 morphisms, in which a morphism is bundled with its source, target and degree. There, transports
-are invisible (`Total.of_homCongr`), and the congruence `ComposableMultilinearMap.total_map_congr`
-only compares arities and inputs. The comparison descends level by level, through `H`, `G` and
-`F`, to one equality of positions of inputs,
-`Composition.gather_embedding_sigmaCompositionAux_embedding`. No equality of objects or of degrees
-is stated.
+are invisible, and the congruence `ComposableMultilinearMap.total_map_congr` only compares arities
+and inputs. The comparison descends through the three levels to one equality of positions of
+inputs, `Composition.gather_embedding_sigmaCompositionAux_embedding`. No equality of objects or of
+degrees is stated.
 
-Two of the transports are removed with `erw`: the definitions `compositionBlockCompTerm` and
-`compCompMapTerm` are well-typed only after unfolding `ComposableMultilinearMap.comp` and
-`compositionBlockObj`, which `simp` does not unfold.
+Each rule is first proved as an equality of sums of terms in an arbitrary degree `d`
+(`sum_compTerm_comp`, `sum_compTerm_compMarked`, `sum_compTerm_comp_pick`). The two sides of a
+rule are composable multilinear maps over `(χ.comp ψ).comp φ` and over `χ.comp (ψ.comp φ)`: these
+are equal by `rfl`, but not syntactically, and sums in the two hom spaces cannot be manipulated
+together.
+
+In (L), the marked block of the composition of `c.length` corresponds to a marked block of
+`c.gather c'`. In (R), the marked block of `c` corresponds, under `Composition.blocksFinEquiv`, to
+a marked block of `c.gather c'` and a marked block of the composition of that block; the Koszul
+sign splits accordingly (`tailSign_sizeUpTo_embedding_succ`).
 -/
 
 @[expose] public section
@@ -72,244 +74,563 @@ noncomputable section
 
 namespace AInfinityTheory
 
-open GradedLinearQuiver AInfinityCategoryStruct
+open GradedLinearQuiver
 
 variable {n : ℕ}
 
-/-! ### The terms of both sides -/
-
 namespace ComposableMultilinearMap
 
 variable {β β' β'' β''' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
   [AddCommGroup β''] [Grading β''] [AddCommGroup β'''] [Grading β'''] {R : Type*} [Semiring R]
   {Obj Obj' Obj'' Obj''' : Type*} [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
-  [GradedLinearQuiver β'' R Obj''] [GradedLinearQuiver β''' R Obj'''] {s : ℤ}
-variable (H : ComposableMultilinearMap β'' β''' R Obj'' Obj''' s)
-  (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj')
-  {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
+  [GradedLinearQuiver β'' R Obj''] [GradedLinearQuiver β''' R Obj''']
+  {f : Obj → Obj'} {φ : β →+ᵍ β'} {g : Obj' → Obj''} {ψ : β' →+ᵍ β''} {h : Obj'' → Obj'''}
+  {χ : β'' →+ᵍ β'''} {s t u : ℤ}
 
-/-- The term, indexed by a composition `c` of the `l`-th block of a composition `e` of `n`, of the
-value of the composite component (G ∘ F) on that block: the component of `G` of arity `c.length`
-applied to the values of the components of `F` on the blocks of `c`, as the `l`-th input of an
-outer map on the objects `G (F (X (e.boundary k)))`. -/
-def compositionBlockCompTerm (e : Composition n) (l : Fin e.length)
-    (c : Composition (e.blocksFun l)) :
-    ComposableHom β'' R (fun k ↦ (G.comp F).obj (X (e.boundary k))) l
-      ((G.comp F).degMap (targetDeg 1 fun j ↦ deg (e.embedding l j))) :=
-  homCongr R (congrArg (G.comp F).obj (compositionBlockObj_zero X e l))
-    (congrArg (G.comp F).obj (compositionBlockObj_last X e l)) rfl
-    (compMapTermMultilinearMap G F (compositionBlockObj X e l) (fun j ↦ deg (e.embedding l j)) c
-      _ rfl fun j ↦ a (e.embedding l j))
+/-! ### Terms with three levels -/
 
-lemma comp_compositionBlockMap_eq_sum (e : Composition n) (l : Fin e.length) :
-    (G.comp F).compositionBlockMap a e l = ∑ c, G.compositionBlockCompTerm F a e l c :=
-  (congrArg (homCongr R (congrArg (G.comp F).obj (compositionBlockObj_zero X e l))
-    (congrArg (G.comp F).obj (compositionBlockObj_last X e l)) rfl)
-    (sum_apply Finset.univ (fun c ↦ compMapTermMultilinearMap G F (compositionBlockObj X e l)
-      (fun j ↦ deg (e.embedding l j)) c _ rfl) fun j ↦ a (e.embedding l j))).trans (map_sum _ _ _)
+section Terms
 
-variable [NeZero n] (j : β) (hj : targetDeg s deg = j)
+variable {X : Fin (n + 1) → Obj} {deg : Fin n → β}
 
-/-- The summand of `H.comp (G.comp F)` indexed by a composition `e` of `n` and compositions `τ l`
-of its blocks: the component of `H` of arity `e.length` applied to the components of `G` on the
-values of the components of `F` on the blocks of the compositions `τ l`. -/
-def compCompMapTerm (e : Composition n) (τ : ∀ l : Fin e.length, Composition (e.blocksFun l)) :
-    (H.obj (G.obj (F.obj (X 0))) →ᵍ[R] H.obj (G.obj (F.obj (X (Fin.last n)))))
-      (H.degMap (G.degMap (F.degMap j))) :=
-  homCongr R (congrArg (fun k ↦ H.obj ((G.comp F).obj (X k))) e.boundary_zero)
-    (congrArg (fun k ↦ H.obj ((G.comp F).obj (X k))) e.boundary_last) rfl
-    ((H.map fun k ↦ (G.comp F).obj (X (e.boundary k))).v
-      (fun l ↦ (G.comp F).degMap (targetDeg 1 fun i ↦ deg (e.embedding l i)))
-      ((G.comp F).degMap j) ((G.comp F).targetDeg_degMap_targetDeg_embedding e j hj)
-      fun l ↦ G.compositionBlockCompTerm F a e l (τ l))
+/-- The term E_k(P₁(…), …, P_k(…)) on the `l`-th block of a composition `e` of `n`, indexed by a
+composition `τ` of that block into k blocks and a choice `P` of a composable multilinear map for
+each of them, as the `l`-th input of an outer map, in any degree `d` equal to its degree. -/
+def blockCompTerm (E : ComposableMultilinearMap R g ψ t)
+    (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (e : Composition n) (l : Fin e.length)
+    (τ : Composition (e.blocksFun l))
+    (P : Fin τ.length → Σ u : ℤ, ComposableMultilinearMap R f φ u) (d : β'')
+    (hd : ψ (targetDeg t fun q ↦
+      φ (targetDeg (P q).1 fun i ↦ deg (e.embedding l (τ.embedding q i)))) = d) :
+    ComposableHom β'' R (fun k ↦ g (f (X (e.boundary k)))) l d :=
+  homCongr R (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_zero X e l))
+    (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_last X e l)) rfl
+    (E.compTerm (X := compositionBlockObj X e l) (deg := fun i ↦ deg (e.embedding l i))
+      (fun i ↦ a (e.embedding l i)) τ P d hd)
 
-/-- The value of `H.comp (G.comp F)`, as a sum over compositions of `n` and compositions of their
-blocks. -/
-lemma comp_comp_map_v_apply_eq_sum_compCompMapTerm :
-    ((H.comp (G.comp F)).map X).v deg j hj a =
-      ∑ σ : Σ e : Composition n, ∀ l : Fin e.length, Composition (e.blocksFun l),
-        H.compCompMapTerm G F a j hj σ.1 σ.2 := by
-  rw [comp_map_v_apply, Fintype.sum_sigma]
-  refine Finset.sum_congr rfl fun e _ ↦ ?_
-  rw [funext (G.comp_compositionBlockMap_eq_sum F a e), MultilinearMap.map_sum, map_sum]
-  rfl
+variable [NeZero n]
 
-/-- The summand of `(H.comp G).comp F` indexed by a composition `c` of `n` and a composition `c'`
-of `c.length`: the component of `H` of arity `c'.length` applied to the components of `G` on the
-groups, given by `c'`, of the values of the components of `F` on the blocks of `c`. -/
-def compMapTermBlockMap (c : Composition n) (c' : Composition c.length) :
-    (H.obj (G.obj (F.obj (X 0))) →ᵍ[R] H.obj (G.obj (F.obj (X (Fin.last n)))))
-      (H.degMap (G.degMap (F.degMap j))) :=
-  homCongr R (congrArg (fun k ↦ H.obj (G.obj (F.obj (X k)))) c.boundary_zero)
-    (congrArg (fun k ↦ H.obj (G.obj (F.obj (X k)))) c.boundary_last) rfl
-    (homCongr R (congrArg (fun k ↦ H.obj (G.obj (F.obj (X (c.boundary k))))) c'.boundary_zero)
-      (congrArg (fun k ↦ H.obj (G.obj (F.obj (X (c.boundary k))))) c'.boundary_last) rfl
-      ((H.map fun k ↦ G.obj (F.obj (X (c.boundary (c'.boundary k))))).v _
-        (G.degMap (F.degMap j))
-        (G.targetDeg_degMap_targetDeg_embedding c' _
-          (F.targetDeg_degMap_targetDeg_embedding c j hj))
-        (G.compositionBlockMap (F.compositionBlockMap a c) c')))
+/-- The term Φ(Q₁(P(…), …, P(…)), …, Q_k(P(…), …, P(…))) described by a composition `c` of `n`
+into the inputs of the innermost maps, chosen by `P`, and a composition `c'` of `c.length` into
+the inputs of the middle maps, chosen by `Q`. -/
+def groupedTerm (Φ : ComposableMultilinearMap R h χ s)
+    (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (c : Composition n)
+    (c' : Composition c.length) (P : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u)
+    (Q : Fin c'.length → Σ u : ℤ, ComposableMultilinearMap R g ψ u) (d₀ : β''')
+    (hd₀ : χ (targetDeg s fun l ↦ ψ (targetDeg (Q l).1 fun q ↦
+      φ (targetDeg (P (c'.embedding l q)).1 fun i ↦
+        deg (c.embedding (c'.embedding l q) i)))) = d₀) (d : β''') (hd : d₀ = d) :
+    (h (g (f (X 0))) →ᵍ[R] h (g (f (X (Fin.last n))))) d :=
+  homCongr R (congrArg (fun k ↦ h (g (f (X k)))) c.boundary_zero)
+    (congrArg (fun k ↦ h (g (f (X k)))) c.boundary_last) hd
+    (Φ.compTerm (X := fun k ↦ f (X (c.boundary k))) (fun l ↦ (P l).2.blockMap a c l) c' Q d₀ hd₀)
 
-/-- The summand of `(H.comp G).comp F` indexed by a composition `c` of `n`, as a sum over the
-compositions of `c.length`. -/
-lemma homCongr_comp_map_v_apply_eq_sum_compMapTermBlockMap (c : Composition n) :
-    homCongr R (congrArg (fun k ↦ (H.comp G).obj (F.obj (X k))) c.boundary_zero)
-      (congrArg (fun k ↦ (H.comp G).obj (F.obj (X k))) c.boundary_last) rfl
-      ((((H.comp G).map fun k ↦ F.obj (X (c.boundary k))).v _ (F.degMap j)
-        (F.targetDeg_degMap_targetDeg_embedding c j hj)) (F.compositionBlockMap a c)) =
-      ∑ c' : Composition c.length, H.compMapTermBlockMap G F a j hj c c' :=
-  (congrArg (homCongr R (congrArg (fun k ↦ (H.comp G).obj (F.obj (X k))) c.boundary_zero)
-    (congrArg (fun k ↦ (H.comp G).obj (F.obj (X k))) c.boundary_last) rfl)
-    (comp_map_v_apply H G _ _ (F.compositionBlockMap a c) _ _)).trans (map_sum _ _ _)
+/-- The term Φ(Q₁(P(…), …, P(…)), …, Q_k(P(…), …, P(…))) described by a composition `e` of `n`
+into the inputs of the middle maps, chosen by `Q`, and a composition `τ l` of each of its blocks
+into the inputs of the innermost maps, chosen by `P`. -/
+def blockwiseTerm (Φ : ComposableMultilinearMap R h χ s)
+    (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (e : Composition n)
+    (τ : ∀ l : Fin e.length, Composition (e.blocksFun l))
+    (P : ∀ l, Fin (τ l).length → Σ u : ℤ, ComposableMultilinearMap R f φ u)
+    (Q : Fin e.length → Σ u : ℤ, ComposableMultilinearMap R g ψ u) (dl : Fin e.length → β'')
+    (hdl : ∀ l, ψ (targetDeg (Q l).1 fun q ↦
+      φ (targetDeg (P l q).1 fun i ↦ deg (e.embedding l ((τ l).embedding q i)))) = dl l)
+    (d : β''') (hd : χ (targetDeg s dl) = d) :
+    (h (g (f (X 0))) →ᵍ[R] h (g (f (X (Fin.last n))))) d :=
+  Φ.applyBlocks (fun Z ↦ g (f Z)) X e
+    (fun l ↦ (Q l).2.blockCompTerm a e l (τ l) (P l) (dl l) (hdl l)) d hd
 
-/-- The value of `(H.comp G).comp F`, as a sum over compositions c of `n` and compositions of
-`c.length`. -/
-lemma comp_comp_map_v_apply_eq_sum_compMapTermBlockMap :
-    (((H.comp G).comp F).map X).v deg j hj a =
-      ∑ σ : Σ c : Composition n, Composition c.length, H.compMapTermBlockMap G F a j hj σ.1 σ.2 :=
-  ((comp_map_v_apply (H.comp G) F X deg a j hj).trans (Finset.sum_congr rfl fun c _ ↦
-    H.homCongr_comp_map_v_apply_eq_sum_compMapTermBlockMap G F a j hj c)).trans
-    (Fintype.sum_sigma fun σ : Σ c : Composition n, Composition c.length ↦
-      H.compMapTermBlockMap G F a j hj σ.1 σ.2).symm
-
-end ComposableMultilinearMap
+end Terms
 
 /-! ### Matching the two descriptions of a term -/
 
-namespace ComposableMultilinearMap
+section Total
 
-variable {β β' β'' β''' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
-  [AddCommGroup β''] [Grading β''] [AddCommGroup β'''] [Grading β'''] {R : Type*} [Semiring R]
-  {Obj Obj' Obj'' Obj''' : Type*} [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
-  [GradedLinearQuiver β'' R Obj''] [GradedLinearQuiver β''' R Obj'''] {s : ℤ}
-variable (H : ComposableMultilinearMap β'' β''' R Obj'' Obj''' s)
-  (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj')
-  {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
+variable {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
   (c : Composition n) (c' : Composition c.length)
 
-/-- The value of `F` on a block of `c`, inside the `l`-th group of blocks given by `c'`, is its
+/-- The value of `D` on a block of `c`, inside the `l`-th group of blocks given by `c'`, is its
 value on the corresponding block of `c.sigmaCompositionAux c'`, inside the `l`-th block of
 `c.gather c'`. -/
-lemma total_compositionBlockMap_embedding (l : Fin c'.length) (q : Fin (c'.blocksFun l)) :
-    Total.of (F.compositionBlockMap a c (c'.embedding l q)) =
-      Total.of (F.compositionBlockMap
+lemma total_blockMap_embedding (D : ComposableMultilinearMap R f φ t) (l : Fin c'.length)
+    (q : Fin (c'.blocksFun l)) :
+    Total.of (D.blockMap a c (c'.embedding l q)) =
+      Total.of (D.blockMap
         (X := compositionBlockObj X (c.gather c') (l.cast (c.length_gather c').symm))
         (fun i ↦ a ((c.gather c').embedding (l.cast (c.length_gather c').symm) i))
         (c.sigmaCompositionAux c' (l.cast (c.length_gather c').symm))
         (q.cast (c.length_sigmaCompositionAux c' l).symm)) := by
-  simp only [compositionBlockMap, Total.of_homCongr]
-  exact F.total_map_congr (c.blocksFun_sigmaCompositionAux c' l q).symm _ _ fun s ↦
+  simp only [blockMap, Total.of_homCongr]
+  exact D.total_map_congr (c.blocksFun_sigmaCompositionAux c' l q).symm _ _ fun s ↦
     congrArg (fun i ↦ Total.of (a i))
       (c.gather_embedding_sigmaCompositionAux_embedding c' l q s).symm
 
-/-- The value of `G` on the values of `F` on the `l`-th group, given by `c'`, of blocks of `c` is
-the term indexed by `c.sigmaCompositionAux c'` of the value of `G.comp F` on the `l`-th block of
-`c.gather c'`. -/
-lemma total_compositionBlockMap_compositionBlockMap (l : Fin c'.length) :
-    Total.of (G.compositionBlockMap (F.compositionBlockMap a c) c' l) =
-      Total.of (G.compositionBlockCompTerm F a (c.gather c') (l.cast (c.length_gather c').symm)
-        (c.sigmaCompositionAux c' (l.cast (c.length_gather c').symm))) := by
-  simp only [compositionBlockMap, compositionBlockCompTerm, Total.of_homCongr]
-  erw [Total.of_homCongr, compMapTermMultilinearMap_apply, Total.of_homCongr]
-  refine G.total_map_congr (c.length_sigmaCompositionAux c' l).symm _ _ ?_
-  exact total_compositionBlockMap_embedding F a c c' l
+/-- The value of `E` on the values of the maps chosen by `P` on the `l`-th group, given by `c'`,
+of blocks of `c` is a term on the `l`-th block of `c.gather c'`. -/
+lemma total_blockMap_blockMap (E : ComposableMultilinearMap R g ψ t)
+    (P : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u) (l : Fin c'.length)
+    (d : β'') (hd : _) :
+    Total.of (E.blockMap (fun l ↦ (P l).2.blockMap a c l) c' l) =
+      Total.of (E.blockCompTerm a (c.gather c') (l.cast (c.length_gather c').symm)
+        (c.sigmaCompositionAux c' (l.cast (c.length_gather c').symm))
+        (fun q ↦ P (c'.embedding l (q.cast (c.length_sigmaCompositionAux c' l)))) d hd) := by
+  simp only [blockMap, blockCompTerm, compTerm, applyBlocks, Total.of_homCongr]
+  refine E.total_map_congr (c.length_sigmaCompositionAux c' l).symm _ _ fun q ↦ ?_
+  exact total_blockMap_embedding a c c' (P (c'.embedding l q)).2 l q
 
-variable [NeZero n] (j : β) (hj : targetDeg s deg = j)
+variable [NeZero n]
 
-/-- The two descriptions of a term of `(H.comp G).comp F = H.comp (G.comp F)` agree: the summand
-of `(H.comp G).comp F` indexed by `c` and `c'` is the summand of `H.comp (G.comp F)` indexed by
-the image `c.gather c'` and `c.sigmaCompositionAux c'` of `(c, c')` under
+/-- The two descriptions of a term Φ(Q(P, …, P), …, Q(P, …, P)) agree: the term described by `c`
+and `c'` is the term described by the image `c.gather c'` and `c.sigmaCompositionAux c'` of
+`(c, c')` under `Composition.sigmaEquivSigmaPi`. -/
+theorem total_groupedTerm (Φ : ComposableMultilinearMap R h χ s)
+    (P : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u)
+    (Q : Fin c'.length → Σ u : ℤ, ComposableMultilinearMap R g ψ u) (d₀ : β''') (hd₀ : _)
+    (d : β''') (hd : d₀ = d) (dl : Fin (c.gather c').length → β'') (hdl : _) (d' : β''')
+    (hd' : _) :
+    Total.of (Φ.groupedTerm a c c' P Q d₀ hd₀ d hd) =
+      Total.of (Φ.blockwiseTerm a (c.gather c') (c.sigmaCompositionAux c')
+        (fun l q ↦ P (c'.embedding (l.cast (c.length_gather c'))
+          (q.cast (c.length_sigmaCompositionAux c' (l.cast (c.length_gather c'))))))
+        (fun l ↦ Q (l.cast (c.length_gather c'))) dl hdl d' hd') := by
+  simp only [groupedTerm, blockwiseTerm, compTerm, applyBlocks, Total.of_homCongr]
+  refine Φ.total_map_congr (c.length_gather c').symm _ _ fun l ↦ ?_
+  exact total_blockMap_blockMap a c c' (Q l).2 P l _ _
+
+/-- The two descriptions of a term Φ(Q(P, …, P), …, Q(P, …, P)) agree. -/
+theorem groupedTerm_eq_blockwiseTerm (Φ : ComposableMultilinearMap R h χ s)
+    (P : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u)
+    (Q : Fin c'.length → Σ u : ℤ, ComposableMultilinearMap R g ψ u) (d₀ : β''') (hd₀ : _)
+    (d : β''') (hd : d₀ = d) (dl : Fin (c.gather c').length → β'') (hdl : _) (hd' : _) :
+    Φ.groupedTerm a c c' P Q d₀ hd₀ d hd =
+      Φ.blockwiseTerm a (c.gather c') (c.sigmaCompositionAux c')
+        (fun l q ↦ P (c'.embedding (l.cast (c.length_gather c'))
+          (q.cast (c.length_sigmaCompositionAux c' (l.cast (c.length_gather c'))))))
+        (fun l ↦ Q (l.cast (c.length_gather c'))) dl hdl d hd' :=
+  Total.of_inj.1 (total_groupedTerm a c c' Φ P Q d₀ hd₀ d hd dl hdl d hd')
+
+end Total
+
+/-! ### Expanding composites into terms -/
+
+section Expand
+
+variable {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
+
+lemma compTerm_congr [NeZero n] (Φ : ComposableMultilinearMap R g ψ s) (c : Composition n)
+    {P P' : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u} (hP : P = P') (d : β'')
+    (hd : _) : Φ.compTerm a c P d hd = Φ.compTerm a c P' d (hP ▸ hd) := by
+  subst hP
+  rfl
+
+lemma blockwiseTerm_congr [NeZero n] (Φ : ComposableMultilinearMap R h χ s) (e : Composition n)
+    (τ : ∀ l : Fin e.length, Composition (e.blocksFun l))
+    {P P' : ∀ l, Fin (τ l).length → Σ u : ℤ, ComposableMultilinearMap R f φ u} (hP : P = P')
+    {Q Q' : Fin e.length → Σ u : ℤ, ComposableMultilinearMap R g ψ u} (hQ : Q = Q')
+    (dl : Fin e.length → β'') (hdl : _) (d : β''') (hd : _) :
+    Φ.blockwiseTerm a e τ P Q dl hdl d hd =
+      Φ.blockwiseTerm a e τ P' Q' dl (hP ▸ hQ ▸ hdl) d hd := by
+  subst hP hQ
+  rfl
+
+/-- The value of E ∘ F on a block of a composition `e` of `n`, as a sum over the compositions of
+that block. -/
+lemma blockMap_comp (E : ComposableMultilinearMap R g ψ t) (F : ComposableMultilinearMap R f φ 1)
+    (e : Composition n) (l : Fin e.length) :
+    (E.comp F).blockMap a e l =
+      ∑ τ : Composition (e.blocksFun l), E.blockCompTerm a e l τ (fun _ ↦ ⟨1, F⟩) _
+        (comp_deg φ ψ (fun i ↦ deg (e.embedding l i)) τ rfl) :=
+  (congrArg (homCongr R (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_zero X e l))
+    (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_last X e l)) rfl)
+    (comp_map_v_apply E F (X := compositionBlockObj X e l) (deg := fun i ↦ deg (e.embedding l i))
+      (fun i ↦ a (e.embedding l i)) rfl)).trans (map_sum _ _ _)
+
+/-- The value of Φ ∘ (F | D) on a block of a composition `e` of `n`, as a signed sum over the
+compositions of that block with one marked block. -/
+lemma blockMap_compMarked (Φ : ComposableMultilinearMap R g ψ s)
+    (F : ComposableMultilinearMap R f φ 1) (D : ComposableMultilinearMap R f φ 2)
+    (hu : s + 1 = u) (e : Composition n) (l : Fin e.length) :
+    (Φ.compMarked F D hu).blockMap a e l =
+      ∑ τ : Composition (e.blocksFun l), ∑ q : Fin τ.length,
+        tailSign (fun i ↦ deg (e.embedding l i)) (τ.sizeUpTo (q + 1)) •
+          Φ.blockCompTerm a e l τ (fun q₀ ↦ pick F D (decide (q₀ = q))) _
+            (compMarked_deg F D (fun i ↦ deg (e.embedding l i)) τ q hu rfl) := by
+  refine (congrArg (homCongr R (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_zero X e l))
+    (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_last X e l)) rfl)
+    (compMarked_map_v_apply Φ F D (X := compositionBlockObj X e l)
+      (deg := fun i ↦ deg (e.embedding l i)) (fun i ↦ a (e.embedding l i)) hu rfl)).trans ?_
+  simp only [map_sum, Units.smul_def, map_zsmul]
+  rfl
+
+variable [NeZero n]
+
+/-- A term of (Φ ∘ G) ∘ P, as a sum over the compositions of its number of blocks. -/
+lemma compTerm_comp (Φ : ComposableMultilinearMap R h χ s) (G : ComposableMultilinearMap R g ψ 1)
+    (c : Composition n) (P : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u)
+    (d : β''') (hd : _) :
+    (Φ.comp G).compTerm a c P d hd =
+      ∑ c' : Composition c.length, Φ.groupedTerm a c c' P (fun _ ↦ ⟨1, G⟩) _
+        (comp_deg ψ χ (fun l ↦ φ (targetDeg (P l).1 fun i ↦ deg (c.embedding l i))) c' rfl)
+        d hd :=
+  (congrArg (homCongr R (congrArg (fun k ↦ h (g (f (X k)))) c.boundary_zero)
+    (congrArg (fun k ↦ h (g (f (X k)))) c.boundary_last) hd)
+    (comp_map_v_apply Φ G (X := fun k ↦ f (X (c.boundary k)))
+      (fun l ↦ (P l).2.blockMap a c l) rfl)).trans (map_sum _ _ _)
+
+/-- A term of (Φ ∘ (G | E)) ∘ P, as a signed sum over the compositions of its number of blocks
+with one marked block. -/
+lemma compTerm_compMarked (Φ : ComposableMultilinearMap R h χ s)
+    (G : ComposableMultilinearMap R g ψ 1) (E : ComposableMultilinearMap R g ψ 2)
+    (hu : s + 1 = u) (c : Composition n)
+    (P : Fin c.length → Σ u : ℤ, ComposableMultilinearMap R f φ u) (d : β''') (hd : _) :
+    (Φ.compMarked G E hu).compTerm a c P d hd =
+      ∑ c' : Composition c.length, ∑ m : Fin c'.length,
+        tailSign (fun l ↦ φ (targetDeg (P l).1 fun i ↦ deg (c.embedding l i)))
+            (c'.sizeUpTo (m + 1)) •
+          Φ.groupedTerm a c c' P (fun l ↦ pick G E (decide (l = m))) _
+            (compMarked_deg G E (fun l ↦ φ (targetDeg (P l).1 fun i ↦ deg (c.embedding l i)))
+              c' m hu rfl) d hd := by
+  refine (congrArg (homCongr R (congrArg (fun k ↦ h (g (f (X k)))) c.boundary_zero)
+    (congrArg (fun k ↦ h (g (f (X k)))) c.boundary_last) hd)
+    (compMarked_map_v_apply Φ G E (X := fun k ↦ f (X (c.boundary k)))
+      (fun l ↦ (P l).2.blockMap a c l) hu rfl)).trans ?_
+  simp only [map_sum, Units.smul_def, map_zsmul]
+  rfl
+
+/-- A term of Φ ∘ (Q ∘ F), as a sum over the compositions of its blocks. -/
+lemma compTerm_comp_right (Φ : ComposableMultilinearMap R h χ s)
+    (F : ComposableMultilinearMap R f φ 1) (e : Composition n)
+    (Q : Fin e.length → Σ u : ℤ, ComposableMultilinearMap R g ψ u) (d : β''') (hd : _) :
+    Φ.compTerm a e (fun l ↦ ⟨(Q l).1, (Q l).2.comp F⟩) d hd =
+      ∑ τ : ∀ l : Fin e.length, Composition (e.blocksFun l),
+        Φ.blockwiseTerm a e τ (fun _ _ ↦ ⟨1, F⟩) Q
+          (fun l ↦ (ψ.comp φ) (targetDeg (Q l).1 fun i ↦ deg (e.embedding l i)))
+          (fun l ↦ comp_deg φ ψ (fun i ↦ deg (e.embedding l i)) (τ l) rfl) d hd := by
+  simp only [compTerm, applyBlocks, blockMap_comp, MultilinearMap.map_sum, map_sum]
+  rfl
+
+end Expand
+
+/-! ### The associativity of the composition -/
+
+section Assoc
+
+variable (Φ : ComposableMultilinearMap R h χ s) (G : ComposableMultilinearMap R g ψ 1)
+  (F : ComposableMultilinearMap R f φ 1)
+
+/-- The terms of (Φ ∘ G) ∘ F and of Φ ∘ (G ∘ F) are the same, reindexed along
 `Composition.sigmaEquivSigmaPi`. -/
-theorem compMapTermBlockMap_eq_compCompMapTerm :
-    H.compMapTermBlockMap G F a j hj c c' =
-      H.compCompMapTerm G F a j hj (c.gather c') (c.sigmaCompositionAux c') := by
-  refine Total.of_inj.1 ?_
-  simp only [compMapTermBlockMap, compCompMapTerm, Total.of_homCongr]
-  erw [Total.of_homCongr]
-  refine H.total_map_congr (c.length_gather c').symm _ _ ?_
-  exact total_compositionBlockMap_compositionBlockMap G F a c c'
+lemma sum_compTerm_comp [NeZero n] {X : Fin (n + 1) → Obj} {deg : Fin n → β}
+    (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (d : β''') (hd : ∀ _ : Composition n, _)
+    (hd' : ∀ _ : Composition n, _) :
+    ∑ c : Composition n, (Φ.comp G).compTerm a c (fun _ ↦ ⟨1, F⟩) d (hd c) =
+      ∑ e : Composition n, Φ.compTerm a e (fun _ ↦ ⟨1, G.comp F⟩) d (hd' e) := by
+  refine (Finset.sum_congr rfl fun c _ ↦ compTerm_comp a Φ G c _ _ _).trans ?_
+  refine Eq.trans ?_ (Finset.sum_congr rfl fun e _ ↦
+    (compTerm_comp_right a Φ F e (fun _ ↦ ⟨1, G⟩) _ _).symm)
+  rw [Finset.sum_sigma', Finset.sum_sigma', Finset.univ_sigma_univ, Finset.univ_sigma_univ]
+  exact Fintype.sum_equiv (Composition.sigmaEquivSigmaPi n) _ _ fun σ ↦
+    groupedTerm_eq_blockwiseTerm a σ.1 σ.2 Φ _ _ _ _ _ _ _ _ _
 
-end ComposableMultilinearMap
+/-- (AS): the composition of composable multilinear maps is associative. -/
+theorem comp_assoc : (Φ.comp G).comp F = Φ.comp (G.comp F) := by
+  ext n _ X deg a j hj
+  exact (comp_map_v_apply _ F a hj).trans ((sum_compTerm_comp Φ G F a _ _ _).trans
+    (comp_map_v_apply Φ (G.comp F) a hj).symm)
 
-/-! ### Associativity -/
+end Assoc
 
-namespace ComposableMultilinearMap
+/-! ### Composing a marked composite with a map on the right -/
 
-variable {β β' β'' β''' : Type*} [AddCommGroup β] [Grading β] [AddCommGroup β'] [Grading β']
-  [AddCommGroup β''] [Grading β''] [AddCommGroup β'''] [Grading β'''] {R : Type*} [Semiring R]
-  {Obj Obj' Obj'' Obj''' : Type*}
+section MarkedLeft
 
-section GradedLinearQuiver
+variable (Φ : ComposableMultilinearMap R h χ s) (G : ComposableMultilinearMap R g ψ 1)
+  (E : ComposableMultilinearMap R g ψ 2) (F : ComposableMultilinearMap R f φ 1)
 
-variable [GradedLinearQuiver β R Obj] [GradedLinearQuiver β' R Obj']
-  [GradedLinearQuiver β'' R Obj''] [GradedLinearQuiver β''' R Obj'''] {s : ℤ}
-variable (H : ComposableMultilinearMap β'' β''' R Obj'' Obj''' s)
-  (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj')
+omit [GradedLinearQuiver β''' R Obj'''] in
+lemma pick_comp (b : Bool) :
+    pick (G.comp F) (E.comp F) b = ⟨(pick G E b).1, (pick G E b).2.comp F⟩ := by
+  cases b <;> rfl
 
-/-- The terms of `(H.comp G).comp F` and of `H.comp (G.comp F)` are the same, reindexed along
+omit [GradedLinearQuiver β''' R Obj'''] in
+lemma pick_comp_fst (b : Bool) : (pick (G.comp F) (E.comp F) b).1 = (pick G E b).1 := by
+  cases b <;> rfl
+
+variable [NeZero n] {X : Fin (n + 1) → Obj} {deg : Fin n → β}
+  (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
+
+/-- A term of Φ ∘ (G ∘ F | E ∘ F), as a sum over the compositions of its blocks. -/
+lemma compTerm_pick_comp (e : Composition n) (B : Fin e.length → Bool) (d : β''') (hd : _) :
+    Φ.compTerm a e (fun l ↦ pick (G.comp F) (E.comp F) (B l)) d hd =
+      ∑ τ : ∀ l : Fin e.length, Composition (e.blocksFun l),
+        Φ.blockwiseTerm a e τ (fun _ _ ↦ ⟨1, F⟩) (fun l ↦ pick G E (B l))
+          (fun l ↦ (ψ.comp φ) (targetDeg (pick G E (B l)).1 fun i ↦ deg (e.embedding l i)))
+          (fun l ↦ comp_deg φ ψ (fun i ↦ deg (e.embedding l i)) (τ l) rfl) d
+          (by simpa only [pick_comp_fst] using hd) :=
+  (compTerm_congr a Φ e (funext fun l ↦ pick_comp G E F (B l)) d hd).trans
+    (compTerm_comp_right a Φ F e _ d _)
+
+/-- The terms of (Φ ∘ (G | E)) ∘ F and of Φ ∘ (G ∘ F | E ∘ F) are the same, reindexed along
 `Composition.sigmaEquivSigmaPi`. -/
-lemma sum_compMapTermBlockMap_eq_sum_compCompMapTerm [NeZero n] {X : Fin (n + 1) → Obj}
-    {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i)) (j : β)
-    (hj : targetDeg s deg = j) :
-    ∑ σ : Σ c : Composition n, Composition c.length, H.compMapTermBlockMap G F a j hj σ.1 σ.2 =
-      ∑ σ : Σ e : Composition n, ∀ l : Fin e.length, Composition (e.blocksFun l),
-        H.compCompMapTerm G F a j hj σ.1 σ.2 :=
-  Fintype.sum_equiv (Composition.sigmaEquivSigmaPi n) _ _ fun σ ↦
-    H.compMapTermBlockMap_eq_compCompMapTerm G F a σ.1 σ.2 j hj
+lemma sum_compTerm_compMarked (hu : s + 1 = u) (d : β''') (hd : ∀ _ : Composition n, _)
+    (hd' : ∀ (e : Composition n) (_ : Fin e.length), _) :
+    ∑ c : Composition n, (Φ.compMarked G E hu).compTerm a c (fun _ ↦ ⟨1, F⟩) d (hd c) =
+      ∑ e : Composition n, ∑ m : Fin e.length, tailSign deg (e.sizeUpTo (m + 1)) •
+        Φ.compTerm a e (fun l ↦ pick (G.comp F) (E.comp F) (decide (l = m))) d (hd' e m) := by
+  refine (Finset.sum_congr rfl fun c _ ↦ compTerm_compMarked a Φ G E hu c _ _ _).trans ?_
+  refine Eq.trans ?_ (Finset.sum_congr rfl fun e _ ↦ Finset.sum_congr rfl fun m _ ↦
+    congrArg (tailSign deg (e.sizeUpTo (m + 1)) • ·)
+      (compTerm_pick_comp Φ G E F a e (fun l ↦ decide (l = m)) d (hd' e m)).symm)
+  refine Eq.trans ?_ (Finset.sum_congr rfl fun e _ ↦ Finset.sum_comm.trans
+    (Finset.sum_congr rfl fun m _ ↦ Finset.smul_sum.symm))
+  conv_lhs => rw [Finset.sum_sigma', Finset.univ_sigma_univ]
+  conv_rhs => rw [Finset.sum_sigma', Finset.univ_sigma_univ]
+  refine Fintype.sum_equiv (Composition.sigmaEquivSigmaPi n) _ _ fun σ ↦ ?_
+  refine Fintype.sum_equiv (finCongr (σ.1.length_gather σ.2).symm) _ _ fun m ↦ ?_
+  refine congrArg₂ (· • ·) ((tailSign_targetDeg_embedding φ deg σ.1 _).trans
+    (congrArg _ (σ.1.sizeUpTo_gather σ.2 (m + 1)).symm)) ?_
+  refine (groupedTerm_eq_blockwiseTerm a σ.1 σ.2 Φ _ _ _ _ _ _ _ _ _).trans
+    (blockwiseTerm_congr a Φ _ _ rfl (funext fun l ↦ ?_) _ _ _ _).symm
+  exact congrArg (pick G E) (decide_eq_decide.2
+    ⟨fun hl ↦ Fin.ext (show (l : ℕ) = m from congrArg Fin.val hl),
+      fun hl ↦ Fin.ext (show (l : ℕ) = m from congrArg Fin.val hl)⟩)
 
-/-- The components of `(H.comp G).comp F` and `H.comp (G.comp F)` agree. -/
-theorem comp_comp_map [NeZero n] (X : Fin (n + 1) → Obj) :
-    ((H.comp G).comp F).map X = (H.comp (G.comp F)).map X :=
-  GradedMultilinearMap.ext fun _ j hj ↦ MultilinearMap.ext fun a ↦
-    (H.comp_comp_map_v_apply_eq_sum_compMapTermBlockMap G F a j hj).trans
-      ((H.sum_compMapTermBlockMap_eq_sum_compCompMapTerm G F a j hj).trans
-        (H.comp_comp_map_v_apply_eq_sum_compCompMapTerm G F a j hj).symm)
+/-- (L): composing Φ ∘ (G | E) with `F` on the right composes both `G` and `E` with `F`. -/
+theorem compMarked_comp (hu : s + 1 = u) :
+    (Φ.compMarked G E hu).comp F = Φ.compMarked (G.comp F) (E.comp F) hu := by
+  ext n _ X deg a j hj
+  exact (comp_map_v_apply _ F a hj).trans ((sum_compTerm_compMarked Φ G E F a hu _ _ _).trans
+    (compMarked_map_v_apply Φ (G.comp F) (E.comp F) a hu hj).symm)
 
-/-- The composition of a composable multilinear map with A∞-functor data is associative. In
-particular, the composition of A∞-functor data is associative. -/
-theorem comp_assoc : (H.comp G).comp F = H.comp (G.comp F) := by
-  have h : (fun {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) ↦ ((H.comp G).comp F).map X) =
-      fun {n : ℕ} [NeZero n] (X : Fin (n + 1) → Obj) ↦ (H.comp (G.comp F)).map X := by
-    funext n _ X
-    exact comp_comp_map H G F X
-  exact congrArg (mk (H.comp (G.comp F)).obj (H.comp (G.comp F)).degMap) h
+end MarkedLeft
 
-end GradedLinearQuiver
+/-! ### Composing a composite with a marked map on the right -/
 
-/-! ### The right-hand side of the functor equation for a composite -/
+/-- A multilinear map is additive in each variable: if the `i`-th input is a signed sum, the value
+is the signed sum of the values with the `i`-th input replaced by each summand. -/
+lemma _root_.MultilinearMap.map_eq_sum_units_smul_update {R ι κ N : Type*} [Semiring R]
+    [DecidableEq ι] [Fintype κ] {M : ι → Type*} [∀ i, AddCommGroup (M i)] [∀ i, Module R (M i)]
+    [AddCommGroup N] [Module R N] (F : MultilinearMap R M N) (w : ∀ i, M i) (i : ι) (c : κ → ℤˣ)
+    (y : κ → M i) (hw : w i = ∑ q, c q • y q) :
+    F w = ∑ q, c q • F (Function.update w i (y q)) := by
+  calc F w = F.toLinearMap w i (∑ q, c q • y q) := by
+        rw [← hw, MultilinearMap.toLinearMap_apply, Function.update_eq_self]
+    _ = ∑ q, c q • F (Function.update w i (y q)) := by
+        simp only [map_sum, Units.smul_def, map_zsmul, MultilinearMap.toLinearMap_apply]
 
-section AInfinityCategoryStruct
+section MarkedRight
 
-variable [AInfinityCategoryStruct β R Obj] [AInfinityCategoryStruct β' R Obj']
-  [AInfinityCategoryStruct β'' R Obj'']
-variable (G : AInfinityFunctorData β' β'' R Obj' Obj'') (F : AInfinityFunctorData β β' R Obj Obj')
+variable (Φ : ComposableMultilinearMap R h χ s) (G : ComposableMultilinearMap R g ψ 1)
+  (F : ComposableMultilinearMap R f φ 1) (D : ComposableMultilinearMap R f φ 2)
   {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
-  (d : β) (hd : targetDeg 2 deg = d) [NeZero n]
 
-/-- The right-hand side of the functor equation of `G` on the values of `F` on the blocks of a
-composition `c` of `n` is the summand indexed by `c` of the composite of `m''.comp G` with `F`. -/
-lemma compMapSumBlockMap_eq_homCongr_comp_map_v_apply (c : Composition n) :
-    G.compMapSumBlockMap F a c d hd =
-      homCongr R (congrArg (fun k ↦ ((toComposableMultilinearMap β'' R Obj'').comp G).obj
-          (F.obj (X k))) c.boundary_zero)
-        (congrArg (fun k ↦ ((toComposableMultilinearMap β'' R Obj'').comp G).obj
-          (F.obj (X k))) c.boundary_last) rfl
-        ((((toComposableMultilinearMap β'' R Obj'').comp G).map
-          fun k ↦ F.obj (X (c.boundary k))).v _ (F.degMap d)
-          (F.targetDeg_degMap_targetDeg_embedding c d hd) (F.compositionBlockMap a c)) :=
-  congrArg (homCongr R _ _ rfl) (G.compMapSum_eq_comp_map_v (F.compositionBlockMap a c) _ _)
+lemma blockCompTerm_congr (E : ComposableMultilinearMap R g ψ t) (e : Composition n)
+    (l : Fin e.length) (τ : Composition (e.blocksFun l))
+    {P P' : Fin τ.length → Σ u : ℤ, ComposableMultilinearMap R f φ u} (hP : P = P') (d : β'')
+    (hd : _) : E.blockCompTerm a e l τ P d hd = E.blockCompTerm a e l τ P' d (hP ▸ hd) := by
+  subst hP
+  rfl
 
-/-- The sum, over all compositions `c` of `n`, of the right-hand sides of the functor equations
-for `G` on the values of `F` on the blocks of `c` is the right-hand side of the functor equation
-for `G.comp F`. This is `comp_assoc` for the operations m'' of the target. -/
-theorem sum_compMapSumBlockMap_eq_comp_compMapSum :
-    ∑ c : Composition n, G.compMapSumBlockMap F a c d hd = (G.comp F).compMapSum a d hd := by
-  rw [compMapSum_eq_comp_map_v, ← comp_comp_map]
-  refine (Finset.sum_congr rfl fun c _ ↦
-    G.compMapSumBlockMap_eq_homCongr_comp_map_v_apply F a d hd c).trans ?_
-  exact (comp_map_v_apply _ F X deg a d hd).symm
+variable (e : Composition n)
 
-end AInfinityCategoryStruct
+section Block
+
+variable (l : Fin e.length) (τ : Composition (e.blocksFun l))
+
+/-- The summand, indexed by a composition `τ` of the `l`-th block of a composition `e` of `n`, of
+the value of G ∘ F, if `b` is false, or of G ∘ (F | D), if `b` is true, on that block. -/
+def markedBlockTerm (b : Bool) :
+    ComposableHom β'' R (fun k ↦ g (f (X (e.boundary k)))) l
+      ((ψ.comp φ) (targetDeg (pick (G.comp F) (G.compMarked F D one_add_one_eq_two) b).1
+        fun i ↦ deg (e.embedding l i))) :=
+  match b with
+  | false => G.blockCompTerm a e l τ (fun _ ↦ ⟨1, F⟩) _
+      (comp_deg φ ψ (fun i ↦ deg (e.embedding l i)) τ rfl)
+  | true => ∑ q : Fin τ.length, tailSign (fun i ↦ deg (e.embedding l i)) (τ.sizeUpTo (q + 1)) •
+      G.blockCompTerm a e l τ (fun q₀ ↦ pick F D (decide (q₀ = q))) _
+        (compMarked_deg F D (fun i ↦ deg (e.embedding l i)) τ q one_add_one_eq_two rfl)
+
+lemma markedBlockTerm_of_false {b : Bool} (hb : b = false) (hd : _) :
+    markedBlockTerm G F D a e l τ b = G.blockCompTerm a e l τ (fun _ ↦ ⟨1, F⟩) _ hd := by
+  subst hb
+  rfl
+
+lemma markedBlockTerm_of_true {b : Bool} (hb : b = true) (hd : ∀ _ : Fin τ.length, _) :
+    markedBlockTerm G F D a e l τ b =
+      ∑ q : Fin τ.length, tailSign (fun i ↦ deg (e.embedding l i)) (τ.sizeUpTo (q + 1)) •
+        G.blockCompTerm a e l τ (fun q₀ ↦ pick F D (decide (q₀ = q))) _ (hd q) := by
+  subst hb
+  rfl
+
+/-- The value of G ∘ F or of G ∘ (F | D) on a block of a composition `e` of `n`, as a sum over
+the compositions of that block. -/
+lemma pick_blockMap_eq_sum (b : Bool) :
+    (pick (G.comp F) (G.compMarked F D one_add_one_eq_two) b).2.blockMap a e l =
+      ∑ τ : Composition (e.blocksFun l), markedBlockTerm G F D a e l τ b := by
+  cases b
+  · exact blockMap_comp a G F e l
+  · exact blockMap_compMarked a G F D one_add_one_eq_two e l
+
+end Block
+
+variable (m : Fin e.length) (τ : ∀ l : Fin e.length, Composition (e.blocksFun l))
+
+lemma one_add_sum_pick_fst_sub_one (q : Fin (τ m).length) (l : Fin e.length) :
+    1 + ∑ q₀ : Fin (τ l).length,
+      ((pick F D (decide ((⟨l, q₀⟩ : Σ l, Fin (τ l).length) = ⟨m, q⟩))).1 - 1) =
+      (pick (G.comp F) (G.compMarked F D one_add_one_eq_two) (decide (l = m))).1 := by
+  by_cases hl : l = m
+  · subst hl
+    simp [pick_fst_sub_one]
+  · simp [hl]
+
+/-- A term of G ∘ (F | D) or of G ∘ F on a block has the degree of that composite. -/
+lemma markedBlock_deg (q : Fin (τ m).length) (l : Fin e.length) :
+    ψ (targetDeg 1 fun q₀ ↦ φ (targetDeg
+      (pick F D (decide ((⟨l, q₀⟩ : Σ l, Fin (τ l).length) = ⟨m, q⟩))).1 fun i ↦
+        deg (e.embedding l ((τ l).embedding q₀ i)))) =
+      (ψ.comp φ) (targetDeg (pick (G.comp F) (G.compMarked F D one_add_one_eq_two)
+        (decide (l = m))).1 fun i ↦ deg (e.embedding l i)) :=
+  degMap_targetDeg_degMap_targetDeg_embedding φ ψ (fun i ↦ deg (e.embedding l i)) (τ l) _
+    (one_add_sum_pick_fst_sub_one G F D e m τ q l) rfl
+
+variable [NeZero n]
+
+/-- A term of Φ ∘ (G ∘ F | G ∘ (F | D)), as a sum over the compositions of its blocks. -/
+lemma compTerm_pick_compMarked_eq_sum (B : Fin e.length → Bool) (d : β''') (hd : _) :
+    Φ.compTerm a e
+        (fun l ↦ pick (G.comp F) (G.compMarked F D one_add_one_eq_two) (B l)) d hd =
+      ∑ τ : ∀ l : Fin e.length, Composition (e.blocksFun l),
+        Φ.applyBlocks (fun Z ↦ g (f Z)) X e
+          (fun l ↦ markedBlockTerm G F D a e l (τ l) (B l)) d hd := by
+  simp only [compTerm, applyBlocks, pick_blockMap_eq_sum, MultilinearMap.map_sum, map_sum]
+
+/-- Φ applied to the summands of the values of G ∘ F on the blocks other than `m` and of
+G ∘ (F | D) on the block `m`, as a signed sum over the blocks of the composition of the block `m`.
+-/
+lemma applyBlocks_markedBlockTerm (d : β''') (hd : _) :
+    Φ.applyBlocks (fun Z ↦ g (f Z)) X e
+        (fun l ↦ markedBlockTerm G F D a e l (τ l) (decide (l = m))) d hd =
+      ∑ q : Fin (τ m).length,
+        tailSign (fun i ↦ deg (e.embedding m i)) ((τ m).sizeUpTo (q + 1)) •
+          Φ.blockwiseTerm a e τ
+            (fun l q₀ ↦ pick F D (decide ((⟨l, q₀⟩ : Σ l, Fin (τ l).length) = ⟨m, q⟩)))
+            (fun _ ↦ ⟨1, G⟩) _ (markedBlock_deg G F D e m τ q) d hd := by
+  have hw := markedBlockTerm_of_true G F D a e m (τ m) (decide_eq_true (rfl : m = m))
+    fun q ↦ by simpa using markedBlock_deg G F D e m τ q m
+  unfold blockwiseTerm applyBlocks
+  rw [MultilinearMap.map_eq_sum_units_smul_update _
+    (fun l ↦ markedBlockTerm G F D a e l (τ l) (decide (l = m))) m _ _ hw]
+  simp only [map_sum, Units.smul_def, map_zsmul]
+  refine Finset.sum_congr rfl fun q _ ↦ congrArg _ (congrArg _ (congrArg _ (funext fun l ↦ ?_)))
+  by_cases hl : l = m
+  · subst hl
+    rw [Function.update_self]
+    exact blockCompTerm_congr a G e l (τ l) (funext fun q₀ ↦ by simp) _ _
+  · rw [Function.update_of_ne hl, markedBlockTerm_of_false G F D a e l (τ l) (decide_eq_false hl)
+      (by simpa [hl] using markedBlock_deg G F D e m τ q l)]
+    exact blockCompTerm_congr a G e l (τ l) (funext fun q₀ ↦ by simp [hl]) _ _
+
+/-- A term of Φ ∘ (G ∘ F | G ∘ (F | D)), as a signed sum over the compositions of its blocks and
+the blocks of the composition of its marked block. -/
+lemma compTerm_pick_compMarked (d : β''') (hd : _) :
+    Φ.compTerm a e (fun l ↦ pick (G.comp F) (G.compMarked F D one_add_one_eq_two)
+        (decide (l = m))) d hd =
+      ∑ τ : ∀ l : Fin e.length, Composition (e.blocksFun l), ∑ q : Fin (τ m).length,
+        tailSign (fun i ↦ deg (e.embedding m i)) ((τ m).sizeUpTo (q + 1)) •
+          Φ.blockwiseTerm a e τ
+            (fun l q₀ ↦ pick F D (decide ((⟨l, q₀⟩ : Σ l, Fin (τ l).length) = ⟨m, q⟩)))
+            (fun _ ↦ ⟨1, G⟩) _ (markedBlock_deg G F D e m τ q) d hd :=
+  (compTerm_pick_compMarked_eq_sum Φ G F D a e (fun l ↦ decide (l = m)) d hd).trans
+    (Finset.sum_congr rfl fun τ _ ↦ applyBlocks_markedBlockTerm Φ G F D a e m τ d hd)
+
+end MarkedRight
+
+/-- A block of `c` inside a group of blocks given by `c'` is determined by the group and its
+position in the group, also after the identification of the groups with the blocks of
+`c.gather c'` and of the blocks in a group with the blocks of `c.sigmaCompositionAux c'`. -/
+lemma _root_.Composition.embedding_cast_eq_embedding_iff (c : Composition n)
+    (c' : Composition c.length) (i : Fin c'.length) (j : Fin (c'.blocksFun i))
+    (l : Fin (c.gather c').length) (q : Fin (c.sigmaCompositionAux c' l).length) :
+    c'.embedding (l.cast (c.length_gather c'))
+        (q.cast (c.length_sigmaCompositionAux c' (l.cast (c.length_gather c')))) =
+        c'.embedding i j ↔
+      (⟨l, q⟩ : Σ l : Fin (c.gather c').length, Fin (c.sigmaCompositionAux c' l).length) =
+        ⟨i.cast (c.length_gather c').symm, j.cast (c.length_sigmaCompositionAux c' i).symm⟩ := by
+  constructor
+  · intro hE
+    have hS := c'.blocksFinEquiv.injective (a₁ := ⟨_, _⟩) (a₂ := ⟨i, j⟩) hE
+    obtain ⟨rfl, hq⟩ := Sigma.mk.inj_iff.1 hS
+    obtain rfl := eq_of_heq hq
+    rfl
+  · intro hS
+    obtain ⟨rfl, hq⟩ := Sigma.mk.inj_iff.1 hS
+    obtain rfl := eq_of_heq hq
+    rfl
+
+omit [Grading β] in
+/-- The Koszul sign of the inputs after a block of `c`, inside a group of blocks given by `c'`,
+is the Koszul sign of the inputs after the group times the Koszul sign of the inputs of the group
+after the block. -/
+lemma tailSign_sizeUpTo_embedding_succ [Grading β] (deg : Fin n → β) (c : Composition n)
+    (c' : Composition c.length) (i : Fin c'.length) (j : Fin (c'.blocksFun i)) :
+    tailSign deg (c.sizeUpTo ((c'.embedding i j : ℕ) + 1)) =
+      tailSign deg ((c.gather c').sizeUpTo ((i : ℕ) + 1)) *
+        tailSign (fun k ↦ deg ((c.gather c').embedding (i.cast (c.length_gather c').symm) k))
+          ((c.sigmaCompositionAux c' (i.cast (c.length_gather c').symm)).sizeUpTo
+            ((j : ℕ) + 1)) := by
+  have h₁ := tailSign_sizeUpTo_add deg (c.gather c') (i.cast (c.length_gather c').symm)
+    ((c.sigmaCompositionAux c' (i.cast (c.length_gather c').symm)).sizeUpTo_le (j + 1))
+  have h₂ := c.sizeUpTo_sizeUpTo_add_boundary c' i j.succ
+  rw [Fin.val_succ] at h₂
+  rw [Composition.coe_embedding, add_assoc, h₂, mul_comm]
+  exact h₁
+
+section MarkedRight
+
+variable (Φ : ComposableMultilinearMap R h χ s) (G : ComposableMultilinearMap R g ψ 1)
+  (F : ComposableMultilinearMap R f φ 1) (D : ComposableMultilinearMap R f φ 2) [NeZero n]
+  {X : Fin (n + 1) → Obj} {deg : Fin n → β} (a : ∀ i : Fin n, ComposableHom β R X i (deg i))
+
+/-- The terms of (Φ ∘ G) ∘ (F | D) and of Φ ∘ (G ∘ F | G ∘ (F | D)) are the same, reindexed along
+`Composition.sigmaEquivSigmaPi` and `Composition.blocksFinEquiv`. -/
+lemma sum_compTerm_comp_pick (d : β''') (hd : ∀ (c : Composition n) (_ : Fin c.length), _)
+    (hd' : ∀ (e : Composition n) (_ : Fin e.length), _) :
+    ∑ c : Composition n, ∑ m : Fin c.length, tailSign deg (c.sizeUpTo (m + 1)) •
+        (Φ.comp G).compTerm a c (fun l ↦ pick F D (decide (l = m))) d (hd c m) =
+      ∑ e : Composition n, ∑ m : Fin e.length, tailSign deg (e.sizeUpTo (m + 1)) •
+        Φ.compTerm a e (fun l ↦ pick (G.comp F) (G.compMarked F D one_add_one_eq_two)
+          (decide (l = m))) d (hd' e m) := by
+  simp only [compTerm_comp, compTerm_pick_compMarked, Finset.smul_sum]
+  refine (Finset.sum_congr rfl fun c _ ↦ Finset.sum_comm).trans ?_
+  refine Eq.trans ?_ (Finset.sum_congr rfl fun e _ ↦ Finset.sum_comm)
+  conv_lhs => rw [Finset.sum_sigma', Finset.univ_sigma_univ]
+  conv_rhs => rw [Finset.sum_sigma', Finset.univ_sigma_univ]
+  refine Fintype.sum_equiv (Composition.sigmaEquivSigmaPi n) _ _ fun σ ↦ ?_
+  obtain ⟨c, c'⟩ := σ
+  dsimp only [Composition.sigmaEquivSigmaPi, Equiv.coe_fn_mk]
+  refine (c'.blocksFinEquiv.sum_comp _).symm.trans ?_
+  refine Eq.trans ?_ (Fintype.sum_sigma' _)
+  refine Fintype.sum_equiv (Equiv.sigmaCongr (finCongr (c.length_gather c').symm)
+    fun i ↦ finCongr (c.length_sigmaCompositionAux c' i).symm) _ _ fun y ↦ ?_
+  obtain ⟨i, j⟩ := y
+  rw [smul_smul]
+  refine congrArg₂ (· • ·) (tailSign_sizeUpTo_embedding_succ deg c c' i j) ?_
+  refine (groupedTerm_eq_blockwiseTerm a c c' Φ _ _ _ _ _ _ _ _ _).trans
+    (blockwiseTerm_congr a Φ _ _ (funext fun l ↦ funext fun q₀ ↦ ?_) rfl _ _ _ _).symm
+  exact congrArg (pick F D)
+    (decide_eq_decide.2 (c.embedding_cast_eq_embedding_iff c' i j l q₀).symm)
+
+/-- (R): composing Φ ∘ G with `F` on the right, with one input replaced by `D`, replaces one input
+G ∘ F of Φ by G ∘ (F | D). -/
+theorem comp_compMarked (hu : s + 1 = u) :
+    (Φ.comp G).compMarked F D hu =
+      Φ.compMarked (G.comp F) (G.compMarked F D one_add_one_eq_two) hu := by
+  ext n _ X deg a j hj
+  exact (compMarked_map_v_apply _ F D a hu hj).trans ((sum_compTerm_comp_pick Φ G F D a _ _ _).trans
+    (compMarked_map_v_apply Φ (G.comp F) (G.compMarked F D one_add_one_eq_two) a hu hj).symm)
+
+end MarkedRight
 
 end ComposableMultilinearMap
 
