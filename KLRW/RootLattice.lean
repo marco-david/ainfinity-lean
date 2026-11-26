@@ -14,50 +14,63 @@ public import Mathlib.LinearAlgebra.Matrix.ToLin
 # Root and weight lattices
 
 Coordinate vectors for the root lattice and the weight lattice of the simply-laced Kac–Moody
-algebra whose Dynkin diagram is `Γ`, written in the basis of simple roots `αᵢ` or of fundamental
-weights `ωᵢ`.
+algebra whose Dynkin diagram is `Γ`, written in the basis of simple roots $α_i$ or of
+fundamental weights $ω_i$.
 
 ## Main definitions
 
-* `SimpleGraph.cartanMatrix`: the Cartan matrix `2I - A` of a simply-laced graph.
+* `SimpleGraph.cartanMatrix`: the Cartan matrix $2I - A$ of a simply-laced graph.
 * `KLRW.Coords k Γ R`: coordinate vectors for `Γ` with coefficients in `R`, in the basis selected
   by `k : KLRW.CoordKind`. They form an `R`-module.
 * `KLRW.RootCoords`, `KLRW.WeightCoords`, `KLRW.DominantWeight`: the root lattice, the weight
   lattice and the dominant integral weights.
 * `KLRW.Coords.single i r`: the vector with coefficient `r` at `i` and `0` elsewhere.
-* `KLRW.simpleRoot Γ i`, `KLRW.fundamentalWeight Γ i`: the simple root `αᵢ` and the fundamental
-  weight `ωᵢ`, i.e. `single i 1` in the root and in the weight lattice.
-* `KLRW.Coords.basis k Γ R`: the basis `(single i 1)ᵢ`, i.e. the simple roots or the fundamental
-  weights.
+* `KLRW.simpleRoot Γ i`, `KLRW.fundamentalWeight Γ i`: the simple root $α_i$ and the
+  fundamental weight $ω_i$, i.e. `single i 1` in the root and in the weight lattice.
+* `KLRW.Coords.basis k Γ R`: the basis formed by the vectors `single i 1`, i.e. the simple roots
+  or the fundamental weights.
 * `KLRW.Coords.map`: apply a function to every coefficient, e.g. inclusion from `ℕ` to `ℤ`.
-* `KLRW.Coords.toWeight`: the linear map sending an element `β` of the root lattice to its
-  Dynkin labels `Cβ`.
+* `KLRW.Coords.toWeight`: the linear map sending an element $β$ of the root lattice to its
+  Dynkin labels $Cβ$.
 
-## Main results
+## Main statements
 
 * `KLRW.Coords.coe_basis`: the simple roots form a basis of the root lattice and the fundamental
-  weights a basis of the weight lattice (over `ℕ`: of `Q⁺` and of `P⁺`).
+  weights a basis of the weight lattice (over `ℕ`: of the $ℕ$-sums of simple roots and of the
+  dominant weights).
 * `KLRW.Coords.toMatrix_toWeight`: in these bases, the matrix of `toWeight` is the Cartan matrix.
-* `KLRW.Coords.toWeight_simpleRoot`: `αᵢ = 2ωᵢ - Σ_{j ∼ i} ωⱼ`.
+* `KLRW.Coords.toWeight_simpleRoot`: $α_i = 2ω_i - ∑_{j ∼ i} ω_j$.
 * `SimpleGraph.cartanMatrix_isSymm`: the Cartan matrix is symmetric.
+
+## Notation
+
+We use the standard notation $α_i$ and $ω_i$ for the simple roots and the fundamental
+weights, and $C$ for the Cartan matrix. In the terms of Lusztig (see References):
+* `V` is the index set $I$, and `Γ` is the graph of a simply laced Cartan datum $(I, ⋅)$
+  (§2.1.3, §14.1.3); `Γ.cartanMatrix i j` is $i ⋅ j$.
+* `RootCoords Γ ℤ` is $ℤ[I]$ and `RootCoords Γ ℕ` is $ℕ[I]$ (§1.2.1);
+  `simpleRoot Γ i` is $i$.
+* `WeightCoords Γ ℤ` is $X = \mathrm{Hom}(ℤ[I], ℤ)$ of the simply connected
+  root datum (§2.2.2): `x i` is $⟨i, x⟩$, `fundamentalWeight Γ i` is the dual basis
+  vector, and `DominantWeight Γ` is $X^+$ (§3.5.5).
+* `toWeight` is the map $ℤ[I] → X$ induced by $i ↦ i'$ (§2.2.1).
 
 ## Implementation notes
 
 * `Coords k Γ R` is a structure wrapping a function `V → R` and tagged by the basis `k`, so that
   coordinates in the basis of simple roots and in the basis of fundamental weights cannot be
-  confused; they are compared through `toWeight`. As in Kac, both bases are indexed by the
+  confused; they are compared through `toWeight`. Bases are indexed by the
   vertices of `Γ`. The `i`-th coefficient of `x` is written `x i`, and the additive and module
   structures are transferred from `V → R` along `Coords.equiv`.
-* A weight `λ` is recorded by its Dynkin labels `⟨αᵢ^∨, λ⟩`, i.e. its coordinates in the basis of
-  fundamental weights. When `det C ≠ 0` (all diagrams of type A, D and E, and some indefinite
-  ones such as `E₁₀`), the Dynkin labels determine `λ` and `WeightCoords Γ ℤ` is the weight
-  lattice `P`. When `det C = 0` (for instance for the affine trees `D̃ₙ`, `Ẽ₆`, `Ẽ₇`, `Ẽ₈`),
-  Kac's realisation gives weights `n - rank C` further coordinates, which the Dynkin labels
-  forget, and `toWeight` kills the null roots: for `D̃₄`, `δ = 2α_centre + Σ α_leaf` has
-  `Cδ = 0`.
-* `C` is symmetric (`SimpleGraph.cartanMatrix_isSymm`), so Kac's convention
-  `aᵢⱼ = ⟨αᵢ^∨, αⱼ⟩` and the transposed convention of Bourbaki and Mathlib give the same
-  `toWeight`.
+* A weight is recorded by its Dynkin labels, i.e. its coordinates in the basis of fundamental
+  weights. This is faithful when $\det C ≠ 0$, which includes all types A, D and E. When
+  $\det C = 0$, as for the affine types, it is not: different weights of the Kac–Moody algebra
+  can have the same labels, and `toWeight` sends some nonzero elements of the root lattice to
+  $0$, e.g. the null root $δ = 2α_{\mathrm{centre}} + ∑ α_{\mathrm{leaf}}$ of
+  $\tilde D_4$.
+* $C$ is symmetric (`SimpleGraph.cartanMatrix_isSymm`), so the conventions
+  $a_{ij} = ⟨α_i^∨, α_j⟩$ and its transpose (used by Mathlib) give the
+  same `toWeight`.
 * `Coords.basis` is noncomputable, like every Mathlib basis. It is meant for statements and
   proofs; computations should use `single`, `simpleRoot` and `fundamentalWeight`. `coe_basis`
   identifies the basis vectors with them.
@@ -71,9 +84,8 @@ weights `ωᵢ`.
 
 ## References
 
-* V. G. Kac, *Infinite dimensional Lie algebras*, 3rd ed., Cambridge University Press, 1990,
-  Chapter 1.
-* N. Bourbaki, *Lie groups and Lie algebras, Chapters 4–6*, Springer, 2002, Chapter VI, §1.
+* G. Lusztig, *Introduction to quantum groups*, Progress in Mathematics 110, Birkhäuser, 1993,
+  §§1.1–1.2, 2.1–2.2, 3.5 and 14.1.
 -/
 
 @[expose] public section
@@ -82,9 +94,9 @@ namespace KLRW
 
 /-- Which basis a coordinate vector is written in. -/
 inductive CoordKind
-  /-- The simple roots `αᵢ`. -/
+  /-- The simple roots $α_i$. -/
   | root
-  /-- The fundamental weights `ωᵢ`. -/
+  /-- The fundamental weights $ω_i$. -/
   | weight
 
 variable {V : Type*}
@@ -95,7 +107,7 @@ section CartanMatrix
 
 variable [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj]
 
-/-- The Cartan matrix `2I - A` of a simply-laced graph. -/
+/-- The Cartan matrix $2I - A$ of a simply-laced graph. -/
 def _root_.SimpleGraph.cartanMatrix : Matrix V V ℤ :=
   2 - G.adjMatrix ℤ
 
@@ -119,10 +131,11 @@ structure Coords (k : CoordKind) (Γ : SimpleGraph V) (R : Type*) where
   /-- The coefficient of the `i`-th basis vector. -/
   coeff : V → R
 
-/-- `RootCoords Γ ℤ` is the root lattice `Q`; `RootCoords Γ ℕ` is `Q⁺`. -/
+/-- `RootCoords Γ ℤ` is the root lattice; `RootCoords Γ ℕ` consists of the $ℕ$-sums of simple
+roots. -/
 abbrev RootCoords (Γ : SimpleGraph V) (R : Type*) := Coords .root Γ R
-/-- `WeightCoords Γ ℤ` is the weight lattice `P`, recorded by Dynkin labels (see the module
-docstring when the Cartan matrix is singular); `WeightCoords Γ ℕ` is `P⁺`. -/
+/-- `WeightCoords Γ ℤ` is the weight lattice, recorded by Dynkin labels (see the module docstring
+when the Cartan matrix is singular); `WeightCoords Γ ℕ` consists of the dominant weights. -/
 abbrev WeightCoords (Γ : SimpleGraph V) (R : Type*) := Coords .weight Γ R
 /-- Dominant integral weights of `Γ`. -/
 abbrev DominantWeight (Γ : SimpleGraph V) := WeightCoords Γ ℕ
@@ -151,8 +164,8 @@ instance [AddCommGroup R] : AddCommGroup (Coords k Γ R) := Equiv.addCommGroup e
 /-- Coordinate vectors with coefficients in a semiring `R` form an `R`-module.
 
 The additive equivalence is written out instead of using `equiv.addEquiv`, which is not
-reducible, so that for `R = ℕ, ℤ` this module structure agrees with the multiples coming from the
-additive structure. See note [reducible non-instances]. -/
+reducible, so that for `R = ℕ` and `R = ℤ` this module structure agrees with the multiples coming
+from the additive structure. -/
 instance [Semiring R] : Module R (Coords k Γ R) :=
   AddEquiv.module R { equiv with map_add' := fun _ _ => rfl }
 instance [Fintype V] [DecidableEq R] : DecidableEq (Coords k Γ R) :=
@@ -217,8 +230,9 @@ section Map
 
 variable {S T : Type*}
 
-/-- Apply `f` to every coefficient, keeping the basis. For instance `x.map (↑)` views an element
-`x` of `Q⁺` (resp. `P⁺`) as an element of the lattice `Q` (resp. `P`). -/
+/-- Apply `f` to every coefficient, keeping the basis. For instance `x.map (↑)` views an
+$ℕ$-sum of simple roots (resp. a dominant weight) `x` as an element of the root lattice (resp.
+the weight lattice). -/
 def map (f : R → S) (x : Coords k Γ R) : Coords k Γ S := ⟨fun i => f (x i)⟩
 
 @[simp] lemma coe_map (f : R → S) (x : Coords k Γ R) : ⇑(x.map f) = f ∘ ⇑x := rfl
@@ -229,8 +243,9 @@ lemma map_apply (f : R → S) (x : Coords k Γ R) (i : V) : x.map f i = f (x i) 
 @[simp] lemma map_map (f : R → S) (g : S → T) (x : Coords k Γ R) :
     (x.map f).map g = x.map (g ∘ f) := rfl
 
-/-- Applying an injective map to the coefficients is injective. For instance `map (↑)` embeds
-`Q⁺` into `Q` and `P⁺` into `P`, by `map_injective Nat.cast_injective`. -/
+/-- Applying an injective map to the coefficients is injective. For instance `map (↑)` embeds the
+$ℕ$-sums of simple roots into the root lattice and the dominant weights into the weight lattice,
+by `map_injective Nat.cast_injective`. -/
 lemma map_injective {f : R → S} (hf : Function.Injective f) :
     Function.Injective (map f : Coords k Γ R → Coords k Γ S) :=
   fun _ _ h => ext fun i => hf (DFunLike.congr_fun h i)
@@ -255,7 +270,7 @@ section Single
 variable [DecidableEq V] [Zero R]
 
 /-- The vector with coefficient `r` at `i` and `0` elsewhere. For `r = 1` it is the simple root
-`αᵢ` (`simpleRoot`) or the fundamental weight `ωᵢ` (`fundamentalWeight`). -/
+$α_i$ (`simpleRoot`) or the fundamental weight $ω_i$ (`fundamentalWeight`). -/
 def single (i : V) (r : R) : Coords k Γ R := ⟨Pi.single i r⟩
 
 @[simp] lemma coe_single (i : V) (r : R) : ⇑(single i r : Coords k Γ R) = Pi.single i r := rfl
@@ -276,10 +291,11 @@ section Basis
 variable [Finite V] [Semiring R]
 
 variable (k Γ R) in
-/-- The basis `(single i 1)ᵢ` of `Coords k Γ R`: the simple roots for `k = .root` and the
-fundamental weights for `k = .weight`. Over `ℕ` these are bases of `Q⁺` and of `P⁺`. Like every
-Mathlib basis it is noncomputable (see the module docstring); `coe_basis` identifies its vectors
-with the computable `single i 1`. -/
+/-- The basis of `Coords k Γ R` formed by the vectors `single i 1`: the simple roots for
+`k = .root` and the fundamental weights for `k = .weight`. Over `ℕ` these are bases of the
+$ℕ$-sums of simple roots and of the dominant weights. Like every Mathlib basis it is
+noncomputable (see the module docstring); `coe_basis` identifies its vectors with the computable
+`single i 1`. -/
 noncomputable def basis : Module.Basis V R (Coords k Γ R) :=
   .ofEquivFun { equiv with map_add' := fun _ _ => rfl, map_smul' := fun _ _ => rfl }
 
@@ -291,7 +307,8 @@ noncomputable def basis : Module.Basis V R (Coords k Γ R) :=
   Module.Basis.coe_ofEquivFun _
 
 omit [Finite V] in
-/-- Every vector is the sum of its coefficients times the basis vectors, e.g. `β = Σ βᵢ αᵢ`. -/
+/-- Every vector is the sum of its coefficients times the basis vectors, e.g.
+$β = ∑_i β_i α_i$. -/
 lemma sum_smul_single [Fintype V] [DecidableEq V] (x : Coords k Γ R) :
     ∑ i, x i • single i 1 = x := by
   simpa using (basis k Γ R).sum_repr x
@@ -302,14 +319,14 @@ end Coords
 
 /-! ### Simple roots and fundamental weights -/
 
-/-- The simple root `αᵢ`: the vector with coefficient `1` at `i` and `0` elsewhere in the root
-lattice. Over `ℕ` it is an element of `Q⁺`, over `ℤ` of `Q`. -/
+/-- The simple root $α_i$: the vector with coefficient `1` at `i` and `0` elsewhere, in the root
+lattice (over `ℤ`) or among the $ℕ$-sums of simple roots (over `ℕ`). -/
 abbrev simpleRoot (Γ : SimpleGraph V) {R : Type*} [DecidableEq V] [Zero R] [One R] (i : V) :
     RootCoords Γ R :=
   Coords.single i 1
 
-/-- The fundamental weight `ωᵢ`: the weight with Dynkin labels `1` at `i` and `0` elsewhere.
-Over `ℕ` it is a dominant weight. -/
+/-- The fundamental weight $ω_i$: the weight with Dynkin labels `1` at `i` and `0`
+elsewhere. Over `ℕ` it is a dominant weight. -/
 abbrev fundamentalWeight (Γ : SimpleGraph V) {R : Type*} [DecidableEq V] [Zero R] [One R]
     (i : V) : WeightCoords Γ R :=
   Coords.single i 1
@@ -322,8 +339,8 @@ section ToWeight
 
 variable {Γ : SimpleGraph V} [Fintype V] [DecidableEq V] [DecidableRel Γ.Adj]
 
-/-- The Dynkin labels of an element `β` of the root lattice, i.e. `β` in the basis of fundamental
-weights: `β ↦ Cβ`, where `C` is the Cartan matrix of `Γ`. -/
+/-- The Dynkin labels of an element $β$ of the root lattice, i.e. $β$ in the basis of
+fundamental weights: $β ↦ Cβ$, where $C$ is the Cartan matrix of `Γ`. -/
 def toWeight : RootCoords Γ ℤ →ₗ[ℤ] WeightCoords Γ ℤ where
   toFun β := ⟨Γ.cartanMatrix.mulVec β⟩
   map_add' _ _ := congrArg mk (Matrix.mulVec_add _ _ _)
@@ -335,13 +352,14 @@ def toWeight : RootCoords Γ ℤ →ₗ[ℤ] WeightCoords Γ ℤ where
 lemma toWeight_apply (β : RootCoords Γ ℤ) (i : V) :
     toWeight β i = Γ.cartanMatrix.mulVec (⇑β) i := rfl
 
-/-- The Dynkin labels of the simple root `αᵢ` are the `i`-th column of the Cartan matrix. -/
+/-- The Dynkin labels of the simple root $α_i$ are the `i`-th column of the Cartan matrix. -/
 @[simp] lemma coe_toWeight_simpleRoot (i : V) :
     ⇑(toWeight (simpleRoot Γ i)) = Γ.cartanMatrix.col i :=
   Matrix.mulVec_single_one _ _
 
-/-- The simple root `αᵢ` in terms of the fundamental weights: `αᵢ = 2ωᵢ - Σ_{j ∼ i} ωⱼ`. In
-particular `αᵢ` is not dominant as soon as `i` has a neighbour. -/
+/-- The simple root $α_i$ in terms of the fundamental weights:
+$α_i = 2ω_i - ∑_{j ∼ i} ω_j$. In particular $α_i$ is not dominant as soon
+as `i` has a neighbour. -/
 lemma toWeight_simpleRoot (i : V) :
     toWeight (simpleRoot Γ i) =
       2 • fundamentalWeight Γ i - ∑ j ∈ Γ.neighborFinset i, fundamentalWeight Γ j := by
@@ -353,7 +371,7 @@ lemma toWeight_simpleRoot (i : V) :
 
 /-- In the bases of simple roots and of fundamental weights, the matrix of `toWeight` is the
 Cartan matrix. -/
-theorem toMatrix_toWeight :
+lemma toMatrix_toWeight :
     LinearMap.toMatrix (basis .root Γ ℤ) (basis .weight Γ ℤ) toWeight = Γ.cartanMatrix := by
   ext i j
   rw [LinearMap.toMatrix_apply]
