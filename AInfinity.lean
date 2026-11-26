@@ -3,6 +3,7 @@ import AInfinity.AInfinityCategoryStruct
 import AInfinity.AInfinityFunctor
 import AInfinity.ArityLeTwo
 import AInfinity.DG
+import AInfinity.FunctorArityLeTwo
 import AInfinity.GradedLinearAlgebra
 import AInfinity.GradedLinearQuiver
 import AInfinity.Grading

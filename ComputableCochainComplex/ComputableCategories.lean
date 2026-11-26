@@ -1,6 +1,40 @@
+/-
+Copyright (c) 2026 Niels Voss. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Niels Voss, Marco David
+-/
 module
 
 public import Mathlib
+
+/-! # Computable biproducts and zero objects
+
+Mathlib's `HasBinaryBiproducts` and `HasZeroObject` only assert that binary biproducts and a zero
+object exist, so `biprod` and the zero object are noncomputable. This file introduces classes that
+carry an explicit choice of them instead, so that in categories such as the additive completion
+`CMat_` biproducts and the zero object can be computed by evaluation.
+
+## Main definitions
+
+* `CategoryTheory.Limits.BinaryBiproductData.mkOfMaps`: binary biproduct data from the
+  projections, the inclusions and the pairing and copairing maps, subject to the biproduct
+  equations and the uniqueness of pairings and copairings.
+* `CategoryTheory.Limits.BinaryBiproductData.mkOfProduct`: in a preadditive category, binary
+  biproduct data from a binary product alone.
+* `ComputableBinaryBiproduct C`: a chosen binary biproduct of any two objects of `C`. It implies
+  `HasBinaryBiproducts C`.
+* `cbiprod X Y`: the chosen biproduct of `X` and `Y`, with projections `cbiprod.fst`,
+  `cbiprod.snd` and inclusions `cbiprod.inl`, `cbiprod.inr`.
+* `HasExplicitZeroObject C`: a chosen zero object of `C`. It implies `HasZeroObject C`.
+* `HasExplicitZeroObject.mkOfPreadditive`: in a preadditive category, the explicit zero object
+  given by an object all of whose incoming and outgoing morphisms are zero.
+* `List.cbiprod`: the biproduct of a list of objects, folded from the zero object with `cbiprod`.
+
+## Notation
+
+* `X ⊞ᶜ Y` for `cbiprod X Y`.
+* `𝟎` for the explicit zero object `HasExplicitZeroObject.zero`.
+-/
 
 @[expose] public section
 
