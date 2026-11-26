@@ -27,20 +27,17 @@ fundamental weights $ω_i$.
 * `KLRW.Coords.single i r`: the vector with coefficient `r` at `i` and `0` elsewhere.
 * `KLRW.simpleRoot Γ i`, `KLRW.fundamentalWeight Γ i`: the simple root $α_i$ and the
   fundamental weight $ω_i$, i.e. `single i 1` in the root and in the weight lattice.
-* `KLRW.Coords.basis k Γ R`: the basis formed by the vectors `single i 1`, i.e. the simple roots
-  or the fundamental weights.
+* `KLRW.Coords.basis k Γ R`: the basis of simple roots or of fundamental weights;
+  `KLRW.Coords.coe_basis` identifies its vectors with `single i 1`.
 * `KLRW.Coords.map`: apply a function to every coefficient, e.g. inclusion from `ℕ` to `ℤ`.
 * `KLRW.Coords.toWeight`: the linear map sending an element $β$ of the root lattice to its
   Dynkin labels $Cβ$.
 
 ## Main statements
 
-* `KLRW.Coords.coe_basis`: the simple roots form a basis of the root lattice and the fundamental
-  weights a basis of the weight lattice (over `ℕ`: of the $ℕ$-sums of simple roots and of the
-  dominant weights).
-* `KLRW.Coords.toMatrix_toWeight`: in these bases, the matrix of `toWeight` is the Cartan matrix.
+* `KLRW.Coords.toMatrix_toWeight`: in the bases of simple roots and of fundamental weights, the
+  matrix of `toWeight` is the Cartan matrix.
 * `KLRW.Coords.toWeight_simpleRoot`: $α_i = 2ω_i - ∑_{j ∼ i} ω_j$.
-* `SimpleGraph.cartanMatrix_isSymm`: the Cartan matrix is symmetric.
 
 ## Notation
 
@@ -59,9 +56,9 @@ weights, and $C$ for the Cartan matrix. In the terms of Lusztig (see References)
 
 * `Coords k Γ R` is a structure wrapping a function `V → R` and tagged by the basis `k`, so that
   coordinates in the basis of simple roots and in the basis of fundamental weights cannot be
-  confused; they are compared through `toWeight`. Bases are indexed by the
-  vertices of `Γ`. The `i`-th coefficient of `x` is written `x i`, and the additive and module
-  structures are transferred from `V → R` along `Coords.equiv`.
+  confused; they are compared through `toWeight`. Both bases are indexed by the vertices of `Γ`.
+  The `i`-th coefficient of `x` is written `x i`, and the additive and module structures are
+  transferred from `V → R` along `Coords.equiv`.
 * A weight is recorded by its Dynkin labels, i.e. its coordinates in the basis of fundamental
   weights. This is faithful when $\det C ≠ 0$, which includes all types A, D and E. When
   $\det C = 0$, as for the affine types, it is not: different weights of the Kac–Moody algebra
