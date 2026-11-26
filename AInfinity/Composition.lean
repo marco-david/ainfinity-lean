@@ -15,6 +15,10 @@ This file collects lemmas on Mathlib's `Composition n`, the decompositions i₁ 
 into positive integers. A composition `c` cuts a string of `n` inputs into k blocks: the `l`-th
 block has size `c.blocksFun l` and starts at position `c.sizeUpTo l`.
 
+## Main definitions
+
+* `Composition.blockObj`: the restriction of a string X₀, …, Xₙ to a block of a composition.
+
 ## Main results
 
 * `Composition.neZero_blocksFun`, `Composition.neZero_length`: the blocks of a composition are
@@ -123,5 +127,25 @@ lemma sum_sub_blocksFun_add (s : ℤ) (σ : Fin c.length → ℤ) :
   simp only [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
     nsmul_eq_mul, mul_one, this]
   ring
+
+/-- The restriction of a string X₀, …, Xₙ to the `l`-th block of `c`: its `i`-th entry is
+`X (c.sizeUpTo l + i)`, for `i ≤ c.blocksFun l`. Its first and last entries are the entries of `X`
+at the boundaries `c.boundary l.castSucc` and `c.boundary l.succ` of the block. -/
+def blockObj {α : Type*} (X : Fin (n + 1) → α) (l : Fin c.length) : Fin (c.blocksFun l + 1) → α :=
+  fun i ↦ X ((i.natAdd (c.sizeUpTo l)).castLE (Nat.succ_le_succ (c.sizeUpTo_add_blocksFun_le l)))
+
+@[simp]
+lemma blockObj_zero {α : Type*} (X : Fin (n + 1) → α) (l : Fin c.length) :
+    c.blockObj X l 0 = X (c.boundary l.castSucc) := by
+  unfold blockObj
+  congr 1
+
+@[simp]
+lemma blockObj_last {α : Type*} (X : Fin (n + 1) → α) (l : Fin c.length) :
+    c.blockObj X l (Fin.last (c.blocksFun l)) = X (c.boundary l.succ) := by
+  unfold blockObj Composition.boundary
+  congr 1
+  ext
+  simp [Composition.sizeUpTo_succ']
 
 end Composition

@@ -6,7 +6,9 @@ Authors: Annie Yao, Marco David, Zhan Shi
 module
 
 public import Mathlib.Algebra.BigOperators.Fin
+public import Mathlib.Algebra.Module.BigOperators
 public import Mathlib.Tactic.Module
+public import AInfinity.Composition
 public import AInfinity.Grading
 
 /-! # Index triples of the Stasheff identities
@@ -22,7 +24,9 @@ operations, their degrees, and the Koszul sign of the summand.
 
 * `AInfinityTheory.targetDeg`: the degree (∑ᵢ degᵢ) + (s - n) · 1 of the output of an n-ary
   map of degree (s - n) · 1. The degrees of mₙ(a₁, …, aₙ) and of the arity-n Stasheff identity
-  are `targetDeg 2` and `targetDeg 3`.
+  are `targetDeg 2` and `targetDeg 3`. `AInfinityTheory.targetDeg_targetDeg_embedding_of_sum`
+  computes the target degree of maps applied blockwise along a composition, followed by an outer
+  map.
 * `AInfinityTheory.StasheffIndex`: the index triples (r, s, t) with r + s + t = n and
   1 ≤ s.
 * `AInfinityTheory.StasheffIndex.leftIndex`, `AInfinityTheory.StasheffIndex.innerIndex`,
@@ -77,6 +81,25 @@ lemma targetDeg_eq_targetDeg_add_degOne {s t : ℤ} (h : s = t + 1) (deg : Fin n
 lemma targetDeg_map {β' : Type*} [AddCommGroup β'] [Grading β'] (f : β →+ᵍ β') (s : ℤ)
     (deg : Fin n → β) : targetDeg s (fun i ↦ f (deg i)) = f (targetDeg s deg) := by
   simp only [targetDeg, map_add, map_sum, map_zsmul, GradingHom.map_degOne]
+
+/-- Applying maps of degrees (σ₁ - i₁) · 1, …, (σₖ - iₖ) · 1 to the blocks of a composition
+c = (i₁, …, iₖ) of `n`, and then a map of degree (s - k) · 1 to their values, has the degree of
+a map of degree (s + ∑ₗ (σₗ - 1) - n) · 1. -/
+lemma targetDeg_targetDeg_embedding_of_sum (deg : Fin n → β) (s : ℤ) (c : Composition n)
+    (σ : Fin c.length → ℤ) :
+    targetDeg s (fun l ↦ targetDeg (σ l) fun j ↦ deg (c.embedding l j)) =
+      targetDeg (s + ∑ l, (σ l - 1)) deg := by
+  simp only [targetDeg, Finset.sum_add_distrib, c.sum_sum_apply_embedding, add_assoc,
+    ← Finset.sum_smul, ← add_smul, c.sum_sub_blocksFun_add s σ]
+
+/-- `targetDeg_targetDeg_embedding_of_sum` translated along homomorphisms of gradings. -/
+lemma degMap_targetDeg_degMap_targetDeg_embedding {β' β'' : Type*} [AddCommGroup β']
+    [Grading β'] [AddCommGroup β''] [Grading β''] (φ : β →+ᵍ β') (ψ : β' →+ᵍ β'')
+    (deg : Fin n → β) {s u : ℤ} (c : Composition n)
+    (σ : Fin c.length → ℤ) (hσ : s + ∑ l, (σ l - 1) = u) {j : β} (hj : targetDeg u deg = j) :
+    ψ (targetDeg s fun l ↦ φ (targetDeg (σ l) fun i ↦ deg (c.embedding l i))) = (ψ.comp φ) j :=
+  congrArg ψ ((targetDeg_map φ s _).trans (congrArg φ
+    ((targetDeg_targetDeg_embedding_of_sum deg s c σ).trans (hσ ▸ hj))))
 
 end TargetDeg
 

@@ -106,9 +106,9 @@ def blockCompTerm (E : ComposableMultilinearMap R g ψ t)
     (hd : ψ (targetDeg t fun q ↦
       φ (targetDeg (P q).1 fun i ↦ deg (e.embedding l (τ.embedding q i)))) = d) :
     ComposableHom β'' R (fun k ↦ g (f (X (e.boundary k)))) l d :=
-  homCongr R (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_zero X e l))
-    (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_last X e l)) rfl
-    (E.compTerm (X := compositionBlockObj X e l) (deg := fun i ↦ deg (e.embedding l i))
+  homCongr R (congrArg (fun Z ↦ g (f Z)) (e.blockObj_zero X l))
+    (congrArg (fun Z ↦ g (f Z)) (e.blockObj_last X l)) rfl
+    (E.compTerm (X := e.blockObj X l) (deg := fun i ↦ deg (e.embedding l i))
       (fun i ↦ a (e.embedding l i)) τ P d hd)
 
 variable [NeZero n]
@@ -159,7 +159,7 @@ lemma total_blockMap_embedding (D : ComposableMultilinearMap R f φ t) (l : Fin 
     (q : Fin (c'.blocksFun l)) :
     Total.of (D.blockMap a c (c'.embedding l q)) =
       Total.of (D.blockMap
-        (X := compositionBlockObj X (c.gather c') (l.cast (c.length_gather c').symm))
+        (X := (c.gather c').blockObj X (l.cast (c.length_gather c').symm))
         (fun i ↦ a ((c.gather c').embedding (l.cast (c.length_gather c').symm) i))
         (c.sigmaCompositionAux c' (l.cast (c.length_gather c').symm))
         (q.cast (c.length_sigmaCompositionAux c' l).symm)) := by
@@ -250,9 +250,9 @@ lemma blockMap_comp (E : ComposableMultilinearMap R g ψ t) (F : ComposableMulti
     (E.comp F).blockMap a e l =
       ∑ τ : Composition (e.blocksFun l), E.blockCompTerm a e l τ (fun _ ↦ ⟨1, F⟩) _
         (comp_deg φ ψ (fun i ↦ deg (e.embedding l i)) τ rfl) :=
-  (congrArg (homCongr R (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_zero X e l))
-    (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_last X e l)) rfl)
-    (comp_map_v_apply E F (X := compositionBlockObj X e l) (deg := fun i ↦ deg (e.embedding l i))
+  (congrArg (homCongr R (congrArg (fun Z ↦ g (f Z)) (e.blockObj_zero X l))
+    (congrArg (fun Z ↦ g (f Z)) (e.blockObj_last X l)) rfl)
+    (comp_map_v_apply E F (X := e.blockObj X l) (deg := fun i ↦ deg (e.embedding l i))
       (fun i ↦ a (e.embedding l i)) rfl)).trans (map_sum _ _ _)
 
 /-- The value of Φ ∘ (F | D) on a block of a composition `e` of `n`, as a signed sum over the
@@ -265,9 +265,9 @@ lemma blockMap_compMarked (Φ : ComposableMultilinearMap R g ψ s)
         tailSign (fun i ↦ deg (e.embedding l i)) (τ.sizeUpTo (q + 1)) •
           Φ.blockCompTerm a e l τ (fun q₀ ↦ pick F D (decide (q₀ = q))) _
             (compMarked_deg F D (fun i ↦ deg (e.embedding l i)) τ q hu rfl) := by
-  refine (congrArg (homCongr R (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_zero X e l))
-    (congrArg (fun Z ↦ g (f Z)) (compositionBlockObj_last X e l)) rfl)
-    (compMarked_map_v_apply Φ F D (X := compositionBlockObj X e l)
+  refine (congrArg (homCongr R (congrArg (fun Z ↦ g (f Z)) (e.blockObj_zero X l))
+    (congrArg (fun Z ↦ g (f Z)) (e.blockObj_last X l)) rfl)
+    (compMarked_map_v_apply Φ F D (X := e.blockObj X l)
       (deg := fun i ↦ deg (e.embedding l i)) (fun i ↦ a (e.embedding l i)) hu rfl)).trans ?_
   simp only [map_sum, Units.smul_def, map_zsmul]
   rfl
